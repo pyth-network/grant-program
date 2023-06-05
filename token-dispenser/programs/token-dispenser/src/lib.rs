@@ -39,8 +39,9 @@ pub mod token_dispenser {
 
         // TO DO : Actually check the proof of identity and the proof of inclusion
         for proof in &proofs {
-            // Each leaf of the tree is a hash of the amount and the discriminator and public key of
-            // the identity
+            // Each leaf of the tree is a hash of the serialized claim info
+            // The identity is derived from the proof of identity (signature)
+            // If the proof of identity does not correspond to a whitelisted identiy, the inclusion verification will fail
             let leaf: [u8; 32] =
                 keccak::hashv(&[ClaimInfo::from(proof).try_to_vec()?.as_slice()]).0;
             verify_inclusion(&leaf, &proof.proof_of_inclusion, &config.merkle_root)?;
