@@ -1,5 +1,9 @@
 use anchor_lang::prelude::*;
 use std::collections::HashSet;
+use std::mem::{
+    self,
+    Discriminant,
+};
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -25,7 +29,7 @@ pub mod token_dispenser {
      *   has been an allocation)
      * - The claimant has not already claimed tokens
      */
-    pub fn claim(ctx: Context<Claim>, proofs: Vec<Proof>) -> Result<()> {
+    pub fn claim(ctx: Context<Claim>, proofs: Vec<ClaimCertificate>) -> Result<()> {
         let config = &ctx.accounts.config;
 
         let mut total_amount: u64 = 0;
@@ -34,16 +38,12 @@ pub mod token_dispenser {
         verify_one_identity_per_ecosystem(&proofs)?;
 
         // TO DO : Actually check the proof of identity and the proof of inclusion
-        for proof in proofs {
-            proof.proof_of_identity.verify_signature()?;
+        for proof in &proofs {
             // Each leaf of the tree is a hash of the amount and the discriminator and public key of
             // the identity
-            let leaf: [u8; 32] = keccak::hashv(&[
-                &proof.amount.to_le_bytes(),
-                &proof.proof_of_identity.into_seed_for_leaf(),
-            ])
-            .0;
-            verify_inclusion(leaf, proof.proof_of_inclusion, config.merkle_root)?;
+            let leaf: [u8; 32] =
+                keccak::hashv(&[ClaimInfo::from(proof).try_to_vec()?.as_slice()]).0;
+            verify_inclusion(&leaf, &proof.proof_of_inclusion, &config.merkle_root)?;
             total_amount = total_amount
                 .checked_add(proof.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
@@ -73,7 +73,7 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(proofs : Vec<Proof>)]
+#[instruction(proofs : Vec<ClaimCertificate>)]
 pub struct Claim<'info> {
     pub claimant:        Signer<'info>,
     pub dispenser_guard: Signer<'info>, /* Check that the dispenser guard has signed and matches
@@ -86,11 +86,29 @@ pub struct Claim<'info> {
 // Instruction calldata.
 ////////////////////////////////////////////////////////////////////////////////
 
+
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub struct Proof {
-    amount:             u64,             // Amount of tokens contained in the leaf
+pub struct ClaimInfo {
+    identity: Identity,
+    amount:   u64,
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub enum Identity {
+    Discord,
+    Solana(Pubkey), // Pubkey, Signature
+    Evm,
+    Sui,
+    Aptos,
+    Cosmwasm,
+}
+
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub struct ClaimCertificate {
     proof_of_identity:  ProofOfIdentity, /* Proof that the caller is the owner of the wallet
                                           * entitled to the tokens */
+    amount:             u64, // Amount of tokens contained in the leaf
     proof_of_inclusion: Vec<[u8; 32]>, // Proof that the leaf is in the tree
 }
 
@@ -101,53 +119,40 @@ pub struct Proof {
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub enum ProofOfIdentity {
     Discord,
-    Solana(Pubkey, Vec<u8>), // Pubkey, Signature
+    Solana(Vec<u8>), // Signature
     Evm,
     Sui,
     Aptos,
     Cosmwasm,
 }
 
-impl ProofOfIdentity {
-    pub fn verify_signature(&self) -> Result<()> {
-        // TO DO Actually verify the signature here
-        Ok(())
-    }
-
-    // Each leaf of the tree is a hash of the amount and the discriminator and public key of the
-    // identity
-    pub fn into_seed_for_leaf(&self) -> [u8; 33] {
-        let mut seed = [0u8; 33];
-        let discriminant: u8 = self.into();
-        let pubkey = match self {
-            ProofOfIdentity::Solana(pubkey, _) => pubkey.to_bytes(),
-            _ => [0u8; 32],
-        };
-        seed.copy_from_slice(&[discriminant]);
-        seed[1..33].copy_from_slice(&pubkey);
-        return seed;
-    }
-}
-
-
-/// Maybe there's a smart way to do this with macros, but I don't know how to do it.
-impl Into<u8> for &ProofOfIdentity {
-    fn into(self) -> u8 {
-        match self {
-            ProofOfIdentity::Discord => 0,
-            ProofOfIdentity::Solana(_, _) => 1,
-            ProofOfIdentity::Evm => 2,
-            ProofOfIdentity::Sui => 3,
-            ProofOfIdentity::Aptos => 4,
-            ProofOfIdentity::Cosmwasm => 5,
+impl From<&ClaimCertificate> for ClaimInfo {
+    fn from(item: &ClaimCertificate) -> ClaimInfo {
+        ClaimInfo {
+            identity: (&item.proof_of_identity).into(),
+            amount:   item.amount,
         }
     }
 }
 
-pub fn verify_one_identity_per_ecosystem(proofs: &Vec<Proof>) -> Result<()> {
-    let hash_set: HashSet<u8> = proofs
+impl From<&ProofOfIdentity> for Identity {
+    // Consume the proof of identity and return the identity it is associated with
+    fn from(item: &ProofOfIdentity) -> Identity {
+        match item {
+            ProofOfIdentity::Discord => Identity::Discord,
+            ProofOfIdentity::Solana(_) => Identity::Solana(Pubkey::new_from_array([0u8; 32])),
+            ProofOfIdentity::Evm => Identity::Evm,
+            ProofOfIdentity::Sui => Identity::Sui,
+            ProofOfIdentity::Aptos => Identity::Aptos,
+            ProofOfIdentity::Cosmwasm => Identity::Cosmwasm,
+        }
+    }
+}
+
+pub fn verify_one_identity_per_ecosystem(proofs: &Vec<ClaimCertificate>) -> Result<()> {
+    let hash_set: HashSet<Discriminant<ProofOfIdentity>> = proofs
         .iter()
-        .map(|proof| (&proof.proof_of_identity).into())
+        .map(|proof| mem::discriminant(&proof.proof_of_identity))
         .collect();
     if hash_set.len() != proofs.len() {
         return Err(ErrorCode::MoreThanOneIdentityPerEcosystem.into());
@@ -156,9 +161,9 @@ pub fn verify_one_identity_per_ecosystem(proofs: &Vec<Proof>) -> Result<()> {
 }
 
 pub fn verify_inclusion(
-    leaf: [u8; 32],
-    merkle_proof: Vec<[u8; 32]>,
-    merkle_root: [u8; 32],
+    leaf: &[u8; 32],
+    merkle_proof: &[[u8; 32]],
+    merkle_root: &[u8; 32],
 ) -> Result<()> {
     // TO DO
     Ok(())
