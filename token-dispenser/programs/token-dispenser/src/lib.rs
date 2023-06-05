@@ -138,6 +138,7 @@ impl From<&ClaimCertificate> for ClaimInfo {
 
 impl From<&ProofOfIdentity> for Identity {
     // Consume the proof of identity and return the identity it is associated with
+    // Conceptually, this is an ecrecover but extended to all ecosystems
     fn from(item: &ProofOfIdentity) -> Identity {
         match item {
             ProofOfIdentity::Discord => Identity::Discord,
