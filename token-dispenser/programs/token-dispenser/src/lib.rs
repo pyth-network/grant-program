@@ -1,12 +1,14 @@
 use anchor_lang::prelude::*;
+use pythnet_sdk::accumulators::merkle::{
+    MerklePath,
+    MerkleRoot,
+};
+use pythnet_sdk::hashers::keccak256::Keccak256;
 use std::collections::HashSet;
 use std::mem::{
     self,
     Discriminant,
 };
-use pythnet_sdk::accumulators::merkle::MerkleRoot;
-use pythnet_sdk::accumulators::merkle::MerklePath;
-use pythnet_sdk::hashers::keccak256::Keccak256;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -27,9 +29,10 @@ pub mod token_dispenser {
      * Claim a claimant's tokens. This instructions needs to enforce :
      * - The dispenser guard has signed the transaction - DONE
      * - The claimant is not claiming tokens for more than one ecosystem - DONE
-     * - The claimant has provided a valid proof of identity (is the owner of the wallet 
+     * - The claimant has provided a valid proof of identity (is the owner of the wallet
      *   entitled to the tokens)
-     * - The claimant has provided a valid proof of inclusion (this confirm that the claimant -- DONE
+     * - The claimant has provided a valid proof of inclusion (this confirm that the claimant --
+     *   DONE
      * - The claimant has not already claimed tokens
      */
     pub fn claim(ctx: Context<Claim>, claim_certificates: Vec<ClaimCertificate>) -> Result<()> {
@@ -48,7 +51,10 @@ pub mod token_dispenser {
             // The identity is derived from the proof of identity (signature)
             // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
             // verification will fail
-            merkle_root.check(MerklePath::<Keccak256>::new(claim_certificate.proof_of_inclusion.clone()), get_claim(claim_certificate).try_to_vec()?.as_slice());
+            merkle_root.check(
+                MerklePath::<Keccak256>::new(claim_certificate.proof_of_inclusion.clone()),
+                get_claim(claim_certificate).try_to_vec()?.as_slice(),
+            );
             total_amount = total_amount
                 .checked_add(claim_certificate.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
@@ -177,7 +183,7 @@ pub fn verify_inclusion(
 
 #[account]
 pub struct Config {
-    pub merkle_root:    [u8; 32],
+    pub merkle_root:     [u8; 32],
     pub dispenser_guard: Pubkey,
 }
 
