@@ -16,8 +16,6 @@ const CONFIG_SEED: &[u8] = b"config";
 #[program]
 pub mod token_dispenser {
     use super::*;
-    use anchor_lang::solana_program::keccak;
-    use pythnet_sdk::accumulators::merkle;
 
     /// This can only be called once and should be called right after the program is deployed.
     pub fn initialize(ctx: Context<Initialize>, target_config: Config) -> Result<()> {
