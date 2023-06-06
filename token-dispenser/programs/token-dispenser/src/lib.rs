@@ -150,6 +150,7 @@ pub fn get_identity(item: &ProofOfIdentity) -> Identity {
     }
 }
 
+
 pub fn verify_one_identity_per_ecosystem(claim_certificates: &Vec<ClaimCertificate>) -> Result<()> {
     let hash_set: HashSet<Discriminant<ProofOfIdentity>> = claim_certificates
         .iter()
