@@ -26,7 +26,7 @@ pub mod token_dispenser {
     /**
      * Claim a claimant's tokens. This instructions needs to enforce :
      * - The dispenser guard has signed the transaction - DONE
-     * - The claimant is claimant no more than once per ecosystem - DONE
+     * - The claimant is claiming no more than once per ecosystem - DONE
      * - The claimant has provided a valid proof of identity (is the owner of the wallet
      *   entitled to the tokens)
      * - The claimant has provided a valid proof of inclusion (this confirm that the claimant --
