@@ -19,34 +19,34 @@ pub mod token_dispenser {
         Ok(())
     }
 
-    /**
+    /**pr
      * Claim a claimant's tokens. This instructions needs to enforce :
      * - The dispenser guard has signed the transaction
      * - The claimant is not claiming tokens for more than one ecosystem
-     * - The claimant has provided a valid proof of identity (is the owner of the wallet
+     * - The claimant has provided a valid  of identity (is the owner of the wallet
      *   entitled to the tokens)
-     * - The claimant has provided a valid proof of inclusion (this confirm that the claimant
+     * - The claimant has provided a valid  of inclusion (this confirm that the claimant
      *   has been an allocation)
      * - The claimant has not already claimed tokens
      */
-    pub fn claim(ctx: Context<Claim>, proofs: Vec<ClaimCertificate>) -> Result<()> {
+    pub fn claim(ctx: Context<Claim>, claim_certificates: Vec<ClaimCertificate>) -> Result<()> {
         let config = &ctx.accounts.config;
 
         let mut total_amount: u64 = 0;
 
         // Check that the claimant is not claiming tokens for more than one ecosystem
-        verify_one_identity_per_ecosystem(&proofs)?;
+        verify_one_identity_per_ecosystem(&claim_certificates)?;
 
         // TO DO : Actually check the proof of identity and the proof of inclusion
-        for proof in &proofs {
+        for claim_certificate in &claim_certificates {
             // Each leaf of the tree is a hash of the serialized claim info
             // The identity is derived from the proof of identity (signature)
             // If the proof of identity does not correspond to a whitelisted identiy, the inclusion verification will fail
             let leaf: [u8; 32] =
-                keccak::hashv(&[ClaimInfo::from(proof).try_to_vec()?.as_slice()]).0;
-            verify_inclusion(&leaf, &proof.proof_of_inclusion, &config.merkle_root)?;
+                keccak::hashv(&[ClaimInfo::from(claim_certificate).try_to_vec()?.as_slice()]).0;
+            verify_inclusion(&leaf, &claim_certificate.proof_of_inclusion, &config.merkle_root)?;
             total_amount = total_amount
-                .checked_add(proof.amount)
+                .checked_add(claim_certificate.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
         }
 
@@ -74,7 +74,7 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(proofs : Vec<ClaimCertificate>)]
+#[instruction(claim_certificates : Vec<ClaimCertificate>)]
 pub struct Claim<'info> {
     pub claimant:        Signer<'info>,
     pub dispenser_guard: Signer<'info>, /* Check that the dispenser guard has signed and matches
@@ -151,12 +151,12 @@ impl From<&ProofOfIdentity> for Identity {
     }
 }
 
-pub fn verify_one_identity_per_ecosystem(proofs: &Vec<ClaimCertificate>) -> Result<()> {
-    let hash_set: HashSet<Discriminant<ProofOfIdentity>> = proofs
+pub fn verify_one_identity_per_ecosystem(claim_certificates: &Vec<ClaimCertificate>) -> Result<()> {
+    let hash_set: HashSet<Discriminant<ProofOfIdentity>> = claim_certificates
         .iter()
-        .map(|proof| mem::discriminant(&proof.proof_of_identity))
+        .map(|claim_certificate| mem::discriminant(&claim_certificate.proof_of_identity))
         .collect();
-    if hash_set.len() != proofs.len() {
+    if hash_set.len() != claim_certificates.len() {
         return Err(ErrorCode::MoreThanOneIdentityPerEcosystem.into());
     }
     Ok(())
