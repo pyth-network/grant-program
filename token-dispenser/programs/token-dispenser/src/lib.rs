@@ -23,10 +23,10 @@ pub mod token_dispenser {
      * Claim a claimant's tokens. This instructions needs to enforce :
      * - The dispenser guard has signed the transaction
      * - The claimant is not claiming tokens for more than one ecosystem
-     * - The claimant has provided a valid  of identity (is the owner of the wallet
-     *   entitled to the tokens)
-     * - The claimant has provided a valid  of inclusion (this confirm that the claimant
-     *   has been an allocation)
+     * - The claimant has provided a valid  of identity (is the owner of the wallet entitled to
+     *   the tokens)
+     * - The claimant has provided a valid  of inclusion (this confirm that the claimant has
+     *   been an allocation)
      * - The claimant has not already claimed tokens
      */
     pub fn claim(ctx: Context<Claim>, claim_certificates: Vec<ClaimCertificate>) -> Result<()> {
@@ -41,10 +41,15 @@ pub mod token_dispenser {
         for claim_certificate in &claim_certificates {
             // Each leaf of the tree is a hash of the serialized claim info
             // The identity is derived from the proof of identity (signature)
-            // If the proof of identity does not correspond to a whitelisted identiy, the inclusion verification will fail
+            // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
+            // verification will fail
             let leaf: [u8; 32] =
                 keccak::hashv(&[ClaimInfo::from(claim_certificate).try_to_vec()?.as_slice()]).0;
-            verify_inclusion(&leaf, &claim_certificate.proof_of_inclusion, &config.merkle_root)?;
+            verify_inclusion(
+                &leaf,
+                &claim_certificate.proof_of_inclusion,
+                &config.merkle_root,
+            )?;
             total_amount = total_amount
                 .checked_add(claim_certificate.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
