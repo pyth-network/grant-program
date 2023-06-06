@@ -19,11 +19,11 @@ pub mod token_dispenser {
         Ok(())
     }
 
-    /**
+    /**pr
      * Claim a claimant's tokens. This instructions needs to enforce :
      * - The dispenser guard has signed the transaction
      * - The claimant is not claiming tokens for more than one ecosystem
-     * - The claimant has provided a valid proof of identity (is the owner of the wallet
+     * - The claimant has provided a valid  of identity (is the owner of the wallet
      *   entitled to the tokens)
      * - The claimant has provided a valid proof of inclusion (this confirm that the claimant
      * - The claimant has not already claimed tokens
@@ -149,7 +149,6 @@ pub fn get_identity(item: &ProofOfIdentity) -> Identity {
         ProofOfIdentity::Cosmwasm => Identity::Cosmwasm,
     }
 }
-
 
 pub fn verify_one_identity_per_ecosystem(claim_certificates: &Vec<ClaimCertificate>) -> Result<()> {
     let hash_set: HashSet<Discriminant<ProofOfIdentity>> = claim_certificates
