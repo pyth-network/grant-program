@@ -18,4 +18,8 @@ default = []
 [dependencies]
 anchor-lang = "0.27.0"
 proc-macro2 = "=1.0.52"
+<<<<<<< HEAD
 pythnet-sdk = { git = "https://github.com/pyth-network/pyth-crosschain.git"}
+=======
+pythnet-sdk = { git = "https://github.com/pyth-network/pyth-crosschain.git", branch = "pythnet-sdk/expose-merkleroot"}
+>>>>>>> 316bd67 (Add inclusion proof from pyth sdk)

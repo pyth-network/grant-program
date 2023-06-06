@@ -9,6 +9,9 @@ use std::mem::{
     self,
     Discriminant,
 };
+use pythnet_sdk::accumulators::merkle::MerkleRoot;
+use pythnet_sdk::accumulators::merkle::MerklePath;
+use pythnet_sdk::hashers::keccak256::Keccak256;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -172,7 +175,7 @@ pub fn verify_one_identity_per_ecosystem(claim_certificates: &Vec<ClaimCertifica
 
 #[account]
 pub struct Config {
-    pub merkle_root:     [u8; 32],
+    pub merkle_root:    [u8; 32],
     pub dispenser_guard: Pubkey,
 }
 
