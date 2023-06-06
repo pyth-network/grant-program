@@ -43,7 +43,7 @@ pub mod token_dispenser {
             // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
             // verification will fail
             let leaf: [u8; 32] =
-                keccak::hashv(&[ClaimInfo::from(claim_certificate).try_to_vec()?.as_slice()]).0;
+                keccak::hashv(&[get_claim(claim_certificate).try_to_vec()?.as_slice()]).0;
             verify_inclusion(
                 &leaf,
                 &claim_certificate.proof_of_inclusion,
@@ -131,29 +131,25 @@ pub enum ProofOfIdentity {
     Cosmwasm,
 }
 
-impl From<&ClaimCertificate> for ClaimInfo {
-    fn from(item: &ClaimCertificate) -> ClaimInfo {
-        ClaimInfo {
-            identity: (&item.proof_of_identity).into(),
-            amount:   item.amount,
-        }
+pub fn get_claim(claim_certificate : &ClaimCertificate) -> ClaimInfo{
+    ClaimInfo {
+        identity: get_identity(&claim_certificate.proof_of_identity),
+        amount:   claim_certificate.amount,
     }
 }
 
-impl From<&ProofOfIdentity> for Identity {
-    // Consume the proof of identity and return the identity it is associated with
-    // Conceptually, this is an ecrecover but extended to all ecosystems
-    fn from(item: &ProofOfIdentity) -> Identity {
-        match item {
-            ProofOfIdentity::Discord => Identity::Discord,
-            ProofOfIdentity::Solana(_) => Identity::Solana(Pubkey::new_from_array([0u8; 32])),
-            ProofOfIdentity::Evm => Identity::Evm,
-            ProofOfIdentity::Sui => Identity::Sui,
-            ProofOfIdentity::Aptos => Identity::Aptos,
-            ProofOfIdentity::Cosmwasm => Identity::Cosmwasm,
-        }
+
+pub fn get_identity(item: &ProofOfIdentity) -> Identity {
+    match item {
+        ProofOfIdentity::Discord => Identity::Discord,
+        ProofOfIdentity::Solana(_) => Identity::Solana(Pubkey::new_from_array([0u8; 32])),
+        ProofOfIdentity::Evm => Identity::Evm,
+        ProofOfIdentity::Sui => Identity::Sui,
+        ProofOfIdentity::Aptos => Identity::Aptos,
+        ProofOfIdentity::Cosmwasm => Identity::Cosmwasm,
     }
 }
+
 
 pub fn verify_one_identity_per_ecosystem(claim_certificates: &Vec<ClaimCertificate>) -> Result<()> {
     let hash_set: HashSet<Discriminant<ProofOfIdentity>> = claim_certificates
