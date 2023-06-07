@@ -166,15 +166,6 @@ pub fn verify_one_identity_per_ecosystem(claim_certificates: &Vec<ClaimCertifica
     Ok(())
 }
 
-pub fn verify_inclusion(
-    leaf: &[u8; 32],
-    merkle_proof: &[[u8; 32]],
-    merkle_root: &[u8; 32],
-) -> Result<()> {
-    // TO DO
-    Ok(())
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Accounts.
 ////////////////////////////////////////////////////////////////////////////////
