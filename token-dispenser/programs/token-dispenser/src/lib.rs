@@ -9,6 +9,7 @@ use pythnet_sdk::accumulators::merkle::{
     MerkleRoot,
 };
 use pythnet_sdk::hashers::keccak256::Keccak256;
+use pythnet_sdk::accumulators::merkle::hash_leaf;
 use std::collections::HashSet;
 use std::mem::{
     self,
@@ -213,7 +214,7 @@ pub fn create_claim_receipt(
     remanining_accounts: &[AccountInfo],
     leaf: &[u8],
 ) -> Result<()> {
-    let (receipt_pubkey, bump) = Pubkey::find_program_address(&[&RECEIPT_SEED, leaf], program_id);
+    let (receipt_pubkey, bump) = Pubkey::find_program_address(&[&RECEIPT_SEED, &hash_leaf::<Keccak256>(&leaf)], program_id);
 
     // Pay rent for the receipt account
     let transfer_instruction =
