@@ -215,10 +215,12 @@ pub fn create_claim_receipt(
 ) -> Result<()> {
     let (claim_pubkey, bump) = Pubkey::find_program_address(&[&CLAIM_SEED, leaf], program_id);
 
+    // Pay rent for the receipt account
     let transfer_instruction =
         system_instruction::transfer(&payer, &claim_pubkey, Rent::get()?.minimum_balance(0));
     invoke(&transfer_instruction, remanining_accounts)?;
 
+    // Assign it to the program, this instruction will fail if the account already belongs to the program
     let assign_instruction = system_instruction::assign(&claim_pubkey, program_id);
     invoke_signed(
         &assign_instruction,
