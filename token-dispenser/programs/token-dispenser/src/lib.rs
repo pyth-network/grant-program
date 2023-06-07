@@ -1,4 +1,9 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::program::{
+    invoke,
+    invoke_signed,
+};
+use anchor_lang::solana_program::system_instruction;
 use pythnet_sdk::accumulators::merkle::{
     MerklePath,
     MerkleRoot,
@@ -13,6 +18,7 @@ use std::mem::{
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 const CONFIG_SEED: &[u8] = b"config";
+const CLAIM_SEED: &[u8] = b"claim";
 #[program]
 pub mod token_dispenser {
     use super::*;
@@ -49,10 +55,17 @@ pub mod token_dispenser {
             // The identity is derived from the proof of identity (signature)
             // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
             // verification will fail
+            let leaf_vector = get_claim(claim_certificate).try_to_vec()?;
             merkle_root.check(
                 MerklePath::<Keccak256>::new(claim_certificate.proof_of_inclusion.clone()),
-                get_claim(claim_certificate).try_to_vec()?.as_slice(),
+                &leaf_vector,
             );
+            create_claim_receipt(
+                ctx.program_id,
+                ctx.accounts.claimant.key,
+                ctx.remaining_accounts,
+                &leaf_vector,
+            )?;
             total_amount = total_amount
                 .checked_add(claim_certificate.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
@@ -184,4 +197,27 @@ pub struct Config {
 pub enum ErrorCode {
     ArithmeticOverflow,
     MoreThanOneIdentityPerEcosystem,
+}
+
+//* */
+pub fn create_claim_receipt(
+    program_id: &Pubkey,
+    payer: &Pubkey,
+    remanining_accounts: &[AccountInfo],
+    leaf: &[u8],
+) -> Result<()> {
+    let (claim_pubkey, bump) = Pubkey::find_program_address(&[&CLAIM_SEED, leaf], program_id);
+
+    let transfer_instruction =
+        system_instruction::transfer(&payer, &claim_pubkey, Rent::get()?.minimum_balance(0));
+    invoke(&transfer_instruction, remanining_accounts)?;
+
+    let assign_instruction = system_instruction::assign(&claim_pubkey, program_id);
+    invoke_signed(
+        &assign_instruction,
+        remanining_accounts,
+        &[&[CLAIM_SEED], &[&[bump]]],
+    )?;
+
+    Ok(())
 }
