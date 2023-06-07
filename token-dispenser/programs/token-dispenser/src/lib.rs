@@ -51,7 +51,7 @@ pub mod token_dispenser {
             // verification will fail
             merkle_root.check(
                 MerklePath::<Keccak256>::new(claim_certificate.proof_of_inclusion.clone()),
-                get_claim(claim_certificate).try_to_vec()?.as_slice(),
+                get_claim(claim_certificate, ctx.accounts.claimant.key).try_to_vec()?.as_slice(),
             );
             total_amount = total_amount
                 .checked_add(claim_certificate.amount)
@@ -128,25 +128,25 @@ pub struct ClaimCertificate {
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub enum ProofOfIdentity {
     Discord,
-    Solana(Vec<u8>), // Signature
+    Solana,
     Evm,
     Sui,
     Aptos,
     Cosmwasm,
 }
 
-pub fn get_claim(claim_certificate: &ClaimCertificate) -> ClaimInfo {
+pub fn get_claim(claim_certificate: &ClaimCertificate, solana_signer : &Pubkey) -> ClaimInfo {
     ClaimInfo {
-        identity: get_identity(&claim_certificate.proof_of_identity),
+        identity: get_identity(&claim_certificate.proof_of_identity, solana_signer),
         amount:   claim_certificate.amount,
     }
 }
 
 
-pub fn get_identity(item: &ProofOfIdentity) -> Identity {
+pub fn get_identity(item: &ProofOfIdentity, solana_signer : &Pubkey) -> Identity {
     match item {
         ProofOfIdentity::Discord => Identity::Discord,
-        ProofOfIdentity::Solana(_) => Identity::Solana(Pubkey::new_from_array([0u8; 32])),
+        ProofOfIdentity::Solana => Identity::Solana(solana_signer.clone()),
         ProofOfIdentity::Evm => Identity::Evm,
         ProofOfIdentity::Sui => Identity::Sui,
         ProofOfIdentity::Aptos => Identity::Aptos,
