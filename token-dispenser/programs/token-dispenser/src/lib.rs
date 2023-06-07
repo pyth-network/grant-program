@@ -37,7 +37,7 @@ pub mod token_dispenser {
      *   entitled to the tokens)
      * - The claimant has provided a valid proof of inclusion (this confirm that the claimant --
      *   DONE
-     * - The claimant has not already claimed tokens
+     * - The claimant has not already claimed tokens -- DONE
      */
     pub fn claim(ctx: Context<Claim>, claim_certificates: Vec<ClaimCertificate>) -> Result<()> {
         let config = &ctx.accounts.config;
