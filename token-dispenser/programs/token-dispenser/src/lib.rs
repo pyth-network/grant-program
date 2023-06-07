@@ -197,7 +197,7 @@ pub struct Config {
 pub enum ErrorCode {
     ArithmeticOverflow,
     MoreThanOneIdentityPerEcosystem,
-    AlreadyClaimed
+    AlreadyClaimed,
 }
 
 /**
@@ -220,13 +220,15 @@ pub fn create_claim_receipt(
         system_instruction::transfer(&payer, &claim_pubkey, Rent::get()?.minimum_balance(0));
     invoke(&transfer_instruction, remanining_accounts)?;
 
-    // Assign it to the program, this instruction will fail if the account already belongs to the program
+    // Assign it to the program, this instruction will fail if the account already belongs to the
+    // program
     let assign_instruction = system_instruction::assign(&claim_pubkey, program_id);
     invoke_signed(
         &assign_instruction,
         remanining_accounts,
         &[&[CLAIM_SEED], &[&[bump]]],
-    ).map_err(|_| ErrorCode::AlreadyClaimed)?;
+    )
+    .map_err(|_| ErrorCode::AlreadyClaimed)?;
 
     Ok(())
 }
