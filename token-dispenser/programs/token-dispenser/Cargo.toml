@@ -18,3 +18,4 @@ default = []
 [dependencies]
 anchor-lang = "0.27.0"
 proc-macro2 = "=1.0.52"
+pythnet-sdk = { git = "https://github.com/pyth-network/pyth-crosschain.git"}
