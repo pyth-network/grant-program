@@ -197,9 +197,16 @@ pub struct Config {
 pub enum ErrorCode {
     ArithmeticOverflow,
     MoreThanOneIdentityPerEcosystem,
+    AlreadyClaimed
 }
 
-//* */
+/**
+ * Creates a claim receipt for the claimant. This is an account that contains no data. Each leaf
+ * is associated with a unique claim receipt account. Since the number of claim accounts to be
+ * passed to the program is dynamic based on the size of `claim_certificates`, it is awkward to
+ * declare them in the anchor context. Instead, we pass them inside remaining_accounts.
+ * If the account is initialized, the assign instruction will fail.
+ */
 pub fn create_claim_receipt(
     program_id: &Pubkey,
     payer: &Pubkey,
@@ -217,7 +224,7 @@ pub fn create_claim_receipt(
         &assign_instruction,
         remanining_accounts,
         &[&[CLAIM_SEED], &[&[bump]]],
-    )?;
+    ).map_err(|_| ErrorCode::AlreadyClaimed)?;
 
     Ok(())
 }
