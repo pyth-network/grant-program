@@ -18,7 +18,7 @@ use std::mem::{
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 const CONFIG_SEED: &[u8] = b"config";
-const CLAIM_SEED: &[u8] = b"claim";
+const RECEIPT_SEED: &[u8] = b"receipt";
 #[program]
 pub mod token_dispenser {
     use super::*;
@@ -213,20 +213,20 @@ pub fn create_claim_receipt(
     remanining_accounts: &[AccountInfo],
     leaf: &[u8],
 ) -> Result<()> {
-    let (claim_pubkey, bump) = Pubkey::find_program_address(&[&CLAIM_SEED, leaf], program_id);
+    let (receipt_pubkey, bump) = Pubkey::find_program_address(&[&RECEIPT_SEED, leaf], program_id);
 
     // Pay rent for the receipt account
     let transfer_instruction =
-        system_instruction::transfer(&payer, &claim_pubkey, Rent::get()?.minimum_balance(0));
+        system_instruction::transfer(&payer, &receipt_pubkey, Rent::get()?.minimum_balance(0));
     invoke(&transfer_instruction, remanining_accounts)?;
 
     // Assign it to the program, this instruction will fail if the account already belongs to the
     // program
-    let assign_instruction = system_instruction::assign(&claim_pubkey, program_id);
+    let assign_instruction = system_instruction::assign(&receipt_pubkey, program_id);
     invoke_signed(
         &assign_instruction,
         remanining_accounts,
-        &[&[CLAIM_SEED], &[&[bump]]],
+        &[&[RECEIPT_SEED], &[&[bump]]],
     )
     .map_err(|_| ErrorCode::AlreadyClaimed)?;
 
