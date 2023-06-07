@@ -202,8 +202,8 @@ pub enum ErrorCode {
 
 /**
  * Creates a claim receipt for the claimant. This is an account that contains no data. Each leaf
- * is associated with a unique claim receipt account. Since the number of claim accounts to be
- * passed to the program is dynamic based on the size of `claim_certificates`, it is awkward to
+ * is associated with a unique claim receipt account. Since the number of claim receipt accounts to be
+ * passed to the program is dynamic and equal to the size of `claim_certificates`, it is awkward to
  * declare them in the anchor context. Instead, we pass them inside remaining_accounts.
  * If the account is initialized, the assign instruction will fail.
  */
