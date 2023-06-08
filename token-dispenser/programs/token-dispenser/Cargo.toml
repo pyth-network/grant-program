@@ -18,7 +18,7 @@ default = []
 [dependencies]
 anchor-lang = "0.27.0"
 
-pythnet-sdk = { git = "https://github.com/pyth-network/pyth-crosschain.git", branch = "reisen/merkle-bytes"}
+pythnet-sdk = { git = "https://github.com/pyth-network/pyth-crosschain.git"}
 
 [dev-dependencies]
 solana-program-test = "1.14.16"
