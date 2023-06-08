@@ -10,8 +10,8 @@ use pythnet_sdk::accumulators::merkle::{
     MerkleRoot,
     MerkleTree,
 };
-use pythnet_sdk::hashers::Hasher;
 use pythnet_sdk::hashers::keccak256::Keccak256;
+use pythnet_sdk::hashers::Hasher;
 use std::collections::HashSet;
 use std::mem::{
     self,
@@ -60,10 +60,9 @@ pub mod token_dispenser {
             // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
             // verification will fail
             let leaf_vector = get_claim(claim_certificate).try_to_vec()?;
-            config.merkle_root.check(
-                claim_certificate.proof_of_inclusion.clone(),
-                &leaf_vector,
-            );
+            config
+                .merkle_root
+                .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector);
             create_claim_receipt(
                 ctx.program_id,
                 ctx.accounts.claimant.key,
@@ -199,8 +198,7 @@ impl Config {
 }
 
 #[account]
-pub struct Receipt {
-}
+pub struct Receipt {}
 ////////////////////////////////////////////////////////////////////////////////
 // Error.
 ////////////////////////////////////////////////////////////////////////////////
@@ -238,7 +236,11 @@ pub fn create_claim_receipt(
     invoke_signed(
         &assign_instruction,
         remanining_accounts,
-        &[&[RECEIPT_SEED,  &MerkleTree::<Keccak256>::hash_leaf(leaf),&[bump]]],
+        &[&[
+            RECEIPT_SEED,
+            &MerkleTree::<Keccak256>::hash_leaf(leaf),
+            &[bump],
+        ]],
     )
     .map_err(|_| ErrorCode::AlreadyClaimed)?;
 
@@ -273,7 +275,7 @@ impl crate::accounts::Initialize {
 }
 
 impl crate::accounts::Claim {
-    pub fn populate(claimant: Pubkey, dispenser_guard : Pubkey) -> Self {
+    pub fn populate(claimant: Pubkey, dispenser_guard: Pubkey) -> Self {
         crate::accounts::Claim {
             claimant,
             dispenser_guard,

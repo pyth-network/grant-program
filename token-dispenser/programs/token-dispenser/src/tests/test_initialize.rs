@@ -2,29 +2,31 @@ use super::dispenser_simulator::DispenserSimulator;
 use crate::{
     get_config_pda,
     Claim,
+    ClaimCertificate,
     ClaimInfo,
     Config,
-    Identity, ClaimCertificate, ProofOfIdentity,
+    Identity,
+    ProofOfIdentity,
 };
 use anchor_lang::prelude::Pubkey;
-use solana_sdk::signature::Keypair;
 use anchor_lang::{
     system_program,
     AnchorDeserialize,
     AnchorSerialize,
     Id,
 };
-use pythnet_sdk::accumulators::Accumulator;
 use pythnet_sdk::accumulators::merkle::MerkleTree;
+use pythnet_sdk::accumulators::Accumulator;
 use pythnet_sdk::hashers::keccak256::Keccak256;
 use solana_program_test::tokio;
 use solana_sdk::account::Account;
+use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
 
 
 #[tokio::test]
 pub async fn test_initialize() {
-    let dispenser_guard : Keypair = Keypair::new();
+    let dispenser_guard: Keypair = Keypair::new();
     let merkle_items: Vec<ClaimInfo> = vec![
         ClaimInfo {
             amount:   100,
@@ -64,12 +66,10 @@ pub async fn test_initialize() {
 
     let target_config = Config {
         merkle_root:     merkle_tree.root.clone(),
-        dispenser_guard : dispenser_guard.pubkey(),
+        dispenser_guard: dispenser_guard.pubkey(),
     };
     let mut simulator = DispenserSimulator::new().await;
-    simulator
-        .initialize(target_config.clone())
-        .await.unwrap();
+    simulator.initialize(target_config.clone()).await.unwrap();
 
     let config_account: Account = simulator.get_account(get_config_pda().0).await.unwrap();
     let config_data: Config = Config::try_from_slice(&config_account.data[8..]).unwrap();
@@ -78,7 +78,7 @@ pub async fn test_initialize() {
     let claim_certificates: Vec<ClaimCertificate> = merkle_items
         .iter()
         .map(|item| ClaimCertificate {
-            proof_of_identity : match item.identity {
+            proof_of_identity:  match item.identity {
                 Identity::Discord => ProofOfIdentity::Discord,
                 Identity::Solana(_) => ProofOfIdentity::Solana(vec![]),
                 Identity::Evm => ProofOfIdentity::Evm,
@@ -86,11 +86,13 @@ pub async fn test_initialize() {
                 Identity::Aptos => ProofOfIdentity::Aptos,
                 Identity::Cosmwasm => ProofOfIdentity::Cosmwasm,
             },
-            amount : item.amount ,
-            proof_of_inclusion : merkle_tree.prove(&item.try_to_vec().unwrap()).unwrap()
+            amount:             item.amount,
+            proof_of_inclusion: merkle_tree.prove(&item.try_to_vec().unwrap()).unwrap(),
         })
         .collect();
 
-    simulator.claim(&dispenser_guard, claim_certificates.clone()).await.unwrap();
-
+    simulator
+        .claim(&dispenser_guard, claim_certificates.clone())
+        .await
+        .unwrap();
 }

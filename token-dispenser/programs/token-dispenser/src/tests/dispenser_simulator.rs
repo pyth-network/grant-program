@@ -1,11 +1,16 @@
-use anchor_lang::prelude::{Pubkey, AccountMeta};
+use anchor_lang::prelude::{
+    AccountMeta,
+    Pubkey,
+};
 use anchor_lang::solana_program::hash;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::{
+    system_program,
+    AnchorSerialize,
+    Id,
     InstructionData,
-    ToAccountMetas, system_program, AnchorSerialize,
+    ToAccountMetas,
 };
-use anchor_lang::Id;
 use solana_program_test::{
     BanksClient,
     BanksClientError,
@@ -20,8 +25,11 @@ use solana_sdk::transaction::Transaction;
 
 use crate::{
     accounts,
+    get_claim,
+    get_receipt_pda,
     instruction,
-    Config, ClaimCertificate, get_receipt_pda, get_claim,
+    ClaimCertificate,
+    Config,
 };
 
 pub struct DispenserSimulator {
@@ -71,28 +79,38 @@ impl DispenserSimulator {
         self.process_ix(&[instruction], &vec![]).await
     }
 
-    pub async fn claim(&mut self, dispenser_guard : &Keypair, claim_certificates: Vec<ClaimCertificate>) -> Result<(), BanksClientError>  {
-        let compute_budget_instruction :Instruction = ComputeBudgetInstruction::set_compute_unit_limit(2000000);
+    pub async fn claim(
+        &mut self,
+        dispenser_guard: &Keypair,
+        claim_certificates: Vec<ClaimCertificate>,
+    ) -> Result<(), BanksClientError> {
+        let compute_budget_instruction: Instruction =
+            ComputeBudgetInstruction::set_compute_unit_limit(2000000);
         let mut accounts =
-            accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey()).to_account_metas(None);
-        accounts.push(
-            AccountMeta::new_readonly(system_program::System::id(), false)
-        );
-        accounts.push(
-            AccountMeta::new(self.genesis_keypair.pubkey(), true)
-        );
+            accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey())
+                .to_account_metas(None);
+        accounts.push(AccountMeta::new_readonly(
+            system_program::System::id(),
+            false,
+        ));
+        accounts.push(AccountMeta::new(self.genesis_keypair.pubkey(), true));
 
         for claim_certificate in &claim_certificates {
-            accounts.push(
-                AccountMeta::new(get_receipt_pda(&get_claim(claim_certificate).try_to_vec().unwrap()).0, false)
-            );
+            accounts.push(AccountMeta::new(
+                get_receipt_pda(&get_claim(claim_certificate).try_to_vec().unwrap()).0,
+                false,
+            ));
         }
-        
+
         let instruction_data: instruction::Claim = instruction::Claim { claim_certificates };
         let instruction =
             Instruction::new_with_bytes(crate::id(), &instruction_data.data(), accounts);
 
-        self.process_ix(&[compute_budget_instruction, instruction], &vec![dispenser_guard]).await
+        self.process_ix(
+            &[compute_budget_instruction, instruction],
+            &vec![dispenser_guard],
+        )
+        .await
     }
 
 
