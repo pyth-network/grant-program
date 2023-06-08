@@ -93,7 +93,7 @@ pub mod token_dispenser {
 pub struct Initialize<'info> {
     #[account(mut)]
     pub payer:          Signer<'info>,
-    #[account(init, payer = payer, space = 8 + 64, seeds = [CONFIG_SEED], bump)]
+    #[account(init, payer = payer, space = Config::LEN, seeds = [CONFIG_SEED], bump)]
     pub config:         Account<'info, Config>,
     pub system_program: Program<'info, System>,
 }
@@ -193,6 +193,10 @@ pub struct Config {
     pub dispenser_guard: Pubkey,
 }
 
+impl Config {
+    pub const LEN : usize =
+        8 + 32 + 32;
+}
 ////////////////////////////////////////////////////////////////////////////////
 // Error.
 ////////////////////////////////////////////////////////////////////////////////
