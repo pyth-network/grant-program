@@ -1,14 +1,16 @@
-use anchor_lang::{prelude::*, system_program};
+use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program::{
     invoke,
     invoke_signed,
 };
 use anchor_lang::solana_program::system_instruction;
+use anchor_lang::system_program;
 use pythnet_sdk::accumulators::merkle::{
     MerklePath,
     MerkleRoot,
-    MerkleTree
+    MerkleTree,
 };
+use pythnet_sdk::hashers::Hasher;
 use pythnet_sdk::hashers::keccak256::Keccak256;
 use std::collections::HashSet;
 use std::mem::{
@@ -51,8 +53,6 @@ pub mod token_dispenser {
         // Check that the claimant is not claiming tokens for more than one ecosystem
         verify_one_identity_per_ecosystem(&claim_certificates)?;
 
-        let merkle_root = MerkleRoot::<Keccak256>::new(config.merkle_root);
-
         // TO DO : Actually check the proof of identity and the proof of inclusion
         for claim_certificate in &claim_certificates {
             // Each leaf of the tree is a hash of the serialized claim info
@@ -60,8 +60,8 @@ pub mod token_dispenser {
             // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
             // verification will fail
             let leaf_vector = get_claim(claim_certificate).try_to_vec()?;
-            merkle_root.check(
-                MerklePath::<Keccak256>::new(claim_certificate.proof_of_inclusion.clone()),
+            config.merkle_root.check(
+                claim_certificate.proof_of_inclusion.clone(),
                 &leaf_vector,
             );
             create_claim_receipt(
@@ -135,7 +135,7 @@ pub struct ClaimCertificate {
     proof_of_identity:  ProofOfIdentity, /* Proof that the caller is the owner of the wallet
                                           * entitled to the tokens */
     amount:             u64, // Amount of tokens contained in the leaf
-    proof_of_inclusion: Vec<[u8; 32]>, // Proof that the leaf is in the tree
+    proof_of_inclusion: MerklePath<Keccak256>, // Proof that the leaf is in the tree
 }
 
 /**
@@ -188,14 +188,14 @@ pub fn verify_one_identity_per_ecosystem(claim_certificates: &Vec<ClaimCertifica
 ////////////////////////////////////////////////////////////////////////////////
 
 #[account]
+#[derive(PartialEq, Debug)]
 pub struct Config {
-    pub merkle_root:     [u8; 32],
+    pub merkle_root:     MerkleRoot<Keccak256>,
     pub dispenser_guard: Pubkey,
 }
 
 impl Config {
-    pub const LEN : usize =
-        8 + 32 + 32;
+    pub const LEN: usize = 8 + 32 + 32;
 }
 ////////////////////////////////////////////////////////////////////////////////
 // Error.
@@ -210,10 +210,10 @@ pub enum ErrorCode {
 
 /**
  * Creates a claim receipt for the claimant. This is an account that contains no data. Each leaf
- * is associated with a unique claim receipt account. Since the number of claim receipt accounts to be
- * passed to the program is dynamic and equal to the size of `claim_certificates`, it is awkward to
- * declare them in the anchor context. Instead, we pass them inside remaining_accounts.
- * If the account is initialized, the assign instruction will fail.
+ * is associated with a unique claim receipt account. Since the number of claim receipt accounts
+ * to be passed to the program is dynamic and equal to the size of `claim_certificates`, it is
+ * awkward to declare them in the anchor context. Instead, we pass them inside
+ * remaining_accounts. If the account is initialized, the assign instruction will fail.
  */
 pub fn create_claim_receipt(
     program_id: &Pubkey,
@@ -234,7 +234,7 @@ pub fn create_claim_receipt(
     invoke_signed(
         &assign_instruction,
         remanining_accounts,
-        &[&[RECEIPT_SEED], &[&[bump]]],
+        &[&[RECEIPT_SEED,  &MerkleTree::<Keccak256>::hash_leaf(leaf),&[bump]]],
     )
     .map_err(|_| ErrorCode::AlreadyClaimed)?;
 
@@ -248,13 +248,10 @@ pub fn create_claim_receipt(
 
 
 pub fn get_config_pda() -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[CONFIG_SEED],
-        &crate::id(),
-    )
+    Pubkey::find_program_address(&[CONFIG_SEED], &crate::id())
 }
 
-pub fn get_receipt_pda(leaf : &[u8]) -> (Pubkey, u8) {
+pub fn get_receipt_pda(leaf: &[u8]) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[&RECEIPT_SEED, &MerkleTree::<Keccak256>::hash_leaf(leaf)],
         &crate::id(),
@@ -262,7 +259,21 @@ pub fn get_receipt_pda(leaf : &[u8]) -> (Pubkey, u8) {
 }
 
 impl crate::accounts::Initialize {
-    pub fn populate(payer : Pubkey) -> Self {
-        crate::accounts::Initialize { payer, config: get_config_pda().0, system_program: system_program::System::id() }
+    pub fn populate(payer: Pubkey) -> Self {
+        crate::accounts::Initialize {
+            payer,
+            config: get_config_pda().0,
+            system_program: system_program::System::id(),
+        }
+    }
+}
+
+impl crate::accounts::Claim {
+    pub fn populate(claimant: Pubkey, dispenser_guard : Pubkey) -> Self {
+        crate::accounts::Claim {
+            claimant,
+            dispenser_guard,
+            config: get_config_pda().0,
+        }
     }
 }
