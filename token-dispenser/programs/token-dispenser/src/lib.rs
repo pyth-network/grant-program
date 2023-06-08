@@ -1,4 +1,4 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, system_program};
 use anchor_lang::solana_program::program::{
     invoke,
     invoke_signed,
@@ -15,6 +15,9 @@ use std::mem::{
     self,
     Discriminant,
 };
+
+#[cfg(test)]
+mod tests;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -214,7 +217,7 @@ pub fn create_claim_receipt(
     remanining_accounts: &[AccountInfo],
     leaf: &[u8],
 ) -> Result<()> {
-    let (receipt_pubkey, bump) = Pubkey::find_program_address(&[&RECEIPT_SEED, &MerkleTree::<Keccak256>::hash_leaf(&leaf)], program_id);
+    let (receipt_pubkey, bump) = get_receipt_pda(leaf);
 
     // Pay rent for the receipt account
     let transfer_instruction =
@@ -232,4 +235,30 @@ pub fn create_claim_receipt(
     .map_err(|_| ErrorCode::AlreadyClaimed)?;
 
     Ok(())
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Sdk.
+////////////////////////////////////////////////////////////////////////////////
+
+
+pub fn get_config_pda() -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[CONFIG_SEED],
+        &crate::id(),
+    )
+}
+
+pub fn get_receipt_pda(leaf : &[u8]) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[&RECEIPT_SEED, &MerkleTree::<Keccak256>::hash_leaf(leaf)],
+        &crate::id(),
+    )
+}
+
+impl crate::accounts::Initialize {
+    pub fn populate(payer : Pubkey) -> Self {
+        crate::accounts::Initialize { payer, config: get_config_pda().0, system_program: system_program::System::id() }
+    }
 }
