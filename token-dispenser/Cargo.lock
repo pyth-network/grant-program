@@ -4456,7 +4456,6 @@ name = "token-dispenser"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "bincode",
  "pythnet-sdk",
  "solana-program-test",
  "solana-sdk",
