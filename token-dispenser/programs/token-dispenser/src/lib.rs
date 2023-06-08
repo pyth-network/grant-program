@@ -1,7 +1,13 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::program::{
+    invoke,
+    invoke_signed,
+};
+use anchor_lang::solana_program::system_instruction;
 use pythnet_sdk::accumulators::merkle::{
     MerklePath,
     MerkleRoot,
+    MerkleTree
 };
 use pythnet_sdk::hashers::keccak256::Keccak256;
 use std::collections::HashSet;
@@ -13,6 +19,7 @@ use std::mem::{
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 const CONFIG_SEED: &[u8] = b"config";
+const RECEIPT_SEED: &[u8] = b"receipt";
 #[program]
 pub mod token_dispenser {
     use super::*;
@@ -31,7 +38,7 @@ pub mod token_dispenser {
      *   entitled to the tokens)
      * - The claimant has provided a valid proof of inclusion (this confirm that the claimant --
      *   DONE
-     * - The claimant has not already claimed tokens
+     * - The claimant has not already claimed tokens -- DONE
      */
     pub fn claim(ctx: Context<Claim>, claim_certificates: Vec<ClaimCertificate>) -> Result<()> {
         let config = &ctx.accounts.config;
@@ -49,10 +56,17 @@ pub mod token_dispenser {
             // The identity is derived from the proof of identity (signature)
             // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
             // verification will fail
+            let leaf_vector = get_claim(claim_certificate).try_to_vec()?;
             merkle_root.check(
                 MerklePath::<Keccak256>::new(claim_certificate.proof_of_inclusion.clone()),
-                get_claim(claim_certificate).try_to_vec()?.as_slice(),
+                &leaf_vector,
             );
+            create_claim_receipt(
+                ctx.program_id,
+                ctx.accounts.claimant.key,
+                ctx.remaining_accounts,
+                &leaf_vector,
+            )?;
             total_amount = total_amount
                 .checked_add(claim_certificate.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
@@ -184,4 +198,38 @@ pub struct Config {
 pub enum ErrorCode {
     ArithmeticOverflow,
     MoreThanOneIdentityPerEcosystem,
+    AlreadyClaimed,
+}
+
+/**
+ * Creates a claim receipt for the claimant. This is an account that contains no data. Each leaf
+ * is associated with a unique claim receipt account. Since the number of claim receipt accounts to be
+ * passed to the program is dynamic and equal to the size of `claim_certificates`, it is awkward to
+ * declare them in the anchor context. Instead, we pass them inside remaining_accounts.
+ * If the account is initialized, the assign instruction will fail.
+ */
+pub fn create_claim_receipt(
+    program_id: &Pubkey,
+    payer: &Pubkey,
+    remanining_accounts: &[AccountInfo],
+    leaf: &[u8],
+) -> Result<()> {
+    let (receipt_pubkey, bump) = Pubkey::find_program_address(&[&RECEIPT_SEED, &MerkleTree::<Keccak256>::hash_leaf(&leaf)], program_id);
+
+    // Pay rent for the receipt account
+    let transfer_instruction =
+        system_instruction::transfer(&payer, &receipt_pubkey, Rent::get()?.minimum_balance(0));
+    invoke(&transfer_instruction, remanining_accounts)?;
+
+    // Assign it to the program, this instruction will fail if the account already belongs to the
+    // program
+    let assign_instruction = system_instruction::assign(&receipt_pubkey, program_id);
+    invoke_signed(
+        &assign_instruction,
+        remanining_accounts,
+        &[&[RECEIPT_SEED], &[&[bump]]],
+    )
+    .map_err(|_| ErrorCode::AlreadyClaimed)?;
+
+    Ok(())
 }
