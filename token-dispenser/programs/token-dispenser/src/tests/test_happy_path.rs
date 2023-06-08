@@ -25,7 +25,7 @@ use solana_sdk::signer::Signer;
 
 
 #[tokio::test]
-pub async fn test_initialize() {
+pub async fn test_happy_path() {
     let dispenser_guard: Keypair = Keypair::new();
     let merkle_items: Vec<ClaimInfo> = vec![
         ClaimInfo {

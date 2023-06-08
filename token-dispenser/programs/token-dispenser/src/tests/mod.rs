@@ -1,2 +1,2 @@
 mod dispenser_simulator;
-mod test_initialize;
+mod test_happy_path;
