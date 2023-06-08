@@ -93,7 +93,4 @@ pub async fn test_initialize() {
 
     simulator.claim(&dispenser_guard, claim_certificates.clone()).await.unwrap();
 
-    simulator.claim(&dispenser_guard,  claim_certificates.clone()).await.unwrap();
-
-
 }
