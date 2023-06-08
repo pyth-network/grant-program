@@ -981,7 +981,7 @@ dependencies = [
 [[package]]
 name = "pythnet-sdk"
 version = "1.13.6"
-source = "git+https://github.com/pyth-network/pyth-crosschain.git?branch=pythnet-sdk/expose-merkleroot#c1cfaf0e0c5046a4937fc857ba21b41424282d7a"
+source = "git+https://github.com/pyth-network/pyth-crosschain.git#0b7805f285a67dab8e9092fbb17b4e43794175a1"
 dependencies = [
  "bincode",
  "borsh",
