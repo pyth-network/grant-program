@@ -44,4 +44,5 @@ impl DispenserSimulator {
 
         self.process_ix(instruction, &vec![]).await.unwrap();
     }   
+
 }
