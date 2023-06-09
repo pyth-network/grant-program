@@ -28,6 +28,8 @@ const CONFIG_SEED: &[u8] = b"config";
 const RECEIPT_SEED: &[u8] = b"receipt";
 #[program]
 pub mod token_dispenser {
+    use std::ops::Index;
+
     use super::*;
 
     /// This can only be called once and should be called right after the program is deployed.
@@ -55,21 +57,30 @@ pub mod token_dispenser {
         verify_one_identity_per_ecosystem(&claim_certificates)?;
 
         // TO DO : Actually check the proof of identity and the proof of inclusion
-        for claim_certificate in &claim_certificates {
+        for (index, claim_certificate) in claim_certificates.iter().enumerate() {
             // Each leaf of the tree is a hash of the serialized claim info
             // The identity is derived from the proof of identity (signature)
             // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
             // verification will fail
             let leaf_vector = get_claim(claim_certificate).try_to_vec()?;
+<<<<<<< HEAD
             if !(config
                 .merkle_root
                 .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)){
                     return Err(ErrorCode::InvalidInclusionProof.into());
                 };
+=======
+            if !config
+                .merkle_root
+                .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)
+            {
+                return Err(ErrorCode::InvalidInclusionProof.into());
+            };
+
+>>>>>>> 6ec8b35 (Checkpoint)
             create_claim_receipt(
-                ctx.program_id,
-                ctx.accounts.claimant.key,
-                ctx.remaining_accounts,
+                &ctx,
+                index,
                 &leaf_vector,
             )?;
             total_amount = total_amount
@@ -108,6 +119,7 @@ pub struct Claim<'info> {
                                          * the config - Done */
     #[account(seeds = [CONFIG_SEED], bump, has_one = dispenser_guard)]
     pub config:          Account<'info, Config>,
+    pub system_program: Program<'info, System>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -226,6 +238,7 @@ pub enum ErrorCode {
     MoreThanOneIdentityPerEcosystem,
     AlreadyClaimed,
     InvalidInclusionProof,
+    WrongPda
 }
 
 /**
@@ -236,24 +249,33 @@ pub enum ErrorCode {
  * remaining_accounts. If the account is initialized, the assign instruction will fail.
  */
 pub fn create_claim_receipt(
-    program_id: &Pubkey,
-    payer: &Pubkey,
-    remanining_accounts: &[AccountInfo],
+    ctx : &Context<Claim>,
+    index : usize,
     leaf: &[u8],
 ) -> Result<()> {
     let (receipt_pubkey, bump) = get_receipt_pda(leaf);
 
+    if !ctx.remaining_accounts[index+2].key.eq(&receipt_pubkey) {
+        return Err(ErrorCode::WrongPda.into());
+    }
+
+    if (ctx.remaining_accounts[index+2]).owner.eq(&crate::id()) {
+        return Err(ErrorCode::AlreadyClaimed.into());
+    }
+
     // Pay rent for the receipt account
     let transfer_instruction =
-        system_instruction::transfer(payer, &receipt_pubkey, Rent::get()?.minimum_balance(0));
-    invoke(&transfer_instruction, remanining_accounts)?;
+        system_instruction::transfer(&ctx.accounts.claimant.key(), &receipt_pubkey, Rent::get()?.minimum_balance(0));
+    invoke(&transfer_instruction, &ctx.remaining_accounts)?;
 
-    // Assign it to the program, this instruction will fail if the account already belongs to the
-    // program
-    let assign_instruction = system_instruction::assign(&receipt_pubkey, program_id);
+
+
+    // // Assign it to the program, this instruction will fail if the account already belongs to the
+    // // program
+    let assign_instruction = system_instruction::assign(&receipt_pubkey, &crate::id());
     invoke_signed(
         &assign_instruction,
-        remanining_accounts,
+        &ctx.remaining_accounts,
         &[&[
             RECEIPT_SEED,
             &MerkleTree::<SolanaHasher>::hash_leaf(leaf),
@@ -298,6 +320,7 @@ impl crate::accounts::Claim {
             claimant,
             dispenser_guard,
             config: get_config_pda().0,
+            system_program: system_program::System::id(),
         }
     }
 }

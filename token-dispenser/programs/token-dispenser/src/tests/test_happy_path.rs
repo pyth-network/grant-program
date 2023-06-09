@@ -5,7 +5,7 @@ use crate::{
     ClaimInfo,
     Config,
     Identity,
-    ProofOfIdentity, SolanaHasher,
+    ProofOfIdentity, SolanaHasher, get_receipt_pda,
 };
 use anchor_lang::prelude::Pubkey;
 use anchor_lang::{
@@ -14,7 +14,6 @@ use anchor_lang::{
 };
 use pythnet_sdk::accumulators::merkle::MerkleTree;
 use pythnet_sdk::accumulators::Accumulator;
-use pythnet_sdk::hashers::keccak256::Keccak256;
 use solana_program_test::tokio;
 use solana_sdk::account::Account;
 use solana_sdk::signature::Keypair;
@@ -88,8 +87,12 @@ pub async fn test_happy_path() {
         })
         .collect();
 
+
     simulator
         .claim(&dispenser_guard, claim_certificates.clone())
         .await
         .unwrap();
+
+    let receipt_account: Account = simulator.get_account(get_receipt_pda(&merkle_items_serialized[0]).0).await.unwrap();
+
 }
