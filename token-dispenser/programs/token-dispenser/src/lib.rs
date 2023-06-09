@@ -245,6 +245,7 @@ pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -
 pub fn checked_create_claim_receipt(ctx: &Context<Claim>, index: usize, leaf: &[u8]) -> Result<()> {
     let (receipt_pubkey, bump) = get_receipt_pda(leaf);
 
+    // The claim receipt accounts should appear in remaining accounts in the same order as the claim certificates
     let claim_receipt_account = &ctx.remaining_accounts[index];
     if !claim_receipt_account.key.eq(&receipt_pubkey) {
         return Err(ErrorCode::WrongPda.into());
