@@ -95,11 +95,6 @@ impl DispenserSimulator {
         let mut accounts =
             accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey())
                 .to_account_metas(None);
-        accounts.push(AccountMeta::new_readonly(
-            system_program::System::id(),
-            false,
-        ));
-        accounts.push(AccountMeta::new(self.genesis_keypair.pubkey(), true));
 
         for claim_certificate in &claim_certificates {
             accounts.push(AccountMeta::new(
@@ -107,6 +102,13 @@ impl DispenserSimulator {
                 false,
             ));
         }
+        
+        accounts.push(AccountMeta::new_readonly(
+            system_program::System::id(),
+            false,
+        ));
+        accounts.push(AccountMeta::new(self.genesis_keypair.pubkey(), true));
+
 
         let instruction_data: instruction::Claim = instruction::Claim { claim_certificates };
         let instruction =
