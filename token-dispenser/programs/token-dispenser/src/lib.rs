@@ -10,7 +10,8 @@ use pythnet_sdk::accumulators::merkle::{
     MerkleRoot,
     MerkleTree,
 };
-use pythnet_sdk::hashers::keccak256::Keccak256;
+use anchor_lang::solana_program::keccak::hashv;
+
 use pythnet_sdk::hashers::Hasher;
 use std::collections::HashSet;
 use std::mem::{
@@ -60,12 +61,11 @@ pub mod token_dispenser {
             // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
             // verification will fail
             let leaf_vector = get_claim(claim_certificate).try_to_vec()?;
-            if config
+            if !(config
                 .merkle_root
-                .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)
-            {
-                return Err(ErrorCode::InvalidInclusionProof.into());
-            };
+                .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)){
+                    return Err(ErrorCode::InvalidInclusionProof.into());
+                };
             create_claim_receipt(
                 ctx.program_id,
                 ctx.accounts.claimant.key,
@@ -137,7 +137,7 @@ pub struct ClaimCertificate {
     proof_of_identity:  ProofOfIdentity, /* Proof that the caller is the owner of the wallet
                                           * entitled to the tokens */
     amount:             u64, // Amount of tokens contained in the leaf
-    proof_of_inclusion: MerklePath<Keccak256>, // Proof that the leaf is in the tree
+    proof_of_inclusion: MerklePath<FastHasher>, // Proof that the leaf is in the tree
 }
 
 /**
@@ -189,10 +189,21 @@ pub fn verify_one_identity_per_ecosystem(claim_certificates: &Vec<ClaimCertifica
 // Accounts.
 ////////////////////////////////////////////////////////////////////////////////
 
+#[derive(Default, Debug, Clone, PartialEq)]
+pub struct FastHasher{
+}
+impl Hasher for FastHasher {
+    type Hash = [u8;32];
+
+    fn hashv(data: &[impl AsRef<[u8]>]) -> Self::Hash {
+        hashv(&data.into_iter().map(|x| x.as_ref()).collect::<Vec<&[u8]>>()).0
+    }
+}
+
 #[account]
 #[derive(PartialEq, Debug)]
 pub struct Config {
-    pub merkle_root:     MerkleRoot<Keccak256>,
+    pub merkle_root:     MerkleRoot<FastHasher>,
     pub dispenser_guard: Pubkey,
 }
 
@@ -231,7 +242,7 @@ pub fn create_claim_receipt(
 
     // Pay rent for the receipt account
     let transfer_instruction =
-        system_instruction::transfer(&payer, &receipt_pubkey, Rent::get()?.minimum_balance(0));
+        system_instruction::transfer(payer, &receipt_pubkey, Rent::get()?.minimum_balance(0));
     invoke(&transfer_instruction, remanining_accounts)?;
 
     // Assign it to the program, this instruction will fail if the account already belongs to the
@@ -242,7 +253,7 @@ pub fn create_claim_receipt(
         remanining_accounts,
         &[&[
             RECEIPT_SEED,
-            &MerkleTree::<Keccak256>::hash_leaf(leaf),
+            &MerkleTree::<FastHasher>::hash_leaf(leaf),
             &[bump],
         ]],
     )
@@ -263,7 +274,7 @@ pub fn get_config_pda() -> (Pubkey, u8) {
 
 pub fn get_receipt_pda(leaf: &[u8]) -> (Pubkey, u8) {
     Pubkey::find_program_address(
-        &[&RECEIPT_SEED, &MerkleTree::<Keccak256>::hash_leaf(leaf)],
+        &[RECEIPT_SEED, &MerkleTree::<FastHasher>::hash_leaf(leaf)],
         &crate::id(),
     )
 }
