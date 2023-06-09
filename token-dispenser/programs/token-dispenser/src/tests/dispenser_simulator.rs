@@ -92,10 +92,9 @@ impl DispenserSimulator {
     ) -> Result<(), BanksClientError> {
         let compute_budget_instruction: Instruction =
             ComputeBudgetInstruction::set_compute_unit_limit(2000000);
-        let mut accounts: Vec<AccountMeta> =
+        let mut accounts =
             accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey())
                 .to_account_metas(None);
-
         accounts.push(AccountMeta::new_readonly(
             system_program::System::id(),
             false,
@@ -134,7 +133,7 @@ pub trait IntoTransactionError {
 impl IntoTransactionError for ErrorCode {
     fn into_transation_error(self) -> TransactionError {
         TransactionError::InstructionError(
-            1,
+            1, // 1 since instruction 0 is the compute budget
             InstructionError::try_from(u64::from(ProgramError::from(
                 anchor_lang::prelude::Error::from(self),
             )))
@@ -144,6 +143,6 @@ impl IntoTransactionError for ErrorCode {
 }
 impl IntoTransactionError for InstructionError {
     fn into_transation_error(self) -> TransactionError {
-        TransactionError::InstructionError(1, self)
+        TransactionError::InstructionError(1, self) // 1 since instruction 0 is the compute budget
     }
 }

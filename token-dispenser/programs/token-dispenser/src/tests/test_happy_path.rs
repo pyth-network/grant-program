@@ -91,12 +91,28 @@ pub async fn test_happy_path() {
         })
         .collect();
 
+    // Check state
+    for serialized_item in merkle_items_serialized.clone() {
+        assert!(simulator
+            .get_account(get_receipt_pda(&serialized_item).0)
+            .await
+            .is_none());
+    }
 
     simulator
         .claim(&dispenser_guard, claim_certificates.clone())
         .await
         .unwrap();
 
+    // Check state
+    for serialized_item in merkle_items_serialized.clone() {
+        let receipt_account: Account = simulator
+            .get_account(get_receipt_pda(&serialized_item).0)
+            .await
+            .unwrap();
+        assert_eq!(receipt_account.owner, crate::id());
+    }
+    // Can't claim twice
     assert_eq!(
         simulator
             .claim(&dispenser_guard, claim_certificates.clone())
@@ -105,4 +121,13 @@ pub async fn test_happy_path() {
             .unwrap(),
         ErrorCode::AlreadyClaimed.into_transation_error()
     );
+
+    // Check state
+    for serialized_item in merkle_items_serialized.clone() {
+        let receipt_account: Account = simulator
+            .get_account(get_receipt_pda(&serialized_item).0)
+            .await
+            .unwrap();
+        assert_eq!(receipt_account.owner, crate::id());
+    }
 }
