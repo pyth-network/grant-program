@@ -102,7 +102,7 @@ impl DispenserSimulator {
                 false,
             ));
         }
-        
+
         accounts.push(AccountMeta::new_readonly(
             system_program::System::id(),
             false,
