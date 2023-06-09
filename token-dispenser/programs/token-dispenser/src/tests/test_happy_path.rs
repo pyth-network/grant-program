@@ -1,19 +1,21 @@
 use super::dispenser_simulator::DispenserSimulator;
+use crate::tests::dispenser_simulator::IntoTransactionError;
 use crate::{
     get_config_pda,
+    get_receipt_pda,
+    Claim,
     ClaimCertificate,
     ClaimInfo,
     Config,
-    Identity,
-    ProofOfIdentity, SolanaHasher, get_receipt_pda,
     ErrorCode,
+    Identity,
+    ProofOfIdentity, SolanaHasher,
 };
 use anchor_lang::prelude::Pubkey;
 use anchor_lang::{
     AnchorDeserialize,
     AnchorSerialize,
 };
-use crate::tests::dispenser_simulator::IntoTransactionError;
 use pythnet_sdk::accumulators::merkle::MerkleTree;
 use pythnet_sdk::accumulators::Accumulator;
 use solana_program_test::tokio;
@@ -95,9 +97,12 @@ pub async fn test_happy_path() {
         .await
         .unwrap();
 
-    assert_eq!(simulator
-    .claim(&dispenser_guard, claim_certificates.clone())
-    .await.unwrap_err().unwrap(),ErrorCode::AlreadyClaimed.into_transation_error());
-
-
+    assert_eq!(
+        simulator
+            .claim(&dispenser_guard, claim_certificates.clone())
+            .await
+            .unwrap_err()
+            .unwrap(),
+        ErrorCode::AlreadyClaimed.into_transation_error()
+    );
 }

@@ -28,8 +28,6 @@ const CONFIG_SEED: &[u8] = b"config";
 const RECEIPT_SEED: &[u8] = b"receipt";
 #[program]
 pub mod token_dispenser {
-    use std::ops::Index;
-
     use super::*;
 
     /// This can only be called once and should be called right after the program is deployed.
@@ -71,11 +69,7 @@ pub mod token_dispenser {
                 return Err(ErrorCode::InvalidInclusionProof.into());
             };
 
-            checked_create_claim_receipt(
-                &ctx,
-                index,
-                &leaf_vector,
-            )?;
+            checked_create_claim_receipt(&ctx, index, &leaf_vector)?;
             total_amount = total_amount
                 .checked_add(claim_certificate.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
@@ -112,7 +106,7 @@ pub struct Claim<'info> {
                                          * the config - Done */
     #[account(seeds = [CONFIG_SEED], bump, has_one = dispenser_guard)]
     pub config:          Account<'info, Config>,
-    pub system_program: Program<'info, System>,
+    pub system_program:  Program<'info, System>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -231,13 +225,13 @@ pub enum ErrorCode {
     MoreThanOneIdentityPerEcosystem,
     AlreadyClaimed,
     InvalidInclusionProof,
-    WrongPda
+    WrongPda,
 }
 
 
-pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -> Result<()>{
+pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -> Result<()> {
     if claim_receipt_account.owner.eq(&crate::id()) {
-        return Err(ErrorCode::AlreadyClaimed.into())
+        return Err(ErrorCode::AlreadyClaimed.into());
     }
     Ok(())
 }
@@ -249,14 +243,10 @@ pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -
  * awkward to declare them in the anchor context. Instead, we pass them inside
  * remaining_accounts. If the account is initialized, the assign instruction will fail.
  */
-pub fn checked_create_claim_receipt(
-    ctx : &Context<Claim>,
-    index : usize,
-    leaf: &[u8],
-) -> Result<()> {
+pub fn checked_create_claim_receipt(ctx: &Context<Claim>, index: usize, leaf: &[u8]) -> Result<()> {
     let (receipt_pubkey, bump) = get_receipt_pda(leaf);
 
-    let claim_receipt_account = &ctx.remaining_accounts[index+2];
+    let claim_receipt_account = &ctx.remaining_accounts[index + 2];
     if !claim_receipt_account.key.eq(&receipt_pubkey) {
         return Err(ErrorCode::WrongPda.into());
     }
@@ -264,10 +254,12 @@ pub fn checked_create_claim_receipt(
     check_claim_receipt_is_unitialized(&claim_receipt_account)?;
 
     // Pay rent for the receipt account
-    let transfer_instruction =
-        system_instruction::transfer(&ctx.accounts.claimant.key(), &receipt_pubkey, Rent::get()?.minimum_balance(0));
+    let transfer_instruction = system_instruction::transfer(
+        &ctx.accounts.claimant.key(),
+        &receipt_pubkey,
+        Rent::get()?.minimum_balance(0),
+    );
     invoke(&transfer_instruction, &ctx.remaining_accounts)?;
-
 
 
     // // Assign it to the program, this instruction will fail if the account already belongs to the
