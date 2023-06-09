@@ -1,6 +1,6 @@
 use anchor_lang::prelude::{
     AccountMeta,
-    Pubkey,
+    Pubkey, ProgramError,
 };
 use anchor_lang::solana_program::hash;
 use anchor_lang::solana_program::instruction::Instruction;
@@ -19,9 +19,10 @@ use solana_program_test::{
 };
 use solana_sdk::account::Account;
 use solana_sdk::compute_budget::ComputeBudgetInstruction;
+use solana_sdk::instruction::InstructionError;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
-use solana_sdk::transaction::Transaction;
+use solana_sdk::transaction::{Transaction, TransactionError};
 
 use crate::{
     accounts,
@@ -29,7 +30,7 @@ use crate::{
     get_receipt_pda,
     instruction,
     ClaimCertificate,
-    Config,
+    Config, ErrorCode,
 };
 
 pub struct DispenserSimulator {
@@ -117,5 +118,27 @@ impl DispenserSimulator {
 
     pub async fn get_account(&mut self, key: Pubkey) -> Option<Account> {
         self.banks_client.get_account(key).await.unwrap()
+    }
+}
+
+
+pub trait IntoTransactionError {
+    fn into_transation_error(self) -> TransactionError;
+}
+
+impl IntoTransactionError for ErrorCode {
+    fn into_transation_error(self) -> TransactionError {
+        TransactionError::InstructionError(
+            1,
+            InstructionError::try_from(u64::from(ProgramError::from(
+                anchor_lang::prelude::Error::from(self),
+            )))
+            .unwrap(),
+        )
+    }
+}
+impl IntoTransactionError for InstructionError {
+    fn into_transation_error(self) -> TransactionError {
+        TransactionError::InstructionError(1, self)
     }
 }

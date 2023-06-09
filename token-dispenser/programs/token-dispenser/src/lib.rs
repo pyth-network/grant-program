@@ -63,13 +63,7 @@ pub mod token_dispenser {
             // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
             // verification will fail
             let leaf_vector = get_claim(claim_certificate).try_to_vec()?;
-<<<<<<< HEAD
-            if !(config
-                .merkle_root
-                .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)){
-                    return Err(ErrorCode::InvalidInclusionProof.into());
-                };
-=======
+
             if !config
                 .merkle_root
                 .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)
@@ -77,8 +71,7 @@ pub mod token_dispenser {
                 return Err(ErrorCode::InvalidInclusionProof.into());
             };
 
->>>>>>> 6ec8b35 (Checkpoint)
-            create_claim_receipt(
+            checked_create_claim_receipt(
                 &ctx,
                 index,
                 &leaf_vector,
@@ -241,6 +234,14 @@ pub enum ErrorCode {
     WrongPda
 }
 
+
+pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -> Result<()>{
+    if claim_receipt_account.owner.eq(&crate::id()) {
+        return Err(ErrorCode::AlreadyClaimed.into())
+    }
+    Ok(())
+}
+
 /**
  * Creates a claim receipt for the claimant. This is an account that contains no data. Each leaf
  * is associated with a unique claim receipt account. Since the number of claim receipt accounts
@@ -248,20 +249,19 @@ pub enum ErrorCode {
  * awkward to declare them in the anchor context. Instead, we pass them inside
  * remaining_accounts. If the account is initialized, the assign instruction will fail.
  */
-pub fn create_claim_receipt(
+pub fn checked_create_claim_receipt(
     ctx : &Context<Claim>,
     index : usize,
     leaf: &[u8],
 ) -> Result<()> {
     let (receipt_pubkey, bump) = get_receipt_pda(leaf);
 
-    if !ctx.remaining_accounts[index+2].key.eq(&receipt_pubkey) {
+    let claim_receipt_account = &ctx.remaining_accounts[index+2];
+    if !claim_receipt_account.key.eq(&receipt_pubkey) {
         return Err(ErrorCode::WrongPda.into());
     }
 
-    if (ctx.remaining_accounts[index+2]).owner.eq(&crate::id()) {
-        return Err(ErrorCode::AlreadyClaimed.into());
-    }
+    check_claim_receipt_is_unitialized(&claim_receipt_account)?;
 
     // Pay rent for the receipt account
     let transfer_instruction =
