@@ -255,7 +255,7 @@ pub fn checked_create_claim_receipt(ctx: &Context<Claim>, index: usize, leaf: &[
     // Pay rent for the receipt account
     let transfer_instruction = system_instruction::transfer(
         &ctx.accounts.claimant.key(),
-        &receipt_pubkey,
+        &claim_receipt_account.key(),
         Rent::get()?.minimum_balance(0),
     );
     invoke(&transfer_instruction, &ctx.remaining_accounts)?;
@@ -263,7 +263,7 @@ pub fn checked_create_claim_receipt(ctx: &Context<Claim>, index: usize, leaf: &[
 
     // Assign it to the program, this instruction will fail if the account already belongs to the
     // program
-    let assign_instruction = system_instruction::assign(&receipt_pubkey, &crate::id());
+    let assign_instruction = system_instruction::assign(&claim_receipt_account.key(), &crate::id());
     invoke_signed(
         &assign_instruction,
         &ctx.remaining_accounts,

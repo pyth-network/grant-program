@@ -92,7 +92,7 @@ impl DispenserSimulator {
     ) -> Result<(), BanksClientError> {
         let compute_budget_instruction: Instruction =
             ComputeBudgetInstruction::set_compute_unit_limit(2000000);
-        let mut accounts =
+        let mut accounts: Vec<AccountMeta> =
             accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey())
                 .to_account_metas(None);
         accounts.push(AccountMeta::new_readonly(
@@ -124,6 +124,11 @@ impl DispenserSimulator {
         self.banks_client.get_account(key).await.unwrap()
     }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Error conversions.
+////////////////////////////////////////////////////////////////////////////////
 
 
 pub trait IntoTransactionError {
