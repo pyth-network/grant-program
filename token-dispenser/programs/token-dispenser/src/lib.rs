@@ -261,8 +261,8 @@ pub fn checked_create_claim_receipt(ctx: &Context<Claim>, index: usize, leaf: &[
     invoke(&transfer_instruction, &ctx.remaining_accounts)?;
 
 
-    // // Assign it to the program, this instruction will fail if the account already belongs to the
-    // // program
+    // Assign it to the program, this instruction will fail if the account already belongs to the
+    // program
     let assign_instruction = system_instruction::assign(&receipt_pubkey, &crate::id());
     invoke_signed(
         &assign_instruction,
