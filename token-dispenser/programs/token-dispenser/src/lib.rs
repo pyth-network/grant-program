@@ -106,7 +106,6 @@ pub struct Claim<'info> {
                                          * the config - Done */
     #[account(seeds = [CONFIG_SEED], bump, has_one = dispenser_guard)]
     pub config:          Account<'info, Config>,
-    pub system_program:  Program<'info, System>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -312,7 +311,6 @@ impl crate::accounts::Claim {
             claimant,
             dispenser_guard,
             config: get_config_pda().0,
-            system_program: system_program::System::id(),
         }
     }
 }
