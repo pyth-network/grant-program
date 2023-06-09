@@ -60,9 +60,12 @@ pub mod token_dispenser {
             // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
             // verification will fail
             let leaf_vector = get_claim(claim_certificate).try_to_vec()?;
-            config
+            if config
                 .merkle_root
-                .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector);
+                .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)
+            {
+                return Err(ErrorCode::InvalidInclusionProof.into());
+            };
             create_claim_receipt(
                 ctx.program_id,
                 ctx.accounts.claimant.key,
@@ -208,6 +211,7 @@ pub enum ErrorCode {
     ArithmeticOverflow,
     MoreThanOneIdentityPerEcosystem,
     AlreadyClaimed,
+    InvalidInclusionProof,
 }
 
 /**
