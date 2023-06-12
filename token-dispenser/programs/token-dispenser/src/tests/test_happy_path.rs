@@ -105,13 +105,8 @@ pub async fn test_happy_path() {
         .unwrap();
 
     // Check state
-    for serialized_item in merkle_items_serialized.clone() {
-        let receipt_account: Account = simulator
-            .get_account(get_receipt_pda(&serialized_item).0)
-            .await
-            .unwrap();
-        assert_eq!(receipt_account.owner, crate::id());
-    }
+    assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
+
     // Can't claim twice
     assert_eq!(
         simulator
@@ -123,7 +118,11 @@ pub async fn test_happy_path() {
     );
 
     // Check state
-    for serialized_item in merkle_items_serialized.clone() {
+    assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
+}
+
+pub async fn assert_claim_receipts_exist(claimed_items_serialized : &Vec<Vec<u8>>, simulator : &mut DispenserSimulator) {
+    for serialized_item in claimed_items_serialized {
         let receipt_account: Account = simulator
             .get_account(get_receipt_pda(&serialized_item).0)
             .await
