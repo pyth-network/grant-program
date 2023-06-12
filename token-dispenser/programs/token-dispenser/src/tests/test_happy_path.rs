@@ -5,7 +5,7 @@ use crate::{
     ClaimInfo,
     Config,
     Identity,
-    ProofOfIdentity, FastHasher,
+    ProofOfIdentity, SolanaHasher,
 };
 use anchor_lang::prelude::Pubkey;
 use anchor_lang::{
@@ -52,7 +52,7 @@ pub async fn test_happy_path() {
         .map(|item| item.try_to_vec().unwrap())
         .collect::<Vec<Vec<u8>>>();
 
-    let merkle_tree: MerkleTree<FastHasher> = MerkleTree::new(
+    let merkle_tree: MerkleTree<SolanaHasher> = MerkleTree::new(
         merkle_items_serialized
             .iter()
             .map(|item| item.as_slice())

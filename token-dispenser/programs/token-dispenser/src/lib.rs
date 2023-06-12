@@ -137,7 +137,7 @@ pub struct ClaimCertificate {
     proof_of_identity:  ProofOfIdentity, /* Proof that the caller is the owner of the wallet
                                           * entitled to the tokens */
     amount:             u64, // Amount of tokens contained in the leaf
-    proof_of_inclusion: MerklePath<FastHasher>, // Proof that the leaf is in the tree
+    proof_of_inclusion: MerklePath<SolanaHasher>, // Proof that the leaf is in the tree
 }
 
 /**
@@ -189,10 +189,13 @@ pub fn verify_one_identity_per_ecosystem(claim_certificates: &Vec<ClaimCertifica
 // Accounts.
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * A hasher that uses the solana pre-compiled keccak256 function.
+ */
 #[derive(Default, Debug, Clone, PartialEq)]
-pub struct FastHasher{
+pub struct SolanaHasher{
 }
-impl Hasher for FastHasher {
+impl Hasher for SolanaHasher {
     type Hash = [u8;32];
 
     fn hashv(data: &[impl AsRef<[u8]>]) -> Self::Hash {
@@ -203,7 +206,7 @@ impl Hasher for FastHasher {
 #[account]
 #[derive(PartialEq, Debug)]
 pub struct Config {
-    pub merkle_root:     MerkleRoot<FastHasher>,
+    pub merkle_root:     MerkleRoot<SolanaHasher>,
     pub dispenser_guard: Pubkey,
 }
 
@@ -253,7 +256,7 @@ pub fn create_claim_receipt(
         remanining_accounts,
         &[&[
             RECEIPT_SEED,
-            &MerkleTree::<FastHasher>::hash_leaf(leaf),
+            &MerkleTree::<SolanaHasher>::hash_leaf(leaf),
             &[bump],
         ]],
     )
@@ -274,7 +277,7 @@ pub fn get_config_pda() -> (Pubkey, u8) {
 
 pub fn get_receipt_pda(leaf: &[u8]) -> (Pubkey, u8) {
     Pubkey::find_program_address(
-        &[RECEIPT_SEED, &MerkleTree::<FastHasher>::hash_leaf(leaf)],
+        &[RECEIPT_SEED, &MerkleTree::<SolanaHasher>::hash_leaf(leaf)],
         &crate::id(),
     )
 }
