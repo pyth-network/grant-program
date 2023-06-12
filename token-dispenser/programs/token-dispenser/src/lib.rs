@@ -196,7 +196,7 @@ impl Hasher for FastHasher {
     type Hash = [u8;32];
 
     fn hashv(data: &[impl AsRef<[u8]>]) -> Self::Hash {
-        hashv(&data.into_iter().map(|x| x.as_ref()).collect::<Vec<&[u8]>>()).0
+        hashv(&data.into_iter().map(|x| x.as_ref()).collect::<Vec<&[u8]>>()).to_bytes()
     }
 }
 
