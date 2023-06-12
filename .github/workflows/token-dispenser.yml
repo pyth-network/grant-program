@@ -8,7 +8,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    working-directory: token-dispenser
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -27,3 +26,4 @@ jobs:
           cargo install --git https://github.com/coral-xyz/anchor --tag v0.27.0 anchor-cli --locked
       - name: Run tests
         run: anchor test
+        working-directory: token-dispenser
