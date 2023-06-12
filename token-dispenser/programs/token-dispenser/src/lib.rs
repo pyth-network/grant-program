@@ -1,22 +1,31 @@
-use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program::{
-    invoke,
-    invoke_signed,
-};
-use anchor_lang::solana_program::system_instruction;
-use anchor_lang::system_program;
-use pythnet_sdk::accumulators::merkle::{
-    MerklePath,
-    MerkleRoot,
-    MerkleTree,
-};
-use anchor_lang::solana_program::keccak::hashv;
-
-use pythnet_sdk::hashers::Hasher;
-use std::collections::HashSet;
-use std::mem::{
-    self,
-    Discriminant,
+use {
+    anchor_lang::{
+        prelude::*,
+        solana_program::{
+            keccak::hashv,
+            program::{
+                invoke,
+                invoke_signed,
+            },
+            system_instruction,
+        },
+        system_program,
+    },
+    pythnet_sdk::{
+        accumulators::merkle::{
+            MerklePath,
+            MerkleRoot,
+            MerkleTree,
+        },
+        hashers::Hasher,
+    },
+    std::{
+        collections::HashSet,
+        mem::{
+            self,
+            Discriminant,
+        },
+    },
 };
 
 #[cfg(test)]
@@ -69,7 +78,12 @@ pub mod token_dispenser {
                 return Err(ErrorCode::InvalidInclusionProof.into());
             };
 
-            checked_create_claim_receipt(index, &leaf_vector, ctx.accounts.claimant.key, ctx.remaining_accounts)?;
+            checked_create_claim_receipt(
+                index,
+                &leaf_vector,
+                ctx.accounts.claimant.key,
+                ctx.remaining_accounts,
+            )?;
             total_amount = total_amount
                 .checked_add(claim_certificate.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
@@ -191,10 +205,9 @@ pub fn verify_one_identity_per_ecosystem(claim_certificates: &Vec<ClaimCertifica
  * A hasher that uses the solana pre-compiled keccak256 function.
  */
 #[derive(Default, Debug, Clone, PartialEq)]
-pub struct SolanaHasher{
-}
+pub struct SolanaHasher {}
 impl Hasher for SolanaHasher {
-    type Hash = [u8;32];
+    type Hash = [u8; 32];
 
     fn hashv(data: &[impl AsRef<[u8]>]) -> Self::Hash {
         hashv(&data.into_iter().map(|x| x.as_ref()).collect::<Vec<&[u8]>>()).to_bytes()
@@ -242,7 +255,12 @@ pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -
  * awkward to declare them in the anchor context. Instead, we pass them inside
  * remaining_accounts. If the account is initialized, the assign instruction will fail.
  */
-pub fn checked_create_claim_receipt(index: usize, leaf: &[u8], payer : &Pubkey, remaining_accounts : &[AccountInfo]) -> Result<()> {
+pub fn checked_create_claim_receipt(
+    index: usize,
+    leaf: &[u8],
+    payer: &Pubkey,
+    remaining_accounts: &[AccountInfo],
+) -> Result<()> {
     let (receipt_pubkey, bump) = get_receipt_pda(leaf);
 
     // The claim receipt accounts should appear in remaining accounts in the same order as the claim certificates

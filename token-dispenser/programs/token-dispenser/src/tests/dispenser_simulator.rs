@@ -1,41 +1,46 @@
-use anchor_lang::prelude::{
-    AccountMeta,
-    ProgramError,
-    Pubkey,
-};
-use anchor_lang::solana_program::hash;
-use anchor_lang::solana_program::instruction::Instruction;
-use anchor_lang::{
-    system_program,
-    AnchorSerialize,
-    Id,
-    InstructionData,
-    ToAccountMetas,
-};
-use solana_program_test::{
-    BanksClient,
-    BanksClientError,
-    ProgramTest,
-    ProgramTestBanksClientExt,
-};
-use solana_sdk::account::Account;
-use solana_sdk::compute_budget::ComputeBudgetInstruction;
-use solana_sdk::instruction::InstructionError;
-use solana_sdk::signature::Keypair;
-use solana_sdk::signer::Signer;
-use solana_sdk::transaction::{
-    Transaction,
-    TransactionError,
-};
-
-use crate::{
-    accounts,
-    get_claim,
-    get_receipt_pda,
-    instruction,
-    ClaimCertificate,
-    Config,
-    ErrorCode,
+use {
+    crate::{
+        accounts,
+        get_claim,
+        get_receipt_pda,
+        instruction,
+        ClaimCertificate,
+        Config,
+        ErrorCode,
+    },
+    anchor_lang::{
+        prelude::{
+            AccountMeta,
+            ProgramError,
+            Pubkey,
+        },
+        solana_program::{
+            hash,
+            instruction::Instruction,
+        },
+        system_program,
+        AnchorSerialize,
+        Id,
+        InstructionData,
+        ToAccountMetas,
+    },
+    solana_program_test::{
+        BanksClient,
+        BanksClientError,
+        ProgramTest,
+        ProgramTestBanksClientExt,
+    },
+    solana_sdk::{
+        account::Account,
+        compute_budget::ComputeBudgetInstruction,
+        instruction::InstructionError,
+        signature::Keypair,
+        signer::Signer,
+        transaction::{
+            Transaction,
+            TransactionError,
+        },
+    },
 };
 
 pub struct DispenserSimulator {

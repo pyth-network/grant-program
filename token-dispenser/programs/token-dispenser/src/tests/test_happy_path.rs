@@ -1,27 +1,34 @@
-use super::dispenser_simulator::DispenserSimulator;
-use crate::tests::dispenser_simulator::IntoTransactionError;
-use crate::{
-    get_config_pda,
-    get_receipt_pda,
-    Claim,
-    ClaimCertificate,
-    ClaimInfo,
-    Config,
-    ErrorCode,
-    Identity,
-    ProofOfIdentity, SolanaHasher,
+use {
+    super::dispenser_simulator::DispenserSimulator,
+    crate::{
+        get_config_pda,
+        get_receipt_pda,
+        tests::dispenser_simulator::IntoTransactionError,
+        Claim,
+        ClaimCertificate,
+        ClaimInfo,
+        Config,
+        ErrorCode,
+        Identity,
+        ProofOfIdentity,
+        SolanaHasher,
+    },
+    anchor_lang::{
+        prelude::Pubkey,
+        AnchorDeserialize,
+        AnchorSerialize,
+    },
+    pythnet_sdk::accumulators::{
+        merkle::MerkleTree,
+        Accumulator,
+    },
+    solana_program_test::tokio,
+    solana_sdk::{
+        account::Account,
+        signature::Keypair,
+        signer::Signer,
+    },
 };
-use anchor_lang::prelude::Pubkey;
-use anchor_lang::{
-    AnchorDeserialize,
-    AnchorSerialize,
-};
-use pythnet_sdk::accumulators::merkle::MerkleTree;
-use pythnet_sdk::accumulators::Accumulator;
-use solana_program_test::tokio;
-use solana_sdk::account::Account;
-use solana_sdk::signature::Keypair;
-use solana_sdk::signer::Signer;
 
 
 #[tokio::test]
@@ -121,7 +128,10 @@ pub async fn test_happy_path() {
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
 }
 
-pub async fn assert_claim_receipts_exist(claimed_items_serialized : &Vec<Vec<u8>>, simulator : &mut DispenserSimulator) {
+pub async fn assert_claim_receipts_exist(
+    claimed_items_serialized: &Vec<Vec<u8>>,
+    simulator: &mut DispenserSimulator,
+) {
     for serialized_item in claimed_items_serialized {
         let receipt_account: Account = simulator
             .get_account(get_receipt_pda(&serialized_item).0)
