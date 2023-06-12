@@ -1,3 +1,4 @@
+#![allow(clippy::result_large_err)]
 use {
     anchor_lang::{
         prelude::*,
@@ -210,7 +211,7 @@ impl Hasher for SolanaHasher {
     type Hash = [u8; 32];
 
     fn hashv(data: &[impl AsRef<[u8]>]) -> Self::Hash {
-        hashv(&data.into_iter().map(|x| x.as_ref()).collect::<Vec<&[u8]>>()).to_bytes()
+        hashv(&data.iter().map(|x| x.as_ref()).collect::<Vec<&[u8]>>()).to_bytes()
     }
 }
 

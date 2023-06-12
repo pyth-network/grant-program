@@ -4,7 +4,6 @@ use {
         get_config_pda,
         get_receipt_pda,
         tests::dispenser_simulator::IntoTransactionError,
-        Claim,
         ClaimCertificate,
         ClaimInfo,
         Config,
@@ -134,7 +133,7 @@ pub async fn assert_claim_receipts_exist(
 ) {
     for serialized_item in claimed_items_serialized {
         let receipt_account: Account = simulator
-            .get_account(get_receipt_pda(&serialized_item).0)
+            .get_account(get_receipt_pda(serialized_item).0)
             .await
             .unwrap();
         assert_eq!(receipt_account.owner, crate::id());
