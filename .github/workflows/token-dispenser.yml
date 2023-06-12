@@ -21,9 +21,8 @@ jobs:
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/v1.14.18/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-      - name: Install Anchor
+      - name: Build
         run: |
-          cargo install --git https://github.com/coral-xyz/anchor --tag v0.27.0 anchor-cli --locked
-      - name: Run tests
-        run: anchor test
-        working-directory: token-dispenser
+          cargo test-bpf --manifest-path token-dispenser/Cargo.toml --locked
+        env:
+          BPF_OUT_DIR: ./token-dispenser/target/deploy
