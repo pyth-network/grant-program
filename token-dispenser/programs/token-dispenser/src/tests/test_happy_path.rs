@@ -1,19 +1,16 @@
 use super::dispenser_simulator::DispenserSimulator;
 use crate::{
     get_config_pda,
-    Claim,
     ClaimCertificate,
     ClaimInfo,
     Config,
     Identity,
-    ProofOfIdentity,
+    ProofOfIdentity, SolanaHasher,
 };
 use anchor_lang::prelude::Pubkey;
 use anchor_lang::{
-    system_program,
     AnchorDeserialize,
     AnchorSerialize,
-    Id,
 };
 use pythnet_sdk::accumulators::merkle::MerkleTree;
 use pythnet_sdk::accumulators::Accumulator;
@@ -55,7 +52,7 @@ pub async fn test_happy_path() {
         .map(|item| item.try_to_vec().unwrap())
         .collect::<Vec<Vec<u8>>>();
 
-    let merkle_tree: MerkleTree<Keccak256> = MerkleTree::new(
+    let merkle_tree: MerkleTree<SolanaHasher> = MerkleTree::new(
         merkle_items_serialized
             .iter()
             .map(|item| item.as_slice())
