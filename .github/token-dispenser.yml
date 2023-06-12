@@ -1,0 +1,29 @@
+name: Check Token Dispenser
+on:
+  pull_request:
+    paths: [token-dispenser/**]
+  push:
+    branches: [main]
+    paths: [token-dispenser/**]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    working-directory: token-dispenser
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.66.1
+          components: rustfmt, clippy
+          override: true
+      - name: Install Solana
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.14.18/install)"
+          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+      - name: Install Anchor
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor --tag v0.27.0 anchor-cli --locked
+      - name: Run tests
+        run: anchor test
