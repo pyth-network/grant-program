@@ -23,6 +23,5 @@ jobs:
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Build
         run: |
-          cargo test-bpf --manifest-path token-dispenser/Cargo.toml --locked
-        env:
-          BPF_OUT_DIR: ./token-dispenser/target/deploy
+          cargo test-sbf
+        working-directory: token-dispenser
