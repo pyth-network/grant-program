@@ -269,7 +269,7 @@ pub fn checked_create_claim_receipt(
         return Err(ErrorCode::WrongPda.into());
     }
 
-    check_claim_receipt_is_unitialized(&claim_receipt_account)?;
+    check_claim_receipt_is_unitialized(claim_receipt_account)?;
 
     // Pay rent for the receipt account
     let transfer_instruction = system_instruction::transfer(
