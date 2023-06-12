@@ -1,0 +1,27 @@
+name: Check Token Dispenser
+on:
+  pull_request:
+    paths: [token-dispenser/**]
+  push:
+    branches: [main]
+    paths: [token-dispenser/**]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.66.1
+          components: rustfmt, clippy
+          override: true
+      - name: Install Solana
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.14.18/install)"
+          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+      - name: Build
+        run: |
+          cargo test-sbf
+        working-directory: token-dispenser

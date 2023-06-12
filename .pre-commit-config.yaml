@@ -1,0 +1,16 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+  - repo: local
+    hooks:
+      # Hooks for the remote executor
+      - id: cargo-fmt-remote-executor
+        name: Cargo format for remote executor
+        language: "rust"
+        entry: cargo +nightly-2023-03-01 fmt --manifest-path ./token-dispenser/Cargo.toml --all -- --config-path ./token-dispenser/rustfmt.toml
+        pass_filenames: false
+        files: token-dispenser
