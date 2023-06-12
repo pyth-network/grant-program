@@ -136,6 +136,7 @@ pub async fn assert_claim_receipts_exist(
             .get_account(get_receipt_pda(serialized_item).0)
             .await
             .unwrap();
+
         assert_eq!(receipt_account.owner, crate::id());
     }
 }
