@@ -55,23 +55,21 @@ pub mod token_dispenser {
         verify_one_identity_per_ecosystem(&claim_certificates)?;
 
         // TO DO : Actually check the proof of identity and the proof of inclusion
-        for claim_certificate in &claim_certificates {
+        for (index, claim_certificate) in claim_certificates.iter().enumerate() {
             // Each leaf of the tree is a hash of the serialized claim info
             // The identity is derived from the proof of identity (signature)
             // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
             // verification will fail
             let leaf_vector = get_claim(claim_certificate).try_to_vec()?;
-            if !(config
+
+            if !config
                 .merkle_root
-                .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)){
-                    return Err(ErrorCode::InvalidInclusionProof.into());
-                };
-            create_claim_receipt(
-                ctx.program_id,
-                ctx.accounts.claimant.key,
-                ctx.remaining_accounts,
-                &leaf_vector,
-            )?;
+                .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)
+            {
+                return Err(ErrorCode::InvalidInclusionProof.into());
+            };
+
+            checked_create_claim_receipt(index, &leaf_vector, ctx.accounts.claimant.key, ctx.remaining_accounts)?;
             total_amount = total_amount
                 .checked_add(claim_certificate.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
@@ -226,6 +224,15 @@ pub enum ErrorCode {
     MoreThanOneIdentityPerEcosystem,
     AlreadyClaimed,
     InvalidInclusionProof,
+    WrongPda,
+}
+
+
+pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -> Result<()> {
+    if claim_receipt_account.owner.eq(&crate::id()) {
+        return Err(ErrorCode::AlreadyClaimed.into());
+    }
+    Ok(())
 }
 
 /**
@@ -235,25 +242,32 @@ pub enum ErrorCode {
  * awkward to declare them in the anchor context. Instead, we pass them inside
  * remaining_accounts. If the account is initialized, the assign instruction will fail.
  */
-pub fn create_claim_receipt(
-    program_id: &Pubkey,
-    payer: &Pubkey,
-    remanining_accounts: &[AccountInfo],
-    leaf: &[u8],
-) -> Result<()> {
+pub fn checked_create_claim_receipt(index: usize, leaf: &[u8], payer : &Pubkey, remaining_accounts : &[AccountInfo]) -> Result<()> {
     let (receipt_pubkey, bump) = get_receipt_pda(leaf);
 
+    // The claim receipt accounts should appear in remaining accounts in the same order as the claim certificates
+    let claim_receipt_account = &remaining_accounts[index];
+    if !claim_receipt_account.key.eq(&receipt_pubkey) {
+        return Err(ErrorCode::WrongPda.into());
+    }
+
+    check_claim_receipt_is_unitialized(&claim_receipt_account)?;
+
     // Pay rent for the receipt account
-    let transfer_instruction =
-        system_instruction::transfer(payer, &receipt_pubkey, Rent::get()?.minimum_balance(0));
-    invoke(&transfer_instruction, remanining_accounts)?;
+    let transfer_instruction = system_instruction::transfer(
+        payer,
+        &claim_receipt_account.key(),
+        Rent::get()?.minimum_balance(0),
+    );
+    invoke(&transfer_instruction, remaining_accounts)?;
+
 
     // Assign it to the program, this instruction will fail if the account already belongs to the
     // program
-    let assign_instruction = system_instruction::assign(&receipt_pubkey, program_id);
+    let assign_instruction = system_instruction::assign(&claim_receipt_account.key(), &crate::id());
     invoke_signed(
         &assign_instruction,
-        remanining_accounts,
+        remaining_accounts,
         &[&[
             RECEIPT_SEED,
             &MerkleTree::<SolanaHasher>::hash_leaf(leaf),

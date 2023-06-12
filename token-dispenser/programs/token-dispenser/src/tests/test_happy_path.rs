@@ -1,9 +1,13 @@
 use super::dispenser_simulator::DispenserSimulator;
+use crate::tests::dispenser_simulator::IntoTransactionError;
 use crate::{
     get_config_pda,
+    get_receipt_pda,
+    Claim,
     ClaimCertificate,
     ClaimInfo,
     Config,
+    ErrorCode,
     Identity,
     ProofOfIdentity, SolanaHasher,
 };
@@ -14,7 +18,6 @@ use anchor_lang::{
 };
 use pythnet_sdk::accumulators::merkle::MerkleTree;
 use pythnet_sdk::accumulators::Accumulator;
-use pythnet_sdk::hashers::keccak256::Keccak256;
 use solana_program_test::tokio;
 use solana_sdk::account::Account;
 use solana_sdk::signature::Keypair;
@@ -88,8 +91,42 @@ pub async fn test_happy_path() {
         })
         .collect();
 
+    // Check state
+    for serialized_item in merkle_items_serialized.clone() {
+        assert!(simulator
+            .get_account(get_receipt_pda(&serialized_item).0)
+            .await
+            .is_none());
+    }
+
     simulator
         .claim(&dispenser_guard, claim_certificates.clone())
         .await
         .unwrap();
+
+    // Check state
+    assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
+
+    // Can't claim twice
+    assert_eq!(
+        simulator
+            .claim(&dispenser_guard, claim_certificates.clone())
+            .await
+            .unwrap_err()
+            .unwrap(),
+        ErrorCode::AlreadyClaimed.into_transation_error()
+    );
+
+    // Check state
+    assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
+}
+
+pub async fn assert_claim_receipts_exist(claimed_items_serialized : &Vec<Vec<u8>>, simulator : &mut DispenserSimulator) {
+    for serialized_item in claimed_items_serialized {
+        let receipt_account: Account = simulator
+            .get_account(get_receipt_pda(&serialized_item).0)
+            .await
+            .unwrap();
+        assert_eq!(receipt_account.owner, crate::id());
+    }
 }

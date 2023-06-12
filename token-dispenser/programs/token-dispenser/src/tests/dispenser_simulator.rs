@@ -1,5 +1,6 @@
 use anchor_lang::prelude::{
     AccountMeta,
+    ProgramError,
     Pubkey,
 };
 use anchor_lang::solana_program::hash;
@@ -19,9 +20,13 @@ use solana_program_test::{
 };
 use solana_sdk::account::Account;
 use solana_sdk::compute_budget::ComputeBudgetInstruction;
+use solana_sdk::instruction::InstructionError;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
-use solana_sdk::transaction::Transaction;
+use solana_sdk::transaction::{
+    Transaction,
+    TransactionError,
+};
 
 use crate::{
     accounts,
@@ -30,6 +35,7 @@ use crate::{
     instruction,
     ClaimCertificate,
     Config,
+    ErrorCode,
 };
 
 pub struct DispenserSimulator {
@@ -89,11 +95,6 @@ impl DispenserSimulator {
         let mut accounts =
             accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey())
                 .to_account_metas(None);
-        accounts.push(AccountMeta::new_readonly(
-            system_program::System::id(),
-            false,
-        ));
-        accounts.push(AccountMeta::new(self.genesis_keypair.pubkey(), true));
 
         for claim_certificate in &claim_certificates {
             accounts.push(AccountMeta::new(
@@ -101,6 +102,13 @@ impl DispenserSimulator {
                 false,
             ));
         }
+
+        accounts.push(AccountMeta::new_readonly(
+            system_program::System::id(),
+            false,
+        ));
+        accounts.push(AccountMeta::new(self.genesis_keypair.pubkey(), true));
+
 
         let instruction_data: instruction::Claim = instruction::Claim { claim_certificates };
         let instruction =
@@ -116,5 +124,32 @@ impl DispenserSimulator {
 
     pub async fn get_account(&mut self, key: Pubkey) -> Option<Account> {
         self.banks_client.get_account(key).await.unwrap()
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Error conversions.
+////////////////////////////////////////////////////////////////////////////////
+
+
+pub trait IntoTransactionError {
+    fn into_transation_error(self) -> TransactionError;
+}
+
+impl IntoTransactionError for ErrorCode {
+    fn into_transation_error(self) -> TransactionError {
+        TransactionError::InstructionError(
+            1, // 1 since instruction 0 is the compute budget
+            InstructionError::try_from(u64::from(ProgramError::from(
+                anchor_lang::prelude::Error::from(self),
+            )))
+            .unwrap(),
+        )
+    }
+}
+impl IntoTransactionError for InstructionError {
+    fn into_transation_error(self) -> TransactionError {
+        TransactionError::InstructionError(1, self) // 1 since instruction 0 is the compute budget
     }
 }
