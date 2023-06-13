@@ -1,4 +1,5 @@
 #![allow(clippy::result_large_err)]
+
 use {
     anchor_lang::{
         prelude::*,
@@ -19,9 +20,13 @@ use {
             MerkleTree,
         },
         hashers::Hasher,
+        wire::v1::Proof,
     },
     std::{
-        collections::HashSet,
+        collections::{
+            BTreeMap,
+            HashSet,
+        },
         mem::{
             self,
             Discriminant,
@@ -167,6 +172,21 @@ pub enum ProofOfIdentity {
     Cosmwasm,
 }
 
+impl ProofOfIdentity {
+    pub fn to_discriminant(&self) -> usize {
+        match self {
+            ProofOfIdentity::Discord => 0,
+            ProofOfIdentity::Solana(_) => 1,
+            ProofOfIdentity::Evm => 2,
+            ProofOfIdentity::Sui => 3,
+            ProofOfIdentity::Aptos => 4,
+            ProofOfIdentity::Cosmwasm => 5,
+        }
+    }
+
+    pub const NUMBER_OF_VARIANTS: usize = 6;
+}
+
 pub fn get_claim(claim_certificate: &ClaimCertificate) -> ClaimInfo {
     ClaimInfo {
         identity: get_identity(&claim_certificate.proof_of_identity),
@@ -228,6 +248,35 @@ impl Config {
 
 #[account]
 pub struct Receipt {}
+
+#[account]
+pub struct Claimant {
+    pub amount: u64,
+    pub set:    ClaimedEcosystems,
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub struct ClaimedEcosystems {
+    set: [bool; ProofOfIdentity::NUMBER_OF_VARIANTS],
+}
+
+impl ClaimedEcosystems {
+    pub fn new() -> Self {
+        ClaimedEcosystems {
+            set: [false; ProofOfIdentity::NUMBER_OF_VARIANTS],
+        }
+    }
+
+    pub fn insert(&mut self, item: &ProofOfIdentity) -> () {
+        let index = item.to_discriminant();
+        self.set[index] = true;
+    }
+    pub fn contains(&self, item: &ProofOfIdentity) -> bool {
+        self.set[item.to_discriminant()]
+    }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Error.
 ////////////////////////////////////////////////////////////////////////////////
