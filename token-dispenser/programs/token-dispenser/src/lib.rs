@@ -37,7 +37,7 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 const CONFIG_SEED: &[u8] = b"config";
 const RECEIPT_SEED: &[u8] = b"receipt";
-const CLAIM_SEED: &[u8] = b"claim";
+const CART_SEED: &[u8] = b"cart";
 #[program]
 pub mod token_dispenser {
     use super::*;
@@ -60,9 +60,7 @@ pub mod token_dispenser {
      */
     pub fn claim(ctx: Context<Claim>, claim_certificates: Vec<ClaimCertificate>) -> Result<()> {
         let config = &ctx.accounts.config;
-        let claim_account = &mut ctx.accounts.claim_account;
-
-        let mut total_amount: u64 = 0;
+        let cart = &mut ctx.accounts.cart;
 
         // Check that the claimant is not claiming tokens for more than one ecosystem
         verify_one_identity_per_ecosystem(&claim_certificates)?;
@@ -88,20 +86,17 @@ pub mod token_dispenser {
                 ctx.accounts.claimant.key,
                 ctx.remaining_accounts,
             )?;
-            total_amount = total_amount
+
+            cart.amount = cart
+                .amount
                 .checked_add(claim_certificate.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
 
 
-            if claim_account
-                .set
-                .contains(&claim_certificate.proof_of_identity)
-            {
+            if cart.set.contains(&claim_certificate.proof_of_identity) {
                 return Err(ErrorCode::MoreThanOneIdentityPerEcosystem.into());
             }
-            claim_account
-                .set
-                .insert(&claim_certificate.proof_of_identity);
+            cart.set.insert(&claim_certificate.proof_of_identity);
         }
 
         // TO DO : Send tokens to claimant (we will also initialize a vesting account for them)
@@ -133,8 +128,8 @@ pub struct Claim<'info> {
                                          * the config - Done */
     #[account(seeds = [CONFIG_SEED], bump, has_one = dispenser_guard)]
     pub config:          Account<'info, Config>,
-    #[account(init_if_needed, space = Claimant::LEN, payer = claimant, seeds = [CLAIM_SEED, claimant.key.as_ref()], bump)]
-    pub claim_account:   Account<'info, Claimant>,
+    #[account(init_if_needed, space = Cart::LEN, payer = claimant, seeds = [CART_SEED, claimant.key.as_ref()], bump)]
+    pub cart:            Account<'info, Cart>,
     pub system_program:  Program<'info, System>,
 }
 
@@ -260,12 +255,12 @@ impl Config {
 pub struct Receipt {}
 
 #[account]
-pub struct Claimant {
+pub struct Cart {
     pub amount: u64,
     pub set:    ClaimedEcosystems,
 }
 
-impl Claimant {
+impl Cart {
     pub const LEN: usize = 8 + 8 + 6;
 }
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
@@ -377,8 +372,8 @@ pub fn get_receipt_pda(leaf: &[u8]) -> (Pubkey, u8) {
     )
 }
 
-pub fn get_claimant_pda(claimant: &Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[CLAIM_SEED, claimant.as_ref()], &crate::id())
+pub fn get_cart_pda(claimant: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[CART_SEED, claimant.as_ref()], &crate::id())
 }
 
 impl crate::accounts::Initialize {
@@ -397,7 +392,7 @@ impl crate::accounts::Claim {
             claimant,
             dispenser_guard,
             config: get_config_pda().0,
-            claim_account: get_claimant_pda(&claimant).0,
+            claim_account: get_cart_pda(&claimant).0,
             system_program: system_program::System::id(),
         }
     }
