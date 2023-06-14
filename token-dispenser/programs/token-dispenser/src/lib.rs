@@ -20,13 +20,9 @@ use {
             MerkleTree,
         },
         hashers::Hasher,
-        wire::v1::Proof,
     },
     std::{
-        collections::{
-            BTreeMap,
-            HashSet,
-        },
+        collections::HashSet,
         mem::{
             self,
             Discriminant,
