@@ -62,9 +62,6 @@ pub mod token_dispenser {
         let config = &ctx.accounts.config;
         let cart = &mut ctx.accounts.cart;
 
-        // Check that the claimant is not claiming tokens for more than one ecosystem
-        verify_one_identity_per_ecosystem(&claim_certificates)?;
-
         // TO DO : Actually check the proof of identity and the proof of inclusion
         for (index, claim_certificate) in claim_certificates.iter().enumerate() {
             // Each leaf of the tree is a hash of the serialized claim info
@@ -92,7 +89,7 @@ pub mod token_dispenser {
                 .checked_add(claim_certificate.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
 
-
+            // Check that the claimant is not claiming tokens more than once per ecosystem
             if cart.set.contains(&claim_certificate.proof_of_identity) {
                 return Err(ErrorCode::MoreThanOneIdentityPerEcosystem.into());
             }
@@ -392,7 +389,7 @@ impl crate::accounts::Claim {
             claimant,
             dispenser_guard,
             config: get_config_pda().0,
-            claim_account: get_cart_pda(&claimant).0,
+            cart: get_cart_pda(&claimant).0,
             system_program: system_program::System::id(),
         }
     }
