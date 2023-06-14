@@ -20,13 +20,9 @@ use {
             MerkleTree,
         },
         hashers::Hasher,
-        wire::v1::Proof,
     },
     std::{
-        collections::{
-            BTreeMap,
-            HashSet,
-        },
+        collections::HashSet,
         mem::{
             self,
             Discriminant,
@@ -41,6 +37,7 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 const CONFIG_SEED: &[u8] = b"config";
 const RECEIPT_SEED: &[u8] = b"receipt";
+const CLAIM_SEED: &[u8] = b"claim";
 #[program]
 pub mod token_dispenser {
     use super::*;
@@ -63,6 +60,7 @@ pub mod token_dispenser {
      */
     pub fn claim(ctx: Context<Claim>, claim_certificates: Vec<ClaimCertificate>) -> Result<()> {
         let config = &ctx.accounts.config;
+        let claim_account = &mut ctx.accounts.claim_account;
 
         let mut total_amount: u64 = 0;
 
@@ -93,10 +91,18 @@ pub mod token_dispenser {
             total_amount = total_amount
                 .checked_add(claim_certificate.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
-        }
 
-        // TO DO : Check that the claimant has not already claimed the tokens (We will initialize a
-        // claim account for each leaf that has been claimed)
+
+            if claim_account
+                .set
+                .contains(&claim_certificate.proof_of_identity)
+            {
+                return Err(ErrorCode::MoreThanOneIdentityPerEcosystem.into());
+            }
+            claim_account
+                .set
+                .insert(&claim_certificate.proof_of_identity);
+        }
 
         // TO DO : Send tokens to claimant (we will also initialize a vesting account for them)
         Ok(())
@@ -121,11 +127,15 @@ pub struct Initialize<'info> {
 #[derive(Accounts)]
 #[instruction(claim_certificates : Vec<ClaimCertificate>)]
 pub struct Claim<'info> {
+    #[account(mut)]
     pub claimant:        Signer<'info>,
     pub dispenser_guard: Signer<'info>, /* Check that the dispenser guard has signed and matches
                                          * the config - Done */
     #[account(seeds = [CONFIG_SEED], bump, has_one = dispenser_guard)]
     pub config:          Account<'info, Config>,
+    #[account(init_if_needed, space = Claimant::LEN, payer = claimant, seeds = [CLAIM_SEED, claimant.key.as_ref()], bump)]
+    pub claim_account:   Account<'info, Claimant>,
+    pub system_program:  Program<'info, System>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,6 +265,9 @@ pub struct Claimant {
     pub set:    ClaimedEcosystems,
 }
 
+impl Claimant {
+    pub const LEN: usize = 8 + 8 + 6;
+}
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimedEcosystems {
     set: [bool; ProofOfIdentity::NUMBER_OF_VARIANTS],
@@ -364,6 +377,10 @@ pub fn get_receipt_pda(leaf: &[u8]) -> (Pubkey, u8) {
     )
 }
 
+pub fn get_claimant_pda(claimant: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[CLAIM_SEED, claimant.as_ref()], &crate::id())
+}
+
 impl crate::accounts::Initialize {
     pub fn populate(payer: Pubkey) -> Self {
         crate::accounts::Initialize {
@@ -380,6 +397,8 @@ impl crate::accounts::Claim {
             claimant,
             dispenser_guard,
             config: get_config_pda().0,
+            claim_account: get_claimant_pda(&claimant).0,
+            system_program: system_program::System::id(),
         }
     }
 }
