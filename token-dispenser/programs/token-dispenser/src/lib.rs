@@ -1,4 +1,5 @@
 #![allow(clippy::result_large_err)]
+
 use {
     anchor_lang::{
         prelude::*,
@@ -36,6 +37,7 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 const CONFIG_SEED: &[u8] = b"config";
 const RECEIPT_SEED: &[u8] = b"receipt";
+const CART_SEED: &[u8] = b"cart";
 #[program]
 pub mod token_dispenser {
     use super::*;
@@ -58,11 +60,7 @@ pub mod token_dispenser {
      */
     pub fn claim(ctx: Context<Claim>, claim_certificates: Vec<ClaimCertificate>) -> Result<()> {
         let config = &ctx.accounts.config;
-
-        let mut total_amount: u64 = 0;
-
-        // Check that the claimant is not claiming tokens for more than one ecosystem
-        verify_one_identity_per_ecosystem(&claim_certificates)?;
+        let cart = &mut ctx.accounts.cart;
 
         // TO DO : Actually check the proof of identity and the proof of inclusion
         for (index, claim_certificate) in claim_certificates.iter().enumerate() {
@@ -85,13 +83,18 @@ pub mod token_dispenser {
                 ctx.accounts.claimant.key,
                 ctx.remaining_accounts,
             )?;
-            total_amount = total_amount
+
+            cart.amount = cart
+                .amount
                 .checked_add(claim_certificate.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
-        }
 
-        // TO DO : Check that the claimant has not already claimed the tokens (We will initialize a
-        // claim account for each leaf that has been claimed)
+            // Check that the claimant is not claiming tokens more than once per ecosystem
+            if cart.set.contains(&claim_certificate.proof_of_identity) {
+                return Err(ErrorCode::MoreThanOneIdentityPerEcosystem.into());
+            }
+            cart.set.insert(&claim_certificate.proof_of_identity);
+        }
 
         // TO DO : Send tokens to claimant (we will also initialize a vesting account for them)
         Ok(())
@@ -116,11 +119,15 @@ pub struct Initialize<'info> {
 #[derive(Accounts)]
 #[instruction(claim_certificates : Vec<ClaimCertificate>)]
 pub struct Claim<'info> {
+    #[account(mut)]
     pub claimant:        Signer<'info>,
     pub dispenser_guard: Signer<'info>, /* Check that the dispenser guard has signed and matches
                                          * the config - Done */
     #[account(seeds = [CONFIG_SEED], bump, has_one = dispenser_guard)]
     pub config:          Account<'info, Config>,
+    #[account(init_if_needed, space = Cart::LEN, payer = claimant, seeds = [CART_SEED, claimant.key.as_ref()], bump)]
+    pub cart:            Account<'info, Cart>,
+    pub system_program:  Program<'info, System>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,6 +172,21 @@ pub enum ProofOfIdentity {
     Sui,
     Aptos,
     Cosmwasm,
+}
+
+impl ProofOfIdentity {
+    pub fn to_discriminant(&self) -> usize {
+        match self {
+            ProofOfIdentity::Discord => 0,
+            ProofOfIdentity::Solana(_) => 1,
+            ProofOfIdentity::Evm => 2,
+            ProofOfIdentity::Sui => 3,
+            ProofOfIdentity::Aptos => 4,
+            ProofOfIdentity::Cosmwasm => 5,
+        }
+    }
+
+    pub const NUMBER_OF_VARIANTS: usize = 6;
 }
 
 pub fn get_claim(claim_certificate: &ClaimCertificate) -> ClaimInfo {
@@ -228,6 +250,38 @@ impl Config {
 
 #[account]
 pub struct Receipt {}
+
+#[account]
+pub struct Cart {
+    pub amount: u64,
+    pub set:    ClaimedEcosystems,
+}
+
+impl Cart {
+    pub const LEN: usize = 8 + 8 + 6;
+}
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub struct ClaimedEcosystems {
+    set: [bool; ProofOfIdentity::NUMBER_OF_VARIANTS],
+}
+
+impl ClaimedEcosystems {
+    pub fn new() -> Self {
+        ClaimedEcosystems {
+            set: [false; ProofOfIdentity::NUMBER_OF_VARIANTS],
+        }
+    }
+
+    pub fn insert(&mut self, item: &ProofOfIdentity) -> () {
+        let index = item.to_discriminant();
+        self.set[index] = true;
+    }
+    pub fn contains(&self, item: &ProofOfIdentity) -> bool {
+        self.set[item.to_discriminant()]
+    }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Error.
 ////////////////////////////////////////////////////////////////////////////////
@@ -315,6 +369,10 @@ pub fn get_receipt_pda(leaf: &[u8]) -> (Pubkey, u8) {
     )
 }
 
+pub fn get_cart_pda(claimant: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[CART_SEED, claimant.as_ref()], &crate::id())
+}
+
 impl crate::accounts::Initialize {
     pub fn populate(payer: Pubkey) -> Self {
         crate::accounts::Initialize {
@@ -331,6 +389,8 @@ impl crate::accounts::Claim {
             claimant,
             dispenser_guard,
             config: get_config_pda().0,
+            cart: get_cart_pda(&claimant).0,
+            system_program: system_program::System::id(),
         }
     }
 }
