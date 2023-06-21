@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "programs/*"
+    "programs/*",
+    "dispenser-guard"
 ]
 
 [profile.release]
