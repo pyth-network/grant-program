@@ -1,5 +1,4 @@
 use {
-    super::verify::verify_secp256k1_signature,
     crate::{
         accounts,
         get_claim,
@@ -35,8 +34,6 @@ use {
         account::Account,
         compute_budget::ComputeBudgetInstruction,
         instruction::InstructionError,
-        secp256k1_instruction,
-        secp256k1_recover::secp256k1_recover,
         signature::Keypair,
         signer::Signer,
         transaction::{
@@ -127,23 +124,6 @@ impl DispenserSimulator {
             &vec![dispenser_guard],
         )
         .await
-    }
-
-    pub async fn verify_secp256k1_signature(
-        &mut self,
-        eth_pubkey: [u8; 20],
-        signature_arr: libsecp256k1::Signature,
-        message_arr: &[u8],
-        recovery_id: libsecp256k1::RecoveryId,
-    ) -> Result<(), BanksClientError> {
-        let instruction = verify_secp256k1_signature(
-            eth_pubkey,
-            signature_arr.serialize(),
-            message_arr,
-            recovery_id.serialize(),
-        );
-
-        self.process_ix(&[instruction], &vec![]).await
     }
 
     pub async fn get_account(&mut self, key: Pubkey) -> Option<Account> {
