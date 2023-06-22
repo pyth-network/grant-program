@@ -10,21 +10,12 @@ const SAMPLE_MESSAGE : &str = "localhost:3000 wants you to sign in with your Eth
 use {
     super::dispenser_simulator::DispenserSimulator,
     crate::tests::verify::verify_secp256k1_signature,
-    anchor_lang::prelude::Pubkey,
     pythnet_sdk::hashers::{
         keccak256::Keccak256,
         Hasher,
     },
-    rand::thread_rng,
     solana_program_test::tokio,
-    solana_sdk::{
-        ed25519_instruction,
-        secp256k1_instruction::{
-            self,
-            new_secp256k1_instruction,
-            HASHED_PUBKEY_SERIALIZED_SIZE,
-        },
-    },
+    solana_sdk::secp256k1_instruction::HASHED_PUBKEY_SERIALIZED_SIZE,
 };
 
 pub struct Secp256k1Message {
@@ -56,7 +47,7 @@ impl Secp256k1Message {
         libsecp256k1::recover(&hash, &self.signature, &self.recovery_id).unwrap()
     }
 
-    pub fn recover_as_eth_address(&self) -> [u8; 20] {
+    pub fn recover_as_eth_address(&self) -> [u8; HASHED_PUBKEY_SERIALIZED_SIZE] {
         construct_eth_pubkey(&self.recover())
     }
 
@@ -71,7 +62,9 @@ impl Secp256k1Message {
 }
 
 /// Creates an Ethereum address from a secp256k1 public key.
-pub fn construct_eth_pubkey(pubkey: &libsecp256k1::PublicKey) -> [u8; 20] {
+pub fn construct_eth_pubkey(
+    pubkey: &libsecp256k1::PublicKey,
+) -> [u8; HASHED_PUBKEY_SERIALIZED_SIZE] {
     let mut addr = [0u8; HASHED_PUBKEY_SERIALIZED_SIZE];
     addr.copy_from_slice(&Keccak256::hashv(&[&pubkey.serialize()[1..]])[12..]);
     assert_eq!(addr.len(), HASHED_PUBKEY_SERIALIZED_SIZE);
