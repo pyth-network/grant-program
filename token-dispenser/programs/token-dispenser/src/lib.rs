@@ -137,8 +137,8 @@ pub struct Claim<'info> {
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimInfo {
-    pub identity: Identity,
-    pub amount:   u64,
+    identity: Identity,
+    amount:   u64,
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
@@ -151,11 +151,6 @@ pub enum Identity {
     Cosmwasm,
 }
 
-impl Identity {
-    pub fn to_string(&self) -> Result<String> {
-        Ok(hex::encode(self.try_to_vec()?))
-    }
-}
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimCertificate {
