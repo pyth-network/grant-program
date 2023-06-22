@@ -1,15 +1,9 @@
-use {
-    pythnet_sdk::hashers::{
-        keccak256::Keccak256,
-        Hasher,
-    },
-    solana_sdk::{
-        instruction::Instruction,
-        secp256k1_instruction::{
-            SecpSignatureOffsets,
-            DATA_START,
-            SIGNATURE_SERIALIZED_SIZE,
-        },
+use solana_sdk::{
+    instruction::Instruction,
+    secp256k1_instruction::{
+        SecpSignatureOffsets,
+        DATA_START,
+        SIGNATURE_SERIALIZED_SIZE,
     },
 };
 
