@@ -7,6 +7,9 @@ use solana_sdk::{
     },
 };
 
+/**
+ * Borrowed from solana-sdk/src/secp256k1_instruction.rs
+ */
 pub fn verify_secp256k1_signature(
     eth_pubkey: [u8; 20],
     signature_arr: [u8; 64],
