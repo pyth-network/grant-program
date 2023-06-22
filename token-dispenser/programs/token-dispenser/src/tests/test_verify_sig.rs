@@ -1,6 +1,11 @@
-use libsecp256k1::RecoveryId;
+use {
+    libsecp256k1::RecoveryId,
+    solana_sdk::instruction::Instruction,
+};
 
-const ETH_SAMPLE_MESSAGE : &str = "\x19Ethereum Signed Message:\n275localhost:3000 wants you to sign in with your Ethereum account:\n0xf3f9225A2166861e745742509CED164183a626d7\n\nSign In With Ethereum to prove you control this wallet.\n\nURI: http://localhost:3000\nVersion: 1\nChain ID: 1\nNonce: wIdVdFLtFSwM6Cfri\nIssued At: 2023-06-22T12:45:06.577Z";
+const PREFIX: &str = "\x19Ethereum Signed Message:\n";
+const SAMPLE_MESSAGE : &str = "localhost:3000 wants you to sign in with your Ethereum account:\n0xf3f9225A2166861e745742509CED164183a626d7\n\nSign In With Ethereum to prove you control this wallet.\n\nURI: http://localhost:3000\nVersion: 1\nChain ID: 1\nNonce: wIdVdFLtFSwM6Cfri\nIssued At: 2023-06-22T12:45:06.577Z";
+
 
 use {
     super::dispenser_simulator::DispenserSimulator,
@@ -22,64 +27,74 @@ use {
     },
 };
 
-const HELLO: &str = "hello";
-
-#[test]
-pub fn verify_sig_message() {
-    // let pubkey = hex::decode("f3f9225A2166861e745742509CED164183a626d7").unwrap();
-    println!("{:?}", ETH_SAMPLE_MESSAGE.as_bytes());
-    let hash = libsecp256k1::Message::parse(&Keccak256::hashv(&[ETH_SAMPLE_MESSAGE.as_bytes()]));
-    let signature = "dac0dfe99fb958f80aa0bda65b4fe3b02a7f4d07baa8395b5dad8585e69fe5d05d9a52c108d201a4465348b3fd8aecd7e56a9690c0ee584fd3b8d6cd7effb46d";
-    let signature_bytes = hex::decode(signature).expect("Decoding failed");
-    let mut signature_array: [u8; 64] = [0; 64];
-    signature_array.copy_from_slice(&signature_bytes[..]);
-    let signature_string =
-        libsecp256k1::Signature::parse_standard(&signature_array).expect("Decoding failed");
-
-    let recovery_id = RecoveryId::parse_rpc(0x1b).unwrap();
-
-    let eth = libsecp256k1::recover(&hash, &signature_string, &recovery_id).unwrap();
-
-    println!("{:?}", ETH_SAMPLE_MESSAGE.len());
-    println!("{:?}", hex::encode(construct_eth_pubkey(&eth)));
+pub struct Secp256k1Message {
+    pub prefixed_message: Vec<u8>,
+    pub signature:        libsecp256k1::Signature,
+    pub recovery_id:      libsecp256k1::RecoveryId,
 }
 
-#[tokio::test]
-pub async fn verify_sig() {
-    let secp_privkey = libsecp256k1::SecretKey::random(&mut thread_rng());
-    let hash = libsecp256k1::Message::parse(&Keccak256::hashv(&[HELLO]));
-    let (signature, recovery_id) = libsecp256k1::sign(&hash, &secp_privkey);
+impl Secp256k1Message {
+    pub fn from_evm_hex(hex_signature: &str, message: &str) -> Secp256k1Message {
+        let signature_bytes = hex::decode(hex_signature).expect("Decoding failed");
+        let mut signature_array: [u8; 64] = [0; 64];
+        signature_array.copy_from_slice(&signature_bytes[..64]);
 
-    let eth_public_key =
-        construct_eth_pubkey(&libsecp256k1::PublicKey::from_secret_key(&secp_privkey));
+        // EIP 191 prepends a prefix to the message being signed.
+        let mut prefixed_message = format!("{}{}", PREFIX, message.len()).into_bytes();
+        prefixed_message.extend_from_slice(message.as_bytes());
 
-    let mut simulator = DispenserSimulator::new().await;
+        Self {
+            signature: libsecp256k1::Signature::parse_standard(&signature_array)
+                .expect("Decoding failed"),
+            prefixed_message,
+            recovery_id: RecoveryId::parse_rpc(signature_bytes[64]).unwrap(),
+        }
+    }
 
-    assert!(libsecp256k1::verify(
-        &hash,
-        &signature,
-        &libsecp256k1::PublicKey::from_secret_key(&secp_privkey)
-    ));
-    simulator
-        .process_ix(
-            &[verify_secp256k1_signature(
-                eth_public_key,
-                signature.serialize(),
-                HELLO.as_bytes(),
-                recovery_id.serialize(),
-            )],
-            &vec![],
+    pub fn recover(&self) -> libsecp256k1::PublicKey {
+        let hash = libsecp256k1::Message::parse(&Keccak256::hashv(&[&self.prefixed_message]));
+        libsecp256k1::recover(&hash, &self.signature, &self.recovery_id).unwrap()
+    }
+
+    pub fn recover_as_eth_address(&self) -> [u8; 20] {
+        construct_eth_pubkey(&self.recover())
+    }
+
+    pub fn to_solana_verify_instruction(&self) -> Instruction {
+        verify_secp256k1_signature(
+            self.recover_as_eth_address(),
+            self.signature.serialize(),
+            &self.prefixed_message,
+            self.recovery_id.serialize(),
         )
-        .await
-        .unwrap();
+    }
 }
 
 /// Creates an Ethereum address from a secp256k1 public key.
-pub fn construct_eth_pubkey(
-    pubkey: &libsecp256k1::PublicKey,
-) -> [u8; HASHED_PUBKEY_SERIALIZED_SIZE] {
+pub fn construct_eth_pubkey(pubkey: &libsecp256k1::PublicKey) -> [u8; 20] {
     let mut addr = [0u8; HASHED_PUBKEY_SERIALIZED_SIZE];
     addr.copy_from_slice(&Keccak256::hashv(&[&pubkey.serialize()[1..]])[12..]);
     assert_eq!(addr.len(), HASHED_PUBKEY_SERIALIZED_SIZE);
     addr
+}
+
+
+#[tokio::test]
+pub async fn verify_sig_message_new() {
+    let signed_message = Secp256k1Message::from_evm_hex("dac0dfe99fb958f80aa0bda65b4fe3b02a7f4d07baa8395b5dad8585e69fe5d05d9a52c108d201a4465348b3fd8aecd7e56a9690c0ee584fd3b8d6cd7effb46d1b", SAMPLE_MESSAGE);
+    assert_eq!(
+        "f3f9225a2166861e745742509ced164183a626d7",
+        hex::encode(signed_message.recover_as_eth_address())
+    );
+}
+
+#[tokio::test]
+pub async fn verify_sig_message_onchain() {
+    let signed_message = Secp256k1Message::from_evm_hex("dac0dfe99fb958f80aa0bda65b4fe3b02a7f4d07baa8395b5dad8585e69fe5d05d9a52c108d201a4465348b3fd8aecd7e56a9690c0ee584fd3b8d6cd7effb46d1b", SAMPLE_MESSAGE);
+    let mut simulator = DispenserSimulator::new().await;
+
+    simulator
+        .process_ix(&[signed_message.to_solana_verify_instruction()], &vec![])
+        .await
+        .unwrap();
 }
