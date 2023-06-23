@@ -1,20 +1,14 @@
-// use ed25519_consensus::{VerificationKey, VerificationKeyBytes, Signature};
 use {
     super::dispenser_simulator::DispenserSimulator,
-    anchor_lang::solana_program::pubkey,
     bytemuck::{
         bytes_of,
         Pod,
         Zeroable,
     },
-    ed25519_dalek::{
-        PublicKey,
-        Verifier,
-    },
+    ed25519_dalek::Verifier,
     solana_program_test::tokio,
     solana_sdk::{
         ed25519_instruction::{
-            self,
             DATA_START,
             PUBKEY_SERIALIZED_SIZE,
             SIGNATURE_SERIALIZED_SIZE,
