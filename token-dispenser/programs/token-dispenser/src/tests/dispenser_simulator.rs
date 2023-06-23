@@ -1,3 +1,7 @@
+use solana_sdk::packet::PACKET_DATA_SIZE;
+
+use super::{test_verify_sig_eth::SAMPLE_MESSAGE, test_verify_sig_eth::Secp256k1Message};
+
 use {
     crate::{
         accounts,
@@ -65,7 +69,7 @@ impl DispenserSimulator {
         instructions: &[Instruction],
         signers: &Vec<&Keypair>,
     ) -> Result<(), BanksClientError> {
-        let mut transaction =
+        let mut transaction: Transaction =
             Transaction::new_with_payer(instructions, Some(&self.genesis_keypair.pubkey()));
 
         let blockhash = self
@@ -77,6 +81,7 @@ impl DispenserSimulator {
 
         transaction.partial_sign(&[&self.genesis_keypair], self.recent_blockhash);
         transaction.partial_sign(signers, self.recent_blockhash);
+        println!("transaction: {:?} < {:?}", bincode::serialized_size(&transaction), PACKET_DATA_SIZE);
         self.banks_client.process_transaction(transaction).await
     }
 
@@ -119,8 +124,11 @@ impl DispenserSimulator {
         let instruction =
             Instruction::new_with_bytes(crate::id(), &instruction_data.data(), accounts);
 
+        let signed_message = Secp256k1Message::from_evm_hex("dac0dfe99fb958f80aa0bda65b4fe3b02a7f4d07baa8395b5dad8585e69fe5d05d9a52c108d201a4465348b3fd8aecd7e56a9690c0ee584fd3b8d6cd7effb46d1b", SAMPLE_MESSAGE);
+        let verify_instruction = signed_message.to_solana_verify_instruction();
+        
         self.process_ix(
-            &[compute_budget_instruction, instruction],
+            &[verify_instruction, instruction],
             &vec![dispenser_guard],
         )
         .await

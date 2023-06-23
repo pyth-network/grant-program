@@ -14,7 +14,7 @@ use {
 };
 
 const PREFIX: &str = "\x19Ethereum Signed Message:\n";
-const SAMPLE_MESSAGE : &str = "localhost:3000 wants you to sign in with your Ethereum account:\n0xf3f9225A2166861e745742509CED164183a626d7\n\nSign In With Ethereum to prove you control this wallet.\n\nURI: http://localhost:3000\nVersion: 1\nChain ID: 1\nNonce: wIdVdFLtFSwM6Cfri\nIssued At: 2023-06-22T12:45:06.577Z";
+pub const SAMPLE_MESSAGE : &str = "localhost:3000 wants you to sign in with your Ethereum account:\n0xf3f9225A2166861e745742509CED164183a626d7\n\nSign In With Ethereum to prove you control this wallet.\n\nURI: http://localhost:3000\nVersion: 1\nChain ID: 1\nNonce: wIdVdFLtFSwM6Cfri\nIssued At: 2023-06-22T12:45:06.577Z";
 
 pub struct Secp256k1Message {
     pub prefixed_message: Vec<u8>,

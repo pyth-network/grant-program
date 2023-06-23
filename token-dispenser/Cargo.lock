@@ -4497,6 +4497,7 @@ dependencies = [
  "hex",
  "libsecp256k1",
  "pythnet-sdk",
+ "serde",
  "solana-program-test",
  "solana-sdk",
 ]
