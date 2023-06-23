@@ -71,7 +71,7 @@ pub fn construct_eth_pubkey(
 
 
 #[tokio::test]
-pub async fn verify_sig_message_new() {
+pub async fn verify_sig_eth_message_new() {
     let signed_message = Secp256k1Message::from_evm_hex("dac0dfe99fb958f80aa0bda65b4fe3b02a7f4d07baa8395b5dad8585e69fe5d05d9a52c108d201a4465348b3fd8aecd7e56a9690c0ee584fd3b8d6cd7effb46d1b", SAMPLE_MESSAGE);
     assert_eq!(
         "f3f9225a2166861e745742509ced164183a626d7",
@@ -80,7 +80,7 @@ pub async fn verify_sig_message_new() {
 }
 
 #[tokio::test]
-pub async fn verify_sig_message_onchain() {
+pub async fn verify_sig_eth_message_onchain() {
     let signed_message = Secp256k1Message::from_evm_hex("dac0dfe99fb958f80aa0bda65b4fe3b02a7f4d07baa8395b5dad8585e69fe5d05d9a52c108d201a4465348b3fd8aecd7e56a9690c0ee584fd3b8d6cd7effb46d1b", SAMPLE_MESSAGE);
     let mut simulator = DispenserSimulator::new().await;
 
