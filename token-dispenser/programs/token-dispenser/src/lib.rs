@@ -26,6 +26,7 @@ use {
         hashers::Hasher,
     },
 };
+use crate::ecosystems::evm;
 
 #[cfg(test)]
 mod tests;
@@ -151,7 +152,7 @@ pub struct ClaimInfo {
 pub enum Identity {
     Discord,
     Solana(Pubkey), // Pubkey, Signature
-    Evm,
+    Evm(evm::EvmPubkey),
     Sui,
     Aptos,
     Cosmwasm,
@@ -162,7 +163,7 @@ impl Identity {
         match self {
             Identity::Discord => 0,
             Identity::Solana(_) => 1,
-            Identity::Evm => 2,
+            Identity::Evm(_) => 2,
             Identity::Sui => 3,
             Identity::Aptos => 4,
             Identity::Cosmwasm => 5,
@@ -280,7 +281,7 @@ impl ClaimInfo {
 
         match self.identity {
             Identity::Discord => Ok(()),
-            Identity::Evm => Ok(()),
+            Identity::Evm(_) => Ok(()),
             _ => Ok(()),
         }
     }

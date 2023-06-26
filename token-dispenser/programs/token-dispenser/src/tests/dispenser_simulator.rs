@@ -59,7 +59,7 @@ impl DispenserSimulator {
         }
     }
 
-    async fn process_ix(
+    pub async fn process_ix(
         &mut self,
         instructions: &[Instruction],
         signers: &Vec<&Keypair>,
