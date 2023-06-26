@@ -1,6 +1,7 @@
 #![allow(clippy::result_large_err)]
 
 use {
+    crate::ecosystems::evm,
     anchor_lang::{
         prelude::*,
         solana_program::{
@@ -17,6 +18,7 @@ use {
         },
         system_program,
     },
+    ecosystems::evm::check_authorized,
     pythnet_sdk::{
         accumulators::merkle::{
             MerklePath,
@@ -26,7 +28,6 @@ use {
         hashers::Hasher,
     },
 };
-use crate::ecosystems::evm;
 
 #[cfg(test)]
 mod tests;
@@ -255,6 +256,13 @@ pub enum ErrorCode {
     InvalidInclusionProof,
     WrongPda,
     NotImplemented,
+    // Signature verification errors
+    SignatureVerificationWrongProgram,
+    SignatureVerificationWrongAccounts,
+    SignatureVerificationWrongHeader,
+    SignatureVerificationWrongMessage,
+    SignatureVerificationWrongSigner,
+    SignatureVerificationWrongClaimant,
 }
 
 
@@ -281,7 +289,9 @@ impl ClaimInfo {
 
         match self.identity {
             Identity::Discord => Ok(()),
-            Identity::Evm(_) => Ok(()),
+            Identity::Evm(pubkey) => {
+                check_authorized(&pubkey, signature_verification_instruction, claimant)
+            }
             _ => Ok(()),
         }
     }

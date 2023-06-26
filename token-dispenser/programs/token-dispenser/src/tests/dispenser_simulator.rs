@@ -1,4 +1,8 @@
 use {
+    super::test_evm::{
+        Secp256k1SignedMessage,
+        SAMPLE_MESSAGE,
+    },
     crate::{
         accounts,
         get_receipt_pda,
@@ -94,8 +98,8 @@ impl DispenserSimulator {
         dispenser_guard: &Keypair,
         claim_certificates: Vec<ClaimCertificate>,
     ) -> Result<(), BanksClientError> {
-        let compute_budget_instruction: Instruction =
-            ComputeBudgetInstruction::set_compute_unit_limit(2000000);
+        let evm_signed_message = Secp256k1SignedMessage::from_evm_hex("dac0dfe99fb958f80aa0bda65b4fe3b02a7f4d07baa8395b5dad8585e69fe5d05d9a52c108d201a4465348b3fd8aecd7e56a9690c0ee584fd3b8d6cd7effb46d1b", SAMPLE_MESSAGE);
+
         let mut accounts =
             accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey())
                 .to_account_metas(None);
@@ -119,7 +123,7 @@ impl DispenserSimulator {
             Instruction::new_with_bytes(crate::id(), &instruction_data.data(), accounts);
 
         self.process_ix(
-            &[compute_budget_instruction, instruction],
+            &[evm_signed_message.into(), instruction],
             &vec![dispenser_guard],
         )
         .await
