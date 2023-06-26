@@ -25,7 +25,6 @@ use {
         },
         hashers::Hasher,
     },
-    std::default,
 };
 
 #[cfg(test)]
