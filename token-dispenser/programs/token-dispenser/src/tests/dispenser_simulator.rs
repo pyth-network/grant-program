@@ -1,7 +1,6 @@
 use {
     crate::{
         accounts,
-        get_claim,
         get_receipt_pda,
         instruction,
         ClaimCertificate,
@@ -103,7 +102,7 @@ impl DispenserSimulator {
 
         for claim_certificate in &claim_certificates {
             accounts.push(AccountMeta::new(
-                get_receipt_pda(&get_claim(claim_certificate).try_to_vec().unwrap()).0,
+                get_receipt_pda(&claim_certificate.claim_info.try_to_vec().unwrap()).0,
                 false,
             ));
         }

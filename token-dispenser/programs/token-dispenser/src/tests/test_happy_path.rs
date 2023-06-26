@@ -9,7 +9,6 @@ use {
         Config,
         ErrorCode,
         Identity,
-        ProofOfIdentity,
         SolanaHasher,
     },
     anchor_lang::{
@@ -84,15 +83,7 @@ pub async fn test_happy_path() {
     let claim_certificates: Vec<ClaimCertificate> = merkle_items
         .iter()
         .map(|item| ClaimCertificate {
-            proof_of_identity:  match item.identity {
-                Identity::Discord => ProofOfIdentity::Discord,
-                Identity::Solana(_) => ProofOfIdentity::Solana(vec![]),
-                Identity::Evm => ProofOfIdentity::Evm,
-                Identity::Sui => ProofOfIdentity::Sui,
-                Identity::Aptos => ProofOfIdentity::Aptos,
-                Identity::Cosmwasm => ProofOfIdentity::Cosmwasm,
-            },
-            amount:             item.amount,
+            claim_info:         item.clone(),
             proof_of_inclusion: merkle_tree.prove(&item.try_to_vec().unwrap()).unwrap(),
         })
         .collect();

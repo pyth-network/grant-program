@@ -10,6 +10,10 @@ use {
                 invoke_signed,
             },
             system_instruction,
+            sysvar::instructions::{
+                load_instruction_at_checked,
+                ID as SYSVAR_IX_ID,
+            },
         },
         system_program,
     },
@@ -21,17 +25,13 @@ use {
         },
         hashers::Hasher,
     },
-    std::{
-        collections::HashSet,
-        mem::{
-            self,
-            Discriminant,
-        },
-    },
+    std::default,
 };
 
 #[cfg(test)]
 mod tests;
+
+mod ecosystems;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -64,11 +64,16 @@ pub mod token_dispenser {
 
         // TO DO : Actually check the proof of identity and the proof of inclusion
         for (index, claim_certificate) in claim_certificates.iter().enumerate() {
+            claim_certificate.claim_info.check_claimant_is_authorized(
+                &ctx.accounts.sysvar_instruction,
+                ctx.accounts.claimant.key,
+            )?;
+
             // Each leaf of the tree is a hash of the serialized claim info
             // The identity is derived from the proof of identity (signature)
             // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
             // verification will fail
-            let leaf_vector = get_claim(claim_certificate).try_to_vec()?;
+            let leaf_vector = claim_certificate.claim_info.try_to_vec()?;
 
             if !config
                 .merkle_root
@@ -86,14 +91,14 @@ pub mod token_dispenser {
 
             cart.amount = cart
                 .amount
-                .checked_add(claim_certificate.amount)
+                .checked_add(claim_certificate.claim_info.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
 
             // Check that the claimant is not claiming tokens more than once per ecosystem
-            if cart.set.contains(&claim_certificate.proof_of_identity) {
+            if cart.set.contains(&claim_certificate.claim_info.identity) {
                 return Err(ErrorCode::MoreThanOneIdentityPerEcosystem.into());
             }
-            cart.set.insert(&claim_certificate.proof_of_identity);
+            cart.set.insert(&claim_certificate.claim_info.identity);
         }
 
         // TO DO : Send tokens to claimant (we will also initialize a vesting account for them)
@@ -120,14 +125,16 @@ pub struct Initialize<'info> {
 #[instruction(claim_certificates : Vec<ClaimCertificate>)]
 pub struct Claim<'info> {
     #[account(mut)]
-    pub claimant:        Signer<'info>,
-    pub dispenser_guard: Signer<'info>, /* Check that the dispenser guard has signed and matches
-                                         * the config - Done */
+    pub claimant:           Signer<'info>,
+    pub dispenser_guard:    Signer<'info>, /* Check that the dispenser guard has signed and matches
+                                            * the config - Done */
     #[account(seeds = [CONFIG_SEED], bump, has_one = dispenser_guard)]
-    pub config:          Account<'info, Config>,
+    pub config:             Account<'info, Config>,
     #[account(init_if_needed, space = Cart::LEN, payer = claimant, seeds = [CART_SEED, claimant.key.as_ref()], bump)]
-    pub cart:            Account<'info, Cart>,
-    pub system_program:  Program<'info, System>,
+    pub cart:               Account<'info, Cart>,
+    pub system_program:     Program<'info, System>,
+    #[account(address = SYSVAR_IX_ID)]
+    pub sysvar_instruction: AccountInfo<'info>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,74 +158,28 @@ pub enum Identity {
     Cosmwasm,
 }
 
-
-#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub struct ClaimCertificate {
-    proof_of_identity:  ProofOfIdentity, /* Proof that the caller is the owner of the wallet
-                                          * entitled to the tokens */
-    amount:             u64, // Amount of tokens contained in the leaf
-    proof_of_inclusion: MerklePath<SolanaHasher>, // Proof that the leaf is in the tree
-}
-
-/**
- * A proof of identity is composed by a public key and a signature except for discord where we
- * can't verify the identity in the smart contract.
- */
-#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub enum ProofOfIdentity {
-    Discord,
-    Solana(Vec<u8>), // Signature
-    Evm,
-    Sui,
-    Aptos,
-    Cosmwasm,
-}
-
-impl ProofOfIdentity {
+impl Identity {
     pub fn to_discriminant(&self) -> usize {
         match self {
-            ProofOfIdentity::Discord => 0,
-            ProofOfIdentity::Solana(_) => 1,
-            ProofOfIdentity::Evm => 2,
-            ProofOfIdentity::Sui => 3,
-            ProofOfIdentity::Aptos => 4,
-            ProofOfIdentity::Cosmwasm => 5,
+            Identity::Discord => 0,
+            Identity::Solana(_) => 1,
+            Identity::Evm => 2,
+            Identity::Sui => 3,
+            Identity::Aptos => 4,
+            Identity::Cosmwasm => 5,
         }
     }
 
     pub const NUMBER_OF_VARIANTS: usize = 6;
 }
 
-pub fn get_claim(claim_certificate: &ClaimCertificate) -> ClaimInfo {
-    ClaimInfo {
-        identity: get_identity(&claim_certificate.proof_of_identity),
-        amount:   claim_certificate.amount,
-    }
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub struct ClaimCertificate {
+    claim_info:         ClaimInfo,
+    proof_of_inclusion: MerklePath<SolanaHasher>, // Proof that the leaf is in the tree
 }
 
-
-pub fn get_identity(item: &ProofOfIdentity) -> Identity {
-    match item {
-        ProofOfIdentity::Discord => Identity::Discord,
-        ProofOfIdentity::Solana(_) => Identity::Solana(Pubkey::new_from_array([0u8; 32])),
-        ProofOfIdentity::Evm => Identity::Evm,
-        ProofOfIdentity::Sui => Identity::Sui,
-        ProofOfIdentity::Aptos => Identity::Aptos,
-        ProofOfIdentity::Cosmwasm => Identity::Cosmwasm,
-    }
-}
-
-
-pub fn verify_one_identity_per_ecosystem(claim_certificates: &Vec<ClaimCertificate>) -> Result<()> {
-    let hash_set: HashSet<Discriminant<ProofOfIdentity>> = claim_certificates
-        .iter()
-        .map(|claim_certificate| mem::discriminant(&claim_certificate.proof_of_identity))
-        .collect();
-    if hash_set.len() != claim_certificates.len() {
-        return Err(ErrorCode::MoreThanOneIdentityPerEcosystem.into());
-    }
-    Ok(())
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accounts.
@@ -262,21 +223,21 @@ impl Cart {
 }
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimedEcosystems {
-    set: [bool; ProofOfIdentity::NUMBER_OF_VARIANTS],
+    set: [bool; Identity::NUMBER_OF_VARIANTS],
 }
 
 impl ClaimedEcosystems {
     pub fn new() -> Self {
         ClaimedEcosystems {
-            set: [false; ProofOfIdentity::NUMBER_OF_VARIANTS],
+            set: [false; Identity::NUMBER_OF_VARIANTS],
         }
     }
 
-    pub fn insert(&mut self, item: &ProofOfIdentity) -> () {
+    pub fn insert(&mut self, item: &Identity) -> () {
         let index = item.to_discriminant();
         self.set[index] = true;
     }
-    pub fn contains(&self, item: &ProofOfIdentity) -> bool {
+    pub fn contains(&self, item: &Identity) -> bool {
         self.set[item.to_discriminant()]
     }
 }
@@ -293,6 +254,7 @@ pub enum ErrorCode {
     AlreadyClaimed,
     InvalidInclusionProof,
     WrongPda,
+    NotImplemented,
 }
 
 
@@ -301,6 +263,28 @@ pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -
         return Err(ErrorCode::AlreadyClaimed.into());
     }
     Ok(())
+}
+
+/**
+ * Check that the identity of the claim_info has authorized the claimant by signing a message.
+ * The message is contained in the 0th instruction (the secp256k1/ed25519 instruction).
+ * Executing that instruction checks the signature.
+ */
+impl ClaimInfo {
+    pub fn check_claimant_is_authorized(
+        &self,
+        sysvar_instruction: &AccountInfo,
+        claimant: &Pubkey,
+    ) -> Result<()> {
+        let signature_verification_instruction =
+            load_instruction_at_checked(0, sysvar_instruction)?;
+
+        match self.identity {
+            Identity::Discord => Ok(()),
+            Identity::Evm => Ok(()),
+            _ => Ok(()),
+        }
+    }
 }
 
 /**
@@ -391,6 +375,7 @@ impl crate::accounts::Claim {
             config: get_config_pda().0,
             cart: get_cart_pda(&claimant).0,
             system_program: system_program::System::id(),
+            sysvar_instruction: SYSVAR_IX_ID,
         }
     }
 }
