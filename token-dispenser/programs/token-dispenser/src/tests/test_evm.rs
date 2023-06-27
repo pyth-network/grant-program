@@ -16,23 +16,14 @@ use {
         solana_program::secp256k1_program::ID as SECP256K1_ID,
         AnchorSerialize,
     },
-    libsecp256k1::{
-        util::SIGNATURE_SIZE,
-        RecoveryId,
-    },
+    libsecp256k1::RecoveryId,
     pythnet_sdk::hashers::{
         keccak256::Keccak256,
         Hasher,
     },
     solana_program_test::tokio,
-    solana_sdk::{
-        instruction::Instruction,
-        secp256k1_instruction::HASHED_PUBKEY_SERIALIZED_SIZE,
-    },
+    solana_sdk::instruction::Instruction,
 };
-
-
-pub const SAMPLE_MESSAGE : &str = "localhost:3000 wants you to sign in with your Ethereum account:\n0xf3f9225A2166861e745742509CED164183a626d7\n\nSign In With Ethereum to prove you control this wallet.\n\nURI: http://localhost:3000\nVersion: 1\nChain ID: 1\nNonce: wIdVdFLtFSwM6Cfri\nIssued At: 2023-06-22T12:45:06.577Z";
 
 impl EvmPubkey {
     pub fn from_evm_hex(hex_pubkey: &str) -> Self {
@@ -116,16 +107,11 @@ impl Into<Instruction> for Secp256k1SignedMessage {
             message: self.message,
         };
 
-        print!(
-            "{:}",
-            pretty_hex::pretty_hex(&instruction_data.try_to_vec().unwrap())
-        );
-
-        return Instruction {
+        Instruction {
             program_id: SECP256K1_ID,
             accounts:   vec![],
             data:       instruction_data.try_to_vec().unwrap(),
-        };
+        }
     }
 }
 

@@ -1,8 +1,4 @@
 use {
-    super::test_evm::{
-        Secp256k1SignedMessage,
-        SAMPLE_MESSAGE,
-    },
     crate::{
         accounts,
         get_receipt_pda,
