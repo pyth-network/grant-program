@@ -2,6 +2,7 @@ use {
     super::dispenser_simulator::DispenserSimulator,
     crate::ecosystems::{
         evm::{
+            EvmPrefixedMessage,
             EvmPubkey,
             EvmSignature,
             Secp256k1InstructionData,
@@ -43,9 +44,21 @@ pub fn construct_evm_pubkey(pubkey: &libsecp256k1::PublicKey) -> EvmPubkey {
 
 #[derive(Clone)]
 pub struct Secp256k1SignedMessage {
-    pub message:     Vec<u8>,
-    pub signature:   libsecp256k1::Signature,
-    pub recovery_id: libsecp256k1::RecoveryId,
+    pub prefixed_message: EvmPrefixedMessage,
+    pub signature:        libsecp256k1::Signature,
+    pub recovery_id:      libsecp256k1::RecoveryId,
+}
+
+impl EvmPrefixedMessage {
+    pub fn from_message(message: &str) -> Self {
+        let mut prefixed_message = format!("{}{}", EVM_MESSAGE_PREFIX, message.len()).into_bytes();
+        prefixed_message.extend_from_slice(message.as_bytes());
+        Self(prefixed_message)
+    }
+
+    pub fn hash(&self) -> libsecp256k1::Message {
+        libsecp256k1::Message::parse(&Keccak256::hashv(&[&self.0]))
+    }
 }
 
 impl Secp256k1SignedMessage {
@@ -55,20 +68,23 @@ impl Secp256k1SignedMessage {
         signature_array.copy_from_slice(&signature_bytes[..64]);
 
         // EIP 191 prepends a prefix to the message being signed.
-        let mut prefixed_message = format!("{}{}", EVM_MESSAGE_PREFIX, message.len()).into_bytes();
-        prefixed_message.extend_from_slice(message.as_bytes());
+
 
         Self {
-            signature:   libsecp256k1::Signature::parse_standard(&signature_array)
+            signature:        libsecp256k1::Signature::parse_standard(&signature_array)
                 .expect("Decoding failed"),
-            message:     prefixed_message,
-            recovery_id: RecoveryId::parse_rpc(signature_bytes[64]).unwrap(),
+            prefixed_message: EvmPrefixedMessage::from_message(message),
+            recovery_id:      RecoveryId::parse_rpc(signature_bytes[64]).unwrap(),
         }
     }
 
     pub fn recover(&self) -> libsecp256k1::PublicKey {
-        let hash = libsecp256k1::Message::parse(&Keccak256::hashv(&[&self.message]));
-        libsecp256k1::recover(&hash, &self.signature, &self.recovery_id).unwrap()
+        libsecp256k1::recover(
+            &self.prefixed_message.hash(),
+            &self.signature,
+            &self.recovery_id,
+        )
+        .unwrap()
     }
 
     pub fn recover_as_evm_address(&self) -> EvmPubkey {
@@ -76,16 +92,11 @@ impl Secp256k1SignedMessage {
     }
 
     pub fn random(claimant: &Pubkey) -> Self {
-        let hashed_message =
-            libsecp256k1::Message::parse(&Keccak256::hashv(&[(EVM_MESSAGE_PREFIX.to_string()
-                + &get_expected_message(claimant))
-                .as_bytes()]));
+        let prefixed_message = EvmPrefixedMessage::from_message(&get_expected_message(claimant));
         let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
-        let (signature, recovery_id) = libsecp256k1::sign(&hashed_message, &secret);
+        let (signature, recovery_id) = libsecp256k1::sign(&prefixed_message.hash(), &secret);
         return Self {
-            message: (EVM_MESSAGE_PREFIX.to_string() + &get_expected_message(claimant))
-                .as_bytes()
-                .to_vec(),
+            prefixed_message: EvmPrefixedMessage::from_message(&get_expected_message(claimant)),
             signature,
             recovery_id,
         };
@@ -97,14 +108,14 @@ impl Into<Instruction> for Secp256k1SignedMessage {
      * Transforms into a solana instruction that will verify the signature when executed
      */
     fn into(self) -> Instruction {
-        let header = Secp256k1InstructionHeader::expected(self.message.len());
+        let header = self.prefixed_message.get_expected_header();
 
         let instruction_data = Secp256k1InstructionData {
             header,
             eth_address: self.recover_as_evm_address(),
             signature: EvmSignature(self.signature.serialize()),
             recovery_id: self.recovery_id.serialize(),
-            message: self.message,
+            prefixed_message: self.prefixed_message,
         };
 
         Instruction {

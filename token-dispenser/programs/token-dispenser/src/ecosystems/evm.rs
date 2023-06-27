@@ -1,5 +1,8 @@
 use {
-    super::check_message_matches,
+    super::{
+        check_message_matches,
+        get_expected_message,
+    },
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
@@ -22,6 +25,44 @@ pub const EVM_SIGNATURE_SIZE: usize = 64;
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct EvmSignature(pub [u8; EVM_SIGNATURE_SIZE]);
 
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub struct EvmPrefixedMessage(pub Vec<u8>);
+
+impl EvmPrefixedMessage {
+    pub fn check_is_authorization_message(&self, claimant: &Pubkey) -> Result<()> {
+        let evm_message_length = get_expected_message(claimant).len().to_string();
+
+        if self.0.starts_with(EVM_MESSAGE_PREFIX.as_bytes())
+            && self.0[EVM_MESSAGE_PREFIX.len()..].starts_with(evm_message_length.as_bytes())
+        {
+            return check_message_matches(
+                &self.0.as_slice()[(EVM_MESSAGE_PREFIX.len() + evm_message_length.len())..],
+                claimant,
+            );
+        } else {
+            return Err(ErrorCode::SignatureVerificationWrongMessagePrefix.into());
+        }
+    }
+
+    pub fn get_expected_header(&self) -> Secp256k1InstructionHeader {
+        Secp256k1InstructionHeader {
+            num_signatures:                1,
+            signature_offset:              Secp256k1InstructionHeader::LEN,
+            signature_instruction_index:   0,
+            eth_address_offset:            Secp256k1InstructionHeader::LEN
+                + EVM_SIGNATURE_SIZE as u16
+                + 1,
+            eth_address_instruction_index: 0,
+            message_data_offset:           Secp256k1InstructionHeader::LEN
+                + EVM_SIGNATURE_SIZE as u16
+                + 1
+                + EVM_PUBKEY_SIZE as u16,
+            message_data_size:             self.0.len() as u16,
+            message_instruction_index:     0,
+        }
+    }
+}
+
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, PartialEq, Eq, Debug)]
 pub struct Secp256k1InstructionHeader {
     pub num_signatures:                u8,
@@ -35,35 +76,15 @@ pub struct Secp256k1InstructionHeader {
 }
 
 impl Secp256k1InstructionHeader {
-    pub fn expected(message_data_size: usize) -> Self {
-        Self {
-            num_signatures:                1,
-            signature_offset:              Secp256k1InstructionHeader::LEN,
-            signature_instruction_index:   0,
-            eth_address_offset:            Secp256k1InstructionHeader::LEN
-                + EVM_SIGNATURE_SIZE as u16
-                + 1,
-            eth_address_instruction_index: 0,
-            message_data_offset:           Secp256k1InstructionHeader::LEN
-                + EVM_SIGNATURE_SIZE as u16
-                + 1
-                + EVM_PUBKEY_SIZE as u16,
-            message_data_size:             message_data_size as u16,
-            message_instruction_index:     0,
-        }
-    }
-}
-
-impl Secp256k1InstructionHeader {
     pub const LEN: u16 = 1 + 2 + 1 + 2 + 1 + 2 + 2 + 1;
 }
 
 pub struct Secp256k1InstructionData {
-    pub header:      Secp256k1InstructionHeader,
-    pub signature:   EvmSignature,
-    pub recovery_id: u8,
-    pub eth_address: EvmPubkey,
-    pub message:     Vec<u8>,
+    pub header:           Secp256k1InstructionHeader,
+    pub signature:        EvmSignature,
+    pub recovery_id:      u8,
+    pub eth_address:      EvmPubkey,
+    pub prefixed_message: EvmPrefixedMessage,
 }
 
 impl AnchorDeserialize for Secp256k1InstructionData {
@@ -83,7 +104,7 @@ impl AnchorDeserialize for Secp256k1InstructionData {
             eth_address,
             signature,
             recovery_id,
-            message,
+            prefixed_message: EvmPrefixedMessage(message),
         })
     }
 }
@@ -98,7 +119,7 @@ impl AnchorSerialize for Secp256k1InstructionData {
         self.recovery_id.serialize(writer)?;
         self.eth_address.serialize(writer)?;
 
-        writer.write_all(&self.message)?;
+        writer.write_all(&self.prefixed_message.0)?;
         Ok(())
     }
 }
@@ -119,7 +140,7 @@ pub fn check_authorized(
 
     let data = Secp256k1InstructionData::try_from_slice(ix.data.as_slice())?;
 
-    if data.header != Secp256k1InstructionHeader::expected(data.message.len()) {
+    if data.header != data.prefixed_message.get_expected_header() {
         return Err(ErrorCode::SignatureVerificationWrongHeader.into());
     }
 
@@ -127,15 +148,8 @@ pub fn check_authorized(
         return Err(ErrorCode::SignatureVerificationWrongSigner.into());
     }
 
-    if data.message.starts_with(EVM_MESSAGE_PREFIX.as_bytes()) {
-        check_message_matches(
-            &data.message.as_slice()[EVM_MESSAGE_PREFIX.len()..],
-            claimant,
-        )?;
-    } else {
-        return Err(ErrorCode::SignatureVerificationWrongMessagePrefix.into());
-    }
-
+    data.prefixed_message
+        .check_is_authorization_message(claimant)?;
 
     Ok(())
 }

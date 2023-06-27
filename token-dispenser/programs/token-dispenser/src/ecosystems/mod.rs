@@ -20,6 +20,7 @@ pub fn check_message_matches(message: &[u8], claimant: &Pubkey) -> Result<()> {
     Ok(())
 }
 
+
 pub fn get_expected_message(claimant: &Pubkey) -> String {
     MESSAGE[0].to_string() + claimant.to_string().as_str() + "\nto withdraw my token allocation.\n"
 }
