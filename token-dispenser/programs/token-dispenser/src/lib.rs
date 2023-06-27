@@ -234,7 +234,7 @@ impl ClaimedEcosystems {
         }
     }
 
-    pub fn insert(&mut self, item: &Identity) -> () {
+    pub fn insert(&mut self, item: &Identity) {
         let index = item.to_discriminant();
         self.set[index] = true;
     }

@@ -29,7 +29,7 @@ impl EvmPubkey {
     pub fn from_evm_hex(hex_pubkey: &str) -> Self {
         let mut pubkey_bytes = [0u8; EVM_PUBKEY_SIZE];
         pubkey_bytes.copy_from_slice(hex::decode(hex_pubkey).unwrap().as_slice());
-        return Self(pubkey_bytes);
+        Self(pubkey_bytes)
     }
 }
 

@@ -14,7 +14,7 @@ pub const MESSAGE: [&str; 2] = [
 ];
 
 pub fn check_message_matches(message: &[u8], claimant: &Pubkey) -> Result<()> {
-    if (message != get_expected_message(claimant).as_bytes()) {
+    if message != get_expected_message(claimant).as_bytes() {
         return Err(ErrorCode::SignatureVerificationWrongMessage.into());
     }
     Ok(())

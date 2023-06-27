@@ -1,7 +1,6 @@
 use {
     super::dispenser_simulator::DispenserSimulator,
     crate::{
-        ecosystems::evm::EvmPubkey,
         get_config_pda,
         get_receipt_pda,
         tests::{

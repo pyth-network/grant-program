@@ -10,10 +10,6 @@ use {
         AnchorDeserialize,
         AnchorSerialize,
     },
-    pythnet_sdk::hashers::{
-        keccak256::Keccak256,
-        Hasher,
-    },
 };
 
 pub const EVM_MESSAGE_PREFIX: &str = "\x19Ethereum Signed Message:\n";
@@ -82,13 +78,13 @@ impl AnchorDeserialize for Secp256k1InstructionData {
         let mut message: Vec<u8> = vec![];
         message.extend_from_slice(&buf[..header.message_data_size as usize]);
         *buf = &buf[header.message_data_size as usize..];
-        return Ok(Secp256k1InstructionData {
+        Ok(Secp256k1InstructionData {
             header,
             eth_address,
             signature,
             recovery_id,
             message,
-        });
+        })
     }
 }
 
@@ -117,7 +113,7 @@ pub fn check_authorized(
         return Err(ErrorCode::SignatureVerificationWrongProgram.into());
     }
 
-    if ix.accounts.len() != 0 {
+    if !ix.accounts.is_empty() {
         return Err(ErrorCode::SignatureVerificationWrongAccounts.into());
     }
 
