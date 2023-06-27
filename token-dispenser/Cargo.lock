@@ -4504,7 +4504,6 @@ name = "token-dispenser"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "hex",
  "libsecp256k1 0.7.1",
  "pythnet-sdk",
  "rand 0.8.5",

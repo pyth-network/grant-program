@@ -26,14 +26,6 @@ use {
     solana_sdk::instruction::Instruction,
 };
 
-impl EvmPubkey {
-    pub fn from_evm_hex(hex_pubkey: &str) -> Self {
-        let mut pubkey_bytes = [0u8; EVM_PUBKEY_SIZE];
-        pubkey_bytes.copy_from_slice(hex::decode(hex_pubkey).unwrap().as_slice());
-        Self(pubkey_bytes)
-    }
-}
-
 /// Creates an Ethereum address from a secp256k1 public key.
 pub fn construct_evm_pubkey(pubkey: &libsecp256k1::PublicKey) -> EvmPubkey {
     let mut addr = [0u8; EVM_PUBKEY_SIZE];
@@ -62,22 +54,6 @@ impl EvmPrefixedMessage {
 }
 
 impl Secp256k1SignedMessage {
-    pub fn from_evm_hex(hex_signature: &str, message: &str) -> Secp256k1SignedMessage {
-        let signature_bytes = hex::decode(hex_signature).expect("Decoding failed");
-        let mut signature_array: [u8; 64] = [0; 64];
-        signature_array.copy_from_slice(&signature_bytes[..64]);
-
-        // EIP 191 prepends a prefix to the message being signed.
-
-
-        Self {
-            signature:        libsecp256k1::Signature::parse_standard(&signature_array)
-                .expect("Decoding failed"),
-            prefixed_message: EvmPrefixedMessage::from_message(message),
-            recovery_id:      RecoveryId::parse_rpc(signature_bytes[64]).unwrap(),
-        }
-    }
-
     pub fn recover(&self) -> libsecp256k1::PublicKey {
         libsecp256k1::recover(
             &self.prefixed_message.hash(),
