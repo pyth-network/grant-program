@@ -75,6 +75,28 @@ impl Secp256k1SignedMessage {
             recovery_id,
         }
     }
+
+    pub fn into_bad_instruction(&self) -> Instruction {
+        let header = self.prefixed_message.get_expected_header();
+
+        let mut signature_bytes = self.signature.serialize();
+        // Flip the first byte of the signature to make it invalid
+        signature_bytes[0] = 255;
+
+        let instruction_data = Secp256k1InstructionData {
+            header,
+            eth_address: self.recover_as_evm_address(),
+            signature: EvmSignature(signature_bytes),
+            recovery_id: self.recovery_id.serialize(),
+            prefixed_message: self.prefixed_message.clone(),
+        };
+
+        Instruction {
+            program_id: SECP256K1_ID,
+            accounts:   vec![],
+            data:       instruction_data.try_to_vec().unwrap(),
+        }
+    }
 }
 
 impl Into<Instruction> for Secp256k1SignedMessage {
@@ -101,12 +123,18 @@ impl Into<Instruction> for Secp256k1SignedMessage {
 }
 
 #[tokio::test]
-pub async fn verify_sig_message_onchain() {
+pub async fn test_verify_signed_message_onchain() {
     let signed_message = Secp256k1SignedMessage::random(&Pubkey::new_unique());
     let mut simulator = DispenserSimulator::new().await;
 
     simulator
-        .process_ix(&[signed_message.into()], &vec![])
+        .process_ix(&[signed_message.clone().into()], &vec![])
         .await
         .unwrap();
+
+
+    assert!(simulator
+        .process_ix(&[signed_message.into_bad_instruction()], &vec![])
+        .await
+        .is_err());
 }
