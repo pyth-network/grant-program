@@ -47,7 +47,7 @@ impl EvmPrefixedMessage {
                 claimant,
             );
         } else {
-            return Err(ErrorCode::SignatureVerificationWrongMessagePrefix.into());
+            Err(ErrorCode::SignatureVerificationWrongMessagePrefix.into())
         }
     }
 

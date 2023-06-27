@@ -6,7 +6,6 @@ use {
             EvmPubkey,
             EvmSignature,
             Secp256k1InstructionData,
-            Secp256k1InstructionHeader,
             EVM_MESSAGE_PREFIX,
             EVM_PUBKEY_SIZE,
         },
@@ -17,7 +16,6 @@ use {
         solana_program::secp256k1_program::ID as SECP256K1_ID,
         AnchorSerialize,
     },
-    libsecp256k1::RecoveryId,
     pythnet_sdk::hashers::{
         keccak256::Keccak256,
         Hasher,
@@ -71,11 +69,11 @@ impl Secp256k1SignedMessage {
         let prefixed_message = EvmPrefixedMessage::from_message(&get_expected_message(claimant));
         let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
         let (signature, recovery_id) = libsecp256k1::sign(&prefixed_message.hash(), &secret);
-        return Self {
+        Self {
             prefixed_message: EvmPrefixedMessage::from_message(&get_expected_message(claimant)),
             signature,
             recovery_id,
-        };
+        }
     }
 }
 
