@@ -63,17 +63,14 @@ pub mod token_dispenser {
         let config = &ctx.accounts.config;
         let cart = &mut ctx.accounts.cart;
 
-        // TO DO : Actually check the proof of identity and the proof of inclusion
         for (index, claim_certificate) in claim_certificates.iter().enumerate() {
+            // Check that the identity corresponding to the leaf has authorized the claimant
             claim_certificate.claim_info.check_claimant_is_authorized(
                 &ctx.accounts.sysvar_instruction,
                 ctx.accounts.claimant.key,
             )?;
 
             // Each leaf of the tree is a hash of the serialized claim info
-            // The identity is derived from the proof of identity (signature)
-            // If the proof of identity does not correspond to a whitelisted identiy, the inclusion
-            // verification will fail
             let leaf_vector = claim_certificate.claim_info.try_to_vec()?;
 
             if !config
@@ -149,10 +146,14 @@ pub struct ClaimInfo {
     amount:   u64,
 }
 
+/**
+ * Ecosystem agnostic identity, this is the identity that the claimant will use to claim tokens.
+ * Typically for a blockchain it is a public key in the blockchain's address space.
+ */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub enum Identity {
     Discord,
-    Solana(Pubkey), // Pubkey, Signature
+    Solana(Pubkey),
     Evm(evm::EvmPubkey),
     Sui,
     Aptos,

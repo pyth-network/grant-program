@@ -15,16 +15,23 @@ use {
     },
 };
 
-pub const EVM_MESSAGE_PREFIX: &str = "\x19Ethereum Signed Message:\n";
 pub const EVM_PUBKEY_SIZE: usize = 20;
+pub const EVM_SIGNATURE_SIZE: usize = 64;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
 pub struct EvmPubkey(pub [u8; EVM_PUBKEY_SIZE]);
 
-pub const EVM_SIGNATURE_SIZE: usize = 64;
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct EvmSignature(pub [u8; EVM_SIGNATURE_SIZE]);
 
+
+pub const EVM_MESSAGE_PREFIX: &str = "\x19Ethereum Signed Message:\n";
+
+/**
+ * An EIP-191 prefixed message.
+ * When a browser wallet signs a message, it prepends the message with a prefix and the length of a message.
+ * This struct represents the prefixed message and helps with creating and verifying it.
+ */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct EvmPrefixedMessage(pub Vec<u8>);
 
@@ -79,6 +86,7 @@ impl Secp256k1InstructionHeader {
     pub const LEN: u16 = 1 + 2 + 1 + 2 + 1 + 2 + 2 + 1;
 }
 
+/** The layout of a Secp256k1 signature verification instruction on Solana */
 pub struct Secp256k1InstructionData {
     pub header:           Secp256k1InstructionHeader,
     pub signature:        EvmSignature,
