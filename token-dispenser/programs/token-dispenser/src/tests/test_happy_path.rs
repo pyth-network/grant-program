@@ -4,7 +4,10 @@ use {
         ecosystems::evm::EvmPubkey,
         get_config_pda,
         get_receipt_pda,
-        tests::dispenser_simulator::IntoTransactionError,
+        tests::{
+            dispenser_simulator::IntoTransactionError,
+            test_evm::Secp256k1SignedMessage,
+        },
         ClaimCertificate,
         ClaimInfo,
         Config,
@@ -33,12 +36,16 @@ use {
 #[tokio::test]
 pub async fn test_happy_path() {
     let dispenser_guard: Keypair = Keypair::new();
+
+    let mut simulator = DispenserSimulator::new().await;
+    let claimant = simulator.genesis_keypair.pubkey();
+
+    let evm_mock_message = Secp256k1SignedMessage::random(&claimant);
+
     let merkle_items: Vec<ClaimInfo> = vec![
         ClaimInfo {
             amount:   100,
-            identity: Identity::Evm(EvmPubkey::from_evm_hex(
-                "f3f9225A2166861e745742509CED164183a626d7",
-            )),
+            identity: Identity::Evm(evm_mock_message.recover_as_evm_address()),
         },
         ClaimInfo {
             amount:   200,
@@ -76,7 +83,7 @@ pub async fn test_happy_path() {
         merkle_root:     merkle_tree.root.clone(),
         dispenser_guard: dispenser_guard.pubkey(),
     };
-    let mut simulator = DispenserSimulator::new().await;
+
     simulator.initialize(target_config.clone()).await.unwrap();
 
     let config_account: Account = simulator.get_account(get_config_pda().0).await.unwrap();
@@ -99,23 +106,35 @@ pub async fn test_happy_path() {
             .is_none());
     }
 
-    simulator
-        .claim(&dispenser_guard, claim_certificates.clone())
-        .await
-        .unwrap();
+    for claim_certificate in claim_certificates.clone() {
+        simulator
+            .claim(
+                &dispenser_guard,
+                claim_certificate,
+                evm_mock_message.clone(),
+            )
+            .await
+            .unwrap();
+    }
 
     // Check state
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
 
     // Can't claim twice
-    assert_eq!(
-        simulator
-            .claim(&dispenser_guard, claim_certificates.clone())
-            .await
-            .unwrap_err()
-            .unwrap(),
-        ErrorCode::AlreadyClaimed.into_transation_error()
-    );
+    for claim_certificate in claim_certificates {
+        assert_eq!(
+            simulator
+                .claim(
+                    &dispenser_guard,
+                    claim_certificate,
+                    evm_mock_message.clone()
+                )
+                .await
+                .unwrap_err()
+                .unwrap(),
+            ErrorCode::AlreadyClaimed.into_transation_error()
+        );
+    }
 
     // Check state
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;

@@ -261,6 +261,7 @@ pub enum ErrorCode {
     SignatureVerificationWrongAccounts,
     SignatureVerificationWrongHeader,
     SignatureVerificationWrongMessage,
+    SignatureVerificationWrongMessagePrefix,
     SignatureVerificationWrongSigner,
     SignatureVerificationWrongClaimant,
 }

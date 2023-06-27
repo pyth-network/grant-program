@@ -1,14 +1,18 @@
 use {
     super::dispenser_simulator::DispenserSimulator,
-    crate::ecosystems::evm::{
-        EvmPubkey,
-        EvmSignature,
-        Secp256k1InstructionData,
-        Secp256k1InstructionHeader,
-        EVM_MESSAGE_PREFIX,
-        EVM_PUBKEY_SIZE,
+    crate::ecosystems::{
+        evm::{
+            EvmPubkey,
+            EvmSignature,
+            Secp256k1InstructionData,
+            Secp256k1InstructionHeader,
+            EVM_MESSAGE_PREFIX,
+            EVM_PUBKEY_SIZE,
+        },
+        get_expected_message,
     },
     anchor_lang::{
+        prelude::Pubkey,
         solana_program::secp256k1_program::ID as SECP256K1_ID,
         AnchorSerialize,
     },
@@ -46,6 +50,7 @@ pub fn construct_evm_pubkey(pubkey: &libsecp256k1::PublicKey) -> EvmPubkey {
     EvmPubkey(addr)
 }
 
+#[derive(Clone)]
 pub struct Secp256k1SignedMessage {
     pub message:     Vec<u8>,
     pub signature:   libsecp256k1::Signature,
@@ -78,6 +83,22 @@ impl Secp256k1SignedMessage {
     pub fn recover_as_evm_address(&self) -> EvmPubkey {
         construct_evm_pubkey(&self.recover())
     }
+
+    pub fn random(claimant: &Pubkey) -> Self {
+        let hashed_message =
+            libsecp256k1::Message::parse(&Keccak256::hashv(&[(EVM_MESSAGE_PREFIX.to_string()
+                + &get_expected_message(claimant))
+                .as_bytes()]));
+        let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
+        let (signature, recovery_id) = libsecp256k1::sign(&hashed_message, &secret);
+        return Self {
+            message: (EVM_MESSAGE_PREFIX.to_string() + &get_expected_message(claimant))
+                .as_bytes()
+                .to_vec(),
+            signature,
+            recovery_id,
+        };
+    }
 }
 
 impl Into<Instruction> for Secp256k1SignedMessage {
@@ -109,17 +130,8 @@ impl Into<Instruction> for Secp256k1SignedMessage {
 }
 
 #[tokio::test]
-pub async fn verify_sig_message_new() {
-    let signed_message = Secp256k1SignedMessage::from_evm_hex("dac0dfe99fb958f80aa0bda65b4fe3b02a7f4d07baa8395b5dad8585e69fe5d05d9a52c108d201a4465348b3fd8aecd7e56a9690c0ee584fd3b8d6cd7effb46d1b", SAMPLE_MESSAGE);
-    assert_eq!(
-        "f3f9225a2166861e745742509ced164183a626d7",
-        hex::encode(signed_message.recover_as_evm_address().0)
-    );
-}
-
-#[tokio::test]
 pub async fn verify_sig_message_onchain() {
-    let signed_message = Secp256k1SignedMessage::from_evm_hex("dac0dfe99fb958f80aa0bda65b4fe3b02a7f4d07baa8395b5dad8585e69fe5d05d9a52c108d201a4465348b3fd8aecd7e56a9690c0ee584fd3b8d6cd7effb46d1b", SAMPLE_MESSAGE);
+    let signed_message = Secp256k1SignedMessage::random(&Pubkey::new_unique());
     let mut simulator = DispenserSimulator::new().await;
 
     simulator

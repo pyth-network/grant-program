@@ -1,4 +1,5 @@
 use {
+    super::check_message_matches,
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
@@ -122,11 +123,6 @@ pub fn check_authorized(
 
     let data = Secp256k1InstructionData::try_from_slice(ix.data.as_slice())?;
 
-    msg!("data.header: {:?}", data.header);
-    msg!(
-        "data.header expected: {:?}",
-        Secp256k1InstructionHeader::expected(data.message.len())
-    );
     if data.header != Secp256k1InstructionHeader::expected(data.message.len()) {
         return Err(ErrorCode::SignatureVerificationWrongHeader.into());
     }
@@ -134,6 +130,16 @@ pub fn check_authorized(
     if data.eth_address != *pubkey {
         return Err(ErrorCode::SignatureVerificationWrongSigner.into());
     }
+
+    if data.message.starts_with(EVM_MESSAGE_PREFIX.as_bytes()) {
+        check_message_matches(
+            &data.message.as_slice()[EVM_MESSAGE_PREFIX.len()..],
+            claimant,
+        )?;
+    } else {
+        return Err(ErrorCode::SignatureVerificationWrongMessagePrefix.into());
+    }
+
 
     Ok(())
 }

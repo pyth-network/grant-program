@@ -35,7 +35,6 @@ use {
     },
     solana_sdk::{
         account::Account,
-        compute_budget::ComputeBudgetInstruction,
         instruction::InstructionError,
         signature::Keypair,
         signer::Signer,
@@ -47,9 +46,9 @@ use {
 };
 
 pub struct DispenserSimulator {
-    banks_client:     BanksClient,
-    genesis_keypair:  Keypair,
-    recent_blockhash: hash::Hash,
+    banks_client:        BanksClient,
+    pub genesis_keypair: Keypair,
+    recent_blockhash:    hash::Hash,
 }
 
 impl DispenserSimulator {
@@ -93,23 +92,22 @@ impl DispenserSimulator {
         self.process_ix(&[instruction], &vec![]).await
     }
 
-    pub async fn claim(
+    pub async fn claim<T: Into<Instruction>>(
         &mut self,
         dispenser_guard: &Keypair,
-        claim_certificates: Vec<ClaimCertificate>,
+        claim_certificate: ClaimCertificate,
+        signed_message: T,
     ) -> Result<(), BanksClientError> {
-        let evm_signed_message = Secp256k1SignedMessage::from_evm_hex("dac0dfe99fb958f80aa0bda65b4fe3b02a7f4d07baa8395b5dad8585e69fe5d05d9a52c108d201a4465348b3fd8aecd7e56a9690c0ee584fd3b8d6cd7effb46d1b", SAMPLE_MESSAGE);
-
         let mut accounts =
             accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey())
                 .to_account_metas(None);
 
-        for claim_certificate in &claim_certificates {
-            accounts.push(AccountMeta::new(
-                get_receipt_pda(&claim_certificate.claim_info.try_to_vec().unwrap()).0,
-                false,
-            ));
-        }
+
+        accounts.push(AccountMeta::new(
+            get_receipt_pda(&claim_certificate.claim_info.try_to_vec().unwrap()).0,
+            false,
+        ));
+
 
         accounts.push(AccountMeta::new_readonly(
             system_program::System::id(),
@@ -118,12 +116,14 @@ impl DispenserSimulator {
         accounts.push(AccountMeta::new(self.genesis_keypair.pubkey(), true));
 
 
-        let instruction_data: instruction::Claim = instruction::Claim { claim_certificates };
+        let instruction_data: instruction::Claim = instruction::Claim {
+            claim_certificates: vec![claim_certificate],
+        };
         let instruction =
             Instruction::new_with_bytes(crate::id(), &instruction_data.data(), accounts);
 
         self.process_ix(
-            &[evm_signed_message.into(), instruction],
+            &[signed_message.into(), instruction],
             &vec![dispenser_guard],
         )
         .await
