@@ -13,7 +13,7 @@ pub mod secp256k1;
  * Ecosystem agnostic authorization message that the identity on the leaf needs to sign.
  * */
 pub const AUTHORIZATION_MESSAGE: [&str; 2] = [
-    "I irrevocably authorize Solana wallet\n",
+    "PythGrantProgram:\nI irrevocably authorize Solana wallet\n",
     "\nto withdraw my token allocation.\n",
 ];
 
