@@ -59,10 +59,6 @@ impl EvmPrefixedMessage {
     pub fn get_payload(&self) -> &[u8] {
         self.0.as_slice()
     }
-
-    pub fn get_prefix_length(&self) -> usize {
-        EVM_MESSAGE_PREFIX.len() + self.0.len().to_string().len() + self.0.len()
-    }
 }
 
 #[cfg(test)]
@@ -78,5 +74,9 @@ impl EvmPrefixedMessage {
 
     pub fn hash(&self) -> libsecp256k1::Message {
         libsecp256k1::Message::parse(&Keccak256::hashv(&[&self.with_prefix()]))
+    }
+
+    pub fn get_prefix_length(&self) -> usize {
+        EVM_MESSAGE_PREFIX.len() + self.0.len().to_string().len() + self.0.len()
     }
 }
