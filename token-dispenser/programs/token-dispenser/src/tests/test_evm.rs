@@ -1,10 +1,7 @@
 use {
     super::dispenser_simulator::DispenserSimulator,
     crate::ecosystems::{
-        evm::{
-            EvmPrefixedMessage,
-            EVM_MESSAGE_PREFIX,
-        },
+        evm::EvmPrefixedMessage,
         get_expected_message,
         secp256k1::{
             EvmPubkey,
@@ -22,10 +19,7 @@ use {
         keccak256::Keccak256,
         Hasher,
     },
-    solana_program_test::{
-        tokio,
-        tokio::signal,
-    },
+    solana_program_test::tokio,
     solana_sdk::instruction::Instruction,
 };
 

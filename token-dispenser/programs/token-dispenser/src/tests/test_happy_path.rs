@@ -50,18 +50,18 @@ pub async fn test_happy_path() {
             amount:   200,
             identity: Identity::Discord,
         },
-        ClaimInfo {
-            amount:   300,
-            identity: Identity::Solana(Pubkey::default()),
-        },
-        ClaimInfo {
-            amount:   400,
-            identity: Identity::Sui,
-        },
-        ClaimInfo {
-            amount:   500,
-            identity: Identity::Aptos,
-        },
+        // ClaimInfo {
+        //     amount:   300,
+        //     identity: Identity::Solana(Pubkey::default()),
+        // },
+        // ClaimInfo {
+        //     amount:   400,
+        //     identity: Identity::Sui,
+        // },
+        // ClaimInfo {
+        //     amount:   500,
+        //     identity: Identity::Aptos,
+        // },
     ];
 
     let merkle_items_serialized = merkle_items

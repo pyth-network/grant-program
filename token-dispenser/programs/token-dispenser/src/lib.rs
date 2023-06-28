@@ -311,7 +311,7 @@ impl ClaimInfo {
                 .get_payload(),
                 claimant,
             ),
-            _ => Ok(()),
+            _ => Err(ErrorCode::NotImplemented.into()),
         }
     }
 }
