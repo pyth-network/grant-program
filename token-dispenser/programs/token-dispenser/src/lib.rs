@@ -1,7 +1,6 @@
 #![allow(clippy::result_large_err)]
 
 use {
-    crate::ecosystems::evm,
     anchor_lang::{
         prelude::*,
         solana_program::{
@@ -20,10 +19,7 @@ use {
     },
     ecosystems::{
         check_message,
-        evm::{
-            check_authorized,
-            EvmPrefixedMessage,
-        },
+        evm::EvmPrefixedMessage,
         secp256k1::{
             self,
             Secp256k1InstructionData,

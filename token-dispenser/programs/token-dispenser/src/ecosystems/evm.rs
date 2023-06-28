@@ -85,14 +85,3 @@ impl EvmPrefixedMessage {
         libsecp256k1::Message::parse(&Keccak256::hashv(&[&self.with_prefix()]))
     }
 }
-
-pub fn check_authorized(
-    pubkey: &EvmPubkey,
-    ix: SolanaInstruction,
-    claimant: &Pubkey,
-) -> Result<()> {
-    // Check program address
-    let evm_message = EvmPrefixedMessage::parse(&data.message)?;
-    check_message(evm_message.get_payload(), claimant)?;
-    Ok(())
-}

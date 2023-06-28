@@ -2,7 +2,6 @@ use {
     super::test_evm::Secp256k1SignedMessage,
     crate::{
         accounts,
-        ecosystems::secp256k1::Secp256k1InstructionData,
         get_receipt_pda,
         instruction,
         ClaimCertificate,
