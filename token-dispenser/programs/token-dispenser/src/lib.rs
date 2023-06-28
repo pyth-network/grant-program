@@ -153,7 +153,8 @@ pub struct ClaimInfo {
 }
 
 /**
- * Ecosystem agnostic identity, this is the identity that the claimant will use to claim tokens.
+ * This is the identity that the claimant will use to claim tokens.
+ * A claimant can claim tokens for 1 identity on each ecosystem.
  * Typically for a blockchain it is a public key in the blockchain's address space.
  */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
