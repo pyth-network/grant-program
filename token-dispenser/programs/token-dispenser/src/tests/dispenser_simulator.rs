@@ -120,7 +120,7 @@ impl DispenserSimulator {
             Instruction::new_with_bytes(crate::id(), &instruction_data.data(), accounts);
 
         self.process_ix(
-            &[signed_message.into_instruction(0), instruction],
+            &[signed_message.into_instruction(0, true), instruction],
             &vec![dispenser_guard],
         )
         .await

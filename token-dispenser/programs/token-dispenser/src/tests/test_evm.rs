@@ -69,7 +69,7 @@ impl Secp256k1SignedMessage {
         }
     }
 
-    pub fn into_bad_instruction(&self, instruction_index: u8) -> Instruction {
+    pub fn into_instruction(&self, instruction_index: u8, valid_signature: bool) -> Instruction {
         let header = Secp256k1InstructionHeader::expected_header(
             self.prefixed_message
                 .get_prefix_length()
@@ -79,37 +79,16 @@ impl Secp256k1SignedMessage {
         );
 
         let mut signature_bytes = self.signature.serialize();
-        // Flip the first byte of the signature to make it invalid
-        signature_bytes[0] = 255;
+        if !valid_signature {
+            // Flip the first byte of the signature to make it invalid
+            signature_bytes[0] ^= 0xff;
+        }
+
 
         let instruction_data = Secp256k1InstructionData {
             header,
             eth_address: self.recover_as_evm_address(),
             signature: Secp256k1Signature(signature_bytes),
-            recovery_id: self.recovery_id.serialize(),
-            message: self.prefixed_message.with_prefix(),
-        };
-
-        Instruction {
-            program_id: SECP256K1_ID,
-            accounts:   vec![],
-            data:       instruction_data.try_to_vec().unwrap(),
-        }
-    }
-
-    pub fn into_instruction(&self, instruction_index: u8) -> Instruction {
-        let header = Secp256k1InstructionHeader::expected_header(
-            self.prefixed_message
-                .get_prefix_length()
-                .try_into()
-                .unwrap(),
-            instruction_index,
-        );
-
-        let instruction_data = Secp256k1InstructionData {
-            header,
-            eth_address: self.recover_as_evm_address(),
-            signature: Secp256k1Signature(self.signature.serialize()),
             recovery_id: self.recovery_id.serialize(),
             message: self.prefixed_message.with_prefix(),
         };
@@ -129,13 +108,13 @@ pub async fn test_verify_signed_message_onchain() {
     let mut simulator = DispenserSimulator::new().await;
 
     assert!(simulator
-        .process_ix(&[signed_message.into_instruction(0)], &vec![])
+        .process_ix(&[signed_message.into_instruction(0, true)], &vec![])
         .await
         .is_ok());
 
 
     assert!(simulator
-        .process_ix(&[signed_message.into_bad_instruction(0)], &vec![])
+        .process_ix(&[signed_message.into_instruction(0, false)], &vec![])
         .await
         .is_err());
 }
