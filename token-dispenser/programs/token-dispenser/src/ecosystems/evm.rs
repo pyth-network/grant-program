@@ -29,17 +29,13 @@ impl EvmPrefixedMessage {
         if data.starts_with(EVM_MESSAGE_PREFIX.as_bytes()) {
             let length_with_message_length = data.len().saturating_sub(EVM_MESSAGE_PREFIX.len());
             let length = match length_with_message_length {
-                _ if 1 + 1 <= length_with_message_length && length_with_message_length <= 9 + 1 => {
+                _ if (1 + 1..=9 + 1).contains(&length_with_message_length) => {
                     length_with_message_length.saturating_sub(1)
                 }
-                _ if 10 + 2 <= length_with_message_length
-                    && length_with_message_length <= 99 + 2 =>
-                {
+                _ if (10 + 2..=99 + 2).contains(&length_with_message_length) => {
                     length_with_message_length.saturating_sub(2)
                 }
-                _ if 100 + 3 <= length_with_message_length
-                    && length_with_message_length <= 999 + 3 =>
-                {
+                _ if (100 + 3..=999 + 3).contains(&length_with_message_length) => {
                     length_with_message_length.saturating_sub(3)
                 }
                 _ => return Err(ErrorCode::SignatureVerificationWrongMessagePrefix.into()),
