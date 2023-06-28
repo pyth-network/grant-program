@@ -4,14 +4,9 @@ use pythnet_sdk::hashers::{
     Hasher,
 };
 use {
-    super::{
-        check_message,
-        secp256k1::EvmPubkey,
-    },
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
-        solana_program::instruction::Instruction as SolanaInstruction,
         AnchorDeserialize,
         AnchorSerialize,
     },
