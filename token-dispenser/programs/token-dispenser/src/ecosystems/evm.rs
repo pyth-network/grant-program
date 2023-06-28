@@ -6,19 +6,12 @@ use pythnet_sdk::hashers::{
 use {
     super::{
         check_message,
-        get_expected_message,
-        secp256k1::{
-            EvmPubkey,
-            Secp256k1InstructionData,
-        },
+        secp256k1::EvmPubkey,
     },
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
-        solana_program::{
-            instruction::Instruction as SolanaInstruction,
-            secp256k1_program::ID as SECP256K1_ID,
-        },
+        solana_program::instruction::Instruction as SolanaInstruction,
         AnchorDeserialize,
         AnchorSerialize,
     },
@@ -99,18 +92,6 @@ pub fn check_authorized(
     claimant: &Pubkey,
 ) -> Result<()> {
     // Check program address
-    if ix.program_id != SECP256K1_ID {
-        return Err(ErrorCode::SignatureVerificationWrongProgram.into());
-    }
-
-    if !ix.accounts.is_empty() {
-        return Err(ErrorCode::SignatureVerificationWrongAccounts.into());
-    }
-
-    let data = Secp256k1InstructionData::deserialize_and_check_header_and_signer(
-        ix.data.as_slice(),
-        pubkey,
-    )?;
     let evm_message = EvmPrefixedMessage::parse(&data.message)?;
     check_message(evm_message.get_payload(), claimant)?;
     Ok(())

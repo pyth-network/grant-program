@@ -2,6 +2,10 @@ use {
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
+        solana_program::{
+            instruction::Instruction,
+            secp256k1_program::ID as SECP256K1_ID,
+        },
         AnchorDeserialize,
         AnchorSerialize,
     },
@@ -66,11 +70,19 @@ impl Secp256k1InstructionHeader {
 }
 
 impl Secp256k1InstructionData {
-    pub fn deserialize_and_check_header_and_signer(
-        data: &[u8],
+    pub fn from_instruction_and_check_signer(
+        instruction: &Instruction,
         pubkey: &EvmPubkey,
     ) -> Result<Self> {
-        let result = Self::try_from_slice(data)?;
+        if instruction.program_id != SECP256K1_ID {
+            return Err(ErrorCode::SignatureVerificationWrongProgram.into());
+        }
+
+        if !instruction.accounts.is_empty() {
+            return Err(ErrorCode::SignatureVerificationWrongAccounts.into());
+        }
+
+        let result = Self::try_from_slice(&instruction.data)?;
         if result.header
             != Secp256k1InstructionHeader::expected_header(
                 result.header.message_data_size,

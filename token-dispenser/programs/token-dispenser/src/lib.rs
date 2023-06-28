@@ -19,8 +19,15 @@ use {
         system_program,
     },
     ecosystems::{
-        evm::check_authorized,
-        secp256k1,
+        check_message,
+        evm::{
+            check_authorized,
+            EvmPrefixedMessage,
+        },
+        secp256k1::{
+            self,
+            Secp256k1InstructionData,
+        },
     },
     pythnet_sdk::{
         accumulators::merkle::{
@@ -294,9 +301,17 @@ impl ClaimInfo {
 
         match self.identity {
             Identity::Discord => Ok(()),
-            Identity::Evm(pubkey) => {
-                check_authorized(&pubkey, signature_verification_instruction, claimant)
-            }
+            Identity::Evm(pubkey) => check_message(
+                EvmPrefixedMessage::parse(
+                    &Secp256k1InstructionData::from_instruction_and_check_signer(
+                        &signature_verification_instruction,
+                        &pubkey,
+                    )?
+                    .message,
+                )?
+                .get_payload(),
+                claimant,
+            ),
             _ => Ok(()),
         }
     }
