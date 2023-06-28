@@ -128,10 +128,10 @@ pub async fn test_verify_signed_message_onchain() {
 
     let mut simulator = DispenserSimulator::new().await;
 
-    simulator
+    assert!(simulator
         .process_ix(&[signed_message.into_instruction(0)], &vec![])
         .await
-        .unwrap();
+        .is_ok());
 
 
     assert!(simulator
