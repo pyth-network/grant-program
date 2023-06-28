@@ -74,6 +74,7 @@ pub mod token_dispenser {
             claim_certificate.claim_info.check_claimant_is_authorized(
                 &ctx.accounts.sysvar_instruction,
                 ctx.accounts.claimant.key,
+                index,
             )?;
 
             // Each leaf of the tree is a hash of the serialized claim info
@@ -292,9 +293,10 @@ impl ClaimInfo {
         &self,
         sysvar_instruction: &AccountInfo,
         claimant: &Pubkey,
+        index: usize,
     ) -> Result<()> {
         let signature_verification_instruction =
-            load_instruction_at_checked(0, sysvar_instruction)?;
+            load_instruction_at_checked(index, sysvar_instruction)?;
 
         match self.identity {
             Identity::Discord => Ok(()),

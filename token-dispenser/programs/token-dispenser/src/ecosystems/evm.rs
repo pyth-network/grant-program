@@ -49,7 +49,7 @@ impl EvmPrefixedMessage {
                 ));
             }
         }
-        return Err(ErrorCode::SignatureVerificationWrongMessagePrefix.into());
+        Err(ErrorCode::SignatureVerificationWrongMessagePrefix.into())
     }
 
     pub fn get_payload(&self) -> &[u8] {
