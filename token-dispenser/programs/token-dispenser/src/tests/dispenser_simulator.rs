@@ -1,6 +1,8 @@
 use {
+    super::test_evm::Secp256k1SignedMessage,
     crate::{
         accounts,
+        ecosystems::secp256k1::Secp256k1InstructionData,
         get_receipt_pda,
         instruction,
         ClaimCertificate,
@@ -88,11 +90,11 @@ impl DispenserSimulator {
         self.process_ix(&[instruction], &vec![]).await
     }
 
-    pub async fn claim<T: Into<Instruction>>(
+    pub async fn claim(
         &mut self,
         dispenser_guard: &Keypair,
         claim_certificate: ClaimCertificate,
-        signed_message: T,
+        signed_message: &Secp256k1SignedMessage,
     ) -> Result<(), BanksClientError> {
         let mut accounts =
             accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey())
@@ -119,7 +121,7 @@ impl DispenserSimulator {
             Instruction::new_with_bytes(crate::id(), &instruction_data.data(), accounts);
 
         self.process_ix(
-            &[signed_message.into(), instruction],
+            &[signed_message.into_instruction(0), instruction],
             &vec![dispenser_guard],
         )
         .await

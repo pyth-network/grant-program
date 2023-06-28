@@ -3,13 +3,15 @@ use {
     crate::ecosystems::{
         evm::{
             EvmPrefixedMessage,
-            EvmPubkey,
-            EvmSignature,
-            Secp256k1InstructionData,
             EVM_MESSAGE_PREFIX,
-            EVM_PUBKEY_SIZE,
         },
         get_expected_message,
+        secp256k1::{
+            EvmPubkey,
+            Secp256k1InstructionData,
+            Secp256k1InstructionHeader,
+            Secp256k1Signature,
+        },
     },
     anchor_lang::{
         prelude::Pubkey,
@@ -20,15 +22,18 @@ use {
         keccak256::Keccak256,
         Hasher,
     },
-    solana_program_test::tokio,
+    solana_program_test::{
+        tokio,
+        tokio::signal,
+    },
     solana_sdk::instruction::Instruction,
 };
 
 /// Creates an Ethereum address from a secp256k1 public key.
 pub fn construct_evm_pubkey(pubkey: &libsecp256k1::PublicKey) -> EvmPubkey {
-    let mut addr = [0u8; EVM_PUBKEY_SIZE];
+    let mut addr = [0u8; EvmPubkey::LEN];
     addr.copy_from_slice(&Keccak256::hashv(&[&pubkey.serialize()[1..]])[12..]);
-    assert_eq!(addr.len(), EVM_PUBKEY_SIZE);
+    assert_eq!(addr.len(), EvmPubkey::LEN);
     EvmPubkey(addr)
 }
 
@@ -37,18 +42,6 @@ pub struct Secp256k1SignedMessage {
     pub prefixed_message: EvmPrefixedMessage,
     pub signature:        libsecp256k1::Signature,
     pub recovery_id:      libsecp256k1::RecoveryId,
-}
-
-impl EvmPrefixedMessage {
-    pub fn from_message(message: &str) -> Self {
-        let mut prefixed_message = format!("{}{}", EVM_MESSAGE_PREFIX, message.len()).into_bytes();
-        prefixed_message.extend_from_slice(message.as_bytes());
-        Self(prefixed_message)
-    }
-
-    pub fn hash(&self) -> libsecp256k1::Message {
-        libsecp256k1::Message::parse(&Keccak256::hashv(&[&self.0]))
-    }
 }
 
 impl Secp256k1SignedMessage {
@@ -66,18 +59,24 @@ impl Secp256k1SignedMessage {
     }
 
     pub fn random(claimant: &Pubkey) -> Self {
-        let prefixed_message = EvmPrefixedMessage::from_message(&get_expected_message(claimant));
+        let prefixed_message = EvmPrefixedMessage::new(&get_expected_message(claimant));
         let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
         let (signature, recovery_id) = libsecp256k1::sign(&prefixed_message.hash(), &secret);
         Self {
-            prefixed_message: EvmPrefixedMessage::from_message(&get_expected_message(claimant)),
+            prefixed_message: EvmPrefixedMessage::new(&get_expected_message(claimant)),
             signature,
             recovery_id,
         }
     }
 
-    pub fn into_bad_instruction(&self) -> Instruction {
-        let header = self.prefixed_message.get_expected_header();
+    pub fn into_bad_instruction(&self, instruction_index: u8) -> Instruction {
+        let header = Secp256k1InstructionHeader::expected_header(
+            self.prefixed_message
+                .get_prefix_length()
+                .try_into()
+                .unwrap(),
+            instruction_index,
+        );
 
         let mut signature_bytes = self.signature.serialize();
         // Flip the first byte of the signature to make it invalid
@@ -86,9 +85,9 @@ impl Secp256k1SignedMessage {
         let instruction_data = Secp256k1InstructionData {
             header,
             eth_address: self.recover_as_evm_address(),
-            signature: EvmSignature(signature_bytes),
+            signature: Secp256k1Signature(signature_bytes),
             recovery_id: self.recovery_id.serialize(),
-            prefixed_message: self.prefixed_message.clone(),
+            message: self.prefixed_message.with_prefix(),
         };
 
         Instruction {
@@ -97,21 +96,22 @@ impl Secp256k1SignedMessage {
             data:       instruction_data.try_to_vec().unwrap(),
         }
     }
-}
 
-impl Into<Instruction> for Secp256k1SignedMessage {
-    /**
-     * Transforms into a solana instruction that will verify the signature when executed
-     */
-    fn into(self) -> Instruction {
-        let header = self.prefixed_message.get_expected_header();
+    pub fn into_instruction(&self, instruction_index: u8) -> Instruction {
+        let header = Secp256k1InstructionHeader::expected_header(
+            self.prefixed_message
+                .get_prefix_length()
+                .try_into()
+                .unwrap(),
+            instruction_index,
+        );
 
         let instruction_data = Secp256k1InstructionData {
             header,
             eth_address: self.recover_as_evm_address(),
-            signature: EvmSignature(self.signature.serialize()),
+            signature: Secp256k1Signature(self.signature.serialize()),
             recovery_id: self.recovery_id.serialize(),
-            prefixed_message: self.prefixed_message,
+            message: self.prefixed_message.with_prefix(),
         };
 
         Instruction {
@@ -125,16 +125,17 @@ impl Into<Instruction> for Secp256k1SignedMessage {
 #[tokio::test]
 pub async fn test_verify_signed_message_onchain() {
     let signed_message = Secp256k1SignedMessage::random(&Pubkey::new_unique());
+
     let mut simulator = DispenserSimulator::new().await;
 
     simulator
-        .process_ix(&[signed_message.clone().into()], &vec![])
+        .process_ix(&[signed_message.into_instruction(0)], &vec![])
         .await
         .unwrap();
 
 
     assert!(simulator
-        .process_ix(&[signed_message.into_bad_instruction()], &vec![])
+        .process_ix(&[signed_message.into_bad_instruction(0)], &vec![])
         .await
         .is_err());
 }

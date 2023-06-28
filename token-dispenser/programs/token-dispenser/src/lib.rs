@@ -18,7 +18,10 @@ use {
         },
         system_program,
     },
-    ecosystems::evm::check_authorized,
+    ecosystems::{
+        evm::check_authorized,
+        secp256k1,
+    },
     pythnet_sdk::{
         accumulators::merkle::{
             MerklePath,
@@ -154,7 +157,7 @@ pub struct ClaimInfo {
 pub enum Identity {
     Discord,
     Solana(Pubkey),
-    Evm(evm::EvmPubkey),
+    Evm(secp256k1::EvmPubkey),
     Sui,
     Aptos,
     Cosmwasm,

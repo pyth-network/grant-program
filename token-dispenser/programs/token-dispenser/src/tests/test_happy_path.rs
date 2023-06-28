@@ -107,11 +107,7 @@ pub async fn test_happy_path() {
 
     for claim_certificate in claim_certificates.clone() {
         simulator
-            .claim(
-                &dispenser_guard,
-                claim_certificate,
-                evm_mock_message.clone(),
-            )
+            .claim(&dispenser_guard, claim_certificate, &evm_mock_message)
             .await
             .unwrap();
     }
@@ -123,11 +119,7 @@ pub async fn test_happy_path() {
     for claim_certificate in claim_certificates {
         assert_eq!(
             simulator
-                .claim(
-                    &dispenser_guard,
-                    claim_certificate,
-                    evm_mock_message.clone()
-                )
+                .claim(&dispenser_guard, claim_certificate, &evm_mock_message)
                 .await
                 .unwrap_err()
                 .unwrap(),

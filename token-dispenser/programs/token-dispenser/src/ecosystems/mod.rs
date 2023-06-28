@@ -7,6 +7,7 @@ use {
 };
 
 pub mod evm;
+pub mod secp256k1;
 
 /**
  * Ecosystem agnostic authorization message that the identity on the leaf needs to sign.
@@ -19,7 +20,7 @@ pub const AUTHORIZATION_MESSAGE: [&str; 2] = [
 /**
  * Check a message matches the expected authorization message.
  */
-pub fn check_message_matches(message: &[u8], claimant: &Pubkey) -> Result<()> {
+pub fn check_message(message: &[u8], claimant: &Pubkey) -> Result<()> {
     if message != get_expected_message(claimant).as_bytes() {
         return Err(ErrorCode::SignatureVerificationWrongMessage.into());
     }
