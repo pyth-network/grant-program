@@ -84,7 +84,7 @@ impl Secp256k1SignedMessage {
             eth_address: self.recover_as_evm_address(),
             signature: Secp256k1Signature(signature_bytes),
             recovery_id: self.recovery_id.serialize(),
-            message: self.prefixed_message.with_prefix(),
+            message: self.prefixed_message.get_prefixed_message(),
         };
 
         Instruction {
