@@ -12,8 +12,9 @@ pub mod secp256k1;
 /**
  * Ecosystem agnostic authorization message that the identity on the leaf needs to sign.
  * */
-pub const AUTHORIZATION_MESSAGE: [&str; 2] = [
-    "PythGrantProgram:\nI irrevocably authorize Solana wallet\n",
+pub const AUTHORIZATION_MESSAGE: [&str; 3] = [
+    "Pyth Grant Program ID:\n",
+    "\nI irrevocably authorize Solana wallet\n",
     "\nto withdraw my token allocation.\n",
 ];
 
@@ -31,5 +32,9 @@ pub fn check_message(message: &[u8], claimant: &Pubkey) -> Result<()> {
  * Get the expected authorization message given the claimant authorized to receive the claim.
  */
 pub fn get_expected_message(claimant: &Pubkey) -> String {
-    AUTHORIZATION_MESSAGE[0].to_string() + claimant.to_string().as_str() + AUTHORIZATION_MESSAGE[1]
+    AUTHORIZATION_MESSAGE[0].to_string()
+        + &crate::ID.to_string()
+        + AUTHORIZATION_MESSAGE[1]
+        + claimant.to_string().as_str()
+        + AUTHORIZATION_MESSAGE[2]
 }
