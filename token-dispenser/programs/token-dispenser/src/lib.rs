@@ -299,7 +299,7 @@ impl ClaimInfo {
             load_instruction_at_checked(index, sysvar_instruction)?;
 
         match self.identity {
-            Identity::Discord => Ok(()),
+            Identity::Discord => Ok(()), // The Discord identity will be checked off-chain by the dispenser guard (it won't sign otherwise)
             Identity::Evm(pubkey) => check_message(
                 EvmPrefixedMessage::parse(
                     &Secp256k1InstructionData::from_instruction_and_check_signer(
