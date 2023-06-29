@@ -1,7 +1,7 @@
 use {
+    super::test_evm::Secp256k1SignedMessage,
     crate::{
         accounts,
-        get_claim,
         get_receipt_pda,
         instruction,
         ClaimCertificate,
@@ -32,7 +32,6 @@ use {
     },
     solana_sdk::{
         account::Account,
-        compute_budget::ComputeBudgetInstruction,
         instruction::InstructionError,
         signature::Keypair,
         signer::Signer,
@@ -44,9 +43,9 @@ use {
 };
 
 pub struct DispenserSimulator {
-    banks_client:     BanksClient,
-    genesis_keypair:  Keypair,
-    recent_blockhash: hash::Hash,
+    banks_client:        BanksClient,
+    pub genesis_keypair: Keypair,
+    recent_blockhash:    hash::Hash,
 }
 
 impl DispenserSimulator {
@@ -60,7 +59,7 @@ impl DispenserSimulator {
         }
     }
 
-    async fn process_ix(
+    pub async fn process_ix(
         &mut self,
         instructions: &[Instruction],
         signers: &Vec<&Keypair>,
@@ -93,20 +92,19 @@ impl DispenserSimulator {
     pub async fn claim(
         &mut self,
         dispenser_guard: &Keypair,
-        claim_certificates: Vec<ClaimCertificate>,
+        claim_certificate: ClaimCertificate,
+        signed_message: &Secp256k1SignedMessage,
     ) -> Result<(), BanksClientError> {
-        let compute_budget_instruction: Instruction =
-            ComputeBudgetInstruction::set_compute_unit_limit(2000000);
         let mut accounts =
             accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey())
                 .to_account_metas(None);
 
-        for claim_certificate in &claim_certificates {
-            accounts.push(AccountMeta::new(
-                get_receipt_pda(&get_claim(claim_certificate).try_to_vec().unwrap()).0,
-                false,
-            ));
-        }
+
+        accounts.push(AccountMeta::new(
+            get_receipt_pda(&claim_certificate.claim_info.try_to_vec().unwrap()).0,
+            false,
+        ));
+
 
         accounts.push(AccountMeta::new_readonly(
             system_program::System::id(),
@@ -115,12 +113,14 @@ impl DispenserSimulator {
         accounts.push(AccountMeta::new(self.genesis_keypair.pubkey(), true));
 
 
-        let instruction_data: instruction::Claim = instruction::Claim { claim_certificates };
+        let instruction_data: instruction::Claim = instruction::Claim {
+            claim_certificates: vec![claim_certificate],
+        };
         let instruction =
             Instruction::new_with_bytes(crate::id(), &instruction_data.data(), accounts);
 
         self.process_ix(
-            &[compute_budget_instruction, instruction],
+            &[signed_message.into_instruction(0, true), instruction],
             &vec![dispenser_guard],
         )
         .await

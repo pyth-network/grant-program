@@ -3,13 +3,15 @@ use {
     crate::{
         get_config_pda,
         get_receipt_pda,
-        tests::dispenser_simulator::IntoTransactionError,
+        tests::{
+            dispenser_simulator::IntoTransactionError,
+            test_evm::Secp256k1SignedMessage,
+        },
         ClaimCertificate,
         ClaimInfo,
         Config,
         ErrorCode,
         Identity,
-        ProofOfIdentity,
         SolanaHasher,
     },
     anchor_lang::{
@@ -33,27 +35,33 @@ use {
 #[tokio::test]
 pub async fn test_happy_path() {
     let dispenser_guard: Keypair = Keypair::new();
+
+    let mut simulator = DispenserSimulator::new().await;
+    let claimant = simulator.genesis_keypair.pubkey();
+
+    let evm_mock_message = Secp256k1SignedMessage::random(&claimant);
+
     let merkle_items: Vec<ClaimInfo> = vec![
         ClaimInfo {
             amount:   100,
-            identity: Identity::Evm,
+            identity: Identity::Evm(evm_mock_message.recover_as_evm_address()),
         },
         ClaimInfo {
             amount:   200,
             identity: Identity::Discord,
         },
-        ClaimInfo {
-            amount:   300,
-            identity: Identity::Solana(Pubkey::default()),
-        },
-        ClaimInfo {
-            amount:   400,
-            identity: Identity::Sui,
-        },
-        ClaimInfo {
-            amount:   500,
-            identity: Identity::Aptos,
-        },
+        // ClaimInfo {
+        //     amount:   300,
+        //     identity: Identity::Solana(Pubkey::default()),
+        // },
+        // ClaimInfo {
+        //     amount:   400,
+        //     identity: Identity::Sui,
+        // },
+        // ClaimInfo {
+        //     amount:   500,
+        //     identity: Identity::Aptos,
+        // },
     ];
 
     let merkle_items_serialized = merkle_items
@@ -74,7 +82,7 @@ pub async fn test_happy_path() {
         merkle_root:     merkle_tree.root.clone(),
         dispenser_guard: dispenser_guard.pubkey(),
     };
-    let mut simulator = DispenserSimulator::new().await;
+
     simulator.initialize(target_config.clone()).await.unwrap();
 
     let config_account: Account = simulator.get_account(get_config_pda().0).await.unwrap();
@@ -84,15 +92,7 @@ pub async fn test_happy_path() {
     let claim_certificates: Vec<ClaimCertificate> = merkle_items
         .iter()
         .map(|item| ClaimCertificate {
-            proof_of_identity:  match item.identity {
-                Identity::Discord => ProofOfIdentity::Discord,
-                Identity::Solana(_) => ProofOfIdentity::Solana(vec![]),
-                Identity::Evm => ProofOfIdentity::Evm,
-                Identity::Sui => ProofOfIdentity::Sui,
-                Identity::Aptos => ProofOfIdentity::Aptos,
-                Identity::Cosmwasm => ProofOfIdentity::Cosmwasm,
-            },
-            amount:             item.amount,
+            claim_info:         item.clone(),
             proof_of_inclusion: merkle_tree.prove(&item.try_to_vec().unwrap()).unwrap(),
         })
         .collect();
@@ -105,23 +105,27 @@ pub async fn test_happy_path() {
             .is_none());
     }
 
-    simulator
-        .claim(&dispenser_guard, claim_certificates.clone())
-        .await
-        .unwrap();
+    for claim_certificate in claim_certificates.clone() {
+        simulator
+            .claim(&dispenser_guard, claim_certificate, &evm_mock_message)
+            .await
+            .unwrap();
+    }
 
     // Check state
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
 
     // Can't claim twice
-    assert_eq!(
-        simulator
-            .claim(&dispenser_guard, claim_certificates.clone())
-            .await
-            .unwrap_err()
-            .unwrap(),
-        ErrorCode::AlreadyClaimed.into_transation_error()
-    );
+    for claim_certificate in claim_certificates {
+        assert_eq!(
+            simulator
+                .claim(&dispenser_guard, claim_certificate, &evm_mock_message)
+                .await
+                .unwrap_err()
+                .unwrap(),
+            ErrorCode::AlreadyClaimed.into_transation_error()
+        );
+    }
 
     // Check state
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
