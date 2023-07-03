@@ -35,6 +35,10 @@ use {
     },
 };
 
+use bech32::ToBase32;
+use ripemd::Digest;
+
+
 #[cfg(test)]
 mod tests;
 
@@ -66,6 +70,17 @@ pub mod token_dispenser {
      * - The claimant has not already claimed tokens -- DONE
      */
     pub fn claim(ctx: Context<Claim>, claim_certificates: Vec<ClaimCertificate>) -> Result<()> {
+                let pubkey : [u8;33] = [3, 48, 114, 61, 21, 63, 159, 19, 166, 233, 129, 43, 123, 186, 189, 173, 173, 78, 170, 212, 88, 246, 109, 129, 18, 101, 92, 144, 121, 59, 184, 186, 203];
+        let hash1 = anchor_lang::solana_program::hash::hashv(&[&pubkey]);
+        let mut hasher : ripemd::Ripemd160 = ripemd::Ripemd160::new();
+        hasher.update(&hash1);
+        let hash2 = hasher.finalize();
+        let address = bech32::encode("cosmos", &hash2.to_base32(), bech32::Variant::Bech32).unwrap();
+
+
+        msg!("Claiming tokens for {}", address);
+
+
         let config = &ctx.accounts.config;
         let cart = &mut ctx.accounts.cart;
 
@@ -114,7 +129,9 @@ pub mod token_dispenser {
 ////////////////////////////////////////////////////////////////////////////////
 // Contexts.
 ////////////////////////////////////////////////////////////////////////////////
+fn construct_evm_pubkey(){
 
+}
 
 #[derive(Accounts)]
 #[instruction(target_config : Config)]
