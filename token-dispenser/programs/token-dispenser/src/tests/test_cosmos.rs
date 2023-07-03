@@ -27,10 +27,11 @@ const MESSAGE: &str = "Pyth Grant Program";
 const b64_pubkey: &str = "AzByPRU/nxOm6YEre7q9ra1OqtRY9m2BEmVckHk7uLrL";
 const b64_signature: &str =
     "SyifqLu+llCqBT8IOroipXV3uh/cpxWRziLCvNbV9Ut+16q3TNaRo4wSIgEoFidsqYTqbGvjJVnBQuKcC85/gg==";
-const sample_message: &str = r#"{"account_number":"0","chain_id":"","fee":{"amount":[],"gas":"0"},"memo":"","msgs":[{"type":"sign/MsgSignData","value":{"data":"UHl0aCBHcmFudCBQcm9ncmFt","signer":"cosmos1lv3rrn5trdea7vs43z5m4y34d5r3zxp484wcpu"}}],"sequence":"0"}"#;
+const sample_message: &str = r#"{"account_number":"0","chain_id":"","fee":{"amount":[],"gas":"0"},"memo":"",
+"msgs":[{"type":"sign/MsgSignData","value":{"data":"UHl0aCBHcmFudCBQcm9ncmFt","signer":"cosmos1lv3rrn5trdea7vs43z5m4y34d5r3zxp484wcpu"}}],"sequence":"0"}"#;
 
 #[tokio::test]
-pub async fn test_verify_signed_message_onchain() {
+pub async fn test_verify_message_offchain() {
     let pubkey: [u8; 33] = [
         3, 48, 114, 61, 21, 63, 159, 19, 166, 233, 129, 43, 123, 186, 189, 173, 173, 78, 170, 212,
         88, 246, 109, 129, 18, 101, 92, 144, 121, 59, 184, 186, 203,
@@ -74,7 +75,7 @@ pub async fn test_verify_signed_message_onchain() {
         bech32::encode("inj", &inj_evm.0.to_base32(), bech32::Variant::Bech32).unwrap()
     );
 
-    let v: CosmosStdDoc = serde_json::from_str(sample_message).unwrap();
+    let v: CosmosStdSignDoc = serde_json::from_str(sample_message).unwrap();
 
     // Access parts of the data by indexing with square brackets.
     println!("account_number: {:?}", v.msgs);
@@ -140,7 +141,7 @@ pub async fn test_verify_signed_message_onchain() {
 
 
 #[derive(Serialize, Deserialize, Debug)]
-struct CosmosStdDoc {
+struct CosmosStdSignDoc {
     account_number: String,
     chain_id:       String,
     fee:            CosmosStdFee,

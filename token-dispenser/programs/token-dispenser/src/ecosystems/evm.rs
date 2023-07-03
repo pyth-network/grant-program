@@ -1,7 +1,10 @@
 #[cfg(test)]
-use pythnet_sdk::hashers::{
-    keccak256::Keccak256,
-    Hasher,
+use {
+    super::Secp256k1WrappedMessage,
+    pythnet_sdk::hashers::{
+        keccak256::Keccak256,
+        Hasher,
+    },
 };
 use {
     crate::ErrorCode,
@@ -39,7 +42,7 @@ impl EvmPrefixedMessage {
                 ));
             }
         }
-        Err(ErrorCode::SignatureVerificationWrongMessagePrefix.into())
+        Err(ErrorCode::SignatureVerificationWrongMessageMetadata.into())
     }
 
     pub fn get_payload(&self) -> &[u8] {
@@ -53,7 +56,7 @@ pub fn get_message_length(l: usize) -> Result<usize> {
 
     while l >= upperbound + number_of_digits {
         if l == upperbound + number_of_digits {
-            return Err(ErrorCode::SignatureVerificationWrongMessagePrefix.into());
+            return Err(ErrorCode::SignatureVerificationWrongMessageMetadata.into());
         }
         number_of_digits += 1;
         upperbound = upperbound * 10;
@@ -62,21 +65,13 @@ pub fn get_message_length(l: usize) -> Result<usize> {
 }
 
 #[cfg(test)]
-impl EvmPrefixedMessage {
-    pub fn new(message: &str) -> Self {
+impl Secp256k1WrappedMessage for EvmPrefixedMessage {
+    fn new(message: &str) -> Self {
         Self(message.as_bytes().to_vec())
     }
-    pub fn get_prefixed_message(&self) -> Vec<u8> {
+    fn get_message_with_metadata(&self) -> Vec<u8> {
         let mut prefixed_message = format!("{}{}", EVM_MESSAGE_PREFIX, self.0.len()).into_bytes();
         prefixed_message.extend_from_slice(&self.0);
         prefixed_message
-    }
-
-    pub fn hash(&self) -> libsecp256k1::Message {
-        libsecp256k1::Message::parse(&Keccak256::hashv(&[&self.get_prefixed_message()]))
-    }
-
-    pub fn get_prefix_length(&self) -> usize {
-        EVM_MESSAGE_PREFIX.len() + self.0.len().to_string().len() + self.0.len()
     }
 }

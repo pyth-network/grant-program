@@ -20,6 +20,11 @@ use {
     bech32::ToBase32,
     ecosystems::{
         check_message,
+        cosmos::{
+            CosmosMessage,
+            CosmosPubkey,
+            CosmosStdSignDoc,
+        },
         evm::EvmPrefixedMessage,
         secp256k1::{
             self,
@@ -69,19 +74,15 @@ pub mod token_dispenser {
      * - The claimant has not already claimed tokens -- DONE
      */
     pub fn claim(ctx: Context<Claim>, claim_certificates: Vec<ClaimCertificate>) -> Result<()> {
-        let pubkey: [u8; 33] = [
-            3, 48, 114, 61, 21, 63, 159, 19, 166, 233, 129, 43, 123, 186, 189, 173, 173, 78, 170,
-            212, 88, 246, 109, 129, 18, 101, 92, 144, 121, 59, 184, 186, 203,
-        ];
-        let hash1 = anchor_lang::solana_program::hash::hashv(&[&pubkey]);
-        let mut hasher: ripemd::Ripemd160 = ripemd::Ripemd160::new();
-        hasher.update(&hash1);
-        let hash2 = hasher.finalize();
-        let address =
-            bech32::encode("cosmos", &hash2.to_base32(), bech32::Variant::Bech32).unwrap();
+        //         let pubkey : [u8;33] = [3, 48, 114, 61, 21, 63, 159, 19, 166, 233, 129, 43, 123, 186, 189, 173, 173, 78, 170, 212, 88, 246, 109, 129, 18, 101, 92, 144, 121, 59, 184, 186, 203];
+        // let hash1 = anchor_lang::solana_program::hash::hashv(&[&pubkey]);
+        // let mut hasher : ripemd::Ripemd160 = ripemd::Ripemd160::new();
+        // hasher.update(&hash1);
+        // let hash2 = hasher.finalize();
+        // let address = bech32::encode("cosmos", &hash2.to_base32(), bech32::Variant::Bech32).unwrap();
 
 
-        msg!("Claiming tokens for {}", address);
+        // msg!("Claiming tokens for {}", address);
 
 
         let config = &ctx.accounts.config;
@@ -132,9 +133,6 @@ pub mod token_dispenser {
 ////////////////////////////////////////////////////////////////////////////////
 // Contexts.
 ////////////////////////////////////////////////////////////////////////////////
-fn construct_evm_pubkey() {
-}
-
 #[derive(Accounts)]
 #[instruction(target_config : Config)]
 pub struct Initialize<'info> {
@@ -184,7 +182,7 @@ pub enum Identity {
     Evm(secp256k1::EvmPubkey),
     Sui,
     Aptos,
-    Cosmwasm,
+    Cosmwasm(CosmosPubkey),
 }
 
 impl Identity {
@@ -195,7 +193,7 @@ impl Identity {
             Identity::Evm(_) => 2,
             Identity::Sui => 3,
             Identity::Aptos => 4,
-            Identity::Cosmwasm => 5,
+            Identity::Cosmwasm(_) => 5,
         }
     }
 
@@ -289,7 +287,7 @@ pub enum ErrorCode {
     SignatureVerificationWrongAccounts,
     SignatureVerificationWrongHeader,
     SignatureVerificationWrongMessage,
-    SignatureVerificationWrongMessagePrefix,
+    SignatureVerificationWrongMessageMetadata,
     SignatureVerificationWrongSigner,
     SignatureVerificationWrongClaimant,
 }
@@ -324,6 +322,17 @@ impl ClaimInfo {
                     &Secp256k1InstructionData::from_instruction_and_check_signer(
                         &signature_verification_instruction,
                         &pubkey,
+                    )?
+                    .message,
+                )?
+                .get_payload(),
+                claimant,
+            ),
+            Identity::Cosmwasm(pubkey) => check_message(
+                CosmosMessage::parse(
+                    &Secp256k1InstructionData::from_instruction_and_check_signer(
+                        &signature_verification_instruction,
+                        &pubkey.into(),
                     )?
                     .message,
                 )?

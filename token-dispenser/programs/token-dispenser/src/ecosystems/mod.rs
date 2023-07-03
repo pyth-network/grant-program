@@ -6,6 +6,7 @@ use {
     },
 };
 
+pub mod cosmos;
 pub mod evm;
 pub mod secp256k1;
 
@@ -37,4 +38,22 @@ pub fn get_expected_message(claimant: &Pubkey) -> String {
         + AUTHORIZATION_MESSAGE[1]
         + claimant.to_string().as_str()
         + AUTHORIZATION_MESSAGE[2]
+}
+
+#[cfg(test)]
+use pythnet_sdk::hashers::{
+    keccak256::Keccak256,
+    Hasher,
+};
+
+#[cfg(test)]
+pub trait Secp256k1WrappedMessage {
+    fn new(message: &str) -> Self;
+    fn get_message_with_metadata(&self) -> Vec<u8>;
+    fn hash(&self) -> libsecp256k1::Message {
+        libsecp256k1::Message::parse(&Keccak256::hashv(&[&self.get_message_with_metadata()]))
+    }
+    fn get_message_with_metadata_length(&self) -> usize {
+        self.get_message_with_metadata().len()
+    }
 }

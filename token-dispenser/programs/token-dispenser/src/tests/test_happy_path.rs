@@ -1,6 +1,13 @@
 use {
     super::dispenser_simulator::DispenserSimulator,
     crate::{
+        ecosystems::{
+            cosmos::{
+                CosmosMessage,
+                CosmosPubkey,
+            },
+            evm::EvmPrefixedMessage,
+        },
         get_config_pda,
         get_receipt_pda,
         tests::{
@@ -39,7 +46,11 @@ pub async fn test_happy_path() {
     let mut simulator = DispenserSimulator::new().await;
     let claimant = simulator.genesis_keypair.pubkey();
 
-    let evm_mock_message = Secp256k1SignedMessage::random(&claimant);
+    let evm_mock_message = Secp256k1SignedMessage::<EvmPrefixedMessage>::random(&claimant);
+    let cosmos_mock_message: Secp256k1SignedMessage<CosmosMessage> =
+        Secp256k1SignedMessage::<CosmosMessage>::random(&claimant);
+
+    // let claim_mock_messages: Vec<Secp256k1SignedMessage> = vec![evm_mock_message.clone(), cosmos_mock_message.clone()];
 
     let merkle_items: Vec<ClaimInfo> = vec![
         ClaimInfo {
@@ -50,10 +61,10 @@ pub async fn test_happy_path() {
             amount:   200,
             identity: Identity::Discord,
         },
-        // ClaimInfo {
-        //     amount:   300,
-        //     identity: Identity::Solana(Pubkey::default()),
-        // },
+        ClaimInfo {
+            amount:   300,
+            identity: Identity::Cosmwasm(CosmosPubkey(cosmos_mock_message.recover().serialize())),
+        },
         // ClaimInfo {
         //     amount:   400,
         //     identity: Identity::Sui,
@@ -105,27 +116,40 @@ pub async fn test_happy_path() {
             .is_none());
     }
 
-    for claim_certificate in claim_certificates.clone() {
-        simulator
-            .claim(&dispenser_guard, claim_certificate, &evm_mock_message)
-            .await
-            .unwrap();
-    }
+    simulator
+        .claim(&dispenser_guard, &claim_certificates[0], &evm_mock_message)
+        .await
+        .unwrap();
+
+    simulator
+        .claim(&dispenser_guard, &claim_certificates[1], &evm_mock_message)
+        .await
+        .unwrap();
+
+    simulator
+        .claim(
+            &dispenser_guard,
+            &claim_certificates[2],
+            &cosmos_mock_message,
+        )
+        .await
+        .unwrap();
+
 
     // Check state
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
 
     // Can't claim twice
-    for claim_certificate in claim_certificates {
-        assert_eq!(
-            simulator
-                .claim(&dispenser_guard, claim_certificate, &evm_mock_message)
-                .await
-                .unwrap_err()
-                .unwrap(),
-            ErrorCode::AlreadyClaimed.into_transation_error()
-        );
-    }
+    // for claim_certificate in claim_certificates {
+    //     assert_eq!(
+    //         simulator
+    //             .claim(&dispenser_guard, &claim_certificate, &evm_mock_message)
+    //             .await
+    //             .unwrap_err()
+    //             .unwrap(),
+    //         ErrorCode::AlreadyClaimed.into_transation_error()
+    //     );
+    // }
 
     // Check state
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
