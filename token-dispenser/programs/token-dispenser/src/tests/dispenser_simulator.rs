@@ -1,8 +1,5 @@
 use {
-    super::{
-        test_evm::EvmOffChainProofOfIdentity,
-        test_happy_path::OffChainClaimCertificate,
-    },
+    super::test_happy_path::OffChainClaimCertificate,
     crate::{
         accounts,
         get_receipt_pda,
@@ -55,7 +52,7 @@ impl Into<Identity> for ProofOfIdentity {
         match self {
             ProofOfIdentity::Evm {
                 pubkey,
-                verification_instruction_index,
+                verification_instruction_index: _,
             } => Identity::Evm(pubkey),
             ProofOfIdentity::Discord => Identity::Discord,
             ProofOfIdentity::Solana => todo!(),

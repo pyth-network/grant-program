@@ -2,24 +2,17 @@ use {
     crate::{
         ecosystems::{
             cosmos::{
-                CosmosBech32Address,
                 CosmosMessage,
                 CosmosPubkey,
             },
-            evm::EvmPrefixedMessage,
             get_expected_message,
             secp256k1::Secp256k1Signature,
         },
-        ClaimCertificate,
         Identity,
         ProofOfIdentity,
     },
     anchor_lang::prelude::Pubkey,
-    pythnet_sdk::wire::v1::Proof,
-    rand::{
-        seq::SliceRandom,
-        Rng,
-    },
+    rand::seq::SliceRandom,
 };
 
 #[derive(Clone)]

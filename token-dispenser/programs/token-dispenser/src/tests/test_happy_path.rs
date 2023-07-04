@@ -4,25 +4,12 @@ use {
         test_cosmos::CosmosOffChainProofOfIdentity,
     },
     crate::{
-        ecosystems::{
-            cosmos::{
-                CosmosMessage,
-                CosmosPubkey,
-            },
-            evm::EvmPrefixedMessage,
-            get_expected_message,
-            secp256k1::{
-                EvmPubkey,
-                Secp256k1Signature,
-            },
-        },
         get_config_pda,
         get_receipt_pda,
         tests::{
             dispenser_simulator::IntoTransactionError,
             test_evm::EvmOffChainProofOfIdentity,
         },
-        Claim,
         ClaimCertificate,
         ClaimInfo,
         Config,
@@ -36,12 +23,7 @@ use {
         AnchorDeserialize,
         AnchorSerialize,
     },
-    base64::{
-        engine::general_purpose::STANDARD as base64_standard_engine,
-        Engine as _,
-    },
     pythnet_sdk::accumulators::{
-        merkle,
         merkle::MerkleTree,
         Accumulator,
     },
@@ -49,7 +31,6 @@ use {
     solana_program_test::tokio,
     solana_sdk::{
         account::Account,
-        hash,
         instruction::Instruction,
         signature::Keypair,
         signer::Signer,
