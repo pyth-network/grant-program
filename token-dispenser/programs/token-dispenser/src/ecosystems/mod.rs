@@ -8,6 +8,7 @@ use {
 
 pub mod evm;
 pub mod secp256k1;
+pub mod cosmos;
 
 /**
  * Ecosystem agnostic authorization message that the identity on the leaf needs to sign.
@@ -32,9 +33,5 @@ pub fn check_message(message: &[u8], claimant: &Pubkey) -> Result<()> {
  * Get the expected authorization message given the claimant authorized to receive the claim.
  */
 pub fn get_expected_message(claimant: &Pubkey) -> String {
-    AUTHORIZATION_MESSAGE[0].to_string()
-        + &crate::ID.to_string()
-        + AUTHORIZATION_MESSAGE[1]
-        + claimant.to_string().as_str()
-        + AUTHORIZATION_MESSAGE[2]
+    return "Pyth Grant Program".to_string();
 }

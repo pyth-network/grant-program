@@ -1,5 +1,7 @@
 #![allow(clippy::result_large_err)]
 
+use ecosystems::{cosmos::{CosmosPubkey, CosmosMessage}, secp256k1::{Secp256k1Signature, secp256k1_sha256_verify_signer}};
+
 use {
     anchor_lang::{
         prelude::*,
@@ -71,14 +73,13 @@ pub mod token_dispenser {
 
         for (index, claim_certificate) in claim_certificates.iter().enumerate() {
             // Check that the identity corresponding to the leaf has authorized the claimant
-            claim_certificate.claim_info.check_claimant_is_authorized(
+            let claim_info = claim_certificate.checked_into_claim_info(
                 &ctx.accounts.sysvar_instruction,
                 ctx.accounts.claimant.key,
                 index,
             )?;
-
             // Each leaf of the tree is a hash of the serialized claim info
-            let leaf_vector = claim_certificate.claim_info.try_to_vec()?;
+            let leaf_vector = claim_info.try_to_vec()?;
 
             if !config
                 .merkle_root
@@ -96,14 +97,14 @@ pub mod token_dispenser {
 
             cart.amount = cart
                 .amount
-                .checked_add(claim_certificate.claim_info.amount)
+                .checked_add(claim_info.amount)
                 .ok_or(ErrorCode::ArithmeticOverflow)?;
 
             // Check that the claimant is not claiming tokens more than once per ecosystem
-            if cart.set.contains(&claim_certificate.claim_info.identity) {
+            if cart.set.contains(&claim_info.identity) {
                 return Err(ErrorCode::MoreThanOneIdentityPerEcosystem.into());
             }
-            cart.set.insert(&claim_certificate.claim_info.identity);
+            cart.set.insert(&claim_info.identity);
         }
 
         // TO DO : Send tokens to claimant (we will also initialize a vesting account for them)
@@ -183,10 +184,26 @@ impl Identity {
     pub const NUMBER_OF_VARIANTS: usize = 6;
 }
 
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub enum ProofOfIdentity {
+    Discord,
+    Evm(secp256k1::EvmPubkey),
+    Solana,
+    Sui,
+    Aptos,
+    Cosmwasm{
+        chain_id : String,
+        signature : Secp256k1Signature,
+        recovery_id : u8,
+        public_key : CosmosPubkey,
+        message : Vec<u8>
+    }
+}
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimCertificate {
-    claim_info:         ClaimInfo,
+    amount : u64,
+    proof_of_identity: ProofOfIdentity,
     proof_of_inclusion: MerklePath<SolanaHasher>, // Proof that the leaf is in the tree
 }
 
@@ -270,7 +287,7 @@ pub enum ErrorCode {
     SignatureVerificationWrongAccounts,
     SignatureVerificationWrongHeader,
     SignatureVerificationWrongMessage,
-    SignatureVerificationWrongMessagePrefix,
+    SignatureVerificationWrongMessageMetadata,
     SignatureVerificationWrongSigner,
     SignatureVerificationWrongClaimant,
 }
@@ -283,36 +300,63 @@ pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -
     Ok(())
 }
 
+impl ProofOfIdentity {
+    pub fn checked_into_identity(
+        &self,
+        sysvar_instruction: &AccountInfo,
+        claimant: &Pubkey,
+        index: usize,
+    ) -> Result<Identity> {
+        let signature_verification_instruction =
+            load_instruction_at_checked(index, sysvar_instruction)?;
+
+        match self {
+            ProofOfIdentity::Discord => Ok(Identity::Discord),
+            ProofOfIdentity::Evm(evm_pubkey) => {
+                check_message(
+                    EvmPrefixedMessage::parse(
+                        &Secp256k1InstructionData::from_instruction_and_check_signer(
+                            &signature_verification_instruction,
+                            &evm_pubkey,
+                        )?
+                        .message,
+                    )?
+                    .get_payload(),
+                    claimant,
+                )?;
+                Ok(Identity::Evm(*evm_pubkey))
+            }
+            ProofOfIdentity::Cosmwasm{ public_key, chain_id, signature, recovery_id, message
+            } => {
+                secp256k1_sha256_verify_signer(signature, recovery_id, public_key, message)?;
+                check_message(CosmosMessage::parse(message)?.get_payload(), claimant)?;
+                Ok(Identity::Cosmwasm)
+            },
+            _ => Err(ErrorCode::NotImplemented.into()),
+        }
+    }
+}
+
 /**
  * Check that the identity of the claim_info has authorized the claimant by signing a message.
  * The message is contained in the 0th instruction (the secp256k1/ed25519 instruction).
  * Executing that instruction checks the signature.
  */
-impl ClaimInfo {
-    pub fn check_claimant_is_authorized(
+impl ClaimCertificate {
+    pub fn checked_into_claim_info (
         &self,
         sysvar_instruction: &AccountInfo,
         claimant: &Pubkey,
         index: usize,
-    ) -> Result<()> {
-        let signature_verification_instruction =
-            load_instruction_at_checked(index, sysvar_instruction)?;
-
-        match self.identity {
-            Identity::Discord => Ok(()), // The Discord identity will be checked off-chain by the dispenser guard (it won't sign otherwise)
-            Identity::Evm(pubkey) => check_message(
-                EvmPrefixedMessage::parse(
-                    &Secp256k1InstructionData::from_instruction_and_check_signer(
-                        &signature_verification_instruction,
-                        &pubkey,
-                    )?
-                    .message,
-                )?
-                .get_payload(),
+    ) -> Result<ClaimInfo> {
+        Ok(ClaimInfo {
+            identity: self.proof_of_identity.checked_into_identity(
+                sysvar_instruction,
                 claimant,
-            ),
-            _ => Err(ErrorCode::NotImplemented.into()),
-        }
+                index,
+            )?,
+            amount: self.amount,
+        })
     }
 }
 

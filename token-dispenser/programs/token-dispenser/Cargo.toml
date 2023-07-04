@@ -17,7 +17,10 @@ default = []
 
 [dependencies]
 anchor-lang = { version = "0.27.0", features = ["init-if-needed"] }
+base64 = "0.21.2"
 pythnet-sdk = { git = "https://github.com/pyth-network/pyth-crosschain.git"}
+serde = "1.0.166"
+serde_json = "1.0.99"
 
 [dev-dependencies]
 solana-program-test = "1.14.16"

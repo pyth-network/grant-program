@@ -1,3 +1,7 @@
+use super::cosmos::CosmosPubkey;
+
+
+
 use {
     crate::ErrorCode,
     anchor_lang::{
@@ -5,6 +9,9 @@ use {
         solana_program::{
             instruction::Instruction,
             secp256k1_program::ID as SECP256K1_ID,
+            secp256k1_recover::secp256k1_recover,
+            hash,
+            keccak
         },
         AnchorDeserialize,
         AnchorSerialize,
@@ -134,4 +141,12 @@ impl AnchorSerialize for Secp256k1InstructionData {
         writer.write_all(&self.message)?;
         Ok(())
     }
+}
+
+pub fn secp256k1_sha256_verify_signer(signature : &Secp256k1Signature, recovery_id : &u8,  pubkey : &CosmosPubkey, message : &Vec<u8>) -> Result<()>{
+    let recovered_key = secp256k1_recover(&hash::hashv(&[&message]).to_bytes(),*recovery_id , &signature.0).map_err(|_| ErrorCode::SignatureVerificationWrongSigner)?;
+    if recovered_key.0 != pubkey.0[1..] {
+        return Err(ErrorCode::SignatureVerificationWrongSigner.into());
+    }
+    Ok(())
 }

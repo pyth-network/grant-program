@@ -1,3 +1,7 @@
+use solana_sdk::hash;
+
+use crate::{ProofOfIdentity, ecosystems::{secp256k1::Secp256k1Signature, cosmos::{CosmosPubkey, CosmosMessage}}};
+
 use {
     super::dispenser_simulator::DispenserSimulator,
     crate::{
@@ -13,6 +17,10 @@ use {
         ErrorCode,
         Identity,
         SolanaHasher,
+    },
+    base64::{
+        engine::general_purpose::STANDARD as base64_standard_engine,
+        Engine as _,
     },
     anchor_lang::{
         prelude::Pubkey,
@@ -31,9 +39,19 @@ use {
     },
 };
 
-
 #[tokio::test]
 pub async fn test_happy_path() {
+
+    let mut pubkey_bytes: [u8; 33] = [0; 33];
+    pubkey_bytes.copy_from_slice(&base64_standard_engine.decode("AzByPRU/nxOm6YEre7q9ra1OqtRY9m2BEmVckHk7uLrL").unwrap());
+    let pubkey: libsecp256k1::PublicKey =
+        libsecp256k1::PublicKey::parse_compressed(&pubkey_bytes).unwrap();
+
+    let mut signature_bytes: [u8; 64] = [0; 64];
+    signature_bytes.copy_from_slice(&base64_standard_engine.decode("SyifqLu+llCqBT8IOroipXV3uh/cpxWRziLCvNbV9Ut+16q3TNaRo4wSIgEoFidsqYTqbGvjJVnBQuKcC85/gg==").unwrap());
+    let signature: libsecp256k1::Signature =
+        libsecp256k1::Signature::parse_standard(&signature_bytes).unwrap();
+
     let dispenser_guard: Keypair = Keypair::new();
 
     let mut simulator = DispenserSimulator::new().await;
@@ -50,10 +68,10 @@ pub async fn test_happy_path() {
             amount:   200,
             identity: Identity::Discord,
         },
-        // ClaimInfo {
-        //     amount:   300,
-        //     identity: Identity::Solana(Pubkey::default()),
-        // },
+        ClaimInfo {
+            amount:   300,
+            identity: Identity::Cosmwasm,
+        },
         // ClaimInfo {
         //     amount:   400,
         //     identity: Identity::Sui,
@@ -89,13 +107,39 @@ pub async fn test_happy_path() {
     let config_data: Config = Config::try_from_slice(&config_account.data[8..]).unwrap();
     assert_eq!(target_config, config_data);
 
-    let claim_certificates: Vec<ClaimCertificate> = merkle_items
-        .iter()
-        .map(|item| ClaimCertificate {
-            claim_info:         item.clone(),
-            proof_of_inclusion: merkle_tree.prove(&item.try_to_vec().unwrap()).unwrap(),
-        })
-        .collect();
+    let claim_certificates: Vec<ClaimCertificate> = vec![
+        ClaimCertificate {
+            amount:   100,
+            proof_of_identity: ProofOfIdentity::Evm(evm_mock_message.recover_as_evm_address()),
+            proof_of_inclusion: merkle_tree.prove(&merkle_items_serialized[0]).unwrap(),
+        },
+        ClaimCertificate {
+            amount:   200,
+            proof_of_identity: ProofOfIdentity::Discord,
+            proof_of_inclusion: merkle_tree.prove(&merkle_items_serialized[1]).unwrap(),
+        },
+        ClaimCertificate {
+            amount:   300,
+            proof_of_identity: ProofOfIdentity::Cosmwasm {
+                chain_id:    "cosmos".to_string(),
+                signature:   Secp256k1Signature(signature.serialize()),
+                recovery_id: 1,
+                public_key:  CosmosPubkey(pubkey.serialize()),
+                message:     CosmosMessage::new("Pyth Grant Program").get_message_with_metadata(),
+            },
+            proof_of_inclusion: merkle_tree.prove(&merkle_items_serialized[1]).unwrap(),
+        }
+    ];
+
+    let message = libsecp256k1::Message::parse_slice(&hash::hashv(&[&CosmosMessage::new("Pyth Grant Program").get_message_with_metadata()]).to_bytes()).unwrap();
+    let recovered_key = libsecp256k1::recover(&message, &signature, &libsecp256k1::RecoveryId::parse(1).unwrap()).unwrap();
+    println!("recovered_key: {:?}", recovered_key.serialize());
+
+    let sample_message: &str = r#"{"account_number":"0","chain_id":"","fee":{"amount":[],"gas":"0"},"memo":"","msgs":[{"type":"sign/MsgSignData","value":{"data":"UHl0aCBHcmFudCBQcm9ncmFt","signer":"cosmos1lv3rrn5trdea7vs43z5m4y34d5r3zxp484wcpu"}}],"sequence":"0"}"#;
+    let message = libsecp256k1::Message::parse_slice(&hash::hashv(&[&sample_message.as_bytes()]).to_bytes()).unwrap();
+    let recovered_key = libsecp256k1::recover(&message, &signature, &libsecp256k1::RecoveryId::parse(1).unwrap()).unwrap();
+    println!("recovered_key: {:?}", recovered_key.serialize());
+
 
     // Check state
     for serialized_item in merkle_items_serialized.clone() {
