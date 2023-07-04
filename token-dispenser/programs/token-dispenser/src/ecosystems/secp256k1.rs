@@ -6,7 +6,6 @@ use {
         solana_program::{
             hash,
             instruction::Instruction,
-            keccak,
             secp256k1_program::ID as SECP256K1_ID,
             secp256k1_recover::secp256k1_recover,
         },
@@ -14,6 +13,8 @@ use {
         AnchorSerialize,
     },
 };
+
+pub const SECP256K1_FULL_PREFIX: u8 = 0x04;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
 pub struct EvmPubkey(pub [u8; Self::LEN]);
@@ -140,7 +141,7 @@ impl AnchorSerialize for Secp256k1InstructionData {
     }
 }
 
-pub fn secp256k1_sha256_verify_signer(
+pub fn secp256k1_sha256_get_signer(
     signature: &Secp256k1Signature,
     recovery_id: &u8,
     pubkey: &CosmosPubkey,
@@ -152,7 +153,7 @@ pub fn secp256k1_sha256_verify_signer(
         &signature.0,
     )
     .map_err(|_| ErrorCode::SignatureVerificationWrongSigner)?;
-    if recovered_key.0 != pubkey.0[1..] {
+    if recovered_key.0 != pubkey.0[1..] && pubkey.0[0] == SECP256K1_FULL_PREFIX {
         return Err(ErrorCode::SignatureVerificationWrongSigner.into());
     }
     Ok(())

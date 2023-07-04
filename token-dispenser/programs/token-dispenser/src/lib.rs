@@ -20,13 +20,14 @@ use {
     ecosystems::{
         check_message,
         cosmos::{
+            CosmosBech32Address,
             CosmosMessage,
             CosmosPubkey,
         },
         evm::EvmPrefixedMessage,
         secp256k1::{
             self,
-            secp256k1_sha256_verify_signer,
+            secp256k1_sha256_get_signer,
             Secp256k1InstructionData,
             Secp256k1Signature,
         },
@@ -170,7 +171,7 @@ pub enum Identity {
     Evm(secp256k1::EvmPubkey),
     Sui,
     Aptos,
-    Cosmwasm,
+    Cosmwasm(CosmosBech32Address),
 }
 
 impl Identity {
@@ -181,7 +182,7 @@ impl Identity {
             Identity::Evm(_) => 2,
             Identity::Sui => 3,
             Identity::Aptos => 4,
-            Identity::Cosmwasm => 5,
+            Identity::Cosmwasm(_) => 5,
         }
     }
 
@@ -337,9 +338,10 @@ impl ProofOfIdentity {
                 recovery_id,
                 message,
             } => {
-                secp256k1_sha256_verify_signer(signature, recovery_id, public_key, message)?;
+                secp256k1_sha256_get_signer(signature, recovery_id, public_key, message)?;
                 check_message(CosmosMessage::parse(message)?.get_payload(), claimant)?;
-                Ok(Identity::Cosmwasm)
+                let cosmos_bech32 = public_key.into_bech32(chain_id);
+                Ok(Identity::Cosmwasm(cosmos_bech32))
             }
             _ => Err(ErrorCode::NotImplemented.into()),
         }

@@ -6,6 +6,7 @@ use {
                 CosmosMessage,
                 CosmosPubkey,
             },
+            evm::EvmPrefixedMessage,
             secp256k1::Secp256k1Signature,
         },
         get_config_pda,
@@ -44,6 +45,7 @@ use {
     },
 };
 
+
 #[tokio::test]
 pub async fn test_happy_path() {
     let mut pubkey_bytes: [u8; 33] = [0; 33];
@@ -78,7 +80,7 @@ pub async fn test_happy_path() {
         },
         ClaimInfo {
             amount:   300,
-            identity: Identity::Cosmwasm,
+            identity: Identity::Cosmwasm(CosmosPubkey(pubkey.serialize()).into_bech32("cosmos")),
         },
         // ClaimInfo {
         //     amount:   400,

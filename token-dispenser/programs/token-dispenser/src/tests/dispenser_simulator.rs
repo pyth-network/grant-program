@@ -59,7 +59,7 @@ impl Into<Identity> for ProofOfIdentity {
                 recovery_id,
                 public_key,
                 message,
-            } => Identity::Cosmwasm,
+            } => Identity::Cosmwasm(public_key.into_bech32(&chain_id)),
         }
     }
 }

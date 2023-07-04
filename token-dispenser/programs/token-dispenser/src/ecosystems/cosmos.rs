@@ -11,6 +11,8 @@ use {
         engine::general_purpose::STANDARD as base64_standard_engine,
         Engine as _,
     },
+    bech32::ToBase32,
+    ripemd::Digest,
     serde::{
         Deserialize,
         Serialize,
@@ -19,6 +21,10 @@ use {
 };
 
 pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
+pub const ODD_PREFIX: u8 = 0x03;
+pub const EVEN_PREFIX: u8 = 0x02;
+pub const COMPRESSED_LENGTH: usize = 33;
+
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
 pub struct CosmosPubkey(pub [u8; Self::LEN]);
 impl CosmosPubkey {
@@ -133,5 +139,28 @@ impl CosmosMessage {
             .unwrap()
             .as_bytes()
             .to_vec();
+    }
+}
+
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub struct CosmosBech32Address(pub String);
+
+impl CosmosPubkey {
+    pub fn into_bech32(self, chain_id: &str) -> CosmosBech32Address {
+        let mut compressed: [u8; COMPRESSED_LENGTH] = [0; COMPRESSED_LENGTH];
+        compressed[1..].copy_from_slice(&self.0[1..COMPRESSED_LENGTH]);
+        compressed[0] = if self.0[Self::LEN - 1] % 2 == 0 {
+            EVEN_PREFIX
+        } else {
+            ODD_PREFIX
+        };
+        let hash1 = solana_program::hash::hashv(&[&compressed]);
+        let mut hasher: ripemd::Ripemd160 = ripemd::Ripemd160::new();
+        hasher.update(&hash1);
+        let hash2 = hasher.finalize();
+        CosmosBech32Address(
+            bech32::encode(chain_id, &hash2.to_base32(), bech32::Variant::Bech32).unwrap(),
+        )
     }
 }
