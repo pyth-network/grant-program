@@ -132,7 +132,7 @@ impl CosmosMessage {
                 r#type: EXPECTED_COSMOS_MESSAGE_TYPE.to_string(),
                 value:  CosmosAdr036Value {
                     data:   base64_standard_engine.encode(&self.0),
-                    signer: "cosmos1lv3rrn5trdea7vs43z5m4y34d5r3zxp484wcpu".to_string(),
+                    signer: "".to_string(),
                 },
             }],
             sequence:       "0".to_string(),
