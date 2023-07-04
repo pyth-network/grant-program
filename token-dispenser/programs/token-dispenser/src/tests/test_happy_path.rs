@@ -105,7 +105,6 @@ impl OffChainClaimCertificate {
                 amount:             self.amount,
                 proof_of_identity:  self
                     .off_chain_proof_of_identity
-                    .clone()
                     .into_claim_certificate(index),
                 proof_of_inclusion: merkle_tree
                     .prove(&Into::<ClaimInfo>::into(self.clone()).try_to_vec().unwrap())
@@ -127,10 +126,10 @@ impl Into<Identity> for OffChainProofOfIdentity {
 }
 
 impl OffChainProofOfIdentity {
-    pub fn into_claim_certificate(self, verification_instruction_index: u8) -> ProofOfIdentity {
+    pub fn into_claim_certificate(&self, verification_instruction_index: u8) -> ProofOfIdentity {
         match self {
             Self::Evm(evm) => evm.into_proof_of_identity(verification_instruction_index),
-            Self::Cosmos(cosmos) => cosmos.into(),
+            Self::Cosmos(cosmos) => cosmos.clone().into(),
             Self::Discord => ProofOfIdentity::Discord,
         }
     }
@@ -188,14 +187,14 @@ pub async fn test_happy_path() {
     let config_data: Config = Config::try_from_slice(&config_account.data[8..]).unwrap();
     assert_eq!(target_config, config_data);
 
-    for serialized_item in merkle_items_serialized.clone() {
+    for serialized_item in &merkle_items_serialized {
         assert!(simulator
             .get_account(get_receipt_pda(&serialized_item).0)
             .await
             .is_none());
     }
 
-    for offchain_claim_certificate in mock_offchain_certificates.clone() {
+    for offchain_claim_certificate in &mock_offchain_certificates {
         simulator
             .claim(&dispenser_guard, &offchain_claim_certificate, &merkle_tree)
             .await
@@ -206,7 +205,7 @@ pub async fn test_happy_path() {
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
 
     // Can't claim twice
-    for offchain_claim_certificate in mock_offchain_certificates {
+    for offchain_claim_certificate in &mock_offchain_certificates {
         assert_eq!(
             simulator
                 .claim(&dispenser_guard, &offchain_claim_certificate, &merkle_tree)

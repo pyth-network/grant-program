@@ -97,9 +97,8 @@ impl DispenserSimulator {
         off_chain_claim_certificate: &OffChainClaimCertificate,
         merkle_tree: &MerkleTree<SolanaHasher>,
     ) -> Result<(), BanksClientError> {
-        let (claim_certificate, option_instruction) = off_chain_claim_certificate
-            .clone()
-            .into_claim_certificate(merkle_tree, 1);
+        let (claim_certificate, option_instruction) =
+            off_chain_claim_certificate.into_claim_certificate(merkle_tree, 1);
         let mut accounts =
             accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey())
                 .to_account_metas(None);
