@@ -328,7 +328,7 @@ impl ProofOfIdentity {
                     EvmPrefixedMessage::parse(
                         &Secp256k1InstructionData::from_instruction_and_check_signer(
                             &signature_verification_instruction,
-                            &pubkey,
+                            pubkey,
                         )?
                         .message,
                     )?

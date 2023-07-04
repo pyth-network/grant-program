@@ -148,7 +148,7 @@ pub fn secp256k1_sha256_get_signer(
     message: &Vec<u8>,
 ) -> Result<()> {
     let recovered_key = secp256k1_recover(
-        &hash::hashv(&[&message]).to_bytes(),
+        &hash::hashv(&[message]).to_bytes(),
         *recovery_id,
         &signature.0,
     )

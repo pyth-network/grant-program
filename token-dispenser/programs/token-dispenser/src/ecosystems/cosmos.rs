@@ -4,8 +4,8 @@ use {
     anchor_lang::{
         prelude::*,
         solana_program::{
-            self,
             hash,
+            keccak,
         },
         AnchorDeserialize,
         AnchorSerialize,
@@ -20,7 +20,6 @@ use {
         Deserialize,
         Serialize,
     },
-    solana_program::keccak,
 };
 
 pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
@@ -52,17 +51,17 @@ impl CosmosMessage {
             .map_err(|_| ErrorCode::SignatureVerificationWrongMessageMetadata)?;
 
         if !(sign_doc.account_number == "0"
-            && sign_doc.chain_id == ""
-            && sign_doc.fee.amount.len() == 0
+            && sign_doc.chain_id.is_empty()
+            && sign_doc.fee.amount.is_empty()
             && sign_doc.fee.gas == "0"
-            && sign_doc.memo == ""
+            && sign_doc.memo.is_empty()
             && sign_doc.msgs.len() == 1
             && sign_doc.sequence == "0")
         {
             return Err(ErrorCode::SignatureVerificationWrongMessageMetadata.into());
         }
 
-        if !(sign_doc.msgs[0].r#type == EXPECTED_COSMOS_MESSAGE_TYPE) {
+        if sign_doc.msgs[0].r#type != EXPECTED_COSMOS_MESSAGE_TYPE {
             return Err(ErrorCode::SignatureVerificationWrongMessageMetadata.into());
         }
         Ok(CosmosMessage(
@@ -162,12 +161,12 @@ impl CosmosPubkey {
         } else {
             ODD_PREFIX
         };
-        let hash1 = solana_program::hash::hashv(&[&compressed]);
+        let hash1 = hash::hashv(&[&compressed]);
         let mut hasher: ripemd::Ripemd160 = ripemd::Ripemd160::new();
-        hasher.update(&hash1);
+        hasher.update(hash1);
         let hash2 = hasher.finalize();
         CosmosBech32Address(
-            bech32::encode(chain_id, &hash2.to_base32(), bech32::Variant::Bech32).unwrap(),
+            bech32::encode(chain_id, hash2.to_base32(), bech32::Variant::Bech32).unwrap(),
         )
     }
 }

@@ -56,7 +56,7 @@ pub fn get_message_length(l: usize) -> Result<usize> {
             return Err(ErrorCode::SignatureVerificationWrongMessageMetadata.into());
         }
         number_of_digits += 1;
-        upperbound = upperbound * 10;
+        upperbound *= 10;
     }
     Ok(l.saturating_sub(number_of_digits))
 }

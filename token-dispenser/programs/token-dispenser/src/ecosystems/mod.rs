@@ -32,6 +32,6 @@ pub fn check_message(message: &[u8], claimant: &Pubkey) -> Result<()> {
 /**
  * Get the expected authorization message given the claimant authorized to receive the claim.
  */
-pub fn get_expected_message(claimant: &Pubkey) -> String {
-    return "Pyth Grant Program".to_string();
+pub fn get_expected_message(_claimant: &Pubkey) -> String {
+    "Pyth Grant Program".to_string()
 }
