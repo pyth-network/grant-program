@@ -27,7 +27,7 @@ use {
         evm::EvmPrefixedMessage,
         secp256k1::{
             self,
-            secp256k1_sha256_get_signer,
+            secp256k1_sha256_verify_signer,
             EvmPubkey,
             Secp256k1InstructionData,
             Secp256k1Signature,
@@ -344,7 +344,7 @@ impl ProofOfIdentity {
                 recovery_id,
                 message,
             } => {
-                secp256k1_sha256_get_signer(signature, recovery_id, pubkey, message)?;
+                secp256k1_sha256_verify_signer(signature, recovery_id, pubkey, message)?;
                 check_message(CosmosMessage::parse(message)?.get_payload(), claimant)?;
                 let cosmos_bech32 = pubkey.into_bech32(chain_id);
                 Ok(Identity::Cosmwasm(cosmos_bech32))

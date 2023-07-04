@@ -144,7 +144,7 @@ impl AnchorSerialize for Secp256k1InstructionData {
     }
 }
 
-pub fn secp256k1_sha256_get_signer(
+pub fn secp256k1_sha256_verify_signer(
     signature: &Secp256k1Signature,
     recovery_id: &u8,
     pubkey: &CosmosPubkey,
