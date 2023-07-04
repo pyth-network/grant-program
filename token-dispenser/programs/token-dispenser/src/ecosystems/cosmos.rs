@@ -1,5 +1,9 @@
 use {
-    super::secp256k1::EvmPubkey,
+    super::secp256k1::{
+        EvmPubkey,
+        SECP256K1_EVEN_PREFIX,
+        SECP256K1_ODD_PREFIX,
+    },
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
@@ -23,8 +27,6 @@ use {
 };
 
 pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
-pub const ODD_PREFIX: u8 = 0x03;
-pub const EVEN_PREFIX: u8 = 0x02;
 pub const COMPRESSED_LENGTH: usize = 33;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
@@ -157,9 +159,9 @@ impl CosmosPubkey {
         let mut compressed: [u8; COMPRESSED_LENGTH] = [0; COMPRESSED_LENGTH];
         compressed[1..].copy_from_slice(&self.0[1..COMPRESSED_LENGTH]);
         compressed[0] = if self.0[Self::LEN - 1] % 2 == 0 {
-            EVEN_PREFIX
+            SECP256K1_EVEN_PREFIX
         } else {
-            ODD_PREFIX
+            SECP256K1_ODD_PREFIX
         };
         let hash1 = hash::hashv(&[&compressed]);
         let mut hasher: ripemd::Ripemd160 = ripemd::Ripemd160::new();

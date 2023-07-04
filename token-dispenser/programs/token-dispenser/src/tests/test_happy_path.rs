@@ -45,9 +45,13 @@ pub struct OffChainClaimCertificate {
 
 pub const MAX_AMOUNT: u64 = 1000;
 impl OffChainClaimCertificate {
+    pub fn random_amount() -> u64 {
+        rand::thread_rng().gen::<u64>() % MAX_AMOUNT
+    }
+
     pub fn random_evm(claimant: &Pubkey) -> Self {
         Self {
-            amount:                      rand::thread_rng().gen::<u64>() % MAX_AMOUNT,
+            amount:                      Self::random_amount(),
             off_chain_proof_of_identity: OffChainProofOfIdentity::Evm(
                 EvmOffChainProofOfIdentity::random(claimant),
             ),
@@ -56,7 +60,7 @@ impl OffChainClaimCertificate {
 
     pub fn random_cosmos(claimant: &Pubkey) -> Self {
         Self {
-            amount:                      rand::thread_rng().gen::<u64>() % MAX_AMOUNT,
+            amount:                      Self::random_amount(),
             off_chain_proof_of_identity: OffChainProofOfIdentity::Cosmos(
                 CosmosOffChainProofOfIdentity::random(claimant),
             ),
@@ -65,7 +69,7 @@ impl OffChainClaimCertificate {
 
     pub fn random_discord() -> Self {
         Self {
-            amount:                      rand::thread_rng().gen::<u64>() % MAX_AMOUNT,
+            amount:                      Self::random_amount(),
             off_chain_proof_of_identity: OffChainProofOfIdentity::Discord,
         }
     }
