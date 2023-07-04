@@ -28,6 +28,7 @@ use {
         secp256k1::{
             self,
             secp256k1_sha256_get_signer,
+            EvmPubkey,
             Secp256k1InstructionData,
             Secp256k1Signature,
         },
@@ -81,7 +82,6 @@ pub mod token_dispenser {
             let claim_info = claim_certificate.checked_into_claim_info(
                 &ctx.accounts.sysvar_instruction,
                 ctx.accounts.claimant.key,
-                index,
             )?;
             // Each leaf of the tree is a hash of the serialized claim info
             let leaf_vector = claim_info.try_to_vec()?;
@@ -192,7 +192,10 @@ impl Identity {
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub enum ProofOfIdentity {
     Discord,
-    Evm(secp256k1::EvmPubkey),
+    Evm {
+        pubkey:                         EvmPubkey,
+        verification_instruction_index: u8,
+    },
     Solana,
     Sui,
     Aptos,
@@ -200,7 +203,7 @@ pub enum ProofOfIdentity {
         chain_id:    String,
         signature:   Secp256k1Signature,
         recovery_id: u8,
-        public_key:  CosmosPubkey,
+        pubkey:      CosmosPubkey,
         message:     Vec<u8>,
     },
 }
@@ -310,37 +313,40 @@ impl ProofOfIdentity {
         &self,
         sysvar_instruction: &AccountInfo,
         claimant: &Pubkey,
-        index: usize,
     ) -> Result<Identity> {
-        let signature_verification_instruction =
-            load_instruction_at_checked(index, sysvar_instruction)?;
-
         match self {
             ProofOfIdentity::Discord => Ok(Identity::Discord),
-            ProofOfIdentity::Evm(evm_pubkey) => {
+            ProofOfIdentity::Evm {
+                pubkey,
+                verification_instruction_index,
+            } => {
+                let signature_verification_instruction = load_instruction_at_checked(
+                    *verification_instruction_index as usize,
+                    sysvar_instruction,
+                )?;
                 check_message(
                     EvmPrefixedMessage::parse(
                         &Secp256k1InstructionData::from_instruction_and_check_signer(
                             &signature_verification_instruction,
-                            &evm_pubkey,
+                            &pubkey,
                         )?
                         .message,
                     )?
                     .get_payload(),
                     claimant,
                 )?;
-                Ok(Identity::Evm(*evm_pubkey))
+                Ok(Identity::Evm(*pubkey))
             }
             ProofOfIdentity::Cosmwasm {
-                public_key,
+                pubkey,
                 chain_id,
                 signature,
                 recovery_id,
                 message,
             } => {
-                secp256k1_sha256_get_signer(signature, recovery_id, public_key, message)?;
+                secp256k1_sha256_get_signer(signature, recovery_id, pubkey, message)?;
                 check_message(CosmosMessage::parse(message)?.get_payload(), claimant)?;
-                let cosmos_bech32 = public_key.into_bech32(chain_id);
+                let cosmos_bech32 = pubkey.into_bech32(chain_id);
                 Ok(Identity::Cosmwasm(cosmos_bech32))
             }
             _ => Err(ErrorCode::NotImplemented.into()),
@@ -358,14 +364,11 @@ impl ClaimCertificate {
         &self,
         sysvar_instruction: &AccountInfo,
         claimant: &Pubkey,
-        index: usize,
     ) -> Result<ClaimInfo> {
         Ok(ClaimInfo {
-            identity: self.proof_of_identity.checked_into_identity(
-                sysvar_instruction,
-                claimant,
-                index,
-            )?,
+            identity: self
+                .proof_of_identity
+                .checked_into_identity(sysvar_instruction, claimant)?,
             amount:   self.amount,
         })
     }

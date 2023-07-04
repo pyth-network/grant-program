@@ -1,14 +1,18 @@
 use {
     super::dispenser_simulator::DispenserSimulator,
-    crate::ecosystems::{
-        evm::EvmPrefixedMessage,
-        get_expected_message,
-        secp256k1::{
-            EvmPubkey,
-            Secp256k1InstructionData,
-            Secp256k1InstructionHeader,
-            Secp256k1Signature,
+    crate::{
+        ecosystems::{
+            evm::EvmPrefixedMessage,
+            get_expected_message,
+            secp256k1::{
+                EvmPubkey,
+                Secp256k1InstructionData,
+                Secp256k1InstructionHeader,
+                Secp256k1Signature,
+            },
         },
+        Identity,
+        ProofOfIdentity,
     },
     anchor_lang::{
         prelude::Pubkey,
@@ -32,20 +36,15 @@ pub fn construct_evm_pubkey(pubkey: &libsecp256k1::PublicKey) -> EvmPubkey {
 }
 
 #[derive(Clone)]
-pub struct Secp256k1SignedMessage {
-    pub prefixed_message: EvmPrefixedMessage,
-    pub signature:        libsecp256k1::Signature,
-    pub recovery_id:      libsecp256k1::RecoveryId,
+pub struct EvmOffChainProofOfIdentity {
+    pub message:     EvmPrefixedMessage,
+    pub signature:   libsecp256k1::Signature,
+    pub recovery_id: libsecp256k1::RecoveryId,
 }
 
-impl Secp256k1SignedMessage {
+impl EvmOffChainProofOfIdentity {
     pub fn recover(&self) -> libsecp256k1::PublicKey {
-        libsecp256k1::recover(
-            &self.prefixed_message.hash(),
-            &self.signature,
-            &self.recovery_id,
-        )
-        .unwrap()
+        libsecp256k1::recover(&self.message.hash(), &self.signature, &self.recovery_id).unwrap()
     }
 
     pub fn recover_as_evm_address(&self) -> EvmPubkey {
@@ -57,7 +56,7 @@ impl Secp256k1SignedMessage {
         let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
         let (signature, recovery_id) = libsecp256k1::sign(&prefixed_message.hash(), &secret);
         Self {
-            prefixed_message: EvmPrefixedMessage::new(&get_expected_message(claimant)),
+            message: EvmPrefixedMessage::new(&get_expected_message(claimant)),
             signature,
             recovery_id,
         }
@@ -65,10 +64,7 @@ impl Secp256k1SignedMessage {
 
     pub fn into_instruction(&self, instruction_index: u8, valid_signature: bool) -> Instruction {
         let header = Secp256k1InstructionHeader::expected_header(
-            self.prefixed_message
-                .get_prefix_length()
-                .try_into()
-                .unwrap(),
+            self.message.get_prefix_length().try_into().unwrap(),
             instruction_index,
         );
 
@@ -84,7 +80,7 @@ impl Secp256k1SignedMessage {
             eth_address: self.recover_as_evm_address(),
             signature: Secp256k1Signature(signature_bytes),
             recovery_id: self.recovery_id.serialize(),
-            message: self.prefixed_message.get_prefixed_message(),
+            message: self.message.get_prefixed_message(),
         };
 
         Instruction {
@@ -95,9 +91,24 @@ impl Secp256k1SignedMessage {
     }
 }
 
+impl Into<Identity> for EvmOffChainProofOfIdentity {
+    fn into(self) -> Identity {
+        Identity::Evm(self.recover_as_evm_address())
+    }
+}
+
+impl Into<ProofOfIdentity> for EvmOffChainProofOfIdentity {
+    fn into(self) -> ProofOfIdentity {
+        ProofOfIdentity::Evm {
+            pubkey:                         self.recover_as_evm_address(),
+            verification_instruction_index: 1,
+        }
+    }
+}
+
 #[tokio::test]
 pub async fn test_verify_signed_message_onchain() {
-    let signed_message = Secp256k1SignedMessage::random(&Pubkey::new_unique());
+    let signed_message = EvmOffChainProofOfIdentity::random(&Pubkey::new_unique());
 
     let mut simulator = DispenserSimulator::new().await;
 

@@ -1,5 +1,8 @@
 use {
-    super::test_evm::Secp256k1SignedMessage,
+    super::{
+        test_evm::EvmOffChainProofOfIdentity,
+        test_happy_path::OffChainClaimCertificate,
+    },
     crate::{
         accounts,
         get_receipt_pda,
@@ -10,6 +13,7 @@ use {
         ErrorCode,
         Identity,
         ProofOfIdentity,
+        SolanaHasher,
     },
     anchor_lang::{
         prelude::{
@@ -27,6 +31,7 @@ use {
         InstructionData,
         ToAccountMetas,
     },
+    pythnet_sdk::accumulators::merkle::MerkleTree,
     solana_program_test::{
         BanksClient,
         BanksClientError,
@@ -48,18 +53,21 @@ use {
 impl Into<Identity> for ProofOfIdentity {
     fn into(self) -> Identity {
         match self {
-            ProofOfIdentity::Evm(evm_address) => Identity::Evm(evm_address),
+            ProofOfIdentity::Evm {
+                pubkey,
+                verification_instruction_index,
+            } => Identity::Evm(pubkey),
             ProofOfIdentity::Discord => Identity::Discord,
             ProofOfIdentity::Solana => todo!(),
             ProofOfIdentity::Sui => todo!(),
             ProofOfIdentity::Aptos => todo!(),
             ProofOfIdentity::Cosmwasm {
                 chain_id,
-                signature,
-                recovery_id,
-                public_key,
-                message,
-            } => Identity::Cosmwasm(public_key.into_bech32(&chain_id)),
+                signature: _,
+                recovery_id: _,
+                pubkey,
+                message: _,
+            } => Identity::Cosmwasm(pubkey.into_bech32(&chain_id)),
         }
     }
 }
@@ -123,9 +131,12 @@ impl DispenserSimulator {
     pub async fn claim(
         &mut self,
         dispenser_guard: &Keypair,
-        claim_certificate: ClaimCertificate,
-        signed_message: &Secp256k1SignedMessage,
+        off_chain_claim_certificate: &OffChainClaimCertificate,
+        merkle_tree: &MerkleTree<SolanaHasher>,
     ) -> Result<(), BanksClientError> {
+        let (claim_certificate, option_instruction) = off_chain_claim_certificate
+            .clone()
+            .into_claim_certificate(merkle_tree, 1);
         let mut accounts =
             accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey())
                 .to_account_metas(None);
@@ -133,9 +144,11 @@ impl DispenserSimulator {
 
         accounts.push(AccountMeta::new(
             get_receipt_pda(
-                &<ClaimCertificate as Into<ClaimInfo>>::into(claim_certificate.clone())
-                    .try_to_vec()
-                    .unwrap(),
+                &<OffChainClaimCertificate as Into<ClaimInfo>>::into(
+                    off_chain_claim_certificate.clone(),
+                )
+                .try_to_vec()
+                .unwrap(),
             )
             .0,
             false,
@@ -152,14 +165,20 @@ impl DispenserSimulator {
         let instruction_data: instruction::Claim = instruction::Claim {
             claim_certificates: vec![claim_certificate],
         };
-        let instruction =
-            Instruction::new_with_bytes(crate::id(), &instruction_data.data(), accounts);
 
-        self.process_ix(
-            &[signed_message.into_instruction(0, true), instruction],
-            &vec![dispenser_guard],
-        )
-        .await
+        let mut instructions = vec![];
+
+        instructions.push(Instruction::new_with_bytes(
+            crate::id(),
+            &instruction_data.data(),
+            accounts,
+        ));
+
+        if let Some(verification_instruction) = option_instruction {
+            instructions.push(verification_instruction);
+        }
+
+        self.process_ix(&instructions, &vec![dispenser_guard]).await
     }
 
 
@@ -181,7 +200,7 @@ pub trait IntoTransactionError {
 impl IntoTransactionError for ErrorCode {
     fn into_transation_error(self) -> TransactionError {
         TransactionError::InstructionError(
-            1, // 1 since instruction 0 is the compute budget
+            0,
             InstructionError::try_from(u64::from(ProgramError::from(
                 anchor_lang::prelude::Error::from(self),
             )))
@@ -191,6 +210,6 @@ impl IntoTransactionError for ErrorCode {
 }
 impl IntoTransactionError for InstructionError {
     fn into_transation_error(self) -> TransactionError {
-        TransactionError::InstructionError(1, self) // 1 since instruction 0 is the compute budget
+        TransactionError::InstructionError(0, self)
     }
 }

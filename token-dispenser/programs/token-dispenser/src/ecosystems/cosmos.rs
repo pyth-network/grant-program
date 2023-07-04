@@ -3,7 +3,10 @@ use {
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
-        solana_program,
+        solana_program::{
+            self,
+            hash,
+        },
         AnchorDeserialize,
         AnchorSerialize,
     },
@@ -139,6 +142,10 @@ impl CosmosMessage {
             .unwrap()
             .as_bytes()
             .to_vec();
+    }
+
+    pub fn hash(&self) -> libsecp256k1::Message {
+        libsecp256k1::Message::parse(&hash::hashv(&[&self.get_message_with_metadata()]).to_bytes())
     }
 }
 
