@@ -152,6 +152,11 @@ impl CosmosMessage {
 pub struct CosmosBech32Address(String);
 
 impl CosmosPubkey {
+    /** Cosmos public addresses are different than the public key.
+     * This one way algorithm converts the public key to the public address.
+     * Note that the claimant needs to submit the public key to the program
+     * to verify the signature.
+     */
     pub fn into_bech32(self, chain_id: &str) -> CosmosBech32Address {
         let mut compressed: [u8; SECP256K1_COMPRESSED_PUBKEY_LENGTH] =
             [0; SECP256K1_COMPRESSED_PUBKEY_LENGTH];
