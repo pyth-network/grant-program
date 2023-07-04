@@ -4522,7 +4522,6 @@ dependencies = [
  "base64 0.21.2",
  "bech32",
  "libsecp256k1 0.7.1",
- "libsecp256k1-core 0.3.0",
  "pythnet-sdk",
  "rand 0.8.5",
  "ripemd",
