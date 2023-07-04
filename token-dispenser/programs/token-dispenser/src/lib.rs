@@ -308,6 +308,11 @@ pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -
     Ok(())
 }
 
+/**
+ * Checks that a proof of identity is valid and returns the underlying identity.
+ * For some ecosystem like EVM we use a signature verification program,
+ * for others like cosmos the signature is included in the ClaimCertificate.
+ */
 impl ProofOfIdentity {
     pub fn checked_into_identity(
         &self,
@@ -356,8 +361,6 @@ impl ProofOfIdentity {
 
 /**
  * Check that the identity of the claim_info has authorized the claimant by signing a message.
- * The message is contained in the 0th instruction (the secp256k1/ed25519 instruction).
- * Executing that instruction checks the signature.
  */
 impl ClaimCertificate {
     pub fn checked_into_claim_info(
