@@ -62,6 +62,13 @@ impl OffChainClaimCertificate {
             ),
         }
     }
+
+    pub fn random_discord() -> Self {
+        Self {
+            amount:                      rand::thread_rng().gen::<u64>() % MAX_AMOUNT,
+            off_chain_proof_of_identity: OffChainProofOfIdentity::Discord,
+        }
+    }
 }
 
 impl Into<ClaimInfo> for OffChainClaimCertificate {
@@ -136,6 +143,7 @@ pub async fn test_happy_path() {
     let mock_offchain_certificates = vec![
         OffChainClaimCertificate::random_evm(&claimant),
         OffChainClaimCertificate::random_cosmos(&claimant),
+        OffChainClaimCertificate::random_discord(),
     ];
 
     let merkle_items: Vec<ClaimInfo> = mock_offchain_certificates
