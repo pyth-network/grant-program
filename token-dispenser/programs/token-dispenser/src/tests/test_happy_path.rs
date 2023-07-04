@@ -37,6 +37,11 @@ use {
     },
 };
 
+/**
+ * Testing requires having both the `ClaimInfo`'s to construct the tree and the `ClaimCertificate`'s
+ * to interact with the program. This struct is supposed to contain all the information needed
+ * to create a `ClaimInfo` and the corresponding `ClaimCertificate` to claim.
+ * */
 #[derive(Clone)]
 pub struct OffChainClaimCertificate {
     pub amount:                      u64,
