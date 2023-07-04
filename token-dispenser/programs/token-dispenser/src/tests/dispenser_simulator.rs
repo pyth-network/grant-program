@@ -4,12 +4,9 @@ use {
         accounts,
         get_receipt_pda,
         instruction,
-        ClaimCertificate,
         ClaimInfo,
         Config,
         ErrorCode,
-        Identity,
-        ProofOfIdentity,
         SolanaHasher,
     },
     anchor_lang::{
@@ -46,37 +43,6 @@ use {
         },
     },
 };
-
-impl Into<Identity> for ProofOfIdentity {
-    fn into(self) -> Identity {
-        match self {
-            ProofOfIdentity::Evm {
-                pubkey,
-                verification_instruction_index: _,
-            } => Identity::Evm(pubkey),
-            ProofOfIdentity::Discord => Identity::Discord,
-            ProofOfIdentity::Solana => todo!(),
-            ProofOfIdentity::Sui => todo!(),
-            ProofOfIdentity::Aptos => todo!(),
-            ProofOfIdentity::Cosmwasm {
-                chain_id,
-                signature: _,
-                recovery_id: _,
-                pubkey,
-                message: _,
-            } => Identity::Cosmwasm(pubkey.into_bech32(&chain_id)),
-        }
-    }
-}
-
-impl Into<ClaimInfo> for ClaimCertificate {
-    fn into(self) -> ClaimInfo {
-        ClaimInfo {
-            identity: self.proof_of_identity.into(),
-            amount:   self.amount,
-        }
-    }
-}
 
 pub struct DispenserSimulator {
     banks_client:        BanksClient,
