@@ -27,8 +27,7 @@ const MESSAGE: &str = "Pyth Grant Program";
 const b64_pubkey: &str = "AzByPRU/nxOm6YEre7q9ra1OqtRY9m2BEmVckHk7uLrL";
 const b64_signature: &str =
     "SyifqLu+llCqBT8IOroipXV3uh/cpxWRziLCvNbV9Ut+16q3TNaRo4wSIgEoFidsqYTqbGvjJVnBQuKcC85/gg==";
-const sample_message: &str = r#"{"account_number":"0","chain_id":"","fee":{"amount":[],"gas":"0"},"memo":"",
-"msgs":[{"type":"sign/MsgSignData","value":{"data":"UHl0aCBHcmFudCBQcm9ncmFt","signer":"cosmos1lv3rrn5trdea7vs43z5m4y34d5r3zxp484wcpu"}}],"sequence":"0"}"#;
+const sample_message: &str = r#"{"account_number":"0","chain_id":"","fee":{"amount":[],"gas":"0"},"memo":"","msgs":[{"type":"sign/MsgSignData","value":{"data":"UHl0aCBHcmFudCBQcm9ncmFt","signer":"cosmos1lv3rrn5trdea7vs43z5m4y34d5r3zxp484wcpu"}}],"sequence":"0"}"#;
 
 #[tokio::test]
 pub async fn test_verify_message_offchain() {
@@ -115,18 +114,6 @@ pub async fn test_verify_message_offchain() {
         .unwrap()
         .serialize()
     );
-    libsecp256k1::recover(
-        &message,
-        &signature,
-        &libsecp256k1::RecoveryId::parse(2).unwrap(),
-    )
-    .is_err();
-    libsecp256k1::recover(
-        &message,
-        &signature,
-        &libsecp256k1::RecoveryId::parse(3).unwrap(),
-    )
-    .is_err();
 
     assert_eq!(
         pubkey,
