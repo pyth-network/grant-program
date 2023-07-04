@@ -112,9 +112,6 @@ struct CosmosCoin {
     denom:  String,
 }
 
-
-// impl Secp256k1WrappedMessage for CosmosMessage {
-
 #[cfg(test)]
 impl CosmosMessage {
     pub fn new(message: &str) -> Self {

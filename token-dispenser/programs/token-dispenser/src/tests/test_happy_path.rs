@@ -98,7 +98,10 @@ impl OffChainClaimCertificate {
         (
             ClaimCertificate {
                 amount:             self.amount,
-                proof_of_identity:  self.off_chain_proof_of_identity.clone().into(),
+                proof_of_identity:  self
+                    .off_chain_proof_of_identity
+                    .clone()
+                    .into_claim_certificate(index),
                 proof_of_inclusion: merkle_tree
                     .prove(&Into::<ClaimInfo>::into(self.clone()).try_to_vec().unwrap())
                     .unwrap(),
@@ -118,10 +121,10 @@ impl Into<Identity> for OffChainProofOfIdentity {
     }
 }
 
-impl Into<ProofOfIdentity> for OffChainProofOfIdentity {
-    fn into(self) -> ProofOfIdentity {
+impl OffChainProofOfIdentity {
+    pub fn into_claim_certificate(self, verification_instruction_index: u8) -> ProofOfIdentity {
         match self {
-            Self::Evm(evm) => evm.into(),
+            Self::Evm(evm) => evm.into_proof_of_identity(verification_instruction_index),
             Self::Cosmos(cosmos) => cosmos.into(),
             Self::Discord => ProofOfIdentity::Discord,
         }

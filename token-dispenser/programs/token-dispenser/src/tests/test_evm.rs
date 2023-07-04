@@ -97,11 +97,11 @@ impl Into<Identity> for EvmOffChainProofOfIdentity {
     }
 }
 
-impl Into<ProofOfIdentity> for EvmOffChainProofOfIdentity {
-    fn into(self) -> ProofOfIdentity {
+impl EvmOffChainProofOfIdentity {
+    pub fn into_proof_of_identity(self, verification_instruction_index: u8) -> ProofOfIdentity {
         ProofOfIdentity::Evm {
-            pubkey:                         self.recover_as_evm_address(),
-            verification_instruction_index: 1,
+            pubkey: self.recover_as_evm_address(),
+            verification_instruction_index,
         }
     }
 }
