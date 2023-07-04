@@ -6,9 +6,9 @@ use {
     },
 };
 
+pub mod cosmos;
 pub mod evm;
 pub mod secp256k1;
-pub mod cosmos;
 
 /**
  * Ecosystem agnostic authorization message that the identity on the leaf needs to sign.

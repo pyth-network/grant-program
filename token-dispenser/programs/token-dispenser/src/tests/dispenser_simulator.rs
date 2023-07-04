@@ -1,5 +1,3 @@
-use crate::{ProofOfIdentity, Identity, ClaimInfo};
-
 use {
     super::test_evm::Secp256k1SignedMessage,
     crate::{
@@ -7,8 +5,11 @@ use {
         get_receipt_pda,
         instruction,
         ClaimCertificate,
+        ClaimInfo,
         Config,
         ErrorCode,
+        Identity,
+        ProofOfIdentity,
     },
     anchor_lang::{
         prelude::{
@@ -45,7 +46,6 @@ use {
 };
 
 impl Into<Identity> for ProofOfIdentity {
-
     fn into(self) -> Identity {
         match self {
             ProofOfIdentity::Evm(evm_address) => Identity::Evm(evm_address),
@@ -53,21 +53,26 @@ impl Into<Identity> for ProofOfIdentity {
             ProofOfIdentity::Solana => todo!(),
             ProofOfIdentity::Sui => todo!(),
             ProofOfIdentity::Aptos => todo!(),
-            ProofOfIdentity::Cosmwasm { chain_id, signature, recovery_id, public_key, message } => Identity::Cosmwasm,
+            ProofOfIdentity::Cosmwasm {
+                chain_id,
+                signature,
+                recovery_id,
+                public_key,
+                message,
+            } => Identity::Cosmwasm,
         }
     }
 }
 
 impl Into<ClaimInfo> for ClaimCertificate {
-
     fn into(self) -> ClaimInfo {
         ClaimInfo {
             identity: self.proof_of_identity.into(),
-            amount: self.amount,
+            amount:   self.amount,
         }
     }
 }
-    
+
 pub struct DispenserSimulator {
     banks_client:        BanksClient,
     pub genesis_keypair: Keypair,
@@ -127,7 +132,12 @@ impl DispenserSimulator {
 
 
         accounts.push(AccountMeta::new(
-            get_receipt_pda(&<ClaimCertificate as Into<ClaimInfo>>::into(claim_certificate.clone()).try_to_vec().unwrap()).0,
+            get_receipt_pda(
+                &<ClaimCertificate as Into<ClaimInfo>>::into(claim_certificate.clone())
+                    .try_to_vec()
+                    .unwrap(),
+            )
+            .0,
             false,
         ));
 
@@ -184,4 +194,3 @@ impl IntoTransactionError for InstructionError {
         TransactionError::InstructionError(1, self) // 1 since instruction 0 is the compute budget
     }
 }
-

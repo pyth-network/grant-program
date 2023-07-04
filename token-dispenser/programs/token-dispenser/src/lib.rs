@@ -1,7 +1,5 @@
 #![allow(clippy::result_large_err)]
 
-use ecosystems::{cosmos::{CosmosPubkey, CosmosMessage}, secp256k1::{Secp256k1Signature, secp256k1_sha256_verify_signer}};
-
 use {
     anchor_lang::{
         prelude::*,
@@ -21,10 +19,16 @@ use {
     },
     ecosystems::{
         check_message,
+        cosmos::{
+            CosmosMessage,
+            CosmosPubkey,
+        },
         evm::EvmPrefixedMessage,
         secp256k1::{
             self,
+            secp256k1_sha256_verify_signer,
             Secp256k1InstructionData,
+            Secp256k1Signature,
         },
     },
     pythnet_sdk::{
@@ -191,19 +195,19 @@ pub enum ProofOfIdentity {
     Solana,
     Sui,
     Aptos,
-    Cosmwasm{
-        chain_id : String,
-        signature : Secp256k1Signature,
-        recovery_id : u8,
-        public_key : CosmosPubkey,
-        message : Vec<u8>
-    }
+    Cosmwasm {
+        chain_id:    String,
+        signature:   Secp256k1Signature,
+        recovery_id: u8,
+        public_key:  CosmosPubkey,
+        message:     Vec<u8>,
+    },
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimCertificate {
-    amount : u64,
-    proof_of_identity: ProofOfIdentity,
+    amount:             u64,
+    proof_of_identity:  ProofOfIdentity,
     proof_of_inclusion: MerklePath<SolanaHasher>, // Proof that the leaf is in the tree
 }
 
@@ -326,12 +330,17 @@ impl ProofOfIdentity {
                 )?;
                 Ok(Identity::Evm(*evm_pubkey))
             }
-            ProofOfIdentity::Cosmwasm{ public_key, chain_id, signature, recovery_id, message
+            ProofOfIdentity::Cosmwasm {
+                public_key,
+                chain_id,
+                signature,
+                recovery_id,
+                message,
             } => {
                 secp256k1_sha256_verify_signer(signature, recovery_id, public_key, message)?;
                 check_message(CosmosMessage::parse(message)?.get_payload(), claimant)?;
                 Ok(Identity::Cosmwasm)
-            },
+            }
             _ => Err(ErrorCode::NotImplemented.into()),
         }
     }
@@ -343,7 +352,7 @@ impl ProofOfIdentity {
  * Executing that instruction checks the signature.
  */
 impl ClaimCertificate {
-    pub fn checked_into_claim_info (
+    pub fn checked_into_claim_info(
         &self,
         sysvar_instruction: &AccountInfo,
         claimant: &Pubkey,
@@ -355,7 +364,7 @@ impl ClaimCertificate {
                 claimant,
                 index,
             )?,
-            amount: self.amount,
+            amount:   self.amount,
         })
     }
 }
