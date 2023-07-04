@@ -144,6 +144,10 @@ impl AnchorSerialize for Secp256k1InstructionData {
     }
 }
 
+/** Cosmos uses a different signing algorith than Evm for signing
+ * messages. Instead of using Keccak256, Cosmos uses SHA256. This prevents
+ * us from using the Secp256k1 instruction struct for Cosmos.
+ */
 pub fn secp256k1_sha256_verify_signer(
     signature: &Secp256k1Signature,
     recovery_id: &u8,
