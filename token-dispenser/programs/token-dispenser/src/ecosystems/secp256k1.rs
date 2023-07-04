@@ -17,6 +17,7 @@ use {
 pub const SECP256K1_FULL_PREFIX: u8 = 0x04;
 pub const SECP256K1_ODD_PREFIX: u8 = 0x03;
 pub const SECP256K1_EVEN_PREFIX: u8 = 0x02;
+pub const SECP256K1_COMPRESSED_PUBKEY_LENGTH: usize = 33;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
 pub struct EvmPubkey(pub [u8; Self::LEN]);

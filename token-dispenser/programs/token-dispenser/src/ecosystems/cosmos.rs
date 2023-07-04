@@ -1,6 +1,7 @@
 use {
     super::secp256k1::{
         EvmPubkey,
+        SECP256K1_COMPRESSED_PUBKEY_LENGTH,
         SECP256K1_EVEN_PREFIX,
         SECP256K1_ODD_PREFIX,
     },
@@ -27,7 +28,6 @@ use {
 };
 
 pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
-pub const COMPRESSED_LENGTH: usize = 33;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
 pub struct CosmosPubkey(pub [u8; Self::LEN]);
@@ -149,12 +149,13 @@ impl CosmosMessage {
 
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub struct CosmosBech32Address(pub String);
+pub struct CosmosBech32Address(String);
 
 impl CosmosPubkey {
     pub fn into_bech32(self, chain_id: &str) -> CosmosBech32Address {
-        let mut compressed: [u8; COMPRESSED_LENGTH] = [0; COMPRESSED_LENGTH];
-        compressed[1..].copy_from_slice(&self.0[1..COMPRESSED_LENGTH]);
+        let mut compressed: [u8; SECP256K1_COMPRESSED_PUBKEY_LENGTH] =
+            [0; SECP256K1_COMPRESSED_PUBKEY_LENGTH];
+        compressed[1..].copy_from_slice(&self.0[1..SECP256K1_COMPRESSED_PUBKEY_LENGTH]);
         compressed[0] = if self.0[Self::LEN - 1] % 2 == 0 {
             SECP256K1_EVEN_PREFIX
         } else {
