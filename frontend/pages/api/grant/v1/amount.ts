@@ -7,6 +7,9 @@ const client = createClient({
   password: `${process.env.ALTINITY_CLICKHOUSE_PASSWORD}`,
 })
 
+/**
+ * This endpoint returns the amount of tokens allocated to a specific identity
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
