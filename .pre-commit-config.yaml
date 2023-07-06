@@ -10,13 +10,19 @@ repos:
             frontend/public/orb.png |
             frontend/package-lock.json
           )$
-
   - repo: local
     hooks:
-      # Hooks for the remote executor
-      - id: cargo-fmt-remote-executor
-        name: Cargo format for remote executor
+      # Hooks for the token dispenser
+      - id: cargo-fmt-token-dispeser
+        name: Cargo format for token dispenser
         language: "rust"
         entry: cargo +nightly-2023-03-01 fmt --manifest-path ./token-dispenser/Cargo.toml --all -- --config-path ./token-dispenser/rustfmt.toml
         pass_filenames: false
         files: token-dispenser
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: "v2.7.1"
+    hooks:
+      - id: prettier
+        additional_dependencies:
+          - "prettier@2.7.1"
+          - "prettier-plugin-tailwindcss@^0.1.13"
