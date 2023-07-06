@@ -10,12 +10,11 @@ repos:
             frontend/public/orb.png |
             frontend/package-lock.json
           )$
-
   - repo: local
     hooks:
-      # Hooks for the remote executor
-      - id: cargo-fmt-remote-executor
-        name: Cargo format for remote executor
+      # Hooks for the token dispenser
+      - id: cargo-fmt-token-dispeser
+        name: Cargo format for token dispenser
         language: "rust"
         entry: cargo +nightly-2023-03-01 fmt --manifest-path ./token-dispenser/Cargo.toml --all -- --config-path ./token-dispenser/rustfmt.toml
         pass_filenames: false
