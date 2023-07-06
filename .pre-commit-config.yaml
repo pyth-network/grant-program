@@ -20,3 +20,10 @@ repos:
         entry: cargo +nightly-2023-03-01 fmt --manifest-path ./token-dispenser/Cargo.toml --all -- --config-path ./token-dispenser/rustfmt.toml
         pass_filenames: false
         files: token-dispenser
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: "v2.7.1"
+    hooks:
+      - id: prettier
+        additional_dependencies:
+          - "prettier@2.7.1"
+          - "prettier-plugin-tailwindcss@^0.1.13"
