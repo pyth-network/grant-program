@@ -53,7 +53,6 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
   // You can also provide a custom RPC endpoint
   // const endpoint = useMemo(() => clusterApiUrl(network), [network])
 
-
   const endpoint = process.env.ENDPOINT
   // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking and lazy loading --
   // Only the wallets you configure here will be compiled into your application, and only the dependencies
