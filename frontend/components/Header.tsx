@@ -1,8 +1,15 @@
 import { Dialog } from '@headlessui/react'
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
+
+import dynamic from 'next/dynamic'
+
+const WalletMultiButtonDynamic = dynamic(
+  async () =>
+    (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
+  { ssr: false }
+)
 
 const Header = () => {
   const router = useRouter()
@@ -51,7 +58,7 @@ const Header = () => {
           </Link>
         </div>
         <div className="flex items-center justify-end space-x-2">
-          <WalletMultiButton className="primary-btn pt-0.5" />
+          <WalletMultiButtonDynamic className="primary-btn pt-0.5" />
           <div className="flex-shrink-0 md:hidden">
             <button
               className="rounded-full p-2 hover:bg-hoverGray"
