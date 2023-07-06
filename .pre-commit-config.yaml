@@ -5,6 +5,12 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-added-large-files
+        exclude: |
+          (?x)^(
+            frontend/public/orb.png |
+            frontend/package-lock.json
+          )$
+
   - repo: local
     hooks:
       # Hooks for the remote executor
