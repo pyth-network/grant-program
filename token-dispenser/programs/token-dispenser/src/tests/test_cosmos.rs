@@ -16,14 +16,14 @@ use {
 };
 
 #[derive(Clone)]
-pub struct CosmosOffChainIdentityCertificate {
+pub struct CosmosTestIdentityCertificate {
     pub chain_id:    String,
     pub signature:   libsecp256k1::Signature,
     pub recovery_id: libsecp256k1::RecoveryId,
     pub message:     CosmosMessage,
 }
 
-impl CosmosOffChainIdentityCertificate {
+impl CosmosTestIdentityCertificate {
     pub fn recover(&self) -> libsecp256k1::PublicKey {
         libsecp256k1::recover(&self.message.hash(), &self.signature, &self.recovery_id).unwrap()
     }
@@ -44,13 +44,13 @@ impl CosmosOffChainIdentityCertificate {
     }
 }
 
-impl Into<Identity> for CosmosOffChainIdentityCertificate {
+impl Into<Identity> for CosmosTestIdentityCertificate {
     fn into(self) -> Identity {
         Identity::Cosmwasm(CosmosPubkey(self.recover().serialize()).into_bech32(&self.chain_id))
     }
 }
 
-impl Into<IdentityCertificate> for CosmosOffChainIdentityCertificate {
+impl Into<IdentityCertificate> for CosmosTestIdentityCertificate {
     fn into(self) -> IdentityCertificate {
         IdentityCertificate::Cosmwasm {
             chain_id:    self.chain_id.clone(),

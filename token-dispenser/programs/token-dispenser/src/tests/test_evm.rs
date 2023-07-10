@@ -36,13 +36,13 @@ pub fn construct_evm_pubkey(pubkey: &libsecp256k1::PublicKey) -> EvmPubkey {
 }
 
 #[derive(Clone)]
-pub struct EvmOffChainIdentityCertificate {
+pub struct EvmTestIdentityCertificate {
     pub message:     EvmPrefixedMessage,
     pub signature:   libsecp256k1::Signature,
     pub recovery_id: libsecp256k1::RecoveryId,
 }
 
-impl EvmOffChainIdentityCertificate {
+impl EvmTestIdentityCertificate {
     pub fn recover(&self) -> libsecp256k1::PublicKey {
         libsecp256k1::recover(&self.message.hash(), &self.signature, &self.recovery_id).unwrap()
     }
@@ -91,13 +91,13 @@ impl EvmOffChainIdentityCertificate {
     }
 }
 
-impl Into<Identity> for EvmOffChainIdentityCertificate {
+impl Into<Identity> for EvmTestIdentityCertificate {
     fn into(self) -> Identity {
         Identity::Evm(self.recover_as_evm_address())
     }
 }
 
-impl EvmOffChainIdentityCertificate {
+impl EvmTestIdentityCertificate {
     pub fn into_proof_of_identity(
         &self,
         verification_instruction_index: u8,
@@ -111,7 +111,7 @@ impl EvmOffChainIdentityCertificate {
 
 #[tokio::test]
 pub async fn test_verify_signed_message_onchain() {
-    let signed_message = EvmOffChainIdentityCertificate::random(&Pubkey::new_unique());
+    let signed_message = EvmTestIdentityCertificate::random(&Pubkey::new_unique());
 
     let mut simulator = DispenserSimulator::new().await;
 

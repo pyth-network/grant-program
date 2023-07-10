@@ -1,5 +1,5 @@
 use {
-    super::test_happy_path::OffChainClaimCertificate,
+    super::test_happy_path::TestClaimCertificate,
     crate::{
         accounts,
         get_receipt_pda,
@@ -94,7 +94,7 @@ impl DispenserSimulator {
     pub async fn claim(
         &mut self,
         dispenser_guard: &Keypair,
-        off_chain_claim_certificate: &OffChainClaimCertificate,
+        off_chain_claim_certificate: &TestClaimCertificate,
         merkle_tree: &MerkleTree<SolanaHasher>,
     ) -> Result<(), BanksClientError> {
         let (claim_certificate, option_instruction) =
@@ -106,7 +106,7 @@ impl DispenserSimulator {
 
         accounts.push(AccountMeta::new(
             get_receipt_pda(
-                &<OffChainClaimCertificate as Into<ClaimInfo>>::into(
+                &<TestClaimCertificate as Into<ClaimInfo>>::into(
                     off_chain_claim_certificate.clone(),
                 )
                 .try_to_vec()

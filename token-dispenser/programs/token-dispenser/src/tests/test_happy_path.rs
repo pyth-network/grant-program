@@ -1,14 +1,14 @@
 use {
     super::{
         dispenser_simulator::DispenserSimulator,
-        test_cosmos::CosmosOffChainIdentityCertificate,
+        test_cosmos::CosmosTestIdentityCertificate,
     },
     crate::{
         get_config_pda,
         get_receipt_pda,
         tests::{
             dispenser_simulator::IntoTransactionError,
-            test_evm::EvmOffChainIdentityCertificate,
+            test_evm::EvmTestIdentityCertificate,
         },
         ClaimCertificate,
         ClaimInfo,
@@ -38,18 +38,25 @@ use {
 };
 
 /**
- * Testing requires having both the `ClaimInfo`'s to construct the tree and the `ClaimCertificate`'s
- * to interact with the program. This struct is supposed to contain all the information needed
- * to create a `ClaimInfo` and the corresponding `ClaimCertificate` to claim.
+ * There's a chicken and egg problem in the tests.
+ * We first want to generate all the signatures so that it's easy for us to simulate claiming.
+ * However, the struct that contains the signature, `ClaimCertificate` requires the merkle proof.
+ * But the only way to get the merkle proof is converting the `ClaimCertificate` into `ClaimInfo` and constructing the tree.
+ * Therefore we use `TestClaimCertificate` from which both `ClaimCerticate` and `ClaimInfo` can be derived.
+ * The testing flow is intended to be:
+ * - Create a set of `TestClaimCertificate`s with the desired amounts and identities
+ * - Create a `MerkleTree` from the `TestClaimCertificate`s
+ * - Use the `TestClaimCertificate`s to create the `ClaimInfo`s
+ * - Use the `TestClaimCertificate`s and the `MerkleTree` to create the `ClaimCertificate`s
  * */
 #[derive(Clone)]
-pub struct OffChainClaimCertificate {
+pub struct TestClaimCertificate {
     pub amount:                      u64,
-    pub off_chain_proof_of_identity: OffChainIdentityCertificate,
+    pub off_chain_proof_of_identity: TestIdentityCertificate,
 }
 
 pub const MAX_AMOUNT: u64 = 1000;
-impl OffChainClaimCertificate {
+impl TestClaimCertificate {
     pub fn random_amount() -> u64 {
         rand::thread_rng().gen::<u64>() % MAX_AMOUNT
     }
@@ -57,8 +64,8 @@ impl OffChainClaimCertificate {
     pub fn random_evm(claimant: &Pubkey) -> Self {
         Self {
             amount:                      Self::random_amount(),
-            off_chain_proof_of_identity: OffChainIdentityCertificate::Evm(
-                EvmOffChainIdentityCertificate::random(claimant),
+            off_chain_proof_of_identity: TestIdentityCertificate::Evm(
+                EvmTestIdentityCertificate::random(claimant),
             ),
         }
     }
@@ -66,8 +73,8 @@ impl OffChainClaimCertificate {
     pub fn random_cosmos(claimant: &Pubkey) -> Self {
         Self {
             amount:                      Self::random_amount(),
-            off_chain_proof_of_identity: OffChainIdentityCertificate::Cosmos(
-                CosmosOffChainIdentityCertificate::random(claimant),
+            off_chain_proof_of_identity: TestIdentityCertificate::Cosmos(
+                CosmosTestIdentityCertificate::random(claimant),
             ),
         }
     }
@@ -75,12 +82,12 @@ impl OffChainClaimCertificate {
     pub fn random_discord() -> Self {
         Self {
             amount:                      Self::random_amount(),
-            off_chain_proof_of_identity: OffChainIdentityCertificate::Discord("username".into()),
+            off_chain_proof_of_identity: TestIdentityCertificate::Discord("username".into()),
         }
     }
 }
 
-impl Into<ClaimInfo> for OffChainClaimCertificate {
+impl Into<ClaimInfo> for TestClaimCertificate {
     fn into(self) -> ClaimInfo {
         ClaimInfo {
             amount:   self.amount,
@@ -89,16 +96,16 @@ impl Into<ClaimInfo> for OffChainClaimCertificate {
     }
 }
 
-impl OffChainClaimCertificate {
+impl TestClaimCertificate {
     pub fn into_claim_certificate(
         &self,
         merkle_tree: &MerkleTree<SolanaHasher>,
         index: u8,
     ) -> (ClaimCertificate, Option<Instruction>) {
         let option_instruction = match &self.off_chain_proof_of_identity {
-            OffChainIdentityCertificate::Evm(evm) => Some(evm.into_instruction(index, true)),
-            OffChainIdentityCertificate::Discord(_) => None,
-            OffChainIdentityCertificate::Cosmos(_) => None,
+            TestIdentityCertificate::Evm(evm) => Some(evm.into_instruction(index, true)),
+            TestIdentityCertificate::Discord(_) => None,
+            TestIdentityCertificate::Cosmos(_) => None,
         };
         (
             ClaimCertificate {
@@ -115,7 +122,7 @@ impl OffChainClaimCertificate {
     }
 }
 
-impl Into<Identity> for OffChainIdentityCertificate {
+impl Into<Identity> for TestIdentityCertificate {
     fn into(self) -> Identity {
         match self {
             Self::Evm(evm) => evm.into(),
@@ -125,7 +132,7 @@ impl Into<Identity> for OffChainIdentityCertificate {
     }
 }
 
-impl OffChainIdentityCertificate {
+impl TestIdentityCertificate {
     pub fn into_claim_certificate(
         &self,
         verification_instruction_index: u8,
@@ -142,10 +149,10 @@ impl OffChainIdentityCertificate {
 
 
 #[derive(Clone)]
-pub enum OffChainIdentityCertificate {
-    Evm(EvmOffChainIdentityCertificate),
+pub enum TestIdentityCertificate {
+    Evm(EvmTestIdentityCertificate),
     Discord(String),
-    Cosmos(CosmosOffChainIdentityCertificate),
+    Cosmos(CosmosTestIdentityCertificate),
 }
 
 
@@ -157,14 +164,14 @@ pub async fn test_happy_path() {
     let claimant = simulator.genesis_keypair.pubkey();
 
     let mock_offchain_certificates = vec![
-        OffChainClaimCertificate::random_evm(&claimant),
-        OffChainClaimCertificate::random_cosmos(&claimant),
-        OffChainClaimCertificate::random_discord(),
+        TestClaimCertificate::random_evm(&claimant),
+        TestClaimCertificate::random_cosmos(&claimant),
+        TestClaimCertificate::random_discord(),
     ];
 
     let merkle_items: Vec<ClaimInfo> = mock_offchain_certificates
         .iter()
-        .map(|item: &OffChainClaimCertificate| item.clone().into())
+        .map(|item: &TestClaimCertificate| item.clone().into())
         .collect();
 
     let merkle_items_serialized = merkle_items
