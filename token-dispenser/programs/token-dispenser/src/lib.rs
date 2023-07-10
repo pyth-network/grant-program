@@ -322,7 +322,7 @@ impl IdentityCertificate {
         claimant: &Pubkey,
     ) -> Result<Identity> {
         match self {
-            IdentityCertificate::Discord { username } => Ok(Identity::Discord(username.clone())),
+            IdentityCertificate::Discord { username } => Ok(Identity::Discord(username.clone())), // The discord check happens off-chain, it is the responsibility of the dispenser guard to check that the Discord user has been authenticated.
             IdentityCertificate::Evm {
                 pubkey,
                 verification_instruction_index,
