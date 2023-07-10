@@ -26,8 +26,8 @@ use {
 pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
 
 /**
- An ADR036 message used in Cosmos.
-Only the message payload is stored in the struct.
+* An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.
+* Only the message payload is stored in this struct.
  */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct CosmosMessage(Vec<u8>);
@@ -64,9 +64,9 @@ impl CosmosMessage {
 }
 
 /**
-A Cosmos signed doc. It's basically a Cosmos transaction. The signer signs the
-hash of the signed doc serialized as JSON.
-For ADR036 (arbitrary messages), a lot of fields are zeroed.
+* A Cosmos signed doc. It's basically a Cosmos transaction.
+* The signer signs the hash of the signed doc serialized as JSON.
+* For ADR036 (arbitrary messages), a lot of fields are zeroed.
  */
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CosmosStdSignDoc {
@@ -79,7 +79,7 @@ pub struct CosmosStdSignDoc {
 }
 
 /**
-A cosmos message, there can be more than one in a signed doc.
+* A cosmos message, there can be more than one in a signed doc.
 */
 #[derive(Serialize, Deserialize, Debug)]
 struct CosmosStdMsg {
@@ -88,7 +88,7 @@ struct CosmosStdMsg {
 }
 
 /**
-The payload of a Cosmos ADR036 message.
+* The payload of a Cosmos ADR036 message.
 */
 #[derive(Serialize, Deserialize, Debug)]
 struct CosmosAdr036Value {
@@ -97,7 +97,7 @@ struct CosmosAdr036Value {
 }
 
 /**
-Fee information for ADR036 this is zeroed.
+* Fee information in a signed doc. for ADR036 this is zeroed.
 */
 #[derive(Serialize, Deserialize, Debug)]
 struct CosmosStdFee {
@@ -106,7 +106,7 @@ struct CosmosStdFee {
 }
 
 /**
-A Cosmos coin used in the fee information.
+* A Cosmos coin used in the fee information.
 */
 #[derive(Serialize, Deserialize, Debug)]
 struct CosmosCoin {
@@ -121,8 +121,8 @@ impl CosmosMessage {
     }
 
     /**
-    Returns the full serialized message with metadata.
-    */
+     * Returns the serialized message including metadata.
+     */
     pub fn get_message_with_metadata(&self) -> Vec<u8> {
         let sign_doc: CosmosStdSignDoc = CosmosStdSignDoc {
             account_number: "0".to_string(),
@@ -153,7 +153,8 @@ impl CosmosMessage {
 }
 
 
-/** A Secp256k1 pubkey used in Cosmos.
+/**
+ * A Secp256k1 pubkey used in Cosmos.
  */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
 pub struct CosmosPubkey(pub [u8; Self::LEN]);
