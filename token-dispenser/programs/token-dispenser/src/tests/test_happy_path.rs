@@ -1,21 +1,21 @@
 use {
     super::{
         dispenser_simulator::DispenserSimulator,
-        test_cosmos::CosmosOffChainProofOfIdentity,
+        test_cosmos::CosmosOffChainIdentityCertificate,
     },
     crate::{
         get_config_pda,
         get_receipt_pda,
         tests::{
             dispenser_simulator::IntoTransactionError,
-            test_evm::EvmOffChainProofOfIdentity,
+            test_evm::EvmOffChainIdentityCertificate,
         },
         ClaimCertificate,
         ClaimInfo,
         Config,
         ErrorCode,
         Identity,
-        ProofOfIdentity,
+        IdentityCertificate,
         SolanaHasher,
     },
     anchor_lang::{
@@ -45,7 +45,7 @@ use {
 #[derive(Clone)]
 pub struct OffChainClaimCertificate {
     pub amount:                      u64,
-    pub off_chain_proof_of_identity: OffChainProofOfIdentity,
+    pub off_chain_proof_of_identity: OffChainIdentityCertificate,
 }
 
 pub const MAX_AMOUNT: u64 = 1000;
@@ -57,8 +57,8 @@ impl OffChainClaimCertificate {
     pub fn random_evm(claimant: &Pubkey) -> Self {
         Self {
             amount:                      Self::random_amount(),
-            off_chain_proof_of_identity: OffChainProofOfIdentity::Evm(
-                EvmOffChainProofOfIdentity::random(claimant),
+            off_chain_proof_of_identity: OffChainIdentityCertificate::Evm(
+                EvmOffChainIdentityCertificate::random(claimant),
             ),
         }
     }
@@ -66,8 +66,8 @@ impl OffChainClaimCertificate {
     pub fn random_cosmos(claimant: &Pubkey) -> Self {
         Self {
             amount:                      Self::random_amount(),
-            off_chain_proof_of_identity: OffChainProofOfIdentity::Cosmos(
-                CosmosOffChainProofOfIdentity::random(claimant),
+            off_chain_proof_of_identity: OffChainIdentityCertificate::Cosmos(
+                CosmosOffChainIdentityCertificate::random(claimant),
             ),
         }
     }
@@ -75,7 +75,7 @@ impl OffChainClaimCertificate {
     pub fn random_discord() -> Self {
         Self {
             amount:                      Self::random_amount(),
-            off_chain_proof_of_identity: OffChainProofOfIdentity::Discord,
+            off_chain_proof_of_identity: OffChainIdentityCertificate::Discord,
         }
     }
 }
@@ -96,9 +96,9 @@ impl OffChainClaimCertificate {
         index: u8,
     ) -> (ClaimCertificate, Option<Instruction>) {
         let option_instruction = match &self.off_chain_proof_of_identity {
-            OffChainProofOfIdentity::Evm(evm) => Some(evm.into_instruction(index, true)),
-            OffChainProofOfIdentity::Discord => None,
-            OffChainProofOfIdentity::Cosmos(_) => None,
+            OffChainIdentityCertificate::Evm(evm) => Some(evm.into_instruction(index, true)),
+            OffChainIdentityCertificate::Discord => None,
+            OffChainIdentityCertificate::Cosmos(_) => None,
         };
         (
             ClaimCertificate {
@@ -115,7 +115,7 @@ impl OffChainClaimCertificate {
     }
 }
 
-impl Into<Identity> for OffChainProofOfIdentity {
+impl Into<Identity> for OffChainIdentityCertificate {
     fn into(self) -> Identity {
         match self {
             Self::Evm(evm) => evm.into(),
@@ -125,22 +125,25 @@ impl Into<Identity> for OffChainProofOfIdentity {
     }
 }
 
-impl OffChainProofOfIdentity {
-    pub fn into_claim_certificate(&self, verification_instruction_index: u8) -> ProofOfIdentity {
+impl OffChainIdentityCertificate {
+    pub fn into_claim_certificate(
+        &self,
+        verification_instruction_index: u8,
+    ) -> IdentityCertificate {
         match self {
             Self::Evm(evm) => evm.into_proof_of_identity(verification_instruction_index),
             Self::Cosmos(cosmos) => cosmos.clone().into(),
-            Self::Discord => ProofOfIdentity::Discord,
+            Self::Discord => IdentityCertificate::Discord,
         }
     }
 }
 
 
 #[derive(Clone)]
-pub enum OffChainProofOfIdentity {
-    Evm(EvmOffChainProofOfIdentity),
+pub enum OffChainIdentityCertificate {
+    Evm(EvmOffChainIdentityCertificate),
     Discord,
-    Cosmos(CosmosOffChainProofOfIdentity),
+    Cosmos(CosmosOffChainIdentityCertificate),
 }
 
 

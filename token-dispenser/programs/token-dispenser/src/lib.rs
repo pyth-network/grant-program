@@ -190,7 +190,7 @@ impl Identity {
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub enum ProofOfIdentity {
+pub enum IdentityCertificate {
     Discord,
     Evm {
         pubkey:                         EvmPubkey,
@@ -211,7 +211,7 @@ pub enum ProofOfIdentity {
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimCertificate {
     amount:             u64,
-    proof_of_identity:  ProofOfIdentity,
+    proof_of_identity:  IdentityCertificate,
     proof_of_inclusion: MerklePath<SolanaHasher>, // Proof that the leaf is in the tree
 }
 
@@ -313,15 +313,15 @@ pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -
  * For some ecosystem like EVM we use a signature verification program,
  * for others like cosmos the signature is included in the ClaimCertificate.
  */
-impl ProofOfIdentity {
+impl IdentityCertificate {
     pub fn checked_into_identity(
         &self,
         sysvar_instruction: &AccountInfo,
         claimant: &Pubkey,
     ) -> Result<Identity> {
         match self {
-            ProofOfIdentity::Discord => Ok(Identity::Discord),
-            ProofOfIdentity::Evm {
+            IdentityCertificate::Discord => Ok(Identity::Discord),
+            IdentityCertificate::Evm {
                 pubkey,
                 verification_instruction_index,
             } => {
@@ -342,7 +342,7 @@ impl ProofOfIdentity {
                 )?;
                 Ok(Identity::Evm(*pubkey))
             }
-            ProofOfIdentity::Cosmwasm {
+            IdentityCertificate::Cosmwasm {
                 pubkey,
                 chain_id,
                 signature,

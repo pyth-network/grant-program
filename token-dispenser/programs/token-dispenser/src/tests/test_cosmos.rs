@@ -9,21 +9,21 @@ use {
             secp256k1::Secp256k1Signature,
         },
         Identity,
-        ProofOfIdentity,
+        IdentityCertificate,
     },
     anchor_lang::prelude::Pubkey,
     rand::seq::SliceRandom,
 };
 
 #[derive(Clone)]
-pub struct CosmosOffChainProofOfIdentity {
+pub struct CosmosOffChainIdentityCertificate {
     pub chain_id:    String,
     pub signature:   libsecp256k1::Signature,
     pub recovery_id: libsecp256k1::RecoveryId,
     pub message:     CosmosMessage,
 }
 
-impl CosmosOffChainProofOfIdentity {
+impl CosmosOffChainIdentityCertificate {
     pub fn recover(&self) -> libsecp256k1::PublicKey {
         libsecp256k1::recover(&self.message.hash(), &self.signature, &self.recovery_id).unwrap()
     }
@@ -44,15 +44,15 @@ impl CosmosOffChainProofOfIdentity {
     }
 }
 
-impl Into<Identity> for CosmosOffChainProofOfIdentity {
+impl Into<Identity> for CosmosOffChainIdentityCertificate {
     fn into(self) -> Identity {
         Identity::Cosmwasm(CosmosPubkey(self.recover().serialize()).into_bech32(&self.chain_id))
     }
 }
 
-impl Into<ProofOfIdentity> for CosmosOffChainProofOfIdentity {
-    fn into(self) -> ProofOfIdentity {
-        ProofOfIdentity::Cosmwasm {
+impl Into<IdentityCertificate> for CosmosOffChainIdentityCertificate {
+    fn into(self) -> IdentityCertificate {
+        IdentityCertificate::Cosmwasm {
             chain_id:    self.chain_id.clone(),
             signature:   Secp256k1Signature(self.signature.serialize()),
             recovery_id: self.recovery_id.into(),
