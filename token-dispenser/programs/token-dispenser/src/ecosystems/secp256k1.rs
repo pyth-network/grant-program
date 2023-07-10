@@ -1,15 +1,23 @@
 use {
+    super::cosmos::CosmosPubkey,
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
         solana_program::{
+            hash,
             instruction::Instruction,
             secp256k1_program::ID as SECP256K1_ID,
+            secp256k1_recover::secp256k1_recover,
         },
         AnchorDeserialize,
         AnchorSerialize,
     },
 };
+
+pub const SECP256K1_FULL_PREFIX: u8 = 0x04;
+pub const SECP256K1_ODD_PREFIX: u8 = 0x03;
+pub const SECP256K1_EVEN_PREFIX: u8 = 0x02;
+pub const SECP256K1_COMPRESSED_PUBKEY_LENGTH: usize = 33;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
 pub struct EvmPubkey(pub [u8; Self::LEN]);
@@ -134,4 +142,26 @@ impl AnchorSerialize for Secp256k1InstructionData {
         writer.write_all(&self.message)?;
         Ok(())
     }
+}
+
+/** Cosmos uses a different signing algorith than Evm for signing
+ * messages. Instead of using Keccak256, Cosmos uses SHA256. This prevents
+ * us from using the Secp256k1 instruction struct for Cosmos.
+ */
+pub fn secp256k1_sha256_verify_signer(
+    signature: &Secp256k1Signature,
+    recovery_id: &u8,
+    pubkey: &CosmosPubkey,
+    message: &Vec<u8>,
+) -> Result<()> {
+    let recovered_key = secp256k1_recover(
+        &hash::hashv(&[message]).to_bytes(),
+        *recovery_id,
+        &signature.0,
+    )
+    .map_err(|_| ErrorCode::SignatureVerificationWrongSigner)?;
+    if !(recovered_key.0 == pubkey.0[1..] && pubkey.0[0] == SECP256K1_FULL_PREFIX) {
+        return Err(ErrorCode::SignatureVerificationWrongSigner.into());
+    }
+    Ok(())
 }

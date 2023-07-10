@@ -1,12 +1,13 @@
 use {
-    super::test_evm::Secp256k1SignedMessage,
+    super::test_happy_path::TestClaimCertificate,
     crate::{
         accounts,
         get_receipt_pda,
         instruction,
-        ClaimCertificate,
+        ClaimInfo,
         Config,
         ErrorCode,
+        SolanaHasher,
     },
     anchor_lang::{
         prelude::{
@@ -24,6 +25,7 @@ use {
         InstructionData,
         ToAccountMetas,
     },
+    pythnet_sdk::accumulators::merkle::MerkleTree,
     solana_program_test::{
         BanksClient,
         BanksClientError,
@@ -92,16 +94,25 @@ impl DispenserSimulator {
     pub async fn claim(
         &mut self,
         dispenser_guard: &Keypair,
-        claim_certificate: ClaimCertificate,
-        signed_message: &Secp256k1SignedMessage,
+        off_chain_claim_certificate: &TestClaimCertificate,
+        merkle_tree: &MerkleTree<SolanaHasher>,
     ) -> Result<(), BanksClientError> {
+        let (claim_certificate, option_instruction) =
+            off_chain_claim_certificate.into_claim_certificate(merkle_tree, 1);
         let mut accounts =
             accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey())
                 .to_account_metas(None);
 
 
         accounts.push(AccountMeta::new(
-            get_receipt_pda(&claim_certificate.claim_info.try_to_vec().unwrap()).0,
+            get_receipt_pda(
+                &<TestClaimCertificate as Into<ClaimInfo>>::into(
+                    off_chain_claim_certificate.clone(),
+                )
+                .try_to_vec()
+                .unwrap(),
+            )
+            .0,
             false,
         ));
 
@@ -116,14 +127,20 @@ impl DispenserSimulator {
         let instruction_data: instruction::Claim = instruction::Claim {
             claim_certificates: vec![claim_certificate],
         };
-        let instruction =
-            Instruction::new_with_bytes(crate::id(), &instruction_data.data(), accounts);
 
-        self.process_ix(
-            &[signed_message.into_instruction(0, true), instruction],
-            &vec![dispenser_guard],
-        )
-        .await
+        let mut instructions = vec![];
+
+        instructions.push(Instruction::new_with_bytes(
+            crate::id(),
+            &instruction_data.data(),
+            accounts,
+        ));
+
+        if let Some(verification_instruction) = option_instruction {
+            instructions.push(verification_instruction);
+        }
+
+        self.process_ix(&instructions, &vec![dispenser_guard]).await
     }
 
 
@@ -145,7 +162,7 @@ pub trait IntoTransactionError {
 impl IntoTransactionError for ErrorCode {
     fn into_transation_error(self) -> TransactionError {
         TransactionError::InstructionError(
-            1, // 1 since instruction 0 is the compute budget
+            0,
             InstructionError::try_from(u64::from(ProgramError::from(
                 anchor_lang::prelude::Error::from(self),
             )))
@@ -155,6 +172,6 @@ impl IntoTransactionError for ErrorCode {
 }
 impl IntoTransactionError for InstructionError {
     fn into_transation_error(self) -> TransactionError {
-        TransactionError::InstructionError(1, self) // 1 since instruction 0 is the compute budget
+        TransactionError::InstructionError(0, self)
     }
 }

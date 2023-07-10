@@ -39,7 +39,7 @@ impl EvmPrefixedMessage {
                 ));
             }
         }
-        Err(ErrorCode::SignatureVerificationWrongMessagePrefix.into())
+        Err(ErrorCode::SignatureVerificationWrongMessageMetadata.into())
     }
 
     pub fn get_payload(&self) -> &[u8] {
@@ -53,10 +53,10 @@ pub fn get_message_length(l: usize) -> Result<usize> {
 
     while l >= upperbound + number_of_digits {
         if l == upperbound + number_of_digits {
-            return Err(ErrorCode::SignatureVerificationWrongMessagePrefix.into());
+            return Err(ErrorCode::SignatureVerificationWrongMessageMetadata.into());
         }
         number_of_digits += 1;
-        upperbound = upperbound * 10;
+        upperbound *= 10;
     }
     Ok(l.saturating_sub(number_of_digits))
 }
