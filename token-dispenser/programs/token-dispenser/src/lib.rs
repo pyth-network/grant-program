@@ -166,7 +166,7 @@ pub struct ClaimInfo {
  */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub enum Identity {
-    Discord,
+    Discord(String),
     Solana(Pubkey),
     Evm(secp256k1::EvmPubkey),
     Sui,
@@ -177,7 +177,7 @@ pub enum Identity {
 impl Identity {
     pub fn to_discriminant(&self) -> usize {
         match self {
-            Identity::Discord => 0,
+            Identity::Discord(_) => 0,
             Identity::Solana(_) => 1,
             Identity::Evm(_) => 2,
             Identity::Sui => 3,
@@ -191,7 +191,9 @@ impl Identity {
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub enum IdentityCertificate {
-    Discord,
+    Discord {
+        username: String,
+    },
     Evm {
         pubkey:                         EvmPubkey,
         verification_instruction_index: u8,
@@ -320,7 +322,7 @@ impl IdentityCertificate {
         claimant: &Pubkey,
     ) -> Result<Identity> {
         match self {
-            IdentityCertificate::Discord => Ok(Identity::Discord),
+            IdentityCertificate::Discord { username } => Ok(Identity::Discord(username.clone())),
             IdentityCertificate::Evm {
                 pubkey,
                 verification_instruction_index,

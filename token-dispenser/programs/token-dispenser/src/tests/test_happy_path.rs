@@ -75,7 +75,7 @@ impl OffChainClaimCertificate {
     pub fn random_discord() -> Self {
         Self {
             amount:                      Self::random_amount(),
-            off_chain_proof_of_identity: OffChainIdentityCertificate::Discord,
+            off_chain_proof_of_identity: OffChainIdentityCertificate::Discord("username".into()),
         }
     }
 }
@@ -97,7 +97,7 @@ impl OffChainClaimCertificate {
     ) -> (ClaimCertificate, Option<Instruction>) {
         let option_instruction = match &self.off_chain_proof_of_identity {
             OffChainIdentityCertificate::Evm(evm) => Some(evm.into_instruction(index, true)),
-            OffChainIdentityCertificate::Discord => None,
+            OffChainIdentityCertificate::Discord(_) => None,
             OffChainIdentityCertificate::Cosmos(_) => None,
         };
         (
@@ -120,7 +120,7 @@ impl Into<Identity> for OffChainIdentityCertificate {
         match self {
             Self::Evm(evm) => evm.into(),
             Self::Cosmos(cosmos) => cosmos.into(),
-            Self::Discord => Identity::Discord,
+            Self::Discord(username) => Identity::Discord(username.clone()),
         }
     }
 }
@@ -133,7 +133,9 @@ impl OffChainIdentityCertificate {
         match self {
             Self::Evm(evm) => evm.into_proof_of_identity(verification_instruction_index),
             Self::Cosmos(cosmos) => cosmos.clone().into(),
-            Self::Discord => IdentityCertificate::Discord,
+            Self::Discord(username) => IdentityCertificate::Discord {
+                username: username.clone(),
+            },
         }
     }
 }
@@ -142,7 +144,7 @@ impl OffChainIdentityCertificate {
 #[derive(Clone)]
 pub enum OffChainIdentityCertificate {
     Evm(EvmOffChainIdentityCertificate),
-    Discord,
+    Discord(String),
     Cosmos(CosmosOffChainIdentityCertificate),
 }
 
