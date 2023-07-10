@@ -34,16 +34,6 @@ pub struct CosmosPubkey(pub [u8; Self::LEN]);
 impl CosmosPubkey {
     pub const LEN: usize = 65;
 }
-
-impl Into<EvmPubkey> for CosmosPubkey {
-    fn into(self) -> EvmPubkey {
-        let mut addr = [0u8; EvmPubkey::LEN];
-        addr.copy_from_slice(&keccak::hashv(&[&self.0[1..]]).to_bytes()[12..]);
-        assert_eq!(addr.len(), EvmPubkey::LEN);
-        EvmPubkey(addr)
-    }
-}
-
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct CosmosMessage(Vec<u8>);
 
