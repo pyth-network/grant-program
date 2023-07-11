@@ -143,7 +143,7 @@ pub struct Claim<'info> {
     #[account(init_if_needed, space = Cart::LEN, payer = claimant, seeds = [CART_SEED, claimant.key.as_ref()], bump)]
     pub cart:               Account<'info, Cart>,
     pub system_program:     Program<'info, System>,
-    /// CHECK : This is safe before we're using load_instruction_at_checked to load the account
+    /// CHECK : Anchor wants me to write this comment because I'm using AccountInfo which doesn't check for ownership and doesn't serialize automatically. But it's fine because I check the address and I load it using load_instruction_at_checked.
     #[account(address = SYSVAR_IX_ID)]
     pub sysvar_instruction: AccountInfo<'info>,
 }
