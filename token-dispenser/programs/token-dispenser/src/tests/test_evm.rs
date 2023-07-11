@@ -93,7 +93,9 @@ impl EvmTestIdentityCertificate {
 
 impl Into<Identity> for EvmTestIdentityCertificate {
     fn into(self) -> Identity {
-        Identity::Evm(self.recover_as_evm_address())
+        Identity::Evm {
+            pubkey: self.recover_as_evm_address(),
+        }
     }
 }
 
