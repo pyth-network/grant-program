@@ -362,7 +362,10 @@ export type TokenDispenser = {
             name: 'Cosmwasm'
             fields: [
               {
-                defined: 'CosmosBech32Address'
+                name: 'address'
+                type: {
+                  defined: 'CosmosBech32Address'
+                }
               }
             ]
           }
@@ -856,7 +859,10 @@ export const IDL: TokenDispenser = {
             name: 'Cosmwasm',
             fields: [
               {
-                defined: 'CosmosBech32Address',
+                name: 'address',
+                type: {
+                  defined: 'CosmosBech32Address',
+                },
               },
             ],
           },
