@@ -1,4 +1,4 @@
-// These IDLs are hardcoded since the IDL parser in rust doesn't support :
+// This IDL is hardcoded since the IDL parser in rust doesn't support :
 // - unit and tuple structs (EvmPubkey, CosmosPubkey, Secp256k1Signature)
 // - types imported from other packages (MerkleRoot<SolanaHasher>, MerklePath<SolanaHasher>)
 
