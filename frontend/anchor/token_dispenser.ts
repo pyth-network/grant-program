@@ -364,6 +364,16 @@ export type TokenDispenser = {
           },
           {
             name: 'Solana'
+            fields: [
+              {
+                name: 'pubkey'
+                type: 'publicKey'
+              },
+              {
+                name: 'verification_instruction_index'
+                type: 'u8'
+              }
+            ]
           },
           {
             name: 'Sui'

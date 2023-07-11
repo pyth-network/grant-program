@@ -367,7 +367,7 @@
             "fields": [
               {
                 "name": "pubkey",
-                "type": "publickey"
+                "type": "publicKey"
               },
               {
                 "name": "verification_instruction_index",
