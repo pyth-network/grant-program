@@ -171,7 +171,7 @@ pub enum Identity {
     Evm { pubkey: EvmPubkey },
     Sui,
     Aptos,
-    Cosmwasm(CosmosBech32Address),
+    Cosmwasm { address: CosmosBech32Address },
 }
 
 impl Identity {
@@ -356,7 +356,9 @@ impl IdentityCertificate {
                 secp256k1_sha256_verify_signer(signature, recovery_id, pubkey, message)?;
                 check_message(CosmosMessage::parse(message)?.get_payload(), claimant)?;
                 let cosmos_bech32 = pubkey.into_bech32(chain_id);
-                Ok(Identity::Cosmwasm(cosmos_bech32))
+                Ok(Identity::Cosmwasm {
+                    address: cosmos_bech32,
+                })
             }
             _ => Err(ErrorCode::NotImplemented.into()),
         }
