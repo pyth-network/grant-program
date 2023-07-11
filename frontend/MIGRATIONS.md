@@ -15,3 +15,13 @@ Next migrate the database to the latest version with :
 ```
 npx node-pg-migrate up
 ```
+
+To reset the database, just shut down the container and create a new one.
+
+### Create a new migration
+
+```
+npx node-pg-migrate create -j {sql|ts} name of migration
+```
+
+This will create a file in `migrations/` prefixed by the timestamp. Then, you can fill out the up migration section manually.
