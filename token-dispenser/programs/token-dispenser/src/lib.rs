@@ -26,7 +26,6 @@ use {
         },
         evm::EvmPrefixedMessage,
         secp256k1::{
-            self,
             secp256k1_sha256_verify_signer,
             EvmPubkey,
             Secp256k1InstructionData,
