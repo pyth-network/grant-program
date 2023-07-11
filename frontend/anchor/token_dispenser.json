@@ -225,29 +225,73 @@
       }
     },
     {
-      "name": "TestIdentityCertificate",
+      "name": "MerkleRoot<SolanaHasher>",
       "type": {
-        "kind": "enum",
-        "variants": [
+        "kind": "struct",
+        "fields": [
           {
-            "name": "Evm",
-            "fields": [
-              {
-                "defined": "EvmTestIdentityCertificate"
+            "name": "data",
+            "type": {
+              "array": ["u8", 32]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "EvmPubkey",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": {
+              "array": ["u8", 20]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Secp256k1Signature",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": {
+              "array": ["u8", 64]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CosmosPubkey",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": {
+              "array": ["u8", 65]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MerklePath<SolanaHasher>",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": {
+              "vec": {
+                "array": ["u8", 32]
               }
-            ]
-          },
-          {
-            "name": "Discord",
-            "fields": ["string"]
-          },
-          {
-            "name": "Cosmos",
-            "fields": [
-              {
-                "defined": "CosmosTestIdentityCertificate"
-              }
-            ]
+            }
           }
         ]
       }
@@ -272,7 +316,7 @@
             "name": "Evm",
             "fields": [
               {
-                "defined": "secp256k1::EvmPubkey"
+                "defined": "EvmPubkey"
               }
             ]
           },
@@ -284,11 +328,7 @@
           },
           {
             "name": "Cosmwasm",
-            "fields": [
-              {
-                "defined": "CosmosBech32Address"
-              }
-            ]
+            "fields": ["string"]
           }
         ]
       }
