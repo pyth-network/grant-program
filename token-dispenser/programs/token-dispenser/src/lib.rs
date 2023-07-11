@@ -260,7 +260,7 @@ impl Cart {
 }
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimedEcosystems {
-    set: [bool; Identity::NUMBER_OF_VARIANTS],
+    set: [bool; 6],
 }
 
 impl ClaimedEcosystems {

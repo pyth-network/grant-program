@@ -363,7 +363,17 @@
             ]
           },
           {
-            "name": "Solana"
+            "name": "Solana",
+            "fields": [
+              {
+                "name": "pubkey",
+                "type": "publickey"
+              },
+              {
+                "name": "verification_instruction_index",
+                "type": "u8"
+              }
+            ]
           },
           {
             "name": "Sui"
