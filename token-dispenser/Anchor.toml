@@ -13,4 +13,4 @@ wallet = "/Users/gbescos/.config/solana/id.json"
 
 [scripts]
 test = "cargo test-bpf"
-export = "./scripts/update_idl.sh"
+export = "anchor build && ./scripts/export_idl.sh"
