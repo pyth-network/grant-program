@@ -4,6 +4,7 @@ import * as anchor from '@coral-xyz/anchor'
 import { removeLeading0x } from './index'
 import { MerkleTree } from './merkleTree'
 
+/** Build an arbitrary Merkle tree that we also build in the Rust tests, the comparison is not automated though */
 test('Merkle tree sanity check', (done) => {
   const coder = new anchor.BorshCoder(IDL as any)
   let claimInfos = [
