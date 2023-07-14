@@ -46,7 +46,9 @@ impl CosmosTestIdentityCertificate {
 
 impl Into<Identity> for CosmosTestIdentityCertificate {
     fn into(self) -> Identity {
-        Identity::Cosmwasm(CosmosPubkey(self.recover().serialize()).into_bech32(&self.chain_id))
+        Identity::Cosmwasm {
+            address: CosmosPubkey(self.recover().serialize()).into_bech32(&self.chain_id),
+        }
     }
 }
 

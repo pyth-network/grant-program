@@ -26,7 +26,6 @@ use {
         },
         evm::EvmPrefixedMessage,
         secp256k1::{
-            self,
             secp256k1_sha256_verify_signer,
             EvmPubkey,
             Secp256k1InstructionData,
@@ -144,6 +143,7 @@ pub struct Claim<'info> {
     #[account(init_if_needed, space = Cart::LEN, payer = claimant, seeds = [CART_SEED, claimant.key.as_ref()], bump)]
     pub cart:               Account<'info, Cart>,
     pub system_program:     Program<'info, System>,
+    /// CHECK : Anchor wants me to write this comment because I'm using AccountInfo which doesn't check for ownership and doesn't deserialize the account automatically. But it's fine because I check the address and I load it using load_instruction_at_checked.
     #[account(address = SYSVAR_IX_ID)]
     pub sysvar_instruction: AccountInfo<'info>,
 }
@@ -166,23 +166,23 @@ pub struct ClaimInfo {
  */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub enum Identity {
-    Discord(String),
-    Solana(Pubkey),
-    Evm(secp256k1::EvmPubkey),
+    Discord { username: String },
+    Solana { pubkey: Pubkey },
+    Evm { pubkey: EvmPubkey },
     Sui,
     Aptos,
-    Cosmwasm(CosmosBech32Address),
+    Cosmwasm { address: CosmosBech32Address },
 }
 
 impl Identity {
     pub fn to_discriminant(&self) -> usize {
         match self {
-            Identity::Discord(_) => 0,
-            Identity::Solana(_) => 1,
-            Identity::Evm(_) => 2,
-            Identity::Sui => 3,
-            Identity::Aptos => 4,
-            Identity::Cosmwasm(_) => 5,
+            Identity::Discord { .. } => 0,
+            Identity::Solana { .. } => 1,
+            Identity::Evm { .. } => 2,
+            Identity::Sui { .. } => 3,
+            Identity::Aptos { .. } => 4,
+            Identity::Cosmwasm { .. } => 5,
         }
     }
 
@@ -256,11 +256,11 @@ pub struct Cart {
 }
 
 impl Cart {
-    pub const LEN: usize = 8 + 8 + 6;
+    pub const LEN: usize = 8 + 8 + Identity::NUMBER_OF_VARIANTS;
 }
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimedEcosystems {
-    set: [bool; Identity::NUMBER_OF_VARIANTS],
+    set: [bool; 6],
 }
 
 impl ClaimedEcosystems {
@@ -322,7 +322,9 @@ impl IdentityCertificate {
         claimant: &Pubkey,
     ) -> Result<Identity> {
         match self {
-            IdentityCertificate::Discord { username } => Ok(Identity::Discord(username.clone())), // The discord check happens off-chain, it is the responsibility of the dispenser guard to check that the Discord user has been authenticated.
+            IdentityCertificate::Discord { username } => Ok(Identity::Discord {
+                username: username.to_string(),
+            }), // The discord check happens off-chain, it is the responsibility of the dispenser guard to check that the Discord user has been authenticated.
             IdentityCertificate::Evm {
                 pubkey,
                 verification_instruction_index,
@@ -342,7 +344,7 @@ impl IdentityCertificate {
                     .get_payload(),
                     claimant,
                 )?;
-                Ok(Identity::Evm(*pubkey))
+                Ok(Identity::Evm { pubkey: *pubkey })
             }
             IdentityCertificate::Cosmwasm {
                 pubkey,
@@ -354,7 +356,9 @@ impl IdentityCertificate {
                 secp256k1_sha256_verify_signer(signature, recovery_id, pubkey, message)?;
                 check_message(CosmosMessage::parse(message)?.get_payload(), claimant)?;
                 let cosmos_bech32 = pubkey.into_bech32(chain_id);
-                Ok(Identity::Cosmwasm(cosmos_bech32))
+                Ok(Identity::Cosmwasm {
+                    address: cosmos_bech32,
+                })
             }
             _ => Err(ErrorCode::NotImplemented.into()),
         }
@@ -470,4 +474,18 @@ impl crate::accounts::Claim {
             sysvar_instruction: SYSVAR_IX_ID,
         }
     }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Tests.
+/////////////////////////////////////////////////////////////////////////////////
+
+#[cfg(test)]
+#[test]
+pub fn test_number_of_identities() {
+    assert_eq!(
+        Identity::NUMBER_OF_VARIANTS,
+        ClaimedEcosystems::new().set.len()
+    );
 }

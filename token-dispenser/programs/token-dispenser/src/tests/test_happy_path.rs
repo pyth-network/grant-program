@@ -127,7 +127,9 @@ impl Into<Identity> for TestIdentityCertificate {
         match self {
             Self::Evm(evm) => evm.into(),
             Self::Cosmos(cosmos) => cosmos.into(),
-            Self::Discord(username) => Identity::Discord(username.clone()),
+            Self::Discord(username) => Identity::Discord {
+                username: username.clone(),
+            },
         }
     }
 }

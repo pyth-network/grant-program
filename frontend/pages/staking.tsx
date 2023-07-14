@@ -2,7 +2,7 @@ import CloseIcon from '@components/icons/CloseIcon'
 import Tooltip from '@components/Tooltip'
 import { Dialog, Listbox, Tab, Transition } from '@headlessui/react'
 import { CheckIcon, SelectorIcon } from '@heroicons/react/solid'
-import { Wallet } from '@project-serum/anchor'
+import { Wallet } from '@coral-xyz/anchor'
 import {
   useAnchorWallet,
   useConnection,
