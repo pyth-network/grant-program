@@ -16,15 +16,13 @@ export class MerkleTree {
   }
 
   constructor(nodes: Buffer[]) {
-    const sortedNodes = nodes.sort(Buffer.compare)
-
     const depth = Math.ceil(Math.log2(nodes.length))
     this.nodes = new Array(1 << (depth + 1)).fill(NULL_PREFIX)
 
     for (let i = 0; i < 1 << depth; i++) {
-      if (i < sortedNodes.length) {
+      if (i < nodes.length) {
         this.nodes[(1 << depth) + i] = keccak256(
-          Buffer.concat([LEAF_PREFIX, sortedNodes[i]])
+          Buffer.concat([LEAF_PREFIX, nodes[i]])
         )
       } else {
         this.nodes[(1 << depth) + i] = keccak256(NULL_PREFIX)
