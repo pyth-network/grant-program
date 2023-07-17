@@ -4521,6 +4521,7 @@ dependencies = [
  "anchor-lang",
  "base64 0.21.2",
  "bech32",
+ "hex",
  "libsecp256k1 0.7.1",
  "pythnet-sdk",
  "rand 0.8.5",

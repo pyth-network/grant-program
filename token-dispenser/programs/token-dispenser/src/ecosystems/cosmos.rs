@@ -163,7 +163,7 @@ impl CosmosPubkey {
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub struct CosmosBech32Address(String);
+pub struct CosmosBech32Address(pub String);
 
 impl CosmosPubkey {
     /** Cosmos public addresses are different than the public key.

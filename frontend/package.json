@@ -58,6 +58,7 @@
     "autoprefixer": "^10.4.0",
     "eslint": "^8.42.0",
     "eslint-config-next": "^13.4.6",
+    "keccak256": "^1.0.6",
     "node-pg-migrate": "^6.2.2",
     "pg": "^8.11.1",
     "postcss": "^8.4.5",
