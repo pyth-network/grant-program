@@ -3,9 +3,10 @@ import IDL from './idl/token_dispenser.json'
 import * as anchor from '@coral-xyz/anchor'
 import { removeLeading0x } from './index'
 import { MerkleTree } from './merkleTree'
+import { expect } from '@jest/globals'
 
-/** Build an arbitrary Merkle tree that we also build in the Rust tests, the comparison is not automated though */
-test('Merkle tree sanity check', (done) => {
+/** Build a Merkle tree and check the result against the Rust implementation. */
+test('Merkle tree sanity check', () => {
   const coder = new anchor.BorshCoder(IDL as any)
   let claimInfos = [
     coder.types.encode('ClaimInfo', {
@@ -43,10 +44,7 @@ test('Merkle tree sanity check', (done) => {
     }),
   ]
 
-  const merkleTree = new MerkleTree(claimInfos)
-  console.log(
-    'Merkle root from JS, check this against the output of the Rust test test_merkle_tree.rs :',
-    merkleTree.nodes[1].toString('hex')
-  )
-  done()
+  // see the Rust test test_merkle_tree.rs for the expected result of this merkle tree computation.
+  const merkleTree = new MerkleTree(claimInfos);
+  expect(merkleTree.nodes[1].toString('hex')).toBe('da2c16a403ad559921906102da13add419b043c2199ec8ff00685e52a91b680f');
 })

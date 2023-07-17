@@ -32,3 +32,12 @@ Once that's done, change directory to the frontend directory and run:
 npm install
 npm run dev
 ```
+
+
+### 4. Tests
+
+Unit tests are written using jest.
+
+```bash
+npm run test
+```
