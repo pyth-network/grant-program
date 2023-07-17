@@ -12,12 +12,20 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const { ecosystem, identity } = req.query
-  try {
-    const result = await pool.query('SELECT amount FROM token_allocations WHERE ecosystem = $1::text AND identity = $2::text', [ecosystem, identity])
-    console.log(JSON.stringify(result.rows[0])) // Hello world!
+  if (ecosystem === undefined || identity === undefined) {
+    res.status(400).json({"error": "Must provide the 'ecosystem' and 'identity' query parameters"});
+    return;
+  }
 
-    res.status(200).json({ amount: result.rows[0] })
+  try {
+    const result = await pool.query('SELECT amount FROM amounts WHERE ecosystem = $1 AND identity = $2', [ecosystem, identity]);
+    if (result.rows.length == 0) {
+      res.status(404).json({"error": `No result found for ${ecosystem} identity ${identity}`});
+
+    } else {
+      res.status(200).json({amount: result.rows[0]});
+    }
   } catch (error) {
-    res.status(404)
+    res.status(500).json({error: `An unexpected error occurred. Error details\n${error.toString()}`});
   }
 }

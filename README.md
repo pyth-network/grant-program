@@ -29,6 +29,9 @@ docker run  -e POSTGRES_PASSWORD="password" -p 5432:5432 -e POSTGRES_USER=postgr
 ```
 
 
+URLs show up here
+
+http://localhost:3001/api/grant/v1/amount
 
 ## Token Dispenser
 
