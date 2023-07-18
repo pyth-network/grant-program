@@ -3,6 +3,8 @@ The claim codebase relies on a database to store :
 - The amounts that each claimant is entitled to (`amounts` table)
 - The authentication status of claimants (`authentications` table)
 
+### Start the database
+
 To develop locally, first spin up a local database using :
 
 ```
