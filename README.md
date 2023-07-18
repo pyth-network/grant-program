@@ -16,7 +16,29 @@ Copy `frontend/.env.sample` to `frontend/.env` and edit the configuration variab
 
 ### Token Dispenser
 
-TODO: how to start solana validator with the anchor program?
+First, install both the [Solana CLI tools](https://docs.solana.com/cli/install-solana-cli-tools) and [Anchor](https://www.anchor-lang.com/docs/installation).
+Next, start a solana test validator. In a new shell, run:
+
+```
+solana-test-validator
+```
+
+Once the validator is running, check that you have a local keypair:
+
+```bash
+solana account ~/.config/solana/id.json
+```
+
+This command should print out the public key of your default local keypair.
+If you don't have a keypair, create one using `solana-keygen new`. 
+
+Next, deploy the program. From the `token_dispenser` directory, run:
+
+```bash
+anchor deploy
+```
+
+TODO: how do we point the frontend at the deployed program? We probably need to configure an address somewhere.
 
 ### Web Frontend
 
@@ -56,7 +78,7 @@ The functions in that directory are available under the URL `http://localhost:30
 
 ## Unit tests
 
-You can run the unit tests for the `token_dispenser` program via:
+You can run the unit tests for the `token_dispenser` program as follows:
 
 ```bash
 cd token_dispenser
