@@ -1,4 +1,4 @@
-name: JS/TS checks
+name: Frontend Tests
 on:
   pull_request:
   push:
@@ -15,6 +15,7 @@ jobs:
         with:
           node-version: 18
           cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
       - name: Install deps
         run: npm ci
       - name: Build
