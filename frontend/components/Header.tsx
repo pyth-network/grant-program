@@ -19,30 +19,30 @@ const Header = () => {
     <div className="before:gradient-border relative -bottom-[1px]  mb-3">
       <div className="col-span-12 flex h-24 items-center justify-between px-8 md:px-8 xl:col-span-10 xl:col-start-2">
         <div className="flex basis-[160px] cursor-pointer items-center">
-          <Link href="/staking">
+          <Link href="/staking" legacyBehavior>
             <img src="/pyth-logo-white.svg" className="h-30 mr-3" />
           </Link>
         </div>
         <div className="hidden space-x-10 md:flex">
-          <Link href="/claim">
-            <a
-              className={
-                router.pathname == '/claim' ? 'nav-link font-bold' : 'nav-link '
-              }
-            >
+          <Link
+            href="/claim"
+            className={
+              router.pathname == '/claim' ? 'nav-link font-bold' : 'nav-link '
+            }>
+            
               Claim
-            </a>
+            
           </Link>{' '}
-          <Link href="/staking">
-            <a
-              className={
-                router.pathname == '/staking'
-                  ? 'nav-link font-bold'
-                  : 'nav-link '
-              }
-            >
+          <Link
+            href="/staking"
+            className={
+              router.pathname == '/staking'
+                ? 'nav-link font-bold'
+                : 'nav-link '
+            }>
+            
               Staking
-            </a>
+            
           </Link>
           <Link
             href={`https://realms.today/dao/PYTH${
@@ -50,11 +50,11 @@ const Header = () => {
                 ? '?cluster=' + process.env.CLUSTER
                 : ''
             }`}
-          >
-            <a className="nav-link">Governance</a>
+            className="nav-link">
+            Governance
           </Link>
-          <Link href="https://pyth.network">
-            <a className="nav-link">Pyth Network</a>
+          <Link href="https://pyth.network" className="nav-link">
+            Pyth Network
           </Link>
         </div>
         <div className="flex items-center justify-end space-x-2">
@@ -79,7 +79,7 @@ const Header = () => {
           <Dialog.Overlay className="fixed inset-0 bg-dark" />
           <div className="height-screen fixed  top-0 mx-auto w-full rounded py-6 px-8">
             <div className="flex items-center justify-between space-x-2 pt-[7px]">
-              <Link href="/staking">
+              <Link href="/staking" legacyBehavior>
                 <img src="/pyth-logo-white.svg" className="h-30 mr-3" />
               </Link>
               <button
@@ -95,7 +95,7 @@ const Header = () => {
             </div>
             <div className="griw-rows-2 grid space-y-5 pt-10 text-center text-base18">
               <Link href="/staking">
-                <a>Staking</a>
+                Staking
               </Link>
               <Link
                 href={`https://realms.today/dao/PYTH${
@@ -104,21 +104,21 @@ const Header = () => {
                     : ''
                 }`}
               >
-                <a>
-                  <div className="flex justify-center">Governance</div>
-                </a>
+
+                <div className="flex justify-center">Governance</div>
+
               </Link>
               <Link href="https://pyth.network">
-                <a>
-                  <div className="flex justify-center">Pyth Network</div>
-                </a>
+
+                <div className="flex justify-center">Pyth Network</div>
+
               </Link>
             </div>
           </div>
         </div>
       </Dialog>
     </div>
-  )
+  );
 }
 
 export default Header
