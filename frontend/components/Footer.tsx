@@ -9,9 +9,7 @@ const Footer = () => {
   return (
     <div className="before:gradient-border relative bottom-0 flex w-full flex-col  items-center justify-between gap-y-8  px-8 py-8 before:top-0 before:bottom-[initial] md:flex-row md:gap-y-0">
       <Link href="/staking" className="md:basis-[195px]">
-
         <img src="/pyth.svg" className="" />
-
       </Link>
       <div className="flex items-center justify-center gap-x-5 md:w-36 md:gap-x-6">
         <a
@@ -66,7 +64,7 @@ const Footer = () => {
         </a>
       </div>
     </div>
-  );
+  )
 }
 
 export default Footer

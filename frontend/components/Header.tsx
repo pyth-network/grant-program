@@ -28,21 +28,17 @@ const Header = () => {
             href="/claim"
             className={
               router.pathname == '/claim' ? 'nav-link font-bold' : 'nav-link '
-            }>
-            
-              Claim
-            
+            }
+          >
+            Claim
           </Link>{' '}
           <Link
             href="/staking"
             className={
-              router.pathname == '/staking'
-                ? 'nav-link font-bold'
-                : 'nav-link '
-            }>
-            
-              Staking
-            
+              router.pathname == '/staking' ? 'nav-link font-bold' : 'nav-link '
+            }
+          >
+            Staking
           </Link>
           <Link
             href={`https://realms.today/dao/PYTH${
@@ -50,7 +46,8 @@ const Header = () => {
                 ? '?cluster=' + process.env.CLUSTER
                 : ''
             }`}
-            className="nav-link">
+            className="nav-link"
+          >
             Governance
           </Link>
           <Link href="https://pyth.network" className="nav-link">
@@ -94,9 +91,7 @@ const Header = () => {
               </button>
             </div>
             <div className="griw-rows-2 grid space-y-5 pt-10 text-center text-base18">
-              <Link href="/staking">
-                Staking
-              </Link>
+              <Link href="/staking">Staking</Link>
               <Link
                 href={`https://realms.today/dao/PYTH${
                   process.env.CLUSTER !== 'mainnet'
@@ -104,21 +99,17 @@ const Header = () => {
                     : ''
                 }`}
               >
-
                 <div className="flex justify-center">Governance</div>
-
               </Link>
               <Link href="https://pyth.network">
-
                 <div className="flex justify-center">Pyth Network</div>
-
               </Link>
             </div>
           </div>
         </div>
       </Dialog>
     </div>
-  );
+  )
 }
 
 export default Header
