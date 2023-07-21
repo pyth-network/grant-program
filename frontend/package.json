@@ -39,6 +39,7 @@
     "ethers": "^6.6.0",
     "framer-motion": "9.0.7",
     "next": "latest",
+    "next-auth": "^4.22.3",
     "petra-plugin-wallet-adapter": "^0.1.5",
     "pg": "^8.11.1",
     "prop-types": "^15.8.1",
