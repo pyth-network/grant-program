@@ -6,9 +6,31 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+  env:
+    POSTGRES_USER: myuser
+    POSTGRES_PASSWORD: mypass
+    POSTGRES_DB: mydb
+
+  services:
+    postgres:
+      image: postgres:latest
+      env:
+        POSTGRES_USER: ${{ env.POSTGRES_USER }}
+        POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        POSTGRES_DB: ${{ env.POSTGRES_DB }}
+      ports:
+        - 5432:5432
+      options: >-
+        --health-cmd pg_isready
+        --health-interval 10s
+        --health-timeout 5s
+        --health-retries 5
+
     defaults:
       run:
         working-directory: ./frontend
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -20,5 +42,7 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+      - name: Migrate DB
+        run: npm run migrate
       - name: Test
         run: npm run test
