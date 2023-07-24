@@ -39,7 +39,8 @@ export class MerkleTree {
     }
   }
 
-  /** `leaf` is the leaf bytes as passed to the constructor (i.e., excluding the merkle tree leaf prefix) */
+  /** Get a merkle proof for the given leaf, if it is contained in the tree.
+   * `leaf` is the leaf bytes as passed to the constructor and *not* the leaf hash. */
   prove(leaf: Buffer): Buffer | undefined {
     const leafHash = keccak256(Buffer.concat([LEAF_PREFIX, leaf]))
 

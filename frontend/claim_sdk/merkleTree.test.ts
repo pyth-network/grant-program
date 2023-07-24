@@ -45,7 +45,8 @@ test('Merkle tree sanity check', () => {
   ]
 
   // see the Rust test test_merkle_tree.rs for the expected result of this merkle tree computation.
-  // Use the command: cargo test test_merkle_tree -- --nocapture
+  // Use the following command to see the println output from that test:
+  //   cargo test test_merkle_tree -- --nocapture
   const merkleTree = new MerkleTree(claimInfos)
   expect(merkleTree.nodes[1].toString('hex')).toBe(
     'da2c16a403ad559921906102da13add419b043c2199ec8ff00685e52a91b680f'
