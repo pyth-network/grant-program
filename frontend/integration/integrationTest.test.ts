@@ -39,7 +39,7 @@ afterAll(async () => {
   await pool.end()
 })
 
-/** Build a Merkle tree and check the result against the Rust implementation. */
+// TODO: this should hit the actual API, not just query the database.
 test('Find claims', async () => {
   const result = await pool.query(
     'SELECT amount FROM claims WHERE ecosystem = $1 AND identity = $2',
