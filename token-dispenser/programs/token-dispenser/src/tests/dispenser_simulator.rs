@@ -2,6 +2,7 @@ use {
     super::test_happy_path::TestClaimCertificate,
     crate::{
         accounts,
+        get_config_pda,
         get_receipt_pda,
         instruction,
         ClaimInfo,
@@ -18,12 +19,21 @@ use {
         solana_program::{
             hash,
             instruction::Instruction,
+            system_instruction::create_account,
         },
         system_program,
         AnchorSerialize,
         Id,
         InstructionData,
         ToAccountMetas,
+    },
+    anchor_spl::{
+        associated_token::get_associated_token_address_with_program_id,
+        token::{
+            spl_token::instruction::initialize_mint,
+            Mint,
+            Token,
+        },
     },
     pythnet_sdk::accumulators::merkle::MerkleTree,
     solana_program_test::{
@@ -48,17 +58,49 @@ pub struct DispenserSimulator {
     banks_client:        BanksClient,
     pub genesis_keypair: Keypair,
     recent_blockhash:    hash::Hash,
+    pub mint_keypair:    Keypair,
 }
 
 impl DispenserSimulator {
     pub async fn new() -> Self {
         let program_test = ProgramTest::new("token_dispenser", crate::id(), None);
         let (banks_client, genesis_keypair, recent_blockhash) = program_test.start().await;
-        DispenserSimulator {
+        let mint_keypair = Keypair::new();
+        let mut simulator = DispenserSimulator {
             banks_client,
             genesis_keypair,
             recent_blockhash,
-        }
+            mint_keypair,
+        };
+        simulator.setup().await.unwrap();
+        simulator
+    }
+
+    pub async fn setup(&mut self) -> Result<(), BanksClientError> {
+        let token_mint_address = self.mint_keypair.pubkey();
+        let space = Mint::LEN;
+        let rent = &self.banks_client.get_rent().await.unwrap();
+        let mint_authority = &self.genesis_keypair;
+        let decimals = 6;
+        let init_mint_ixs = &[
+            create_account(
+                &self.genesis_keypair.pubkey(),
+                &self.mint_keypair.pubkey(),
+                rent.minimum_balance(space),
+                space as u64,
+                &Token::id(),
+            ),
+            initialize_mint(
+                &Token::id(),
+                &token_mint_address,
+                &mint_authority.pubkey(),
+                Some(&mint_authority.pubkey()),
+                decimals,
+            )
+            .unwrap(),
+        ];
+        let mint_keypair = &Self::copy_keypair(&self.mint_keypair);
+        self.process_ix(init_mint_ixs, &vec![mint_keypair]).await
     }
 
     pub async fn process_ix(
@@ -82,12 +124,20 @@ impl DispenserSimulator {
     }
 
     pub async fn initialize(&mut self, target_config: Config) -> Result<(), BanksClientError> {
-        let accounts =
-            accounts::Initialize::populate(self.genesis_keypair.pubkey()).to_account_metas(None);
+        let treasury = get_associated_token_address_with_program_id(
+            &(get_config_pda().0),
+            &self.mint_keypair.pubkey(),
+            &Token::id(),
+        );
+        let accounts = accounts::Initialize::populate(
+            self.genesis_keypair.pubkey(),
+            self.mint_keypair.pubkey(),
+            treasury,
+        )
+        .to_account_metas(None);
         let instruction_data = instruction::Initialize { target_config };
         let instruction =
             Instruction::new_with_bytes(crate::id(), &instruction_data.data(), accounts);
-
         self.process_ix(&[instruction], &vec![]).await
     }
 
@@ -103,7 +153,6 @@ impl DispenserSimulator {
             accounts::Claim::populate(self.genesis_keypair.pubkey(), dispenser_guard.pubkey())
                 .to_account_metas(None);
 
-
         accounts.push(AccountMeta::new(
             get_receipt_pda(
                 &<TestClaimCertificate as Into<ClaimInfo>>::into(
@@ -116,13 +165,11 @@ impl DispenserSimulator {
             false,
         ));
 
-
         accounts.push(AccountMeta::new_readonly(
             system_program::System::id(),
             false,
         ));
         accounts.push(AccountMeta::new(self.genesis_keypair.pubkey(), true));
-
 
         let instruction_data: instruction::Claim = instruction::Claim {
             claim_certificates: vec![claim_certificate],
@@ -143,17 +190,18 @@ impl DispenserSimulator {
         self.process_ix(&instructions, &vec![dispenser_guard]).await
     }
 
-
     pub async fn get_account(&mut self, key: Pubkey) -> Option<Account> {
         self.banks_client.get_account(key).await.unwrap()
     }
-}
 
+    fn copy_keypair(keypair: &Keypair) -> Keypair {
+        Keypair::from_bytes(&keypair.to_bytes()).unwrap()
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Error conversions.
 ////////////////////////////////////////////////////////////////////////////////
-
 
 pub trait IntoTransactionError {
     fn into_transation_error(self) -> TransactionError;

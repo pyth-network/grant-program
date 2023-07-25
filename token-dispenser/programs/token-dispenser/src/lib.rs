@@ -17,6 +17,14 @@ use {
         },
         system_program,
     },
+    anchor_spl::{
+        associated_token::AssociatedToken,
+        token::{
+            Mint,
+            Token,
+            TokenAccount,
+        },
+    },
     ecosystems::{
         check_message,
         cosmos::{
@@ -120,15 +128,27 @@ pub mod token_dispenser {
 // Contexts.
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #[derive(Accounts)]
 #[instruction(target_config : Config)]
 pub struct Initialize<'info> {
     #[account(mut)]
-    pub payer:          Signer<'info>,
+    pub payer:                    Signer<'info>,
     #[account(init, payer = payer, space = Config::LEN, seeds = [CONFIG_SEED], bump)]
-    pub config:         Account<'info, Config>,
-    pub system_program: Program<'info, System>,
+    pub config:                   Account<'info, Config>,
+    /// Mint of the treasury
+    #[account(address = target_config.mint)]
+    pub mint:                     Account<'info, Mint>,
+    #[account(
+        init,
+        payer = payer,
+        associated_token::authority = config,
+        associated_token::mint = mint,
+        address = target_config.treasury
+    )]
+    pub treasury:                 Account<'info, TokenAccount>,
+    pub system_program:           Program<'info, System>,
+    pub token_program:            Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 #[derive(Accounts)]
@@ -151,7 +171,6 @@ pub struct Claim<'info> {
 ////////////////////////////////////////////////////////////////////////////////
 // Instruction calldata.
 ////////////////////////////////////////////////////////////////////////////////
-
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimInfo {
@@ -217,7 +236,6 @@ pub struct ClaimCertificate {
     proof_of_inclusion: MerklePath<SolanaHasher>, // Proof that the leaf is in the tree
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Accounts.
 ////////////////////////////////////////////////////////////////////////////////
@@ -240,10 +258,12 @@ impl Hasher for SolanaHasher {
 pub struct Config {
     pub merkle_root:     MerkleRoot<SolanaHasher>,
     pub dispenser_guard: Pubkey,
+    pub mint:            Pubkey,
+    pub treasury:        Pubkey,
 }
 
 impl Config {
-    pub const LEN: usize = 8 + 32 + 32;
+    pub const LEN: usize = 8 + 32 + 32 + 32 + 32;
 }
 
 #[account]
@@ -279,7 +299,6 @@ impl ClaimedEcosystems {
     }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Error.
 ////////////////////////////////////////////////////////////////////////////////
@@ -301,7 +320,6 @@ pub enum ErrorCode {
     SignatureVerificationWrongSigner,
     SignatureVerificationWrongClaimant,
 }
-
 
 pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -> Result<()> {
     if claim_receipt_account.owner.eq(&crate::id()) {
@@ -414,7 +432,6 @@ pub fn checked_create_claim_receipt(
     );
     invoke(&transfer_instruction, remaining_accounts)?;
 
-
     // Assign it to the program, this instruction will fail if the account already belongs to the
     // program
     let assign_instruction = system_instruction::assign(&claim_receipt_account.key(), &crate::id());
@@ -432,11 +449,9 @@ pub fn checked_create_claim_receipt(
     Ok(())
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Sdk.
 ////////////////////////////////////////////////////////////////////////////////
-
 
 pub fn get_config_pda() -> (Pubkey, u8) {
     Pubkey::find_program_address(&[CONFIG_SEED], &crate::id())
@@ -454,11 +469,15 @@ pub fn get_cart_pda(claimant: &Pubkey) -> (Pubkey, u8) {
 }
 
 impl crate::accounts::Initialize {
-    pub fn populate(payer: Pubkey) -> Self {
+    pub fn populate(payer: Pubkey, mint: Pubkey, treasury: Pubkey) -> Self {
         crate::accounts::Initialize {
             payer,
             config: get_config_pda().0,
+            mint,
+            treasury,
             system_program: system_program::System::id(),
+            token_program: anchor_spl::token::Token::id(),
+            associated_token_program: AssociatedToken::id(),
         }
     }
 }
@@ -475,7 +494,6 @@ impl crate::accounts::Claim {
         }
     }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Tests.

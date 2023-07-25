@@ -20,8 +20,17 @@ use {
     },
     anchor_lang::{
         prelude::Pubkey,
+        AccountDeserialize,
         AnchorDeserialize,
         AnchorSerialize,
+        Id,
+    },
+    anchor_spl::{
+        associated_token::get_associated_token_address_with_program_id,
+        token::{
+            Token,
+            TokenAccount,
+        },
     },
     pythnet_sdk::accumulators::{
         merkle::MerkleTree,
@@ -149,14 +158,12 @@ impl TestIdentityCertificate {
     }
 }
 
-
 #[derive(Clone)]
 pub enum TestIdentityCertificate {
     Evm(EvmTestIdentityCertificate),
     Discord(String),
     Cosmos(CosmosTestIdentityCertificate),
 }
-
 
 #[tokio::test]
 pub async fn test_happy_path() {
@@ -190,16 +197,34 @@ pub async fn test_happy_path() {
     )
     .unwrap();
 
+    let config_pubkey = get_config_pda().0;
+    let treasury = get_associated_token_address_with_program_id(
+        &(config_pubkey),
+        &simulator.mint_keypair.pubkey(),
+        &Token::id(),
+    );
+
     let target_config = Config {
-        merkle_root:     merkle_tree.root.clone(),
+        merkle_root: merkle_tree.root.clone(),
         dispenser_guard: dispenser_guard.pubkey(),
+        mint: simulator.mint_keypair.pubkey(),
+        treasury,
     };
+
 
     simulator.initialize(target_config.clone()).await.unwrap();
 
-    let config_account: Account = simulator.get_account(get_config_pda().0).await.unwrap();
+    let config_account: Account = simulator.get_account(config_pubkey).await.unwrap();
     let config_data: Config = Config::try_from_slice(&config_account.data[8..]).unwrap();
     assert_eq!(target_config, config_data);
+
+    let treasury_account: Account = simulator.get_account(treasury).await.unwrap();
+    let treasury_data: TokenAccount =
+        TokenAccount::try_deserialize_unchecked(&mut treasury_account.data.as_slice()).unwrap();
+    assert_eq!(treasury_data.amount, 0);
+    assert_eq!(treasury_data.mint, simulator.mint_keypair.pubkey());
+    assert_eq!(treasury_data.owner, config_pubkey);
+
 
     for serialized_item in &merkle_items_serialized {
         assert!(simulator
