@@ -61,7 +61,7 @@ pub async fn test_initialize_fails_with_incorrect_accounts() {
     };
 
 
-    let res = simulator.initialize(target_config.clone()).await;
+    let res = simulator.initialize(target_config).await;
     assert!(res.is_err());
     // 2012 - ConstraintAddress
     assert_eq!(res.unwrap_err().unwrap(), InstructionError(0, Custom(2012)));
@@ -73,7 +73,7 @@ pub async fn test_initialize_fails_with_incorrect_accounts() {
         treasury:        Keypair::new().pubkey(), //incorrect treasury
     };
 
-    let res = simulator.initialize(target_config.clone()).await;
+    let res = simulator.initialize(target_config).await;
     assert!(res.is_err());
     // 2012 - ConstraintAddress
     assert_eq!(res.unwrap_err().unwrap(), InstructionError(0, Custom(2012)));
