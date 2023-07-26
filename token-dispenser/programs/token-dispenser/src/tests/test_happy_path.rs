@@ -8,6 +8,7 @@ use {
         get_receipt_pda,
         tests::{
             dispenser_simulator::IntoTransactionError,
+            merkleize,
             test_evm::EvmTestIdentityCertificate,
         },
         ClaimCertificate,
@@ -183,19 +184,7 @@ pub async fn test_happy_path() {
         .map(|item: &TestClaimCertificate| item.clone().into())
         .collect();
 
-    let merkle_items_serialized = merkle_items
-        .iter()
-        .map(|item| item.try_to_vec().unwrap())
-        .collect::<Vec<Vec<u8>>>();
-
-    let merkle_tree: MerkleTree<SolanaHasher> = MerkleTree::new(
-        merkle_items_serialized
-            .iter()
-            .map(|item| item.as_slice())
-            .collect::<Vec<&[u8]>>()
-            .as_slice(),
-    )
-    .unwrap();
+    let (merkle_tree, merkle_items_serialized) = merkleize(merkle_items);
 
     let config_pubkey = get_config_pda().0;
     let treasury = get_associated_token_address_with_program_id(

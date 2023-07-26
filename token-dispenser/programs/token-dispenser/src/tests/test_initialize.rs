@@ -2,21 +2,21 @@ use {
     super::dispenser_simulator::DispenserSimulator,
     crate::{
         get_config_pda,
-        tests::test_happy_path::TestClaimCertificate,
+        tests::{
+            merkleize,
+            test_happy_path::TestClaimCertificate,
+        },
         ClaimInfo,
         Config,
-        SolanaHasher,
     },
     anchor_lang::{
         solana_program::instruction::InstructionError::Custom,
-        AnchorSerialize,
         Id,
     },
     anchor_spl::{
         associated_token::get_associated_token_address_with_program_id,
         token::Token,
     },
-    pythnet_sdk::accumulators::merkle::MerkleTree,
     solana_program_test::tokio,
     solana_sdk::{
         signature::Keypair,
@@ -44,19 +44,7 @@ pub async fn test_initialize_fails_with_incorrect_accounts() {
         .map(|item: &TestClaimCertificate| item.clone().into())
         .collect();
 
-    let merkle_items_serialized = merkle_items
-        .iter()
-        .map(|item| item.try_to_vec().unwrap())
-        .collect::<Vec<Vec<u8>>>();
-
-    let merkle_tree: MerkleTree<SolanaHasher> = MerkleTree::new(
-        merkle_items_serialized
-            .iter()
-            .map(|item| item.as_slice())
-            .collect::<Vec<&[u8]>>()
-            .as_slice(),
-    )
-    .unwrap();
+    let (merkle_tree, _) = merkleize(merkle_items);
 
     let config_pubkey = get_config_pda().0;
     let treasury = get_associated_token_address_with_program_id(
