@@ -14,8 +14,18 @@ module.exports = {
   webpack: (config, { isServer, dev }) => {
     config.experiments = { asyncWebAssembly: true, layers: true }
 
+    const fileLoaderRule = config.module.rules.find(
+      (rule) => rule.test && rule.test.test('.svg')
+    )
+    fileLoaderRule.exclude = /\.inline\.svg$/
+    config.module.rules.push({
+      test: /\.inline\.svg$/,
+      loader: require.resolve('@svgr/webpack'),
+    })
+
     return config
   },
+
   async redirects() {
     return [
       {

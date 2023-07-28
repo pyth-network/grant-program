@@ -1,3 +1,5 @@
+const { url } = require('inspector')
+
 module.exports = {
   content: [
     './pages/**/*.{js,ts,jsx,tsx}',
@@ -28,6 +30,7 @@ module.exports = {
 
       light: '#E6DAFE',
       dark: '#110F23',
+      'light-50': 'rgba(230, 218, 254, .5)',
     },
     colors: {
       pythPurple: '#7142CF',
@@ -50,13 +53,16 @@ module.exports = {
       transparent: 'transparent',
       current: 'currentColor',
       light: '#E6DAFE',
+      'light-35': 'rgba(230, 218, 254, .35)',
       dark: '#110F23',
       'dark-300': 'rgba(36, 34, 53, .3)',
+      'dark-25': 'rgba(66, 63, 92, 0.25)',
       darkGray: '#252236',
       darkGray1: '#242235',
       darkGray2: '#312F47',
       darkGray3: '#575572',
       darkGray4: '#413E53',
+      darkGray5: '#44415E',
       beige: '#F1EAEA',
       'beige-300': 'rgba(229, 231, 235, .3)',
       beige2: '#E4DADB',
@@ -73,6 +79,8 @@ module.exports = {
       poppins: 'poppins, sans-serif',
       body: 'Urbanist, sans-serif',
       mono: 'IBM Plex Mono, monospace',
+      header: ["'Red Hat Display'", 'sans-serif'],
+      body: ["'Red Hat Text'", 'sans-serif'],
     },
 
     extend: {
@@ -89,9 +97,15 @@ module.exports = {
           'radial-gradient(100% 628.91% at 95.63% 10.42%, rgba(230, 218, 254, 0) 0%, #E6DAFE 30.71%, #E6DAFE 71.52%, rgba(230, 218, 254, 0) 100%)',
         radial2:
           'radial-gradient(91.27% 628.91% at 95.63% 10.42%, rgba(75, 52, 122, 0.15) 0%, #4B347A 30.71%, #4B347A 71.52%, rgba(75, 52, 122, 0.19) 100%)',
+        check: 'url("../images/check.svg")',
+        gradient:
+          'linear-gradient(358.04deg, #242235 1.04%, #242235 18.68%, rgba(36, 34, 53, 0) 79.82%);',
       },
       transition: {
         walletClose: 'all 200ms ease 0s',
+      },
+      content: {
+        li: 'url("../images/li.svg")',
       },
     },
   },
