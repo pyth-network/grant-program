@@ -6,12 +6,12 @@ import chest2 from '../images/chest2.png'
 
 import Link from 'next/link'
 
-import Step1 from '@components/ClaimSteps/Step1'
-import Step2 from '@components/ClaimSteps/Step2'
-import Step3 from '@components/ClaimSteps/Step3'
-import Step4 from '@components/ClaimSteps/Step4'
-import Step5 from '@components/ClaimSteps/Step5'
-import Step6 from '@components/ClaimSteps/Step6'
+import Step1 from '@components/Claim/Step1'
+import Step2 from '@components/Claim/Step2'
+import Step3 from '@components/Claim/Step3'
+import Step4 from '@components/Claim/Step4'
+import Step5 from '@components/Claim/Step5'
+import Step6 from '@components/Claim/Step6'
 
 const claim = () => {
   const [step, setStep] = useState(1)

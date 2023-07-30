@@ -11,7 +11,7 @@ module.exports = {
     ENDPOINT: process.env.ENDPOINT,
     CLUSTER: process.env.CLUSTER,
   },
-  webpack: (config, { isServer, dev }) => {
+  webpack: (config) => {
     config.experiments = { asyncWebAssembly: true, layers: true }
 
     const fileLoaderRule = config.module.rules.find(

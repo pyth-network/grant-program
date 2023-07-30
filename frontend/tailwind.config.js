@@ -57,6 +57,7 @@ module.exports = {
       dark: '#110F23',
       'dark-300': 'rgba(36, 34, 53, .3)',
       'dark-25': 'rgba(66, 63, 92, 0.25)',
+      'dark-70': 'rgba(17, 15, 35, 0.70)',
       darkGray: '#252236',
       darkGray1: '#242235',
       darkGray2: '#312F47',
@@ -100,6 +101,8 @@ module.exports = {
         check: 'url("../images/check.svg")',
         gradient:
           'linear-gradient(358.04deg, #242235 1.04%, #242235 18.68%, rgba(36, 34, 53, 0) 79.82%);',
+        gradient2:
+          'linear-gradient(120deg, #1A192C 0%, rgba(26, 25, 44, 0.00) 100%)',
       },
       transition: {
         walletClose: 'all 200ms ease 0s',
