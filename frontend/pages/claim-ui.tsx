@@ -44,8 +44,8 @@ const claim = () => {
         </div>
       </header>
       <div className="relative   px-4 pt-40 pb-32">
-        <div className="mx-auto flex max-w-[997px] justify-between gap-2.5">
-          <ul className="max-w-[292px]">
+        <div className="mx-auto max-w-[997px] justify-between gap-2.5 lg:flex">
+          <ul className="mb-2.5 lg:mb-0 lg:max-w-[292px]">
             <li
               className={`claim_li ${
                 step == 1 ? 'bg-darkGray5 text-light' : 'bg-dark text-light-50'
