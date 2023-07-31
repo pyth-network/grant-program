@@ -18,7 +18,10 @@ use {
         system_program,
     },
     anchor_spl::{
-        associated_token::AssociatedToken,
+        associated_token::{
+            get_associated_token_address,
+            AssociatedToken,
+        },
         token::{
             Mint,
             Token,
@@ -62,11 +65,24 @@ const RECEIPT_SEED: &[u8] = b"receipt";
 const CART_SEED: &[u8] = b"cart";
 #[program]
 pub mod token_dispenser {
-    use super::*;
+    use {
+        super::*,
+        anchor_spl::token,
+    };
 
     /// This can only be called once and should be called right after the program is deployed.
-    pub fn initialize(ctx: Context<Initialize>, target_config: Config) -> Result<()> {
-        *ctx.accounts.config = target_config;
+    pub fn initialize(
+        ctx: Context<Initialize>,
+        merkle_root: MerkleRoot<SolanaHasher>,
+        dispenser_guard: Pubkey,
+    ) -> Result<()> {
+        require_keys_neq!(dispenser_guard, Pubkey::default());
+        let config = &mut ctx.accounts.config;
+        config.bump = *ctx.bumps.get("config").unwrap();
+        config.merkle_root = merkle_root;
+        config.dispenser_guard = dispenser_guard;
+        config.mint = ctx.accounts.mint.key();
+        config.treasury = ctx.accounts.treasury.key();
         Ok(())
     }
 
@@ -122,6 +138,33 @@ pub mod token_dispenser {
         // TO DO : Send tokens to claimant (we will also initialize a vesting account for them)
         Ok(())
     }
+
+    pub fn checkout(ctx: Context<Checkout>) -> Result<()> {
+        let cart = &mut ctx.accounts.cart;
+        require_gt!(cart.amount, 0, ErrorCode::ZeroCartAmount);
+        let claimant_fund = &ctx.accounts.claimant_fund;
+        let treasury = &mut ctx.accounts.treasury;
+        let config = &ctx.accounts.config;
+        require_gte!(
+            treasury.amount,
+            cart.amount,
+            ErrorCode::InsufficientTreasuryFunds
+        );
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                token::Transfer {
+                    from:      treasury.to_account_info(),
+                    to:        claimant_fund.to_account_info(),
+                    authority: config.to_account_info(),
+                },
+                &[&[CONFIG_SEED, &[config.bump]]],
+            ),
+            cart.amount,
+        )?;
+        cart.amount = 0;
+        Ok(())
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,21 +172,18 @@ pub mod token_dispenser {
 ////////////////////////////////////////////////////////////////////////////////
 
 #[derive(Accounts)]
-#[instruction(target_config : Config)]
 pub struct Initialize<'info> {
     #[account(mut)]
     pub payer:                    Signer<'info>,
     #[account(init, payer = payer, space = Config::LEN, seeds = [CONFIG_SEED], bump)]
     pub config:                   Account<'info, Config>,
     /// Mint of the treasury
-    #[account(address = target_config.mint)]
     pub mint:                     Account<'info, Mint>,
     #[account(
         init,
         payer = payer,
         associated_token::authority = config,
         associated_token::mint = mint,
-        address = target_config.treasury
     )]
     pub treasury:                 Account<'info, TokenAccount>,
     pub system_program:           Program<'info, System>,
@@ -158,7 +198,7 @@ pub struct Claim<'info> {
     pub claimant:           Signer<'info>,
     pub dispenser_guard:    Signer<'info>, /* Check that the dispenser guard has signed and matches
                                             * the config - Done */
-    #[account(seeds = [CONFIG_SEED], bump, has_one = dispenser_guard)]
+    #[account(seeds = [CONFIG_SEED], bump = config.bump, has_one = dispenser_guard)]
     pub config:             Account<'info, Config>,
     #[account(init_if_needed, space = Cart::LEN, payer = claimant, seeds = [CART_SEED, claimant.key.as_ref()], bump)]
     pub cart:               Account<'info, Cart>,
@@ -166,6 +206,36 @@ pub struct Claim<'info> {
     /// CHECK : Anchor wants me to write this comment because I'm using AccountInfo which doesn't check for ownership and doesn't deserialize the account automatically. But it's fine because I check the address and I load it using load_instruction_at_checked.
     #[account(address = SYSVAR_IX_ID)]
     pub sysvar_instruction: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct Checkout<'info> {
+    #[account(mut)]
+    pub claimant:                 Signer<'info>,
+    // TODO: dispenser_guard signer still needed?
+    #[account(seeds = [CONFIG_SEED], bump = config.bump, has_one = mint)]
+    pub config:                   Account<'info, Config>,
+    /// Need to pass in mint if the claimant_fund needs to be initialized
+    pub mint:                     Account<'info, Mint>,
+    #[account(
+        mut,
+        associated_token::authority = config,
+        associated_token::mint = config.mint,
+        address = config.treasury
+    )]
+    pub treasury:                 Account<'info, TokenAccount>,
+    #[account(mut, seeds = [CART_SEED, claimant.key.as_ref()], bump)]
+    pub cart:                     Account<'info, Cart>,
+    #[account(
+        init_if_needed,
+        payer = claimant,
+        associated_token::authority = claimant,
+        associated_token::mint = mint,
+    )]
+    pub claimant_fund:            Account<'info, TokenAccount>,
+    pub system_program:           Program<'info, System>,
+    pub token_program:            Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -256,6 +326,7 @@ impl Hasher for SolanaHasher {
 #[account]
 #[derive(PartialEq, Debug)]
 pub struct Config {
+    pub bump:            u8,
     pub merkle_root:     MerkleRoot<SolanaHasher>,
     pub dispenser_guard: Pubkey,
     pub mint:            Pubkey,
@@ -263,7 +334,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub const LEN: usize = 8 + 32 + 32 + 32 + 32;
+    pub const LEN: usize = 8 + 1 + 32 + 32 + 32 + 32;
 }
 
 #[account]
@@ -311,6 +382,8 @@ pub enum ErrorCode {
     InvalidInclusionProof,
     WrongPda,
     NotImplemented,
+    ZeroCartAmount,
+    InsufficientTreasuryFunds,
     // Signature verification errors
     SignatureVerificationWrongProgram,
     SignatureVerificationWrongAccounts,
@@ -468,6 +541,10 @@ pub fn get_cart_pda(claimant: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[CART_SEED, claimant.as_ref()], &crate::id())
 }
 
+pub fn get_treasury_ata(config: &Pubkey, mint: &Pubkey) -> Pubkey {
+    get_associated_token_address(config, mint)
+}
+
 impl crate::accounts::Initialize {
     pub fn populate(payer: Pubkey, mint: Pubkey, treasury: Pubkey) -> Self {
         crate::accounts::Initialize {
@@ -491,6 +568,23 @@ impl crate::accounts::Claim {
             cart: get_cart_pda(&claimant).0,
             system_program: system_program::System::id(),
             sysvar_instruction: SYSVAR_IX_ID,
+        }
+    }
+}
+
+impl crate::accounts::Checkout {
+    pub fn populate(claimant: Pubkey, mint: Pubkey) -> Self {
+        let config = get_config_pda().0;
+        crate::accounts::Checkout {
+            claimant,
+            config,
+            mint,
+            treasury: get_treasury_ata(&config, &mint),
+            cart: get_cart_pda(&claimant).0,
+            claimant_fund: get_associated_token_address(&claimant, &mint),
+            system_program: system_program::System::id(),
+            token_program: Token::id(),
+            associated_token_program: AssociatedToken::id(),
         }
     }
 }
