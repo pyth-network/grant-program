@@ -111,11 +111,7 @@ impl DispenserSimulator {
             )
             .await
             .unwrap();
-        // simulator
-        //     .create_associated_token_account(
-        //         simulator.mint_keypair.pubkey(),
-        //         &copy_keypair(&simulator.pyth_mint_authority),
-        //     ).await.unwrap();
+
         simulator
     }
 
