@@ -14,6 +14,7 @@ import Down from '../../images/down2.inline.svg'
 import Copy from '../../images/copy.inline.svg'
 import Change from '../../images/change.inline.svg'
 import Disconect from '../../images/disconect.inline.svg'
+import { AptosWalletButton } from '@components/wallets/Aptos'
 
 const walletOptions = [
   { name: '5jfkqa35 ... 8DqC', icon: <Wallet /> },
@@ -156,18 +157,13 @@ const Eligibility = ({
             </td>
           </tr>
           <tr className="border-b border-light-35 ">
-            <td className="w-full py-2 pl-10 pr-4 opacity-25">
+            <td className="w-full py-2 pl-10 pr-4">
               <div className="flex items-center justify-between">
                 <span className="font-header text-base18 font-thin">
                   Aptos Activity
                 </span>
                 <span className="flex items-center gap-5">
-                  <button className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light">
-                    <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                      <Wallet />
-                      <span>connect wallet</span>
-                    </span>
-                  </button>
+                  <AptosWalletButton />
                   <TooltipIcon />
                   <Verified className="opacity-0" />
                 </span>
