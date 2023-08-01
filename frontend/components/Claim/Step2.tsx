@@ -2,7 +2,7 @@ import React from 'react'
 
 import Phantom from '../../images/phantom.inline.svg'
 import Backpack from '../../images/backpack.inline.svg'
-import Solflare from '../../images/Solflare.inline.svg'
+import Solflare from '../../images/solflare.inline.svg'
 import Link from 'next/link'
 import Arrow from '../../images/arrow.inline.svg'
 

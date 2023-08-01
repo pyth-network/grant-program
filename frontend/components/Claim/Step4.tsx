@@ -1,20 +1,12 @@
 import React, { useState } from 'react'
-import Arrow from '../../images/arrow.inline.svg'
-import Wallet from '../../images/wallet.inline.svg'
-import Coin from '../../images/coin.inline.svg'
 import { Listbox, Transition } from '@headlessui/react'
-
-import TooltipIcon from '../../images/tooltip.inline.svg'
-import Verified from '../../images/verified.inline.svg'
-import NotEligible from '../../images/not.inline.svg'
-import Discord from '../../images/discord.inline.svg'
-import Tooltip from '@components/Tooltip'
+import Arrow from '../../images/arrow.inline.svg'
 
 import Down from '../../images/down.inline.svg'
 
 import Phantom from '../../images/phantom.inline.svg'
 import Backpack from '../../images/backpack.inline.svg'
-import Solflare from '../../images/Solflare.inline.svg'
+import Solflare from '../../images/solflare.inline.svg'
 
 import Modal from './Modal'
 import Eligibility from './Eligibility'
