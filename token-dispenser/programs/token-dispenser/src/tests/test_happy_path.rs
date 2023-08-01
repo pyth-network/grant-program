@@ -4,10 +4,15 @@ use {
         test_cosmos::CosmosTestIdentityCertificate,
     },
     crate::{
+        get_cart_pda,
         get_config_pda,
         get_receipt_pda,
+        get_treasury_ata,
         tests::{
-            dispenser_simulator::IntoTransactionError,
+            dispenser_simulator::{
+                copy_keypair,
+                IntoTransactionError,
+            },
             merkleize,
             test_evm::EvmTestIdentityCertificate,
         },
@@ -24,14 +29,10 @@ use {
         AccountDeserialize,
         AnchorDeserialize,
         AnchorSerialize,
-        Id,
     },
     anchor_spl::{
-        associated_token::get_associated_token_address_with_program_id,
-        token::{
-            Token,
-            TokenAccount,
-        },
+        associated_token::get_associated_token_address,
+        token::TokenAccount,
     },
     pythnet_sdk::accumulators::{
         merkle::MerkleTree,
@@ -171,13 +172,9 @@ pub async fn test_happy_path() {
     let dispenser_guard: Keypair = Keypair::new();
 
     let mut simulator = DispenserSimulator::new().await;
-    let claimant = simulator.genesis_keypair.pubkey();
 
-    let mock_offchain_certificates = vec![
-        TestClaimCertificate::random_evm(&claimant),
-        TestClaimCertificate::random_cosmos(&claimant),
-        TestClaimCertificate::random_discord(),
-    ];
+    let mock_offchain_certificates =
+        DispenserSimulator::generate_test_claim_certs(simulator.genesis_keypair.pubkey());
 
     let merkle_items: Vec<ClaimInfo> = mock_offchain_certificates
         .iter()
@@ -186,14 +183,21 @@ pub async fn test_happy_path() {
 
     let (merkle_tree, merkle_items_serialized) = merkleize(merkle_items);
 
-    let config_pubkey = get_config_pda().0;
-    let treasury = get_associated_token_address_with_program_id(
-        &(config_pubkey),
-        &simulator.mint_keypair.pubkey(),
-        &Token::id(),
-    );
+    let (config_pubkey, config_bump) = get_config_pda();
+    let treasury = get_treasury_ata(&config_pubkey, &simulator.mint_keypair.pubkey());
 
-    let target_config = Config {
+    simulator
+        .initialize(
+            merkle_tree.root.clone(),
+            dispenser_guard.pubkey(),
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+    let expected_target_config = Config {
+        bump: config_bump,
         merkle_root: merkle_tree.root.clone(),
         dispenser_guard: dispenser_guard.pubkey(),
         mint: simulator.mint_keypair.pubkey(),
@@ -201,19 +205,22 @@ pub async fn test_happy_path() {
     };
 
 
-    simulator.initialize(target_config.clone()).await.unwrap();
-
     let config_account: Account = simulator.get_account(config_pubkey).await.unwrap();
     let config_data: Config = Config::try_from_slice(&config_account.data[8..]).unwrap();
-    assert_eq!(target_config, config_data);
+    assert_eq!(expected_target_config, config_data);
+    let claim_sum = mock_offchain_certificates
+        .iter()
+        .map(|item| item.amount)
+        .sum::<u64>();
+    let mint_to_amount = 10 * claim_sum;
+    simulator.mint_to_treasury(mint_to_amount).await.unwrap();
 
     let treasury_account: Account = simulator.get_account(treasury).await.unwrap();
     let treasury_data: TokenAccount =
         TokenAccount::try_deserialize_unchecked(&mut treasury_account.data.as_slice()).unwrap();
-    assert_eq!(treasury_data.amount, 0);
+    assert_eq!(treasury_data.amount, mint_to_amount);
     assert_eq!(treasury_data.mint, simulator.mint_keypair.pubkey());
     assert_eq!(treasury_data.owner, config_pubkey);
-
 
     for serialized_item in &merkle_items_serialized {
         assert!(simulator
@@ -224,7 +231,12 @@ pub async fn test_happy_path() {
 
     for offchain_claim_certificate in &mock_offchain_certificates {
         simulator
-            .claim(&dispenser_guard, &offchain_claim_certificate, &merkle_tree)
+            .claim(
+                &copy_keypair(&simulator.genesis_keypair),
+                &dispenser_guard,
+                &offchain_claim_certificate,
+                &merkle_tree,
+            )
             .await
             .unwrap();
     }
@@ -236,16 +248,54 @@ pub async fn test_happy_path() {
     for offchain_claim_certificate in &mock_offchain_certificates {
         assert_eq!(
             simulator
-                .claim(&dispenser_guard, &offchain_claim_certificate, &merkle_tree)
+                .claim(
+                    &copy_keypair(&simulator.genesis_keypair),
+                    &dispenser_guard,
+                    &offchain_claim_certificate,
+                    &merkle_tree
+                )
                 .await
                 .unwrap_err()
                 .unwrap(),
-            ErrorCode::AlreadyClaimed.into_transation_error()
+            ErrorCode::AlreadyClaimed.into_transaction_error()
         );
     }
 
     // Check state
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
+    let cart_pda = get_cart_pda(&simulator.genesis_keypair.pubkey()).0;
+    let cart_data = simulator
+        .get_account_data::<crate::Cart>(cart_pda)
+        .await
+        .unwrap();
+    assert_eq!(cart_data.amount, claim_sum);
+
+    // Checkout
+    simulator
+        .checkout(
+            &copy_keypair(&simulator.genesis_keypair),
+            simulator.mint_keypair.pubkey(),
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+    let claimant_fund_data = simulator
+        .get_account_data::<TokenAccount>(get_associated_token_address(
+            &simulator.genesis_keypair.pubkey(),
+            &simulator.mint_keypair.pubkey(),
+        ))
+        .await
+        .unwrap();
+
+    assert_eq!(claimant_fund_data.amount, claim_sum);
+
+    let cart_data = simulator
+        .get_account_data::<crate::Cart>(cart_pda)
+        .await
+        .unwrap();
+    assert_eq!(cart_data.amount, 0);
 }
 
 pub async fn assert_claim_receipts_exist(
