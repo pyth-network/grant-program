@@ -7,7 +7,6 @@ use {
         get_cart_pda,
         get_config_pda,
         get_receipt_pda,
-        get_treasury_ata,
         tests::{
             dispenser_simulator::{
                 copy_keypair,
@@ -26,7 +25,7 @@ use {
     },
     anchor_lang::{
         prelude::Pubkey,
-        AccountDeserialize,
+        solana_program::program_option::COption,
         AnchorDeserialize,
         AnchorSerialize,
     },
@@ -184,7 +183,7 @@ pub async fn test_happy_path() {
     let (merkle_tree, merkle_items_serialized) = merkleize(merkle_items);
 
     let (config_pubkey, config_bump) = get_config_pda();
-    let treasury = get_treasury_ata(&config_pubkey, &simulator.mint_keypair.pubkey());
+    let treasury = simulator.pyth_treasury;
 
     simulator
         .initialize(
@@ -213,14 +212,29 @@ pub async fn test_happy_path() {
         .map(|item| item.amount)
         .sum::<u64>();
     let mint_to_amount = 10 * claim_sum;
-    simulator.mint_to_treasury(mint_to_amount).await.unwrap();
 
-    let treasury_account: Account = simulator.get_account(treasury).await.unwrap();
-    let treasury_data: TokenAccount =
-        TokenAccount::try_deserialize_unchecked(&mut treasury_account.data.as_slice()).unwrap();
+    simulator.mint_to_treasury(mint_to_amount).await.unwrap();
+    let treasury_data = simulator
+        .get_account_data::<TokenAccount>(treasury)
+        .await
+        .unwrap();
     assert_eq!(treasury_data.amount, mint_to_amount);
     assert_eq!(treasury_data.mint, simulator.mint_keypair.pubkey());
-    assert_eq!(treasury_data.owner, config_pubkey);
+    assert_eq!(treasury_data.owner, simulator.pyth_mint_authority.pubkey());
+    assert_eq!(treasury_data.delegate, COption::None);
+    assert_eq!(treasury_data.delegated_amount, 0);
+
+    simulator
+        .approve_treasury_delegate(get_config_pda().0, mint_to_amount)
+        .await
+        .unwrap();
+
+    let treasury_data = simulator
+        .get_account_data::<TokenAccount>(treasury)
+        .await
+        .unwrap();
+    assert_eq!(treasury_data.delegate, COption::Some(config_pubkey));
+    assert_eq!(treasury_data.delegated_amount, mint_to_amount);
 
     for serialized_item in &merkle_items_serialized {
         assert!(simulator
@@ -269,6 +283,7 @@ pub async fn test_happy_path() {
         .await
         .unwrap();
     assert_eq!(cart_data.amount, claim_sum);
+
 
     // Checkout
     simulator

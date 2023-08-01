@@ -2,10 +2,7 @@ use {
     super::test_happy_path::TestClaimCertificate,
     crate::{
         accounts,
-        get_cart_pda,
-        get_config_pda,
         get_receipt_pda,
-        get_treasury_ata,
         instruction,
         tests::merkleize,
         ClaimInfo,
@@ -31,22 +28,19 @@ use {
         InstructionData,
         ToAccountMetas,
     },
-    anchor_spl::{
-        associated_token::{
-            get_associated_token_address,
-            get_associated_token_address_with_program_id,
-            AssociatedToken,
-        },
-        token::{
-            spl_token::instruction::{
+    anchor_spl::token::{
+        spl_token,
+        spl_token::{
+            error::TokenError,
+            instruction::{
                 initialize_account3,
-                initialize_mint,
+                initialize_mint2,
                 mint_to,
             },
-            Mint,
-            Token,
-            TokenAccount,
         },
+        Mint,
+        Token,
+        TokenAccount,
     },
     pythnet_sdk::accumulators::merkle::{
         MerkleRoot,
@@ -74,10 +68,13 @@ use {
 };
 
 pub struct DispenserSimulator {
-    banks_client:        BanksClient,
-    pub genesis_keypair: Keypair,
-    recent_blockhash:    hash::Hash,
-    pub mint_keypair:    Keypair,
+    banks_client:            BanksClient,
+    pub genesis_keypair:     Keypair,
+    recent_blockhash:        hash::Hash,
+    pub mint_keypair:        Keypair,
+    /// also the owner/authority of `pyth_treasury`
+    pub pyth_mint_authority: Keypair,
+    pub pyth_treasury:       Pubkey,
 }
 
 impl DispenserSimulator {
@@ -85,20 +82,39 @@ impl DispenserSimulator {
         let program_test = ProgramTest::new("token_dispenser", crate::id(), None);
         let (banks_client, genesis_keypair, recent_blockhash) = program_test.start().await;
         let mint_keypair = Keypair::new();
+        let pyth_mint_authority = Keypair::new();
+        let pyth_treasury = Keypair::new();
         let mut simulator = DispenserSimulator {
             banks_client,
             genesis_keypair,
             recent_blockhash,
             mint_keypair,
+            pyth_mint_authority,
+            pyth_treasury: pyth_treasury.pubkey(),
         };
+
         simulator
             .create_mint(
                 &copy_keypair(&simulator.mint_keypair),
-                &copy_keypair(&simulator.genesis_keypair),
+                &simulator.pyth_mint_authority.pubkey(),
                 6,
             )
             .await
             .unwrap();
+
+        simulator
+            .create_token_account(
+                simulator.mint_keypair.pubkey(),
+                &copy_keypair(&simulator.pyth_mint_authority),
+                &pyth_treasury,
+            )
+            .await
+            .unwrap();
+        // simulator
+        //     .create_associated_token_account(
+        //         simulator.mint_keypair.pubkey(),
+        //         &copy_keypair(&simulator.pyth_mint_authority),
+        //     ).await.unwrap();
         simulator
     }
 
@@ -118,7 +134,7 @@ impl DispenserSimulator {
     pub async fn create_mint(
         &mut self,
         mint_keypair: &Keypair,
-        mint_authority: &Keypair,
+        mint_authority: &Pubkey,
         decimals: u8,
     ) -> Result<(), BanksClientError> {
         let space = Mint::LEN;
@@ -131,32 +147,29 @@ impl DispenserSimulator {
                 space as u64,
                 &Token::id(),
             ),
-            initialize_mint(
+            initialize_mint2(
                 &Token::id(),
                 &mint_keypair.pubkey(),
-                &mint_authority.pubkey(),
+                &mint_authority,
                 None,
                 decimals,
             )
             .unwrap(),
         ];
-        self.process_ix(init_mint_ixs, &vec![mint_keypair, mint_authority])
-            .await
+        self.process_ix(init_mint_ixs, &vec![mint_keypair]).await
     }
 
     pub async fn mint_to_treasury(&mut self, mint_amount: u64) -> Result<(), BanksClientError> {
-        let config = get_config_pda().0;
-        let treasury = get_treasury_ata(&config, &self.mint_keypair.pubkey());
         let mint_to_ix = &[mint_to(
             &Token::id(),
             &self.mint_keypair.pubkey(),
-            &treasury,
-            &self.genesis_keypair.pubkey(),
+            &self.pyth_treasury,
+            &self.pyth_mint_authority.pubkey(),
             &[],
             mint_amount,
         )
         .unwrap()];
-        self.process_ix(mint_to_ix, &vec![&copy_keypair(&self.genesis_keypair)])
+        self.process_ix(mint_to_ix, &vec![&copy_keypair(&self.pyth_mint_authority)])
             .await
     }
 
@@ -187,15 +200,10 @@ impl DispenserSimulator {
         mint_pubkey_override: Option<Pubkey>,
         treasury_pubkey_override: Option<Pubkey>,
     ) -> Result<(), BanksClientError> {
-        let treasury = get_associated_token_address_with_program_id(
-            &(get_config_pda().0),
-            &self.mint_keypair.pubkey(),
-            &Token::id(),
-        );
         let accounts = accounts::Initialize::populate(
             self.genesis_keypair.pubkey(),
             mint_pubkey_override.unwrap_or(self.mint_keypair.pubkey()),
-            treasury_pubkey_override.unwrap_or(treasury),
+            treasury_pubkey_override.unwrap_or(self.pyth_treasury),
         )
         .to_account_metas(None);
         let instruction_data = instruction::Initialize {
@@ -245,6 +253,44 @@ impl DispenserSimulator {
         )
         .await?;
         Ok((merkle_tree, mock_offchain_certificates_and_claimants))
+    }
+
+    pub async fn approve_treasury_delegate(
+        &mut self,
+        delegate: Pubkey,
+        amount: u64,
+    ) -> Result<(), BanksClientError> {
+        let approve_ix = spl_token::instruction::approve(
+            &Token::id(),
+            &self.pyth_treasury,
+            &delegate,
+            &self.pyth_mint_authority.pubkey(),
+            &[],
+            amount,
+        )
+        .unwrap();
+
+        self.process_ix(
+            &[approve_ix],
+            &vec![&copy_keypair(&self.pyth_mint_authority)],
+        )
+        .await
+    }
+
+    pub async fn revoke_treasury_delegate(&mut self) -> Result<(), BanksClientError> {
+        let revoke_ix = spl_token::instruction::revoke(
+            &Token::id(),
+            &self.pyth_treasury,
+            &self.pyth_mint_authority.pubkey(),
+            &[],
+        )
+        .unwrap();
+
+        self.process_ix(
+            &[revoke_ix],
+            &vec![&copy_keypair(&self.pyth_mint_authority)],
+        )
+        .await
     }
 
 
@@ -307,6 +353,7 @@ impl DispenserSimulator {
         let accounts = accounts::Checkout::populate(
             claimant.pubkey(),
             mint,
+            self.pyth_treasury,
             cart_override,
             claimant_fund_override,
         )
@@ -358,7 +405,7 @@ impl DispenserSimulator {
             )
             .unwrap(),
         ];
-        self.process_ix(init_token_account_ixs, &vec![&owner, &token_account])
+        self.process_ix(init_token_account_ixs, &vec![&token_account])
             .await
     }
 }
@@ -383,6 +430,15 @@ impl IntoTransactionError for ErrorCode {
                 anchor_lang::prelude::Error::from(self),
             )))
             .unwrap(),
+        )
+    }
+}
+
+impl IntoTransactionError for TokenError {
+    fn into_transaction_error(self) -> TransactionError {
+        TransactionError::InstructionError(
+            0,
+            InstructionError::try_from(u64::from(ProgramError::from(self))).unwrap(),
         )
     }
 }
