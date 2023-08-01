@@ -103,7 +103,7 @@ const Eligibility = ({
                             className={`btn   min-w-[207px] before:bg-dark hover:text-dark hover:before:bg-light
                             ${
                               open
-                                ? 'border border-light-35 hover:bg-light'
+                                ? 'border border-light-35 bg-darkGray1 hover:bg-light'
                                 : 'before:btn-bg btn--dark'
                             }
                             `}
