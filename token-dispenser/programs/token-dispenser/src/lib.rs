@@ -141,7 +141,6 @@ pub mod token_dispenser {
 
     pub fn checkout(ctx: Context<Checkout>) -> Result<()> {
         let cart = &mut ctx.accounts.cart;
-        require_gt!(cart.amount, 0, ErrorCode::ZeroCartAmount);
         let claimant_fund = &ctx.accounts.claimant_fund;
         let treasury = &mut ctx.accounts.treasury;
         let config = &ctx.accounts.config;
@@ -212,20 +211,25 @@ pub struct Claim<'info> {
 pub struct Checkout<'info> {
     #[account(mut)]
     pub claimant:                 Signer<'info>,
-    // TODO: dispenser_guard signer still needed?
-    #[account(seeds = [CONFIG_SEED], bump = config.bump, has_one = mint)]
+    #[account(
+        seeds = [CONFIG_SEED],
+        bump = config.bump,
+        has_one = mint,
+        has_one = treasury,
+    )]
     pub config:                   Account<'info, Config>,
-    /// Need to pass in mint if the claimant_fund needs to be initialized
+    /// Mint of the treasury & claimant_fund token account.
+    /// Needed if the `claimant_fund` token account needs to be initialized
     pub mint:                     Account<'info, Mint>,
     #[account(
         mut,
         associated_token::authority = config,
         associated_token::mint = config.mint,
-        address = config.treasury
     )]
     pub treasury:                 Account<'info, TokenAccount>,
     #[account(mut, seeds = [CART_SEED, claimant.key.as_ref()], bump)]
     pub cart:                     Account<'info, Cart>,
+    /// Claimant's associated token account for receiving their claim/token grant
     #[account(
         init_if_needed,
         payer = claimant,
@@ -382,7 +386,6 @@ pub enum ErrorCode {
     InvalidInclusionProof,
     WrongPda,
     NotImplemented,
-    ZeroCartAmount,
     InsufficientTreasuryFunds,
     // Signature verification errors
     SignatureVerificationWrongProgram,

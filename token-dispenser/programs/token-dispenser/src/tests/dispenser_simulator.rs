@@ -102,6 +102,15 @@ impl DispenserSimulator {
         simulator
     }
 
+    pub fn generate_test_claim_certs(claimant: Pubkey) -> Vec<TestClaimCertificate> {
+        vec![
+            TestClaimCertificate::random_evm(&claimant),
+            TestClaimCertificate::random_cosmos(&claimant),
+            TestClaimCertificate::random_discord(),
+        ]
+    }
+
+
     pub async fn get_rent(&mut self) -> Rent {
         self.banks_client.get_rent().await.unwrap()
     }
@@ -175,8 +184,8 @@ impl DispenserSimulator {
         &mut self,
         merkle_root: MerkleRoot<SolanaHasher>,
         dispenser_guard: Pubkey,
-        mint_pubkey: Option<Pubkey>,
-        treasury_pubkey: Option<Pubkey>,
+        mint_pubkey_override: Option<Pubkey>,
+        treasury_pubkey_override: Option<Pubkey>,
     ) -> Result<(), BanksClientError> {
         let treasury = get_associated_token_address_with_program_id(
             &(get_config_pda().0),
@@ -185,8 +194,8 @@ impl DispenserSimulator {
         );
         let accounts = accounts::Initialize::populate(
             self.genesis_keypair.pubkey(),
-            mint_pubkey.unwrap_or(self.mint_keypair.pubkey()),
-            treasury_pubkey.unwrap_or(treasury),
+            mint_pubkey_override.unwrap_or(self.mint_keypair.pubkey()),
+            treasury_pubkey_override.unwrap_or(treasury),
         )
         .to_account_metas(None);
         let instruction_data = instruction::Initialize {
@@ -199,27 +208,23 @@ impl DispenserSimulator {
     }
 
 
-    pub fn generate_test_claim_certs(claimant: Pubkey) -> Vec<TestClaimCertificate> {
-        vec![
-            TestClaimCertificate::random_evm(&claimant),
-            TestClaimCertificate::random_cosmos(&claimant),
-            TestClaimCertificate::random_discord(),
-        ]
-    }
-
-    pub async fn initialize_and_claim_happy_path(
+    pub async fn initialize_with_claimants(
         &mut self,
-        claimants: Vec<&Keypair>,
+        claimants: Vec<Keypair>,
         dispenser_guard: &Keypair,
-    ) -> Result<Vec<TestClaimCertificate>, BanksClientError> {
-        let mock_offchain_certificates_and_claimants: Vec<(&Keypair, Vec<TestClaimCertificate>)> =
+    ) -> Result<
+        (
+            MerkleTree<SolanaHasher>,
+            Vec<(Keypair, Vec<TestClaimCertificate>)>,
+        ),
+        BanksClientError,
+    > {
+        let mock_offchain_certificates_and_claimants: Vec<(Keypair, Vec<TestClaimCertificate>)> =
             claimants
-                .iter()
+                .into_iter()
                 .map(|c| {
-                    (
-                        *c,
-                        DispenserSimulator::generate_test_claim_certs(c.pubkey()),
-                    )
+                    let pubkey = c.pubkey();
+                    (c, DispenserSimulator::generate_test_claim_certs(pubkey))
                 })
                 .collect::<Vec<_>>();
         let merkle_items: Vec<ClaimInfo> = mock_offchain_certificates_and_claimants
@@ -238,26 +243,8 @@ impl DispenserSimulator {
             None,
             None,
         )
-        .await
-        .unwrap();
-
-        for (claimant, offchain_claim_certificates) in &mock_offchain_certificates_and_claimants {
-            for offchain_claim_certificate in offchain_claim_certificates {
-                self.claim(
-                    &copy_keypair(claimant),
-                    &dispenser_guard,
-                    &offchain_claim_certificate,
-                    &merkle_tree,
-                )
-                .await
-                .unwrap();
-            }
-        }
-        Ok(mock_offchain_certificates_and_claimants
-            .iter()
-            .map(|(_, claim_certs)| claim_certs.clone())
-            .flatten()
-            .collect())
+        .await?;
+        Ok((merkle_tree, mock_offchain_certificates_and_claimants))
     }
 
 
@@ -278,8 +265,7 @@ impl DispenserSimulator {
                 &<TestClaimCertificate as Into<ClaimInfo>>::into(
                     off_chain_claim_certificate.clone(),
                 )
-                .try_to_vec()
-                .unwrap(),
+                .try_to_vec()?,
             )
             .0,
             false,
@@ -332,21 +318,20 @@ impl DispenserSimulator {
     }
 
     /**
-     *  Generate a `checkout` Instruction with all the correct
-     *  accounts populated unless explicitly overridden by providing
+     *  Generate a `checkout` Instruction deriving all the correct accounts
+     *  based on the provided `claimant` unless explicitly overridden by providing
      *  an `Option<Pubkey>` for the account.
      */
     pub fn checkout_ix(
         &mut self,
-        claimant: Option<Pubkey>,
+        claimant: Pubkey,
         cart: Option<Pubkey>,
         claimant_fund: Option<Pubkey>,
     ) -> Instruction {
-        let claimant = claimant.unwrap_or(self.genesis_keypair.pubkey());
         let config = get_config_pda().0;
-        let cart = cart.unwrap_or(get_cart_pda(&self.genesis_keypair.pubkey()).0);
+        let cart = cart.unwrap_or(get_cart_pda(&claimant).0);
         let claimant_fund = claimant_fund.unwrap_or(get_associated_token_address(
-            &self.genesis_keypair.pubkey(),
+            &claimant,
             &self.mint_keypair.pubkey(),
         ));
         let checkout = crate::accounts::Checkout {
@@ -366,7 +351,7 @@ impl DispenserSimulator {
     }
 
     pub async fn get_account(&mut self, key: Pubkey) -> Option<Account> {
-        self.banks_client.get_account(key).await.unwrap()
+        self.banks_client.get_account(key).await.ok()?
     }
 
     pub async fn get_account_data<T: AccountDeserialize>(&mut self, cart_key: Pubkey) -> Option<T> {

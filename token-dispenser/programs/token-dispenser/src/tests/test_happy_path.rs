@@ -294,19 +294,6 @@ pub async fn test_happy_path() {
         .await
         .unwrap();
     assert_eq!(cart_data.amount, 0);
-
-    // can't checkout if cart.amount is 0
-    assert_eq!(
-        simulator
-            .checkout(
-                &copy_keypair(&simulator.genesis_keypair),
-                simulator.mint_keypair.pubkey()
-            )
-            .await
-            .unwrap_err()
-            .unwrap(),
-        ErrorCode::ZeroCartAmount.into_transaction_error()
-    )
 }
 
 pub async fn assert_claim_receipts_exist(
