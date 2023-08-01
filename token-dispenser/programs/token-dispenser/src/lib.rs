@@ -576,15 +576,21 @@ impl crate::accounts::Claim {
 }
 
 impl crate::accounts::Checkout {
-    pub fn populate(claimant: Pubkey, mint: Pubkey) -> Self {
+    pub fn populate(
+        claimant: Pubkey,
+        mint: Pubkey,
+        cart_override: Option<Pubkey>,
+        claimant_fund_override: Option<Pubkey>,
+    ) -> Self {
         let config = get_config_pda().0;
         crate::accounts::Checkout {
             claimant,
             config,
             mint,
             treasury: get_treasury_ata(&config, &mint),
-            cart: get_cart_pda(&claimant).0,
-            claimant_fund: get_associated_token_address(&claimant, &mint),
+            cart: cart_override.unwrap_or_else(|| get_cart_pda(&claimant).0),
+            claimant_fund: claimant_fund_override
+                .unwrap_or_else(|| get_associated_token_address(&claimant, &mint)),
             system_program: system_program::System::id(),
             token_program: Token::id(),
             associated_token_program: AssociatedToken::id(),

@@ -106,6 +106,7 @@ pub async fn test_initialize_fails_with_incorrect_accounts() {
         )
         .await;
     assert!(res.is_err());
+    // associated token account for treasury is missing
     assert_eq!(
         res.unwrap_err().unwrap(),
         InstructionError(0, MissingAccount)

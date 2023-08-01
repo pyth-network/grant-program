@@ -301,8 +301,16 @@ impl DispenserSimulator {
         &mut self,
         claimant: &Keypair,
         mint: Pubkey,
+        cart_override: Option<Pubkey>,
+        claimant_fund_override: Option<Pubkey>,
     ) -> Result<(), BanksClientError> {
-        let accounts = accounts::Checkout::populate(claimant.pubkey(), mint).to_account_metas(None);
+        let accounts = accounts::Checkout::populate(
+            claimant.pubkey(),
+            mint,
+            cart_override,
+            claimant_fund_override,
+        )
+        .to_account_metas(None);
 
         let instruction_data = instruction::Checkout {};
         let mut instructions = vec![];
@@ -315,39 +323,6 @@ impl DispenserSimulator {
 
 
         self.process_ix(&instructions, &vec![claimant]).await
-    }
-
-    /**
-     *  Generate a `checkout` Instruction deriving all the correct accounts
-     *  based on the provided `claimant` unless explicitly overridden by providing
-     *  an `Option<Pubkey>` for the account.
-     */
-    pub fn checkout_ix(
-        &mut self,
-        claimant: Pubkey,
-        cart: Option<Pubkey>,
-        claimant_fund: Option<Pubkey>,
-    ) -> Instruction {
-        let config = get_config_pda().0;
-        let cart = cart.unwrap_or(get_cart_pda(&claimant).0);
-        let claimant_fund = claimant_fund.unwrap_or(get_associated_token_address(
-            &claimant,
-            &self.mint_keypair.pubkey(),
-        ));
-        let checkout = crate::accounts::Checkout {
-            claimant,
-            config,
-            mint: self.mint_keypair.pubkey(),
-            treasury: get_treasury_ata(&get_config_pda().0, &self.mint_keypair.pubkey()),
-            cart,
-            claimant_fund,
-            system_program: system_program::System::id(),
-            token_program: Token::id(),
-            associated_token_program: AssociatedToken::id(),
-        };
-        let ix_data = instruction::Checkout {};
-        let accounts = checkout.to_account_metas(None);
-        Instruction::new_with_bytes(crate::id(), &ix_data.data(), accounts)
     }
 
     pub async fn get_account(&mut self, key: Pubkey) -> Option<Account> {

@@ -70,18 +70,21 @@ pub async fn test_checkout_fails_with_wrong_accounts() {
 
     let fake_claimant = Keypair::new();
     // use invalid claimant with valid cart & claimant_fund
-    let checkout_ix = simulator.checkout_ix(
-        fake_claimant.pubkey(),
-        Some(get_cart_pda(&simulator.genesis_keypair.pubkey()).0),
-        Some(get_associated_token_address(
-            &simulator.genesis_keypair.pubkey(),
-            &simulator.mint_keypair.pubkey(),
-        )),
-    );
     let res = simulator
-        .process_ix(&vec![checkout_ix], &vec![&fake_claimant])
+        .checkout(
+            &fake_claimant,
+            simulator.mint_keypair.pubkey(),
+            Some(get_cart_pda(&simulator.genesis_keypair.pubkey()).0),
+            Some(get_associated_token_address(
+                &simulator.genesis_keypair.pubkey(),
+                &simulator.mint_keypair.pubkey(),
+            )),
+        )
         .await;
+
+
     assert!(res.is_err());
+    // cart for fake claimant is missing.
     assert_eq!(
         res.unwrap_err().unwrap(),
         InstructionError(0, MissingAccount)
@@ -97,25 +100,30 @@ pub async fn test_checkout_fails_with_wrong_accounts() {
         .await
         .unwrap();
 
-    let checkout_ix = simulator.checkout_ix(
-        simulator.genesis_keypair.pubkey(),
-        None,
-        Some(fake_claimant_fund_keypair.pubkey()),
-    );
+    let res = simulator
+        .checkout(
+            &copy_keypair(&simulator.genesis_keypair),
+            simulator.mint_keypair.pubkey(),
+            None,
+            Some(fake_claimant_fund_keypair.pubkey()),
+        )
+        .await;
+    // simulator.process_ix(&vec![checkout_ix], &vec![]).await;
 
-    let res = simulator.process_ix(&vec![checkout_ix], &vec![]).await;
     assert!(res.is_err());
     // 3014 - AccountNotAssociatedTokenAccount
     assert_eq!(res.unwrap_err().unwrap(), InstructionError(0, Custom(3014)));
 
     // valid claimant, wrong cart, valid claimant fund
-    let checkout_ix = simulator.checkout_ix(
-        simulator.genesis_keypair.pubkey(),
-        Some(get_cart_pda(&claimant_1.pubkey()).0), // use someone else's cart
-        None,
-    );
+    let res = simulator
+        .checkout(
+            &copy_keypair(&simulator.genesis_keypair),
+            simulator.mint_keypair.pubkey(),
+            Some(get_cart_pda(&claimant_1.pubkey()).0),
+            None,
+        )
+        .await;
 
-    let res = simulator.process_ix(&vec![checkout_ix], &vec![]).await;
     assert!(res.is_err());
     // 2006 - ConstraintSeeds
     assert_eq!(res.unwrap_err().unwrap(), InstructionError(0, Custom(2006)));
@@ -169,6 +177,8 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
             .checkout(
                 &copy_keypair(&simulator.genesis_keypair),
                 simulator.mint_keypair.pubkey(),
+                None,
+                None
             )
             .await
             .unwrap_err()
@@ -189,12 +199,19 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
         .checkout(
             &copy_keypair(&simulator.genesis_keypair),
             simulator.mint_keypair.pubkey(),
+            None,
+            None,
         )
         .await
         .unwrap();
 
     simulator
-        .checkout(&copy_keypair(&claimant_1), simulator.mint_keypair.pubkey())
+        .checkout(
+            &copy_keypair(&claimant_1),
+            simulator.mint_keypair.pubkey(),
+            None,
+            None,
+        )
         .await
         .unwrap();
 

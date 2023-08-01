@@ -275,6 +275,8 @@ pub async fn test_happy_path() {
         .checkout(
             &copy_keypair(&simulator.genesis_keypair),
             simulator.mint_keypair.pubkey(),
+            None,
+            None,
         )
         .await
         .unwrap();
