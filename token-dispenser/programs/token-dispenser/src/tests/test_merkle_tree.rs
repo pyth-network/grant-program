@@ -9,7 +9,10 @@ use {
         SolanaHasher,
     },
     anchor_lang::AnchorSerialize,
-    pythnet_sdk::accumulators::merkle::MerkleTree,
+    pythnet_sdk::accumulators::{
+        merkle::MerkleTree,
+        Accumulator,
+    },
     solana_sdk::pubkey,
 };
 
@@ -72,4 +75,17 @@ fn test_merkle_tree() {
         "Merkle root from Rust, check this against the JS test merkleTree.test.ts: {:?}",
         hex::encode(merkle_tree.root.as_bytes())
     );
+
+    println!("Proofs in order");
+    for claim_info in merkle_items {
+        println!(
+            "{:?}",
+            hex::encode(
+                merkle_tree
+                    .prove(&claim_info.try_to_vec().unwrap())
+                    .unwrap()
+                    .to_bytes()
+            )
+        );
+    }
 }

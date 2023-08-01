@@ -86,7 +86,8 @@ cd token_dispenser
 cargo test-bpf
 ```
 
-And the unit tests for the frontend via:
+The unit tests for the frontend require starting the database and migrating it (per the directions above).
+Then run:
 
 ```bash
 cd frontend
