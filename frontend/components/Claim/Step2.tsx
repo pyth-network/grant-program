@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Listbox, Transition } from '@headlessui/react'
 
 import Phantom from '../../images/phantom.inline.svg'
@@ -7,17 +7,27 @@ import Solflare from '../../images/solflare.inline.svg'
 import Arrow from '../../images/arrow.inline.svg'
 import Modal from './Modal'
 import Down from '../../images/down2.inline.svg'
-
-const wallets = [
-  { id: 1, name: 'Phantom', icon: <Phantom /> },
-  { id: 2, name: 'Backpack', icon: <Backpack /> },
-  { id: 2, name: 'Solflare', icon: <Solflare /> },
-]
+import { useWallet } from '@solana/wallet-adapter-react'
+import {
+  BACKPACK_WALLET_ADAPTER,
+  OTHER_WALLETS,
+  PHANTOM_WALLET_ADAPTER,
+  SOLFARE_WALLET_ADAPTER,
+} from '@components/wallets/Solana'
+import Image from 'next/image'
 
 const Step2 = () => {
-  const [step, setStep] = useState(1)
-  const [modal, openModal] = useState(false)
-  const [wallet, setWallet] = useState(null)
+  const { publicKey, wallet, disconnect, connecting, connected, connect } =
+    useWallet()
+
+  const base58 = useMemo(() => publicKey?.toBase58(), [publicKey])
+
+  const buttonText = useMemo(() => {
+    if (base58) return base58.slice(0, 4) + '..' + base58.slice(-4)
+    if (connecting) return 'Connecting ...'
+    if (connected) return 'Connected'
+    if (wallet) return 'Connect'
+  }, [base58, connecting, connected, wallet])
 
   return (
     <>
@@ -44,50 +54,31 @@ const Step2 = () => {
             You can find a list of popular wallets that support Solana (SPL)
             tokens below.
           </p>
-          {step == 1 ? (
-            <div className="mt-6 flex flex-wrap items-center gap-2">
-              <button
-                className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-                onClick={() => setStep(2)}
-              >
-                <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                  <Phantom /> Phantom
-                </span>
-              </button>
-              <button
-                className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-                onClick={() => setStep(2)}
-              >
-                <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                  <Backpack /> Backpack
-                </span>
-              </button>
-              <button
-                className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-                onClick={() => setStep(2)}
-              >
-                <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                  <Solflare /> Solflare
-                </span>
-              </button>
-
-              <button
-                className="ml-4 font-body text-base16 font-normal underline"
-                onClick={() => openModal(true)}
-              >
-                More wallets
-              </button>
-            </div>
+          {wallet === null ? (
+            <SelectWallets />
           ) : (
             <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <button className="btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light">
+                <button
+                  className="btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light"
+                  onClick={() => {
+                    if (base58 === undefined) connect().catch(() => {})
+                  }}
+                >
                   <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                    <Phantom />
-                    <span>5jfkqsa35 ... 8DqCV</span>
+                    <Image
+                      src={wallet.adapter.icon}
+                      alt="wallet icon"
+                      width={20}
+                      height={20}
+                    />{' '}
+                    <span>{buttonText}</span>
                   </span>
                 </button>
-                <span className="mt-4 block text-center font-body font-normal underline">
+                <span
+                  className="mt-4 block text-center font-body font-normal underline hover:cursor-pointer"
+                  onClick={disconnect}
+                >
                   Change wallet
                 </span>
               </div>
@@ -99,6 +90,56 @@ const Step2 = () => {
             </div>
           )}
         </div>
+      </div>
+    </>
+  )
+}
+
+const SelectWallets = () => {
+  const { select } = useWallet()
+  const [modal, openModal] = useState(false)
+  const [wallet, setWallet] = useState(null)
+
+  return (
+    <>
+      <div className="mt-6 flex flex-wrap items-center gap-2">
+        <button
+          className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
+          onClick={() => {
+            select(PHANTOM_WALLET_ADAPTER.name)
+          }}
+        >
+          <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+            <Phantom /> Phantom
+          </span>
+        </button>
+        <button
+          className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
+          onClick={() => {
+            select(BACKPACK_WALLET_ADAPTER.name)
+          }}
+        >
+          <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+            <Backpack /> Backpack
+          </span>
+        </button>
+        <button
+          className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
+          onClick={() => {
+            select(SOLFARE_WALLET_ADAPTER.name)
+          }}
+        >
+          <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+            <Solflare /> Solflare
+          </span>
+        </button>
+
+        <button
+          className="ml-4 font-body text-base16 font-normal underline"
+          onClick={() => openModal(true)}
+        >
+          More wallets
+        </button>
       </div>
       {modal && (
         <Modal openModal={openModal}>
@@ -124,14 +165,23 @@ const Step2 = () => {
                     leaveTo="transform scale-95 opacity-0"
                   >
                     <Listbox.Options className="absolute -mt-[1px] w-full divide-y divide-light-35 border border-light-35 bg-darkGray1">
-                      {wallets.map((wallet) => (
+                      {OTHER_WALLETS.map((wallet) => (
                         <Listbox.Option
-                          key={wallet.id}
-                          value={wallet}
+                          key={wallet.name}
+                          value={wallet.name}
                           className="flex cursor-pointer items-center justify-center gap-2.5 py-3 px-8 hover:bg-darkGray3"
-                          onClick={() => openModal(false)}
+                          onClick={() => {
+                            select(wallet.name)
+                            openModal(false)
+                          }}
                         >
-                          {wallet.icon} {wallet.name}
+                          <Image
+                            src={wallet.icon}
+                            alt="wallet icon"
+                            width={20}
+                            height={20}
+                          />{' '}
+                          {wallet.name}
                         </Listbox.Option>
                       ))}
                     </Listbox.Options>
