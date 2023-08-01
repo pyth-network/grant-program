@@ -29,10 +29,7 @@ use {
         AnchorDeserialize,
         AnchorSerialize,
     },
-    anchor_spl::{
-        associated_token::get_associated_token_address,
-        token::TokenAccount,
-    },
+    anchor_spl::associated_token::get_associated_token_address,
     pythnet_sdk::accumulators::{
         merkle::MerkleTree,
         Accumulator,
@@ -214,27 +211,25 @@ pub async fn test_happy_path() {
     let mint_to_amount = 10 * claim_sum;
 
     simulator.mint_to_treasury(mint_to_amount).await.unwrap();
-    let treasury_data = simulator
-        .get_account_data::<TokenAccount>(treasury)
+    simulator
+        .verify_token_account_data(treasury, mint_to_amount, COption::None, 0)
         .await
         .unwrap();
-    assert_eq!(treasury_data.amount, mint_to_amount);
-    assert_eq!(treasury_data.mint, simulator.mint_keypair.pubkey());
-    assert_eq!(treasury_data.owner, simulator.pyth_mint_authority.pubkey());
-    assert_eq!(treasury_data.delegate, COption::None);
-    assert_eq!(treasury_data.delegated_amount, 0);
 
     simulator
         .approve_treasury_delegate(get_config_pda().0, mint_to_amount)
         .await
         .unwrap();
 
-    let treasury_data = simulator
-        .get_account_data::<TokenAccount>(treasury)
+    simulator
+        .verify_token_account_data(
+            treasury,
+            mint_to_amount,
+            COption::Some(config_pubkey),
+            mint_to_amount,
+        )
         .await
         .unwrap();
-    assert_eq!(treasury_data.delegate, COption::Some(config_pubkey));
-    assert_eq!(treasury_data.delegated_amount, mint_to_amount);
 
     for serialized_item in &merkle_items_serialized {
         assert!(simulator
@@ -296,15 +291,19 @@ pub async fn test_happy_path() {
         .await
         .unwrap();
 
-    let claimant_fund_data = simulator
-        .get_account_data::<TokenAccount>(get_associated_token_address(
-            &simulator.genesis_keypair.pubkey(),
-            &simulator.mint_keypair.pubkey(),
-        ))
+
+    simulator
+        .verify_token_account_data(
+            get_associated_token_address(
+                &simulator.genesis_keypair.pubkey(),
+                &simulator.mint_keypair.pubkey(),
+            ),
+            claim_sum,
+            COption::None,
+            0,
+        )
         .await
         .unwrap();
-
-    assert_eq!(claimant_fund_data.amount, claim_sum);
 
     let cart_data = simulator
         .get_account_data::<crate::Cart>(cart_pda)

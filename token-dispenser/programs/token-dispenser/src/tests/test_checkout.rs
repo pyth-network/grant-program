@@ -116,7 +116,6 @@ pub async fn test_checkout_fails_with_wrong_accounts() {
             Some(fake_claimant_fund_keypair.pubkey()),
         )
         .await;
-    // simulator.process_ix(&vec![checkout_ix], &vec![]).await;
 
     assert!(res.is_err());
     // 3014 - AccountNotAssociatedTokenAccount
@@ -210,12 +209,16 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
         .await
         .unwrap();
 
-    let treasury_data = simulator
-        .get_account_data::<TokenAccount>(simulator.pyth_treasury)
+    simulator
+        .verify_token_account_data(
+            simulator.pyth_treasury,
+            total_claim_sum,
+            COption::Some(get_config_pda().0),
+            delegated_amount,
+        )
         .await
         .unwrap();
-    assert_eq!(treasury_data.amount, total_claim_sum);
-    assert_eq!(treasury_data.delegated_amount, delegated_amount);
+
 
     simulator
         .checkout(
@@ -226,12 +229,17 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
         )
         .await
         .unwrap();
-    let treasury_data = simulator
-        .get_account_data::<TokenAccount>(simulator.pyth_treasury)
+
+    simulator
+        .verify_token_account_data(
+            simulator.pyth_treasury,
+            total_claim_sum - claim_sums[0],
+            COption::Some(get_config_pda().0),
+            1,
+        )
         .await
         .unwrap();
-    assert_eq!(treasury_data.amount, total_claim_sum - claim_sums[0]);
-    assert_eq!(treasury_data.delegated_amount, 1);
+
     assert_eq!(
         simulator
             .checkout(
@@ -251,12 +259,16 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
         .approve_treasury_delegate(get_config_pda().0, delegated_amount)
         .await
         .unwrap();
-    let treasury_data = simulator
-        .get_account_data::<TokenAccount>(simulator.pyth_treasury)
+
+    simulator
+        .verify_token_account_data(
+            simulator.pyth_treasury,
+            total_claim_sum - claim_sums[0],
+            COption::Some(get_config_pda().0),
+            delegated_amount,
+        )
         .await
         .unwrap();
-    assert_eq!(treasury_data.amount, total_claim_sum - claim_sums[0]);
-    assert_eq!(treasury_data.delegated_amount, delegated_amount);
 
     assert_eq!(
         simulator
@@ -278,12 +290,16 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
         .await
         .unwrap();
 
-    let treasury_data = simulator
-        .get_account_data::<TokenAccount>(simulator.pyth_treasury)
+    simulator
+        .verify_token_account_data(
+            simulator.pyth_treasury,
+            total_claim_sum - claim_sums[0],
+            COption::Some(get_config_pda().0),
+            delegated_amount,
+        )
         .await
         .unwrap();
-    assert_eq!(treasury_data.delegated_amount, delegated_amount);
-    assert_eq!(treasury_data.delegate, COption::Some(get_config_pda().0));
+
 
     simulator
         .checkout(
@@ -295,26 +311,24 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
         .await
         .unwrap();
 
-    let treasury_data = simulator
-        .get_account_data::<TokenAccount>(simulator.pyth_treasury)
+
+    simulator
+        .verify_token_account_data(simulator.pyth_treasury, 0, COption::None, 0)
         .await
         .unwrap();
-
-    assert_eq!(treasury_data.amount, 0);
-    assert_eq!(treasury_data.delegated_amount, 0);
-    assert_eq!(treasury_data.delegate, COption::None);
 
 
     let claimant_pubkeys = vec![simulator.genesis_keypair.pubkey(), claimant_1.pubkey()];
     for (claim_sum, pubkey) in claim_sums.iter().zip(claimant_pubkeys.iter()) {
-        let claimant_fund_data = simulator
-            .get_account_data::<TokenAccount>(get_associated_token_address(
-                &pubkey,
-                &simulator.mint_keypair.pubkey(),
-            ))
+        simulator
+            .verify_token_account_data(
+                get_associated_token_address(&pubkey, &simulator.mint_keypair.pubkey()),
+                *claim_sum,
+                COption::None,
+                0,
+            )
             .await
             .unwrap();
-        assert_eq!(claimant_fund_data.amount, *claim_sum);
     }
 }
 
@@ -376,27 +390,27 @@ pub async fn test_checkout_fails_if_delegate_revoked() {
         .await
         .unwrap();
 
-    let treasury_data = simulator
-        .get_account_data::<TokenAccount>(simulator.pyth_treasury)
+    simulator
+        .verify_token_account_data(
+            simulator.pyth_treasury,
+            total_claim_sum,
+            COption::Some(get_config_pda().0),
+            total_claim_sum,
+        )
         .await
         .unwrap();
-    assert_eq!(treasury_data.amount, total_claim_sum);
-    assert_eq!(treasury_data.delegated_amount, total_claim_sum);
-    assert_eq!(treasury_data.delegate, COption::Some(get_config_pda().0));
+
 
     simulator.revoke_treasury_delegate().await.unwrap();
-    let treasury_data = simulator
-        .get_account_data::<TokenAccount>(simulator.pyth_treasury)
+    simulator
+        .verify_token_account_data(simulator.pyth_treasury, total_claim_sum, COption::None, 0)
         .await
         .unwrap();
-    assert_eq!(treasury_data.amount, total_claim_sum);
-    assert_eq!(treasury_data.delegated_amount, 0);
-    assert_eq!(treasury_data.delegate, COption::None);
 
     assert_eq!(
         simulator
             .checkout(
-                &copy_keypair(&claimant_1),
+                &copy_keypair(&simulator.genesis_keypair),
                 simulator.mint_keypair.pubkey(),
                 None,
                 None,
@@ -406,4 +420,54 @@ pub async fn test_checkout_fails_if_delegate_revoked() {
             .unwrap(),
         OwnerMismatch.into_transaction_error()
     );
+
+    simulator
+        .approve_treasury_delegate(get_config_pda().0, claim_sums[0])
+        .await
+        .unwrap();
+
+    simulator
+        .verify_token_account_data(
+            simulator.pyth_treasury,
+            total_claim_sum,
+            COption::Some(get_config_pda().0),
+            claim_sums[0],
+        )
+        .await
+        .unwrap();
+
+    simulator
+        .checkout(
+            &copy_keypair(&simulator.genesis_keypair),
+            simulator.mint_keypair.pubkey(),
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+
+    simulator
+        .verify_token_account_data(
+            simulator.pyth_treasury,
+            total_claim_sum - claim_sums[0],
+            COption::None,
+            0,
+        )
+        .await
+        .unwrap();
+
+
+    simulator
+        .verify_token_account_data(
+            get_associated_token_address(
+                &copy_keypair(&simulator.genesis_keypair).pubkey(),
+                &simulator.mint_keypair.pubkey(),
+            ),
+            claim_sums[0],
+            COption::None,
+            0,
+        )
+        .await
+        .unwrap();
 }

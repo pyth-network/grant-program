@@ -19,6 +19,7 @@ use {
         solana_program::{
             hash,
             instruction::Instruction,
+            program_option::COption,
             system_instruction::create_account,
         },
         system_program,
@@ -407,6 +408,26 @@ impl DispenserSimulator {
         ];
         self.process_ix(init_token_account_ixs, &vec![&token_account])
             .await
+    }
+
+    pub async fn verify_token_account_data(
+        &mut self,
+        token_account: Pubkey,
+        expected_amount: u64,
+        expected_delegate: COption<Pubkey>,
+        expected_delegated_amount: u64,
+    ) -> Result<(), BanksClientError> {
+        let token_account_data = self
+            .get_account_data::<TokenAccount>(token_account)
+            .await
+            .unwrap();
+        assert_eq!(token_account_data.amount, expected_amount);
+        assert_eq!(token_account_data.delegate, expected_delegate);
+        assert_eq!(
+            token_account_data.delegated_amount,
+            expected_delegated_amount
+        );
+        Ok(())
     }
 }
 
