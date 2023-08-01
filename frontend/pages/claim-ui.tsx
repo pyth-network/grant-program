@@ -13,7 +13,7 @@ import Step4 from '@components/Claim/Step4'
 import Step5 from '@components/Claim/Step5'
 import Step6 from '@components/Claim/Step6'
 
-const claim = () => {
+const Claim = () => {
   const [step, setStep] = useState(1)
 
   const renderStep = () => {
@@ -135,4 +135,4 @@ const claim = () => {
   )
 }
 
-export default claim
+export default Claim
