@@ -9,7 +9,7 @@ import Verified from '../../images/verified.inline.svg'
 import NotEligible from '../../images/not.inline.svg'
 import Discord from '../../images/discord.inline.svg'
 import Tooltip from '@components/Tooltip'
-import Down from '../../images/down.inline.svg'
+import Down from '../../images/down2.inline.svg'
 
 import Copy from '../../images/copy.inline.svg'
 import Change from '../../images/change.inline.svg'
@@ -110,7 +110,11 @@ const Eligibility = ({
                           >
                             <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
                               <span>explore options</span>
-                              <Down />
+                              <Down
+                                className={`${
+                                  open ? 'rotate-0' : 'rotate-180'
+                                }`}
+                              />
                             </span>
                           </Listbox.Button>
                           <Transition

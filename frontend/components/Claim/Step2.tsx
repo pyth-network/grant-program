@@ -1,12 +1,24 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { Listbox, Transition } from '@headlessui/react'
 
 import Phantom from '../../images/phantom.inline.svg'
 import Backpack from '../../images/backpack.inline.svg'
 import Solflare from '../../images/solflare.inline.svg'
-import Link from 'next/link'
 import Arrow from '../../images/arrow.inline.svg'
+import Modal from './Modal'
+import Down from '../../images/down2.inline.svg'
+
+const wallets = [
+  { id: 1, name: 'Phantom', icon: <Phantom /> },
+  { id: 2, name: 'Backpack', icon: <Backpack /> },
+  { id: 2, name: 'Solflare', icon: <Solflare /> },
+]
 
 const Step2 = () => {
+  const [step, setStep] = useState(1)
+  const [modal, openModal] = useState(false)
+  const [wallet, setWallet] = useState(null)
+
   return (
     <>
       <div className=" border border-light-35 bg-dark">
@@ -32,49 +44,104 @@ const Step2 = () => {
             You can find a list of popular wallets that support Solana (SPL)
             tokens below.
           </p>
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            <button className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark">
-              <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                <Phantom /> Phantom
-              </span>
-            </button>
-            <button className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark">
-              <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                <Backpack /> Backpack
-              </span>
-            </button>
-            <button className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark">
-              <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                <Solflare /> Solflare
-              </span>
-            </button>
-
-            <Link href="/">
-              <a className="ml-4 font-body  text-base16 font-normal underline">
-                More wallets
-              </a>
-            </Link>
-          </div>
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <button className="btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light">
+          {step == 1 ? (
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <button
+                className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
+                onClick={() => setStep(2)}
+              >
                 <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                  <Phantom />
-                  <span>5jfkqsa35 ... 8DqCV</span>
+                  <Phantom /> Phantom
                 </span>
               </button>
-              <span className="mt-4 block text-center font-body font-normal underline">
-                Change wallet
-              </span>
+              <button
+                className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
+                onClick={() => setStep(2)}
+              >
+                <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+                  <Backpack /> Backpack
+                </span>
+              </button>
+              <button
+                className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
+                onClick={() => setStep(2)}
+              >
+                <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+                  <Solflare /> Solflare
+                </span>
+              </button>
+
+              <button
+                className="ml-4 font-body text-base16 font-normal underline"
+                onClick={() => openModal(true)}
+              >
+                More wallets
+              </button>
             </div>
-            <button className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark">
-              <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                proceed <Arrow />
-              </span>
-            </button>
-          </div>
+          ) : (
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <button className="btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light">
+                  <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+                    <Phantom />
+                    <span>5jfkqsa35 ... 8DqCV</span>
+                  </span>
+                </button>
+                <span className="mt-4 block text-center font-body font-normal underline">
+                  Change wallet
+                </span>
+              </div>
+              <button className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark">
+                <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+                  proceed <Arrow />
+                </span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
+      {modal && (
+        <Modal openModal={openModal}>
+          <h3 className="mb-16  font-header text-[36px] font-light">
+            Select Your Wallet
+          </h3>
+          <div className="mx-auto max-w-[200px]">
+            <Listbox value={wallet} onChange={setWallet}>
+              {({ open }) => (
+                <>
+                  <Listbox.Button className="block w-full border border-light-35 py-3 px-8">
+                    <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+                      <span>explore options</span>
+                      <Down className={`${open ? 'rotate-0' : 'rotate-180'}`} />
+                    </span>
+                  </Listbox.Button>
+                  <Transition
+                    enter="transition duration-100 ease-out"
+                    enterFrom="transform scale-95 opacity-0"
+                    enterTo="transform scale-100 opacity-100"
+                    leave="transition duration-75 ease-out"
+                    leaveFrom="transform scale-100 opacity-100"
+                    leaveTo="transform scale-95 opacity-0"
+                  >
+                    <Listbox.Options className="absolute -mt-[1px] w-full divide-y divide-light-35 border border-light-35 bg-darkGray1">
+                      {wallets.map((wallet) => (
+                        <Listbox.Option
+                          key={wallet.id}
+                          value={wallet}
+                          className="flex cursor-pointer items-center justify-center gap-2.5 py-3 px-8 hover:bg-darkGray3"
+                          onClick={() => openModal(false)}
+                        >
+                          {wallet.icon} {wallet.name}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </Transition>
+                </>
+              )}
+            </Listbox>
+          </div>
+        </Modal>
+      )}
     </>
   )
 }
