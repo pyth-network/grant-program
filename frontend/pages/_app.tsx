@@ -10,9 +10,9 @@ import { assets, chains } from 'chain-registry'
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit'
 import type { AppProps } from 'next/app'
 import { FC } from 'react'
+import { WalletKitProvider as SuiWalletProvider } from '@mysten/wallet-kit'
 
 import { Toaster } from 'react-hot-toast'
-import { RecoilRoot } from 'recoil'
 import { WagmiConfig, createConfig } from 'wagmi'
 
 // Use require instead of import since order matters
@@ -30,9 +30,9 @@ const config = createConfig(
 
 const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
   return (
-    <RecoilRoot>
-      <SolanaWalletProvider>
-        <AptosWalletProvider>
+    <SolanaWalletProvider>
+      <AptosWalletProvider>
+        <SuiWalletProvider>
           <WagmiConfig config={config}>
             <ConnectKitProvider>
               <ChakraProvider theme={noCssResetTheme}>
@@ -75,9 +75,9 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
               </ChakraProvider>
             </ConnectKitProvider>
           </WagmiConfig>
-        </AptosWalletProvider>
-      </SolanaWalletProvider>
-    </RecoilRoot>
+        </SuiWalletProvider>
+      </AptosWalletProvider>
+    </SolanaWalletProvider>
   )
 }
 
