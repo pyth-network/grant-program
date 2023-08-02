@@ -10,16 +10,16 @@ import { useAccount, useNetwork, useSignMessage } from 'wagmi'
 import Layout from '../components/Layout'
 import SEO from '../components/SEO'
 
-const MESSAGE = 'Pyth Grant Program'
+const MESSAGE = 'Pyth Grant Program\n PYTH grant program'
 
 const Claim: NextPage = () => {
   const [recoveredAddress, setRecoveredAddress] = useState<string>()
-  const { data: signMessageData, signMessage, variables } = useSignMessage()
+  const { data: signMessageData, variables } = useSignMessage()
   const { address, isDisconnected } = useAccount()
   const { chain } = useNetwork()
   const [aptosSignMesage, setAptosSignMessage] = useState<string>()
 
-  const { signMessageAndVerify, connected } = useWallet()
+  const { signMessage, connected } = useWallet()
   const {
     chain: cosmosChain,
     address: cosmosAddress,
@@ -48,7 +48,7 @@ const Claim: NextPage = () => {
       nonce: 'random_string',
     }
     try {
-      const response = await signMessageAndVerify(payload)
+      const response = await signMessage(payload)
       setAptosSignMessage(JSON.stringify({ onSignMessageAndVerify: response }))
       console.log('response', response)
     } catch (error: any) {
