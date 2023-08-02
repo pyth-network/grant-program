@@ -27,6 +27,8 @@ pub struct Ed25519InstructionData {
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, PartialEq, Eq, Debug)]
 pub struct Ed25519InstructionHeader {
+    num_signatures:               u8,
+    padding:                      u8,
     signature_offset:             u16,
     signature_instruction_index:  u16,
     public_key_offset:            u16,
@@ -37,13 +39,15 @@ pub struct Ed25519InstructionHeader {
 }
 
 impl Ed25519InstructionHeader {
-    pub const LEN: u16 = 2 + 2 + 2 + 2 + 2 + 2 + 2;
+    pub const LEN: u16 = 2 + 2 + 2 + 2 + 2 + 2 + 2 + 2;
 }
 
 
 impl Ed25519InstructionHeader {
     pub fn expected_header(message_length: u16, instruction_index: u8) -> Self {
         Ed25519InstructionHeader {
+            num_signatures:               1,
+            padding:                      0,
             signature_offset:             Ed25519InstructionHeader::LEN,
             signature_instruction_index:  instruction_index as u16,
             public_key_offset:            Ed25519InstructionHeader::LEN
