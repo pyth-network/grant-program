@@ -100,7 +100,7 @@ impl AptosTestIdentityCertificate {
 }
 
 #[tokio::test]
-pub async fn test_verify_aptos() {
+pub async fn test_parse_message() {
     assert!(AptosMessage::parse("APTOS\nmessage: hello\nnonce: ".as_bytes()).is_ok());
     assert_eq!(
         AptosMessage::parse(&AptosMessage::new("hello").get_message_with_metadata())
