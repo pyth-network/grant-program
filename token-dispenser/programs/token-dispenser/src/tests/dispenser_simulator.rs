@@ -20,7 +20,10 @@ use {
             hash,
             instruction::Instruction,
             program_option::COption,
-            system_instruction::create_account,
+            system_instruction::{
+                self,
+                create_account,
+            },
         },
         system_program,
         AccountDeserialize,
@@ -126,6 +129,12 @@ impl DispenserSimulator {
 
     pub async fn get_rent(&mut self) -> Rent {
         self.banks_client.get_rent().await.unwrap()
+    }
+
+    pub async fn airdrop(&mut self, target: Pubkey, amount: u64) -> Result<(), BanksClientError> {
+        let airdrop_ix =
+            system_instruction::transfer(&self.genesis_keypair.pubkey(), &target, amount);
+        self.process_ix(&[airdrop_ix], &vec![]).await
     }
 
     pub async fn create_mint(

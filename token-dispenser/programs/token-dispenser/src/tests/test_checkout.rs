@@ -40,14 +40,8 @@ pub async fn test_checkout_fails_with_wrong_accounts() {
 
     let mut simulator = DispenserSimulator::new().await;
     let claimant_1 = Keypair::new();
-    let claimant_1_airdrop_ix = system_instruction::transfer(
-        &simulator.genesis_keypair.pubkey(),
-        &claimant_1.pubkey(),
-        1000000000,
-    );
-
     simulator
-        .process_ix(&vec![claimant_1_airdrop_ix], &vec![])
+        .airdrop(claimant_1.pubkey(), 1000000000)
         .await
         .unwrap();
 
@@ -142,14 +136,8 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
 
     let mut simulator = DispenserSimulator::new().await;
     let claimant_1 = Keypair::new();
-    let claimant_1_airdrop_ix = system_instruction::transfer(
-        &simulator.genesis_keypair.pubkey(),
-        &claimant_1.pubkey(),
-        1000000000,
-    );
-
     simulator
-        .process_ix(&vec![claimant_1_airdrop_ix], &vec![])
+        .airdrop(claimant_1.pubkey(), 1000000000)
         .await
         .unwrap();
 
@@ -338,14 +326,8 @@ pub async fn test_checkout_fails_if_delegate_revoked() {
 
     let mut simulator = DispenserSimulator::new().await;
     let claimant_1 = Keypair::new();
-    let claimant_1_airdrop_ix = system_instruction::transfer(
-        &simulator.genesis_keypair.pubkey(),
-        &claimant_1.pubkey(),
-        1000000000,
-    );
-
     simulator
-        .process_ix(&vec![claimant_1_airdrop_ix], &vec![])
+        .airdrop(claimant_1.pubkey(), 1000000000)
         .await
         .unwrap();
 
