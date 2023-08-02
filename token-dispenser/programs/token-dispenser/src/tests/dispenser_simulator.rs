@@ -123,6 +123,7 @@ impl DispenserSimulator {
             TestClaimCertificate::random_evm(&claimant),
             TestClaimCertificate::random_cosmos(&claimant),
             TestClaimCertificate::random_discord(),
+            TestClaimCertificate::random_aptos(&claimant),
         ]
     }
 

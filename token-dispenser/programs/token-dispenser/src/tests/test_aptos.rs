@@ -11,6 +11,8 @@ use {
             get_expected_message,
         },
         tests::dispenser_simulator::DispenserSimulator,
+        Identity,
+        IdentityCertificate,
     },
     anchor_lang::{
         prelude::Pubkey,
@@ -27,6 +29,7 @@ use {
 };
 
 
+#[derive(Clone)]
 pub struct AptosTestIdentityCertificate {
     pub message:   AptosMessage,
     pub signature: ed25519_dalek::Signature,
@@ -76,9 +79,35 @@ impl AptosTestIdentityCertificate {
     }
 }
 
+impl Into<Identity> for AptosTestIdentityCertificate {
+    fn into(self) -> Identity {
+        Identity::Aptos {
+            address: Ed25519Pubkey(self.publickey.to_bytes()).into(),
+        }
+    }
+}
+
+impl AptosTestIdentityCertificate {
+    pub fn into_proof_of_identity(
+        &self,
+        verification_instruction_index: u8,
+    ) -> IdentityCertificate {
+        IdentityCertificate::Aptos {
+            pubkey: Ed25519Pubkey(self.publickey.to_bytes()),
+            verification_instruction_index,
+        }
+    }
+}
+
 #[tokio::test]
 pub async fn test_verify_aptos() {
     assert!(AptosMessage::parse("APTOS\nmessage: hello\nnonce: ".as_bytes()).is_ok());
+    assert_eq!(
+        AptosMessage::parse(&AptosMessage::new("hello").get_message_with_metadata())
+            .unwrap()
+            .get_payload(),
+        b"hello"
+    );
 }
 
 #[tokio::test]

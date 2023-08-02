@@ -1,6 +1,7 @@
 use {
     super::{
         dispenser_simulator::DispenserSimulator,
+        test_aptos::AptosTestIdentityCertificate,
         test_cosmos::CosmosTestIdentityCertificate,
     },
     crate::{
@@ -92,6 +93,15 @@ impl TestClaimCertificate {
             off_chain_proof_of_identity: TestIdentityCertificate::Discord("username".into()),
         }
     }
+
+    pub fn random_aptos(claimant: &Pubkey) -> Self {
+        Self {
+            amount:                      Self::random_amount(),
+            off_chain_proof_of_identity: TestIdentityCertificate::Aptos(
+                AptosTestIdentityCertificate::random(claimant),
+            ),
+        }
+    }
 }
 
 impl From<TestClaimCertificate> for ClaimInfo {
@@ -113,6 +123,7 @@ impl TestClaimCertificate {
             TestIdentityCertificate::Evm(evm) => Some(evm.as_instruction(index, true)),
             TestIdentityCertificate::Discord(_) => None,
             TestIdentityCertificate::Cosmos(_) => None,
+            TestIdentityCertificate::Aptos(aptos) => Some(aptos.into_instruction(index, true)),
         };
         (
             ClaimCertificate {
@@ -133,6 +144,7 @@ impl From<TestIdentityCertificate> for Identity {
             TestIdentityCertificate::Evm(evm) => evm.into(),
             TestIdentityCertificate::Cosmos(cosmos) => cosmos.into(),
             TestIdentityCertificate::Discord(username) => Identity::Discord { username },
+            TestIdentityCertificate::Aptos(aptos) => aptos.into()
         }
     }
 }
@@ -145,6 +157,7 @@ impl TestIdentityCertificate {
             Self::Discord(username) => IdentityCertificate::Discord {
                 username: username.clone(),
             },
+            Self::Aptos(aptos) => aptos.into_proof_of_identity(verification_instruction_index),
         }
     }
 }
@@ -154,6 +167,7 @@ pub enum TestIdentityCertificate {
     Evm(EvmTestIdentityCertificate),
     Discord(String),
     Cosmos(CosmosTestIdentityCertificate),
+    Aptos(AptosTestIdentityCertificate),
 }
 
 #[tokio::test]
