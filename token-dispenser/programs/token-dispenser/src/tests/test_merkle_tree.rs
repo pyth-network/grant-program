@@ -1,6 +1,10 @@
 use {
     crate::{
         ecosystems::{
+            aptos::{
+                self,
+                AptosAddress,
+            },
             cosmos::CosmosBech32Address,
             secp256k1::EvmPubkey,
         },
@@ -23,6 +27,11 @@ use {
 fn test_merkle_tree() {
     let mut evm_pubkey: [u8; 20] = [0u8; 20];
     evm_pubkey.copy_from_slice(&hex::decode("f3f9225A2166861e745742509CED164183a626d7").unwrap());
+
+    let mut aptos_address: [u8; 32] = [0u8; 32];
+    aptos_address.copy_from_slice(
+        &hex::decode("7e7544df4fc42107d4a60834685dfd9c1e6ff048f49fe477bc19c1551299d5cb").unwrap(),
+    );
 
     let merkle_items: Vec<ClaimInfo> = vec![
         ClaimInfo {
@@ -53,7 +62,9 @@ fn test_merkle_tree() {
         },
         ClaimInfo {
             amount:   3000,
-            identity: Identity::Aptos,
+            identity: Identity::Aptos {
+                address: AptosAddress(aptos_address),
+            },
         },
     ];
 

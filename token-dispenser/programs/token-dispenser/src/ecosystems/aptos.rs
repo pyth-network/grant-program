@@ -1,4 +1,5 @@
 use {
+    super::ed25519::Ed25519Pubkey,
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
@@ -14,6 +15,7 @@ use {
 pub const APTOS_PREFIX: &str = "APTOS";
 pub const APTOS_MESSAGE_PREFIX: &str = "message: ";
 pub const APTOS_MESSAGE_NONCE: &str = "nonce: ";
+pub const APTOS_SIGNATURE_SCHEME_ID: u8 = 0;
 
 
 /**
@@ -49,6 +51,15 @@ impl AptosMessage {
 
     pub fn get_payload(&self) -> &[u8] {
         self.0.as_slice()
+    }
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub struct AptosAddress(pub [u8; 32]);
+
+impl Into<AptosAddress> for Ed25519Pubkey {
+    fn into(self) -> AptosAddress {
+        AptosAddress(hash::hashv(&[&self.0, &[APTOS_SIGNATURE_SCHEME_ID]]).to_bytes())
     }
 }
 

@@ -29,11 +29,19 @@ use {
         },
     },
     ecosystems::{
+        aptos::{
+            AptosAddress,
+            AptosMessage,
+        },
         check_message,
         cosmos::{
             CosmosBech32Address,
             CosmosMessage,
             CosmosPubkey,
+        },
+        ed25519::{
+            Ed25519InstructionData,
+            Ed25519Pubkey,
         },
         evm::EvmPrefixedMessage,
         secp256k1::{
@@ -263,7 +271,7 @@ pub enum Identity {
     Solana { pubkey: Pubkey },
     Evm { pubkey: EvmPubkey },
     Sui,
-    Aptos,
+    Aptos { address: AptosAddress },
     Cosmwasm { address: CosmosBech32Address },
 }
 
@@ -293,7 +301,10 @@ pub enum IdentityCertificate {
     },
     Solana,
     Sui,
-    Aptos,
+    Aptos {
+        pubkey:                         Ed25519Pubkey,
+        verification_instruction_index: u8,
+    },
     Cosmwasm {
         chain_id:    String,
         signature:   Secp256k1Signature,
@@ -452,6 +463,29 @@ impl IdentityCertificate {
                 let cosmos_bech32 = pubkey.into_bech32(chain_id);
                 Ok(Identity::Cosmwasm {
                     address: cosmos_bech32,
+                })
+            }
+            IdentityCertificate::Aptos {
+                pubkey,
+                verification_instruction_index,
+            } => {
+                let signature_verification_instruction = load_instruction_at_checked(
+                    *verification_instruction_index as usize,
+                    sysvar_instruction,
+                )?;
+                check_message(
+                    AptosMessage::parse(
+                        &Ed25519InstructionData::from_instruction_and_check_signer(
+                            &signature_verification_instruction,
+                            pubkey,
+                        )?
+                        .message,
+                    )?
+                    .get_payload(),
+                    claimant,
+                )?;
+                Ok(Identity::Aptos {
+                    address: Into::<AptosAddress>::into(pubkey.clone()),
                 })
             }
             _ => Err(ErrorCode::NotImplemented.into()),
