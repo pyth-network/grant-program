@@ -10,7 +10,7 @@ use {
 };
 
 pub const APTOS_PREFIX: &[u8] = b"APTOS\nmessage: ";
-pub const APTOS_SUFFIX: &[u8] = b"\nnonce: ";
+pub const APTOS_SUFFIX: &[u8] = b"\nnonce: nonce";
 pub const APTOS_SIGNATURE_SCHEME_ID: u8 = 0;
 
 
