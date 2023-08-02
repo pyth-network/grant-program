@@ -1,62 +1,72 @@
-import {
-  AptosWalletAdapterProvider,
-  useWallet,
-} from '@aptos-labs/wallet-adapter-react'
-import { PetraWallet } from 'petra-plugin-wallet-adapter'
 import { ReactElement, ReactNode, useMemo, useState } from 'react'
 import Wallet from '../../images/wallet.inline.svg'
 import Modal from '@components/Claim/Modal'
 import Image from 'next/image'
+import { ChainProvider, useChainWallet } from '@cosmos-kit/react-lite'
+import { assets, chains } from 'chain-registry'
+import { wallets as keplrWallets } from '@cosmos-kit/keplr'
+import { MainWalletBase, ChainWalletContext } from '@cosmos-kit/core'
 
-type AptosWalletProviderProps = {
+const walletName = 'keplr-extension'
+
+type CosmosWalletProviderProps = {
   children: ReactNode
 }
 
-export function AptosWalletProvider({
+export function CosmosWalletProvider({
   children,
-}: AptosWalletProviderProps): ReactElement {
-  const aptosWallets = useMemo(() => [new PetraWallet()], [])
-
+}: CosmosWalletProviderProps): ReactElement {
   return (
-    <AptosWalletAdapterProvider plugins={aptosWallets} autoConnect>
+    <ChainProvider
+      chains={chains}
+      assetLists={assets}
+      wallets={[...keplrWallets] as unknown as MainWalletBase[]}
+    >
       {children}
-    </AptosWalletAdapterProvider>
+    </ChainProvider>
   )
 }
 
-export function AptosWalletButton() {
-  const { disconnect, account, connected, wallet, isLoading } = useWallet()
+type CosmosWalletButtonProps = {
+  chainName: 'injective' | 'osmosis' | 'neutron'
+}
+export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
+  const chainWalletContext = useChainWallet(chainName, walletName)
+  const { address, isWalletDisconnected, isWalletConnecting, chainWallet } =
+    chainWalletContext
 
   const buttonText = useMemo(() => {
-    if (isLoading) return 'Connecting...'
+    if (isWalletConnecting) return 'Connecting...'
 
-    return account?.ansName
-      ? account?.ansName
-      : truncateAddress(account?.address)
-  }, [account?.address, account?.ansName, isLoading])
+    return truncateAddress(address)
+  }, [address, isWalletConnecting])
 
-  if (connected === false && isLoading === false)
-    return <AptosWalletModalButton />
+  if (isWalletDisconnected === true && isWalletConnecting === false)
+    return <CosmosWalletModalButton chainWalletContext={chainWalletContext} />
   return (
     <button
       className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light"
-      onClick={() => disconnect()}
+      onClick={() => {
+        chainWallet?.disconnect(true)
+      }}
     >
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-        {wallet?.icon ? (
-          <Image src={wallet?.icon} alt="wallet icon" width={20} height={20} />
-        ) : (
-          <Wallet />
-        )}
+        <Wallet />
         <span>{buttonText ?? 'Connected'}</span>
       </span>
     </button>
   )
 }
 
-function AptosWalletModalButton() {
+type CosmosWalletModalButtonProps = {
+  chainWalletContext: ChainWalletContext
+}
+function CosmosWalletModalButton({
+  chainWalletContext,
+}: CosmosWalletModalButtonProps) {
   const [modal, openModal] = useState(false)
-  const { wallets, connect, isLoading } = useWallet()
+
+  const { logoUrl, isWalletConnecting, connect } = chainWalletContext
 
   return (
     <>
@@ -78,19 +88,23 @@ function AptosWalletModalButton() {
             <button
               className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light"
               onClick={() => {
-                connect(wallets[0].name)
+                connect()
                 openModal(false)
               }}
             >
               <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                <Image
-                  src={wallets[0].icon}
-                  alt="wallet icon"
-                  width={20}
-                  height={20}
-                />
+                {logoUrl ? (
+                  <Image
+                    src={logoUrl}
+                    alt="wallet icon"
+                    width={20}
+                    height={20}
+                  />
+                ) : (
+                  <Wallet />
+                )}
                 <span>
-                  {isLoading === true ? 'Connecting...' : wallets[0].name}
+                  {isWalletConnecting === true ? 'Connecting...' : 'Keplr'}
                 </span>
               </span>
             </button>

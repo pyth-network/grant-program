@@ -16,6 +16,8 @@ import Change from '../../images/change.inline.svg'
 import Disconect from '../../images/disconect.inline.svg'
 import { AptosWalletButton } from '@components/wallets/Aptos'
 import { SuiWalletButton } from '@components/wallets/Sui'
+import { EVMWalletButton } from '@components/wallets/EVM'
+import { CosmosWalletButton } from '@components/wallets/Cosmos'
 
 const walletOptions = [
   { name: '5jfkqa35 ... 8DqC', icon: <Wallet /> },
@@ -97,7 +99,7 @@ const Eligibility = ({
                   EVM Activity
                 </span>
                 <span className="flex items-center gap-5">
-                  <div className="relative z-10">
+                  {/* <div className="relative z-10">
                     <Listbox value={wallet} onChange={setWallet}>
                       {({ open }) => (
                         <>
@@ -142,7 +144,8 @@ const Eligibility = ({
                         </>
                       )}
                     </Listbox>
-                  </div>
+                  </div> */}
+                  <EVMWalletButton />
 
                   <Tooltip content="This wallet is unfortunately not eligible for an allocation. You can click on the wallet address to change to another wallet.">
                     <TooltipIcon />
@@ -196,18 +199,13 @@ const Eligibility = ({
             </td>
           </tr>
           <tr className="border-b border-light-35 ">
-            <td className="w-full py-2 pl-10 pr-4 opacity-25">
+            <td className="w-full py-2 pl-10 pr-4">
               <div className="flex items-center justify-between">
                 <span className="font-header text-base18 font-thin">
                   Injective Activity
                 </span>
                 <span className="flex items-center gap-5">
-                  <button className="btn before:btn-bg btn--dark min-w-[207px] before:bg-dark hover:text-dark hover:before:bg-light">
-                    <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                      <Wallet />
-                      <span>connect wallet</span>
-                    </span>
-                  </button>
+                  <CosmosWalletButton chainName="injective" />
                   <TooltipIcon />
                   <Verified className="opacity-0" />
                 </span>
@@ -220,18 +218,13 @@ const Eligibility = ({
             </td>
           </tr>
           <tr className="border-b border-light-35 ">
-            <td className="w-full py-2 pl-10 pr-4 opacity-25">
+            <td className="w-full py-2 pl-10 pr-4">
               <div className="flex items-center justify-between">
                 <span className="font-header text-base18 font-thin">
                   Osmosis Activity
                 </span>
                 <span className="flex items-center gap-5">
-                  <button className="btn before:btn-bg btn--dark min-w-[207px] before:bg-dark hover:text-dark hover:before:bg-light">
-                    <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                      <Wallet />
-                      <span>connect wallet</span>
-                    </span>
-                  </button>
+                  <CosmosWalletButton chainName="osmosis" />
                   <TooltipIcon />
                   <Verified className="opacity-0" />
                 </span>
@@ -244,18 +237,13 @@ const Eligibility = ({
             </td>
           </tr>
           <tr className="border-b border-light-35 ">
-            <td className="w-full py-2 pl-10 pr-4 opacity-25">
+            <td className="w-full py-2 pl-10 pr-4">
               <div className="flex items-center justify-between">
                 <span className="font-header text-base18 font-thin">
                   Neutron Activity
                 </span>
                 <span className="flex items-center gap-5">
-                  <button className="btn before:btn-bg btn--dark min-w-[207px] before:bg-dark hover:text-dark hover:before:bg-light">
-                    <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                      <Wallet />
-                      <span>connect wallet</span>
-                    </span>
-                  </button>
+                  <CosmosWalletButton chainName="neutron" />
                   <TooltipIcon />
                   <Verified className="opacity-0" />
                 </span>
