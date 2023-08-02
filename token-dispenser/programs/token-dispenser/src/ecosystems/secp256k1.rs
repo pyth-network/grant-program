@@ -81,6 +81,7 @@ impl Secp256k1InstructionData {
     pub fn from_instruction_and_check_signer(
         instruction: &Instruction,
         pubkey: &EvmPubkey,
+        verification_instruction_index: &u8,
     ) -> Result<Self> {
         if instruction.program_id != SECP256K1_ID {
             return Err(ErrorCode::SignatureVerificationWrongProgram.into());
@@ -91,11 +92,12 @@ impl Secp256k1InstructionData {
         }
 
         let result = Self::try_from_slice(&instruction.data)?;
-        if result.header
-            != Secp256k1InstructionHeader::expected_header(
-                result.header.message_data_size,
-                result.header.message_instruction_index,
-            )
+        if (result.header.message_instruction_index != *verification_instruction_index)
+            || (result.header
+                != Secp256k1InstructionHeader::expected_header(
+                    result.header.message_data_size,
+                    result.header.message_instruction_index,
+                ))
         {
             return Err(ErrorCode::SignatureVerificationWrongHeader.into());
         }
