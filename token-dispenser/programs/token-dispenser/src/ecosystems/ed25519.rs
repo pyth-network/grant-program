@@ -1,7 +1,14 @@
-use anchor_lang::{
-    prelude::*,
-    AnchorDeserialize,
-    AnchorSerialize,
+use {
+    crate::ErrorCode,
+    anchor_lang::{
+        prelude::*,
+        solana_program::{
+            ed25519_program::ID as ED25519_ID,
+            instruction::Instruction,
+        },
+        AnchorDeserialize,
+        AnchorSerialize,
+    },
 };
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
@@ -10,7 +17,7 @@ impl Ed25519Signature {
     pub const LEN: usize = 64;
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, PartialEq)]
 pub struct Ed25519Pubkey(pub [u8; Ed25519Pubkey::LEN]);
 impl Ed25519Pubkey {
     pub const LEN: usize = 32;
@@ -59,6 +66,41 @@ impl Ed25519InstructionHeader {
             message_data_size:            message_length,
             message_instruction_index:    instruction_index as u16,
         }
+    }
+}
+
+impl Ed25519InstructionData {
+    pub fn from_instruction_and_check_signer(
+        instruction: &Instruction,
+        pubkey: &Ed25519Pubkey,
+    ) -> Result<Self> {
+        if instruction.program_id != ED25519_ID {
+            return Err(ErrorCode::SignatureVerificationWrongProgram.into());
+        }
+
+        if !instruction.accounts.is_empty() {
+            return Err(ErrorCode::SignatureVerificationWrongAccounts.into());
+        }
+
+        let result = Self::try_from_slice(&instruction.data)?;
+        if result.header
+            != Ed25519InstructionHeader::expected_header(
+                result.header.message_data_size,
+                result
+                    .header
+                    .message_instruction_index
+                    .try_into()
+                    .map_err(|_| ErrorCode::SignatureVerificationWrongHeader)?,
+            )
+        {
+            return Err(ErrorCode::SignatureVerificationWrongHeader.into());
+        }
+
+        if result.pubkey != *pubkey {
+            return Err(ErrorCode::SignatureVerificationWrongSigner.into());
+        }
+
+        Ok(result)
     }
 }
 
