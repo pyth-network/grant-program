@@ -19,7 +19,6 @@ use {
     },
     ed25519_dalek::{
         Keypair,
-        Signature,
         Signer,
     },
     rand_compatible::rngs::OsRng,
@@ -33,6 +32,7 @@ pub struct AptosTestIdentityCertificate {
     pub signature: ed25519_dalek::Signature,
     pub publickey: ed25519_dalek::PublicKey,
 }
+
 
 impl AptosTestIdentityCertificate {
     pub fn random(claimant: &Pubkey) -> Self {
@@ -78,8 +78,7 @@ impl AptosTestIdentityCertificate {
 
 #[tokio::test]
 pub async fn test_verify_aptos() {
-    let message = AptosMessage::parse("APTOS\nmessage: hello\nnonce: ".as_bytes()).unwrap();
-    println!("{:?}", message.get_payload())
+    assert!(AptosMessage::parse("APTOS\nmessage: hello\nnonce: ".as_bytes()).is_ok());
 }
 
 #[tokio::test]
@@ -87,6 +86,13 @@ pub async fn test_verify_signed_message_onchain() {
     let signed_message = AptosTestIdentityCertificate::random(&Pubkey::new_unique());
 
     let mut simulator = DispenserSimulator::new().await;
+
+    assert!(ed25519_dalek::Verifier::verify(
+        &signed_message.publickey,
+        &signed_message.message.get_message_with_metadata(),
+        &signed_message.signature
+    )
+    .is_ok());
 
     assert!(simulator
         .process_ix(&[signed_message.into_instruction(0, true)], &vec![])
