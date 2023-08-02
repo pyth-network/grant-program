@@ -173,21 +173,17 @@ pub mod token_dispenser {
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
-    pub payer:                    Signer<'info>,
+    pub payer:          Signer<'info>,
     #[account(init, payer = payer, space = Config::LEN, seeds = [CONFIG_SEED], bump)]
-    pub config:                   Account<'info, Config>,
+    pub config:         Account<'info, Config>,
     /// Mint of the treasury
-    pub mint:                     Account<'info, Mint>,
-    #[account(
-        init,
-        payer = payer,
-        associated_token::authority = config,
-        associated_token::mint = mint,
-    )]
-    pub treasury:                 Account<'info, TokenAccount>,
-    pub system_program:           Program<'info, System>,
-    pub token_program:            Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub mint:           Account<'info, Mint>,
+    /// Treasury token account. This is an externally owned token account and
+    /// the owner of this account will approve the config as a delegate using the
+    /// solana CLI command `spl-token approve <treasury_account_address> <approve_amount> <config_address>`
+    #[account( token::mint = mint )]
+    pub treasury:       Account<'info, TokenAccount>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -221,11 +217,7 @@ pub struct Checkout<'info> {
     /// Mint of the treasury & claimant_fund token account.
     /// Needed if the `claimant_fund` token account needs to be initialized
     pub mint:                     Account<'info, Mint>,
-    #[account(
-        mut,
-        associated_token::authority = config,
-        associated_token::mint = config.mint,
-    )]
+    #[account(mut)]
     pub treasury:                 Account<'info, TokenAccount>,
     #[account(mut, seeds = [CART_SEED, claimant.key.as_ref()], bump)]
     pub cart:                     Account<'info, Cart>,
@@ -544,10 +536,6 @@ pub fn get_cart_pda(claimant: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[CART_SEED, claimant.as_ref()], &crate::id())
 }
 
-pub fn get_treasury_ata(config: &Pubkey, mint: &Pubkey) -> Pubkey {
-    get_associated_token_address(config, mint)
-}
-
 impl crate::accounts::Initialize {
     pub fn populate(payer: Pubkey, mint: Pubkey, treasury: Pubkey) -> Self {
         crate::accounts::Initialize {
@@ -556,8 +544,6 @@ impl crate::accounts::Initialize {
             mint,
             treasury,
             system_program: system_program::System::id(),
-            token_program: anchor_spl::token::Token::id(),
-            associated_token_program: AssociatedToken::id(),
         }
     }
 }
@@ -579,6 +565,7 @@ impl crate::accounts::Checkout {
     pub fn populate(
         claimant: Pubkey,
         mint: Pubkey,
+        treasury: Pubkey,
         cart_override: Option<Pubkey>,
         claimant_fund_override: Option<Pubkey>,
     ) -> Self {
@@ -587,7 +574,7 @@ impl crate::accounts::Checkout {
             claimant,
             config,
             mint,
-            treasury: get_treasury_ata(&config, &mint),
+            treasury,
             cart: cart_override.unwrap_or_else(|| get_cart_pda(&claimant).0),
             claimant_fund: claimant_fund_override
                 .unwrap_or_else(|| get_associated_token_address(&claimant, &mint)),
