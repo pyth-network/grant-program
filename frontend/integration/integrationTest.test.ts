@@ -8,6 +8,7 @@ const pool = getDatabasePool()
 
 beforeAll(async () => {
   // TODO: run database migrations here. This seems difficult with node-pg-migrate though.
+
   const sampleData: any[] = [
     ['solana', '3kzAHeiucNConBwKQVHyLcG3soaMzSZkvs4y14fmMgKL', 1000],
     ['evm', '0xf3f9225A2166861e745742509CED164183a626d7', 2000],
