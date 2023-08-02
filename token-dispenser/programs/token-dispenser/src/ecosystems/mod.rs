@@ -6,7 +6,9 @@ use {
     },
 };
 
+pub mod aptos;
 pub mod cosmos;
+pub mod ed25519;
 pub mod evm;
 pub mod secp256k1;
 
