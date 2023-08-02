@@ -73,6 +73,7 @@ impl Ed25519InstructionData {
     pub fn from_instruction_and_check_signer(
         instruction: &Instruction,
         pubkey: &Ed25519Pubkey,
+        verification_instruction_index: &u8,
     ) -> Result<Self> {
         if instruction.program_id != ED25519_ID {
             return Err(ErrorCode::SignatureVerificationWrongProgram.into());
@@ -83,15 +84,17 @@ impl Ed25519InstructionData {
         }
 
         let result = Self::try_from_slice(&instruction.data)?;
-        if result.header
-            != Ed25519InstructionHeader::expected_header(
-                result.header.message_data_size,
-                result
-                    .header
-                    .message_instruction_index
-                    .try_into()
-                    .map_err(|_| ErrorCode::SignatureVerificationWrongHeader)?,
-            )
+        let header_instruction_index = result
+            .header
+            .message_instruction_index
+            .try_into()
+            .map_err(|_| ErrorCode::SignatureVerificationWrongHeader)?;
+        if (header_instruction_index != *verification_instruction_index)
+            || (result.header
+                != Ed25519InstructionHeader::expected_header(
+                    result.header.message_data_size,
+                    header_instruction_index,
+                ))
         {
             return Err(ErrorCode::SignatureVerificationWrongHeader.into());
         }
