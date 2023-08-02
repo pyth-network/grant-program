@@ -54,6 +54,7 @@ impl AptosMessage {
     }
 }
 
+
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct AptosAddress(pub [u8; 32]);
 
