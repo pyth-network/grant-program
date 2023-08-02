@@ -443,6 +443,7 @@ impl IdentityCertificate {
                         &Secp256k1InstructionData::from_instruction_and_check_signer(
                             &signature_verification_instruction,
                             pubkey,
+                            verification_instruction_index,
                         )?
                         .message,
                     )?
@@ -478,6 +479,7 @@ impl IdentityCertificate {
                         &Ed25519InstructionData::from_instruction_and_check_signer(
                             &signature_verification_instruction,
                             pubkey,
+                            verification_instruction_index,
                         )?
                         .message,
                     )?
