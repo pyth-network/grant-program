@@ -62,9 +62,4 @@ impl AptosMessage {
     pub fn get_message_length(&self) -> usize {
         self.get_message_with_metadata().len()
     }
-
-
-    pub fn hash(&self) -> hash::Hash {
-        hash::hashv(&[&self.get_message_with_metadata()])
-    }
 }
