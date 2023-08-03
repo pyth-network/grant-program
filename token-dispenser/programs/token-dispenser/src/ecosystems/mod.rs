@@ -11,6 +11,7 @@ pub mod cosmos;
 pub mod ed25519;
 pub mod evm;
 pub mod secp256k1;
+pub mod sui;
 
 /**
  * Ecosystem agnostic authorization message that the identity on the leaf needs to sign.

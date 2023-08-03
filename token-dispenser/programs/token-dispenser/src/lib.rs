@@ -44,6 +44,7 @@ use {
             Secp256k1Signature,
             UncompressedSecp256k1Pubkey,
         },
+        sui::SuiAddress,
     },
     pythnet_sdk::{
         accumulators::merkle::{
@@ -256,7 +257,7 @@ pub enum Identity {
     Discord { username: String },
     Solana { pubkey: Pubkey },
     Evm { pubkey: EvmPubkey },
-    Sui,
+    Sui { address: SuiAddress },
     Aptos { address: AptosAddress },
     Cosmwasm { address: CosmosBech32Address },
 }
@@ -286,7 +287,10 @@ pub enum IdentityCertificate {
         verification_instruction_index: u8,
     },
     Solana,
-    Sui,
+    Sui {
+        pubkey:                         Ed25519Pubkey,
+        verification_instruction_index: u8,
+    },
     Aptos {
         pubkey:                         Ed25519Pubkey,
         verification_instruction_index: u8,
