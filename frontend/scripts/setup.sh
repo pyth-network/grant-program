@@ -68,13 +68,14 @@ fi
 
 
 function start_postgres_docker() {
+    # TODO: use different ports for dev and test
     docker run  -d -e POSTGRES_PASSWORD="password" \
       -p 5432:5432 -e POSTGRES_USER=postgresUser \
       --name token-grant-postgres \
       postgres
 }
 
-function cleanup_postgres_docker() {
+function stop_postgres_docker() {
       docker stop token-grant-postgres || true
       docker rm token-grant-postgres || true
 }
@@ -96,12 +97,12 @@ function run_frontend_tests() {
 }
 
 
-function deploy_test_validator() {
+function start_test_validator() {
   cd "$TOKEN_DISPENSER_DIR";
   anchor localnet &
 }
 
-function shutdown_test_validator() {
+function stop_test_validator() {
   solana_pid=$(pgrep -f '[s]olana-test-validator' || true)
   if [ -n "$solana_pid" ]; then
     echo "killing solana-test-validator with pid: $solana_pid"
@@ -116,11 +117,11 @@ function cleanup() {
   if [ "$verbose" -eq 1 ]; then
     echo "cleaning up postgres docker"
   fi
-  cleanup_postgres_docker;
+  stop_postgres_docker;
   if [ "$verbose" -eq 1 ]; then
       echo "shutting down solana-test-validator if running"
   fi
-  shutdown_test_validator;
+  stop_test_validator;
 }
 
 function main() {
@@ -134,7 +135,7 @@ function main() {
         echo "deploy solana-test-validator using anchor localnet"
       fi
       printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
-      deploy_test_validator;
+      start_test_validator;
       # wait for ctrl-c
       ( trap exit SIGINT ; read -r -d '' _ </dev/tty )
   elif [ "$test" -eq 1 ]; then

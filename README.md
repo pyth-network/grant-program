@@ -95,3 +95,4 @@ npm run test
 ```
 
 TODO: do the anchor tests do anything or can we delete tests/token-dispenser.ts
+TODO: add instructions on using `frontend/scripts/setup.sh` for running tests and local dev environments
