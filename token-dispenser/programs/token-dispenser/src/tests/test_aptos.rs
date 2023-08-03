@@ -3,12 +3,14 @@ use {
         ecosystems::{
             aptos::AptosMessage,
             ed25519::{
+                EcosystemMessage,
                 Ed25519InstructionData,
                 Ed25519InstructionHeader,
                 Ed25519Pubkey,
                 Ed25519Signature,
             },
             get_expected_message,
+            sui::SuiMessage,
         },
         tests::dispenser_simulator::DispenserSimulator,
         Identity,
@@ -28,18 +30,16 @@ use {
     solana_sdk::instruction::Instruction,
 };
 
-
 #[derive(Clone)]
-pub struct AptosTestIdentityCertificate {
-    pub message:   AptosMessage,
+pub struct Ed25519TestIdentityCertificate<T: EcosystemMessage> {
+    pub message:   T,
     pub signature: ed25519_dalek::Signature,
     pub publickey: ed25519_dalek::PublicKey,
 }
 
-
-impl AptosTestIdentityCertificate {
+impl<T: EcosystemMessage> Ed25519TestIdentityCertificate<T> {
     pub fn random(claimant: &Pubkey) -> Self {
-        let message = AptosMessage::new(&get_expected_message(claimant));
+        let message = T::new(&get_expected_message(claimant));
         let mut csprng = OsRng {};
         let keypair: Keypair = Keypair::generate(&mut csprng);
         let signature = keypair.sign(&message.get_message_with_metadata());
@@ -79,7 +79,7 @@ impl AptosTestIdentityCertificate {
     }
 }
 
-impl Into<Identity> for AptosTestIdentityCertificate {
+impl Into<Identity> for Ed25519TestIdentityCertificate<AptosMessage> {
     fn into(self) -> Identity {
         Identity::Aptos {
             address: Ed25519Pubkey(self.publickey.to_bytes()).into(),
@@ -87,7 +87,7 @@ impl Into<Identity> for AptosTestIdentityCertificate {
     }
 }
 
-impl AptosTestIdentityCertificate {
+impl Ed25519TestIdentityCertificate<AptosMessage> {
     pub fn into_proof_of_identity(
         &self,
         verification_instruction_index: u8,
@@ -99,8 +99,28 @@ impl AptosTestIdentityCertificate {
     }
 }
 
+impl Into<Identity> for Ed25519TestIdentityCertificate<SuiMessage> {
+    fn into(self) -> Identity {
+        Identity::Sui {
+            address: Ed25519Pubkey(self.publickey.to_bytes()).into(),
+        }
+    }
+}
+
+impl Ed25519TestIdentityCertificate<SuiMessage> {
+    pub fn into_proof_of_identity(
+        &self,
+        verification_instruction_index: u8,
+    ) -> IdentityCertificate {
+        IdentityCertificate::Sui {
+            pubkey: Ed25519Pubkey(self.publickey.to_bytes()),
+            verification_instruction_index,
+        }
+    }
+}
+
 #[tokio::test]
-pub async fn test_parse_message() {
+pub async fn test_aptos_message() {
     assert!(AptosMessage::parse("APTOS\nmessage: hello\nnonce: nonce".as_bytes()).is_ok());
     assert_eq!(
         AptosMessage::parse(&AptosMessage::new("hello").get_message_with_metadata())
@@ -112,7 +132,8 @@ pub async fn test_parse_message() {
 
 #[tokio::test]
 pub async fn test_verify_signed_message_onchain() {
-    let signed_message = AptosTestIdentityCertificate::random(&Pubkey::new_unique());
+    let signed_message =
+        Ed25519TestIdentityCertificate::<AptosMessage>::random(&Pubkey::new_unique());
 
     let mut simulator = DispenserSimulator::new().await;
 

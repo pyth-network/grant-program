@@ -1,10 +1,14 @@
 use {
     super::{
         dispenser_simulator::DispenserSimulator,
-        test_aptos::AptosTestIdentityCertificate,
+        test_aptos::Ed25519TestIdentityCertificate,
         test_cosmos::CosmosTestIdentityCertificate,
     },
     crate::{
+        ecosystems::{
+            aptos::AptosMessage,
+            sui::SuiMessage,
+        },
         get_cart_pda,
         get_config_pda,
         get_receipt_pda,
@@ -98,7 +102,16 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Aptos(
-                AptosTestIdentityCertificate::random(claimant),
+                Ed25519TestIdentityCertificate::<AptosMessage>::random(claimant),
+            ),
+        }
+    }
+
+    pub fn random_sui(claimant: &Pubkey) -> Self {
+        Self {
+            amount:                      Self::random_amount(),
+            off_chain_proof_of_identity: TestIdentityCertificate::Sui(
+                Ed25519TestIdentityCertificate::<SuiMessage>::random(claimant),
             ),
         }
     }
@@ -124,6 +137,7 @@ impl TestClaimCertificate {
             TestIdentityCertificate::Discord(_) => None,
             TestIdentityCertificate::Cosmos(_) => None,
             TestIdentityCertificate::Aptos(aptos) => Some(aptos.into_instruction(index, true)),
+            TestIdentityCertificate::Sui(sui) => Some(sui.into_instruction(index, true)),
         };
         (
             ClaimCertificate {
@@ -144,7 +158,8 @@ impl From<TestIdentityCertificate> for Identity {
             TestIdentityCertificate::Evm(evm) => evm.into(),
             TestIdentityCertificate::Cosmos(cosmos) => cosmos.into(),
             TestIdentityCertificate::Discord(username) => Identity::Discord { username },
-            TestIdentityCertificate::Aptos(aptos) => aptos.into()
+            TestIdentityCertificate::Aptos(aptos) => aptos.into(),
+            TestIdentityCertificate::Sui(sui) => sui.into()
         }
     }
 }
@@ -158,6 +173,7 @@ impl TestIdentityCertificate {
                 username: username.clone(),
             },
             Self::Aptos(aptos) => aptos.into_proof_of_identity(verification_instruction_index),
+            Self::Sui(sui) => sui.into_proof_of_identity(verification_instruction_index),
         }
     }
 }
@@ -167,7 +183,8 @@ pub enum TestIdentityCertificate {
     Evm(EvmTestIdentityCertificate),
     Discord(String),
     Cosmos(CosmosTestIdentityCertificate),
-    Aptos(AptosTestIdentityCertificate),
+    Aptos(Ed25519TestIdentityCertificate<AptosMessage>),
+    Sui(Ed25519TestIdentityCertificate<SuiMessage>),
 }
 
 #[tokio::test]

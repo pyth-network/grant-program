@@ -480,6 +480,27 @@ impl IdentityCertificate {
                     address: Into::<AptosAddress>::into(pubkey.clone()),
                 })
             }
+            IdentityCertificate::Sui {
+                pubkey,
+                verification_instruction_index,
+            } => {
+                let signature_verification_instruction = load_instruction_at_checked(
+                    *verification_instruction_index as usize,
+                    sysvar_instruction,
+                )?;
+                check_message(
+                    &Ed25519InstructionData::from_instruction_and_check_signer(
+                        &signature_verification_instruction,
+                        pubkey,
+                        verification_instruction_index,
+                    )?
+                    .message,
+                    claimant,
+                )?;
+                Ok(Identity::Sui {
+                    address: Into::<SuiAddress>::into(pubkey.clone()),
+                })
+            }
             _ => Err(ErrorCode::NotImplemented.into()),
         }
     }

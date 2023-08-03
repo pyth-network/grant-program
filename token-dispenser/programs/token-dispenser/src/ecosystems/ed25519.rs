@@ -11,6 +11,7 @@ use {
     },
 };
 
+
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct Ed25519Signature(pub [u8; Ed25519Signature::LEN]);
 impl Ed25519Signature {
@@ -137,4 +138,19 @@ impl AnchorSerialize for Ed25519InstructionData {
         writer.write_all(&self.message)?;
         Ok(())
     }
+}
+
+pub trait EcosystemMessage
+where
+    Self: Sized,
+{
+    fn parse(data: &[u8]) -> Result<Self>;
+    fn get_payload(&self) -> &[u8];
+
+    #[cfg(test)]
+    fn new(message: &str) -> Self;
+    #[cfg(test)]
+    fn get_message_with_metadata(&self) -> Vec<u8>;
+    #[cfg(test)]
+    fn get_message_length(&self) -> usize;
 }
