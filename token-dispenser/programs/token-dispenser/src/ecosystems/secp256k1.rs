@@ -128,7 +128,6 @@ impl AnchorDeserialize for Secp256k1InstructionData {
 
         message.extend_from_slice(&buf[..header.message_data_size as usize]);
         *buf = &buf[header.message_data_size as usize..];
-        // std::io::Error::from(std::io::ErrorKind::)?;
         Ok(Secp256k1InstructionData {
             header,
             eth_address,
