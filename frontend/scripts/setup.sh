@@ -3,8 +3,9 @@ set -o errexit -o nounset -o pipefail
 command -v shellcheck >/dev/null && shellcheck "$0"
 
 # initialize variables
-dev=
-test=
+dev=0
+test=0
+verbose=0
 
 DIR=$(cd "$(dirname "$0")" && pwd)
 TOKEN_DISPENSER_DIR="$DIR/../../token-dispenser";
@@ -12,7 +13,7 @@ TOKEN_DISPENSER_DIR="$DIR/../../token-dispenser";
 
 usage() {
   cat <<EOF
-  Usage: $0 -d[--dev]|-t[--test] [-h|--help]
+  Usage: $0 -d[--dev]|-t[--test] -v[--verbose] -h[--help]
   where:
     -d | --dev  : start up test validator, deploy programs, run postgres docker and migrate
     -t | --test : run tests
@@ -27,12 +28,26 @@ for i in "$@"
 do
 case $i in
     -d|--dev)
-    [ -n "$test" ] && usage || dev=1
-    shift # past argument=value
+    if [ "$test" -eq 1 ]; then
+      usage
+      exit
+    else
+      dev=1
+    fi
+    shift
     ;;
     -t|--test)
-    [ -n "$dev" ] && usage || test=1
-    shift # past argument=value
+    if [ "$dev" -eq 1 ]; then
+      usage
+      exit
+    else
+      test=1
+    fi
+    shift
+    ;;
+    -v|--verbose)
+    verbose=1
+    shift
     ;;
     -h|--help)
     usage
@@ -44,13 +59,15 @@ case $i in
 esac
 done
 
-echo "dev: $dev"
-echo "test: $test"
+if [ "$dev" -eq 0 ] && [ "$test" -eq 0 ]; then
+  printf "No mode selected. Please select either -d[--dev] or -t[--test]\n\n"
+  usage
+  exit 1
+fi
 
 
 
 function start_postgres_docker() {
-    echo "starting up"
     docker run  -d -e POSTGRES_PASSWORD="password" \
       -p 5432:5432 -e POSTGRES_USER=postgresUser \
       --name token-grant-postgres \
@@ -58,17 +75,19 @@ function start_postgres_docker() {
 }
 
 function cleanup_postgres_docker() {
-      echo "stopping postgres docker"
       docker stop token-grant-postgres || true
-      echo "removing postgres docker"
       docker rm token-grant-postgres || true
 }
 
 function setup_postgres_docker() {
+  if [ "$verbose" -eq 1 ]; then
+    echo "starting up postgres docker"
+  fi
   start_postgres_docker;
-  echo "sleeping for 10 seconds before running migrate"
   sleep 10
-  echo "running migrate";
+  if [ "$verbose" -eq 1 ]; then
+    echo "running postgres docker migrations"
+  fi
   npm run migrate;
 }
 
@@ -88,30 +107,47 @@ function shutdown_test_validator() {
     echo "killing solana-test-validator with pid: $solana_pid"
     kill "$solana_pid"
   else
-    echo "solana-test-validator not running. Nothing to clean up"
+    echo "No solana-test-validator process found to stop"
   fi
 }
 
-# run clean up in case of failures from previous run
-cleanup_postgres_docker;
-shutdown_test_validator;
-# setup postgres docker
-setup_postgres_docker;
-if [ "$dev" -eq 1 ]; then
-    echo "dev mode"
-    echo "deploy solana-test-validator using anchor localnet"
-    printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
-    deploy_test_validator;
-    # wait for ctrl-c
-    ( trap exit SIGINT ; read -r -d '' _ </dev/tty )
-    echo "shutting down solana-test-validator"
-    shutdown_test_validator;
-elif [ "$test" -eq 1 ]; then
-    echo "test mode"
-    echo "running frontend tests";
-    run_frontend_tests;
-else
-    echo "no mode selected"
-    usage;
-fi
-cleanup_postgres_docker;
+
+function cleanup() {
+  if [ "$verbose" -eq 1 ]; then
+    echo "cleaning up postgres docker"
+  fi
+  cleanup_postgres_docker;
+  if [ "$verbose" -eq 1 ]; then
+      echo "shutting down solana-test-validator if running"
+  fi
+  shutdown_test_validator;
+}
+
+function main() {
+  # run clean up in case of failures from previous run
+  cleanup;
+  # setup postgres docker
+  setup_postgres_docker;
+  if [ "$dev" -eq 1 ]; then
+      if [ "$verbose" -eq 1 ]; then
+        echo "dev mode"
+        echo "deploy solana-test-validator using anchor localnet"
+      fi
+      printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
+      deploy_test_validator;
+      # wait for ctrl-c
+      ( trap exit SIGINT ; read -r -d '' _ </dev/tty )
+  elif [ "$test" -eq 1 ]; then
+    if [ "$verbose" -eq 1 ]; then
+        echo "test mode"
+        echo "running frontend tests"
+      fi
+      run_frontend_tests;
+  else
+      echo "no mode selected"
+      usage;
+  fi
+  cleanup;
+}
+
+main
