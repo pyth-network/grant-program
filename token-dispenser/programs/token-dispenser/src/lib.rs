@@ -425,8 +425,7 @@ impl IdentityCertificate {
                             &signature_verification_instruction,
                             pubkey,
                             &verification_instruction_index,
-                        )?
-                        .message,
+                        )?,
                     )?
                     .get_payload(),
                     claimant,

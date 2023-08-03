@@ -1,6 +1,9 @@
 use {
     super::cosmos::CosmosPubkey,
-    crate::ErrorCode,
+    crate::{
+        ErrorCode,
+        ProgramError::BorshIoError,
+    },
     anchor_lang::{
         prelude::*,
         solana_program::{
@@ -82,7 +85,7 @@ impl Secp256k1InstructionData {
         instruction: &Instruction,
         pubkey: &EvmPubkey,
         verification_instruction_index: &u8,
-    ) -> Result<Self> {
+    ) -> Result<Vec<u8>> {
         if instruction.program_id != SECP256K1_ID {
             return Err(ErrorCode::SignatureVerificationWrongProgram.into());
         }
@@ -92,12 +95,11 @@ impl Secp256k1InstructionData {
         }
 
         let result = Self::try_from_slice(&instruction.data)?;
-        if (result.header.message_instruction_index != *verification_instruction_index)
-            || (result.header
-                != Secp256k1InstructionHeader::expected_header(
-                    result.header.message_data_size,
-                    result.header.message_instruction_index,
-                ))
+        if result.header
+            != Secp256k1InstructionHeader::expected_header(
+                result.header.message_data_size,
+                *verification_instruction_index,
+            )
         {
             return Err(ErrorCode::SignatureVerificationWrongHeader.into());
         }
@@ -106,7 +108,7 @@ impl Secp256k1InstructionData {
             return Err(ErrorCode::SignatureVerificationWrongSigner.into());
         }
 
-        Ok(result)
+        Ok(result.message)
     }
 }
 impl AnchorDeserialize for Secp256k1InstructionData {
@@ -119,8 +121,14 @@ impl AnchorDeserialize for Secp256k1InstructionData {
         let eth_address = EvmPubkey::deserialize(buf)?;
 
         let mut message: Vec<u8> = vec![];
+
+        if buf.len() < header.message_data_size as usize {
+            return Err(std::io::Error::from(std::io::ErrorKind::UnexpectedEof));
+        }
+
         message.extend_from_slice(&buf[..header.message_data_size as usize]);
         *buf = &buf[header.message_data_size as usize..];
+        // std::io::Error::from(std::io::ErrorKind::)?;
         Ok(Secp256k1InstructionData {
             header,
             eth_address,
@@ -130,6 +138,7 @@ impl AnchorDeserialize for Secp256k1InstructionData {
         })
     }
 }
+
 
 impl AnchorSerialize for Secp256k1InstructionData {
     fn serialize<W: std::io::Write>(
@@ -166,4 +175,135 @@ pub fn secp256k1_sha256_verify_signer(
         return Err(ErrorCode::SignatureVerificationWrongSigner.into());
     }
     Ok(())
+}
+
+#[cfg(test)]
+#[test]
+pub fn test_signature_verification() {
+    let secp256k1_ix = Secp256k1InstructionData {
+        header:      Secp256k1InstructionHeader::expected_header(5, 0),
+        signature:   Secp256k1Signature([0; Secp256k1Signature::LEN]),
+        recovery_id: 0,
+        eth_address: EvmPubkey([0; EvmPubkey::LEN]),
+        message:     b"hello".to_vec(),
+    };
+
+    assert_eq!(
+        Secp256k1InstructionData::from_instruction_and_check_signer(
+            &Instruction {
+                program_id: SECP256K1_ID,
+                accounts:   vec![],
+                data:       secp256k1_ix.try_to_vec().unwrap(),
+            },
+            &EvmPubkey([0; EvmPubkey::LEN]),
+            &0,
+        )
+        .unwrap(),
+        b"hello".to_vec()
+    );
+
+    assert_eq!(
+        Secp256k1InstructionData::from_instruction_and_check_signer(
+            &Instruction {
+                program_id: Pubkey::new_unique(),
+                accounts:   vec![],
+                data:       secp256k1_ix.try_to_vec().unwrap(),
+            },
+            &EvmPubkey([0; EvmPubkey::LEN]),
+            &0,
+        )
+        .unwrap_err(),
+        ErrorCode::SignatureVerificationWrongProgram.into()
+    );
+
+    assert_eq!(
+        Secp256k1InstructionData::from_instruction_and_check_signer(
+            &Instruction {
+                program_id: SECP256K1_ID,
+                accounts:   vec![AccountMeta {
+                    pubkey:      Pubkey::new_unique(),
+                    is_signer:   true,
+                    is_writable: false,
+                }],
+                data:       secp256k1_ix.try_to_vec().unwrap(),
+            },
+            &EvmPubkey([0; EvmPubkey::LEN]),
+            &0,
+        )
+        .unwrap_err(),
+        ErrorCode::SignatureVerificationWrongAccounts.into()
+    );
+
+    assert_eq!(
+        Secp256k1InstructionData::from_instruction_and_check_signer(
+            &Instruction {
+                program_id: SECP256K1_ID,
+                accounts:   vec![],
+                data:       secp256k1_ix.try_to_vec().unwrap(),
+            },
+            &EvmPubkey([0; EvmPubkey::LEN]),
+            &1, // wrong instruction index
+        )
+        .unwrap_err(),
+        ErrorCode::SignatureVerificationWrongHeader.into()
+    );
+
+    assert_eq!(
+        Secp256k1InstructionData::from_instruction_and_check_signer(
+            &Instruction {
+                program_id: SECP256K1_ID,
+                accounts:   vec![],
+                data:       secp256k1_ix.try_to_vec().unwrap(),
+            },
+            &EvmPubkey([1; EvmPubkey::LEN]),
+            &0,
+        )
+        .unwrap_err(),
+        ErrorCode::SignatureVerificationWrongSigner.into()
+    );
+
+
+    let secp256k1_ix_message_too_long = Secp256k1InstructionData {
+        header:      Secp256k1InstructionHeader::expected_header(2, 0),
+        signature:   Secp256k1Signature([0; Secp256k1Signature::LEN]),
+        recovery_id: 0,
+        eth_address: EvmPubkey([0; EvmPubkey::LEN]),
+        message:     b"hello".to_vec(),
+    };
+
+    assert_eq!(
+        Secp256k1InstructionData::from_instruction_and_check_signer(
+            &Instruction {
+                program_id: SECP256K1_ID,
+                accounts:   vec![],
+                data:       secp256k1_ix_message_too_long.try_to_vec().unwrap(),
+            },
+            &EvmPubkey([0; EvmPubkey::LEN]),
+            &0,
+        )
+        .unwrap_err(),
+        BorshIoError("Not all bytes read".to_string()).into()
+    );
+
+    let secp256k1_ix_message_too_short = Secp256k1InstructionData {
+        header:      Secp256k1InstructionHeader::expected_header(10, 0),
+        signature:   Secp256k1Signature([0; Secp256k1Signature::LEN]),
+        recovery_id: 0,
+        eth_address: EvmPubkey([0; EvmPubkey::LEN]),
+        message:     b"hello".to_vec(),
+    };
+
+    assert_eq!(
+        Secp256k1InstructionData::from_instruction_and_check_signer(
+            &Instruction {
+                program_id: SECP256K1_ID,
+                accounts:   vec![],
+                data:       secp256k1_ix_message_too_short.try_to_vec().unwrap(),
+            },
+            &EvmPubkey([0; EvmPubkey::LEN]),
+            &0,
+        )
+        .unwrap_err(),
+        BorshIoError("unexpected end of file".to_string()).into()
+    );
 }
