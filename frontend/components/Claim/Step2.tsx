@@ -16,6 +16,7 @@ import {
 } from '@components/wallets/Solana'
 import Image from 'next/image'
 import { WalletConnectedButton } from '@components/wallets/Common'
+import { truncateAddress } from 'utils/truncateAddress'
 
 const Step2 = () => {
   const { publicKey, wallet, disconnect, connecting, connected, connect } =
@@ -24,7 +25,7 @@ const Step2 = () => {
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey])
 
   const buttonText = useMemo(() => {
-    if (base58) return base58.slice(0, 4) + '..' + base58.slice(-4)
+    if (base58) return truncateAddress(base58)
     if (connecting) return 'Connecting ...'
     if (connected) return 'Connected'
     if (wallet) return 'Install'
