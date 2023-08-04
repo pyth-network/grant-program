@@ -10,7 +10,6 @@ import Down from '../../images/down2.inline.svg'
 import { useWallet } from '@solana/wallet-adapter-react'
 import {
   BACKPACK_WALLET_ADAPTER,
-  OTHER_WALLETS,
   PHANTOM_WALLET_ADAPTER,
   SOLFLARE_WALLET_ADAPTER,
 } from '@components/wallets/Solana'

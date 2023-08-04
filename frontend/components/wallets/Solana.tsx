@@ -12,11 +12,18 @@ import {
 import {
   ConnectionProvider,
   WalletProvider,
+  useWallet,
 } from '@solana/wallet-adapter-react'
 
 import { useMemo, ReactElement, ReactNode } from 'react'
 import { clusterApiUrl } from '@solana/web3.js'
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
+import {
+  WalletButton,
+  WalletConnectedButton,
+  WalletLoadingButton,
+  WalletModalButton,
+} from './Common'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
 export const BACKPACK_WALLET_ADAPTER = new BackpackWalletAdapter()
@@ -62,5 +69,33 @@ export function SolanaWalletProvider({
         {children}
       </WalletProvider>
     </ConnectionProvider>
+  )
+}
+
+export function SolanaWalletButton() {
+  const { publicKey, disconnect, connecting, connected, select, wallets } =
+    useWallet()
+
+  const base58 = useMemo(() => publicKey?.toBase58(), [publicKey])
+
+  return (
+    <WalletButton
+      address={base58}
+      connected={connected}
+      isLoading={connecting}
+      walletModalButton={
+        <WalletModalButton
+          connect={select}
+          wallets={wallets.map((wallet) => ({
+            name: wallet.adapter.name,
+            connectId: wallet.adapter.name,
+          }))}
+        />
+      }
+      walletLoadingButton={<WalletLoadingButton />}
+      walletConnectedButton={(address: string) => (
+        <WalletConnectedButton disconnect={disconnect} address={address} />
+      )}
+    />
   )
 }

@@ -16,6 +16,7 @@ import { AptosWalletButton } from '@components/wallets/Aptos'
 import { SuiWalletButton } from '@components/wallets/Sui'
 import { EVMWalletButton } from '@components/wallets/EVM'
 import { CosmosWalletButton } from '@components/wallets/Cosmos'
+import { SolanaWalletButton } from '@components/wallets/Solana'
 
 const Eligibility = ({
   openModal,
@@ -58,15 +59,7 @@ const Eligibility = ({
                 </span>
 
                 <span className="flex items-center gap-5">
-                  <button
-                    className="btn before:btn-bg btn--dark  min-w-[207px] before:bg-dark hover:text-dark hover:before:bg-light"
-                    onClick={() => openModal(true)}
-                  >
-                    <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                      <Wallet />
-                      <span>5jfkqsa35 ... 8DqCV</span>
-                    </span>
-                  </button>
+                  <SolanaWalletButton />
 
                   <Tooltip content="Congratulations! This wallet is successfully connected. Click on the wallet address to change to another wallet.">
                     <TooltipIcon />
