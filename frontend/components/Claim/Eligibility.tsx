@@ -2,14 +2,12 @@ import React, { useState } from 'react'
 import Arrow from '../../images/arrow.inline.svg'
 import Wallet from '../../images/wallet.inline.svg'
 import Coin from '../../images/coin.inline.svg'
-import { Listbox, Transition } from '@headlessui/react'
 
 import TooltipIcon from '../../images/tooltip.inline.svg'
 import Verified from '../../images/verified.inline.svg'
 import NotEligible from '../../images/not.inline.svg'
 import Discord from '../../images/discord.inline.svg'
 import Tooltip from '@components/Tooltip'
-import Down from '../../images/down2.inline.svg'
 
 import Copy from '../../images/copy.inline.svg'
 import Change from '../../images/change.inline.svg'
@@ -19,13 +17,6 @@ import { SuiWalletButton } from '@components/wallets/Sui'
 import { EVMWalletButton } from '@components/wallets/EVM'
 import { CosmosWalletButton } from '@components/wallets/Cosmos'
 
-const walletOptions = [
-  { name: '5jfkqa35 ... 8DqC', icon: <Wallet /> },
-  { name: 'Copy Wallet Address', icon: <Copy /> },
-  { name: 'Change wallet', icon: <Change /> },
-  { name: 'Disconnect', icon: <Disconect /> },
-]
-
 const Eligibility = ({
   openModal,
   setStep,
@@ -33,8 +24,6 @@ const Eligibility = ({
   openModal: Function
   setStep: Function
 }) => {
-  const [wallet, setWallet] = useState(null)
-
   return (
     <div className=" border border-light-35 bg-dark">
       <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-8 px-10">
@@ -99,52 +88,6 @@ const Eligibility = ({
                   EVM Activity
                 </span>
                 <span className="flex items-center gap-5">
-                  {/* <div className="relative z-10">
-                    <Listbox value={wallet} onChange={setWallet}>
-                      {({ open }) => (
-                        <>
-                          <Listbox.Button
-                            className={`btn   min-w-[207px] before:bg-dark hover:text-dark hover:before:bg-light
-                            ${
-                              open
-                                ? 'border border-light-35 bg-darkGray1 hover:bg-light'
-                                : 'before:btn-bg btn--dark'
-                            }
-                            `}
-                          >
-                            <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                              <span>explore options</span>
-                              <Down
-                                className={`${
-                                  open ? 'rotate-0' : 'rotate-180'
-                                }`}
-                              />
-                            </span>
-                          </Listbox.Button>
-                          <Transition
-                            enter="transition duration-100 ease-out"
-                            enterFrom="transform scale-95 opacity-0"
-                            enterTo="transform scale-100 opacity-100"
-                            leave="transition duration-75 ease-out"
-                            leaveFrom="transform scale-100 opacity-100"
-                            leaveTo="transform scale-95 opacity-0"
-                          >
-                            <Listbox.Options className="absolute top-0  -mt-[1px] w-full divide-y divide-light-35 border border-light-35 bg-darkGray1">
-                              {walletOptions.map((option, index) => (
-                                <Listbox.Option
-                                  key={option.name}
-                                  value={index}
-                                  className="flex cursor-pointer items-center  gap-2.5 py-3 px-6 hover:bg-darkGray3"
-                                >
-                                  {option.icon} {option.name}
-                                </Listbox.Option>
-                              ))}
-                            </Listbox.Options>
-                          </Transition>
-                        </>
-                      )}
-                    </Listbox>
-                  </div> */}
                   <EVMWalletButton />
 
                   <Tooltip content="This wallet is unfortunately not eligible for an allocation. You can click on the wallet address to change to another wallet.">
