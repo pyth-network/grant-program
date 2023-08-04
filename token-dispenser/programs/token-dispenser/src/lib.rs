@@ -421,7 +421,7 @@ impl IdentityCertificate {
                 )?;
                 check_message(
                     EvmPrefixedMessage::parse(
-                        &Secp256k1InstructionData::from_instruction_and_check_signer(
+                        &Secp256k1InstructionData::extract_message_and_check_signature(
                             &signature_verification_instruction,
                             pubkey,
                             &verification_instruction_index,

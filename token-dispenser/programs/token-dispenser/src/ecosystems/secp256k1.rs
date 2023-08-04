@@ -81,7 +81,7 @@ impl Secp256k1InstructionHeader {
 }
 
 impl Secp256k1InstructionData {
-    pub fn from_instruction_and_check_signer(
+    pub fn extract_message_and_check_signature(
         instruction: &Instruction,
         pubkey: &EvmPubkey,
         verification_instruction_index: &u8,
@@ -188,7 +188,7 @@ pub fn test_signature_verification() {
     };
 
     assert_eq!(
-        Secp256k1InstructionData::from_instruction_and_check_signer(
+        Secp256k1InstructionData::extract_message_and_check_signature(
             &Instruction {
                 program_id: SECP256K1_ID,
                 accounts:   vec![],
@@ -202,7 +202,7 @@ pub fn test_signature_verification() {
     );
 
     assert_eq!(
-        Secp256k1InstructionData::from_instruction_and_check_signer(
+        Secp256k1InstructionData::extract_message_and_check_signature(
             &Instruction {
                 program_id: Pubkey::new_unique(),
                 accounts:   vec![],
@@ -216,7 +216,7 @@ pub fn test_signature_verification() {
     );
 
     assert_eq!(
-        Secp256k1InstructionData::from_instruction_and_check_signer(
+        Secp256k1InstructionData::extract_message_and_check_signature(
             &Instruction {
                 program_id: SECP256K1_ID,
                 accounts:   vec![AccountMeta {
@@ -234,7 +234,7 @@ pub fn test_signature_verification() {
     );
 
     assert_eq!(
-        Secp256k1InstructionData::from_instruction_and_check_signer(
+        Secp256k1InstructionData::extract_message_and_check_signature(
             &Instruction {
                 program_id: SECP256K1_ID,
                 accounts:   vec![],
@@ -248,7 +248,7 @@ pub fn test_signature_verification() {
     );
 
     assert_eq!(
-        Secp256k1InstructionData::from_instruction_and_check_signer(
+        Secp256k1InstructionData::extract_message_and_check_signature(
             &Instruction {
                 program_id: SECP256K1_ID,
                 accounts:   vec![],
@@ -271,7 +271,7 @@ pub fn test_signature_verification() {
     };
 
     assert_eq!(
-        Secp256k1InstructionData::from_instruction_and_check_signer(
+        Secp256k1InstructionData::extract_message_and_check_signature(
             &Instruction {
                 program_id: SECP256K1_ID,
                 accounts:   vec![],
@@ -293,7 +293,7 @@ pub fn test_signature_verification() {
     };
 
     assert_eq!(
-        Secp256k1InstructionData::from_instruction_and_check_signer(
+        Secp256k1InstructionData::extract_message_and_check_signature(
             &Instruction {
                 program_id: SECP256K1_ID,
                 accounts:   vec![],
