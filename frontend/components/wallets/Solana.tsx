@@ -21,9 +21,13 @@ import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import {
   WalletButton,
   WalletConnectedButton,
+  WalletIcon,
   WalletLoadingButton,
   WalletModalButton,
 } from './Common'
+import { Listbox, Transition } from '@headlessui/react'
+
+import Down from '../../images/down.inline.svg'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
 export const BACKPACK_WALLET_ADAPTER = new BackpackWalletAdapter()
@@ -110,15 +114,75 @@ export function SolanaWalletButton() {
         />
       }
       walletLoadingButton={<WalletLoadingButton />}
-      walletConnectedButton={(address: string) => (
-        // connected will be true only when wallet is undefined
-        <WalletConnectedButton
-          onClick={toInstall ? () => connect().catch(() => {}) : disconnect}
-          address={address}
-          icon={wallet?.adapter.icon}
-          onHoverText={toInstall ? 'install' : 'disconnect'}
-        />
-      )}
+      walletConnectedButton={(address: string) => {
+        if (toInstall === false)
+          return (
+            // connected will be true only when wallet is undefined
+            <WalletConnectedButton
+              onClick={disconnect}
+              address={address}
+              icon={wallet?.adapter.icon}
+            />
+          )
+        else return <SolanaWalletDropdownButton />
+      }}
     />
+  )
+}
+
+export function SolanaWalletDropdownButton() {
+  const { connect, disconnect, wallet } = useWallet()
+  const options = useMemo(() => {
+    return [
+      { label: 'install', action: () => connect().catch(() => {}) },
+      { label: 'disconnect', action: () => disconnect() },
+    ]
+  }, [connect, disconnect])
+
+  return (
+    <div className="relative z-10">
+      <Listbox>
+        {({ open }) => (
+          <>
+            <Listbox.Button
+              className={`btn   min-w-[207px] before:bg-dark hover:text-dark hover:before:bg-light
+          ${
+            open
+              ? 'border border-light-35 bg-darkGray1 hover:bg-light'
+              : 'before:btn-bg btn--dark'
+          }
+          `}
+            >
+              <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+                <WalletIcon icon={wallet?.adapter.icon} />
+                <span>{wallet?.adapter.name}</span>
+                <Down className={`${open ? 'rotate-180' : 'rotate-0'}`} />
+              </span>
+            </Listbox.Button>
+            <Transition
+              enter="transition duration-100 ease-out"
+              enterFrom="transform scale-95 opacity-0"
+              enterTo="transform scale-100 opacity-100"
+              leave="transition duration-75 ease-out"
+              leaveFrom="transform scale-100 opacity-100"
+              leaveTo="transform scale-95 opacity-0"
+            >
+              <Listbox.Options className="absolute top-0  -mt-[1px] w-full divide-y divide-light-35 border border-light-35 bg-darkGray1">
+                {options.map((option) => (
+                  <Listbox.Option
+                    key={option.label}
+                    value={option.label}
+                    className="flex cursor-pointer items-center  gap-2.5 py-3 px-6 hover:bg-darkGray3"
+                    onClick={option.action}
+                  >
+                    {option.label}
+                  </Listbox.Option>
+                ))}
+              </Listbox.Options>
+            </Transition>
+          </>
+        )}
+      </Listbox>
+    </div>
   )
 }

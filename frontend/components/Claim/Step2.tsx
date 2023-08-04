@@ -12,6 +12,7 @@ import {
   BACKPACK_WALLET_ADAPTER,
   PHANTOM_WALLET_ADAPTER,
   SOLFLARE_WALLET_ADAPTER,
+  SolanaWalletDropdownButton,
 } from '@components/wallets/Solana'
 import Image from 'next/image'
 import { WalletConnectedButton } from '@components/wallets/Common'
@@ -59,15 +60,16 @@ const Step2 = () => {
           ) : (
             <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <WalletConnectedButton
-                  onClick={() => {
-                    if (base58 === undefined) connect().catch(() => {})
-                    else disconnect()
-                  }}
-                  address={buttonText!}
-                  icon={wallet?.adapter.icon}
-                  onHoverText={base58 ? 'disconnect' : 'install'}
-                />
+                {base58 !== undefined || connecting === true ? (
+                  <WalletConnectedButton
+                    onClick={disconnect}
+                    address={buttonText!}
+                    icon={wallet?.adapter.icon}
+                    onHoverText={'disconnect'}
+                  />
+                ) : (
+                  <SolanaWalletDropdownButton />
+                )}
                 <span
                   className="mt-4 block text-center font-body font-normal underline hover:cursor-pointer"
                   onClick={disconnect}

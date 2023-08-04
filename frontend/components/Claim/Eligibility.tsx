@@ -1,6 +1,5 @@
-import React, { useState } from 'react'
+import React from 'react'
 import Arrow from '../../images/arrow.inline.svg'
-import Wallet from '../../images/wallet.inline.svg'
 import Coin from '../../images/coin.inline.svg'
 
 import TooltipIcon from '../../images/tooltip.inline.svg'
@@ -9,9 +8,6 @@ import NotEligible from '../../images/not.inline.svg'
 import Discord from '../../images/discord.inline.svg'
 import Tooltip from '@components/Tooltip'
 
-import Copy from '../../images/copy.inline.svg'
-import Change from '../../images/change.inline.svg'
-import Disconect from '../../images/disconect.inline.svg'
 import { AptosWalletButton } from '@components/wallets/Aptos'
 import { SuiWalletButton } from '@components/wallets/Sui'
 import { EVMWalletButton } from '@components/wallets/EVM'
