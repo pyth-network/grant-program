@@ -48,7 +48,7 @@ export function AptosWalletButton() {
         ) : (
           <Wallet />
         )}
-        <span>{buttonText ?? 'Connected'}</span>
+        <span>{buttonText}</span>
       </span>
     </button>
   )
