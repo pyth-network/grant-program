@@ -140,17 +140,14 @@ impl AnchorSerialize for Ed25519InstructionData {
     }
 }
 
-pub trait EcosystemMessage
+#[cfg(test)]
+pub trait TestMessage
 where
     Self: Sized,
 {
-    fn parse(data: &[u8]) -> Result<Self>;
-    fn get_payload(&self) -> &[u8];
-
-    #[cfg(test)]
     fn new(message: &str) -> Self;
-    #[cfg(test)]
     fn get_message_with_metadata(&self) -> Vec<u8>;
-    #[cfg(test)]
-    fn get_message_length(&self) -> usize;
+    fn get_message_length(&self) -> usize {
+        self.get_message_with_metadata().len()
+    }
 }

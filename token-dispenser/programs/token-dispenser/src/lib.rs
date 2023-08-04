@@ -44,7 +44,10 @@ use {
             Secp256k1Signature,
             UncompressedSecp256k1Pubkey,
         },
-        sui::SuiAddress,
+        sui::{
+            check_hashed_message,
+            SuiAddress,
+        },
     },
     pythnet_sdk::{
         accumulators::merkle::{
@@ -488,7 +491,7 @@ impl IdentityCertificate {
                     *verification_instruction_index as usize,
                     sysvar_instruction,
                 )?;
-                check_message(
+                check_hashed_message(
                     &Ed25519InstructionData::from_instruction_and_check_signer(
                         &signature_verification_instruction,
                         pubkey,

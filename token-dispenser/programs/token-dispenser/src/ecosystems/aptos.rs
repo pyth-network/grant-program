@@ -1,8 +1,7 @@
+#[cfg(test)]
+use super::ed25519::TestMessage;
 use {
-    super::ed25519::{
-        EcosystemMessage,
-        Ed25519Pubkey,
-    },
+    super::ed25519::Ed25519Pubkey,
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
@@ -21,11 +20,30 @@ pub const APTOS_SIGNATURE_SCHEME_ID: u8 = 0;
 * An arbitrary message used in Aptos.
 * Only the message payload is stored in this struct.
  */
+
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct AptosMessage(Vec<u8>);
 
-impl EcosystemMessage for AptosMessage {
-    fn parse(data: &[u8]) -> Result<Self> {
+#[cfg(test)]
+impl TestMessage for AptosMessage {
+    fn new(message: &str) -> Self {
+        Self(message.as_bytes().to_vec())
+    }
+
+    fn get_message_with_metadata(&self) -> Vec<u8> {
+        let mut message = APTOS_PREFIX.to_vec();
+        message.extend_from_slice(&self.0);
+        message.extend_from_slice(&APTOS_SUFFIX);
+        message.to_vec()
+    }
+}
+
+impl AptosMessage {
+    pub fn get_payload(&self) -> &[u8] {
+        self.0.as_slice()
+    }
+
+    pub fn parse(data: &[u8]) -> Result<Self> {
         if let Some(no_prefix) = data.strip_prefix(APTOS_PREFIX) {
             if let Some(message) = no_prefix.strip_suffix(APTOS_SUFFIX) {
                 return Ok(AptosMessage(message.to_vec()));
@@ -33,29 +51,6 @@ impl EcosystemMessage for AptosMessage {
         }
         Err(ErrorCode::SignatureVerificationWrongMessageMetadata.into())
     }
-
-    fn get_payload(&self) -> &[u8] {
-        self.0.as_slice()
-    }
-
-    #[cfg(test)]
-    fn new(message: &str) -> Self {
-        Self(message.as_bytes().to_vec())
-    }
-    #[cfg(test)]
-    fn get_message_with_metadata(&self) -> Vec<u8> {
-        let mut message = APTOS_PREFIX.to_vec();
-        message.extend_from_slice(&self.0);
-        message.extend_from_slice(&APTOS_SUFFIX);
-        message.to_vec()
-    }
-
-    #[cfg(test)]
-    fn get_message_length(&self) -> usize {
-        self.get_message_with_metadata().len()
-    }
-}
-impl AptosMessage {
 }
 
 

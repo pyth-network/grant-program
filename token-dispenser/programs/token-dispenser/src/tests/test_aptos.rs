@@ -3,11 +3,11 @@ use {
         ecosystems::{
             aptos::AptosMessage,
             ed25519::{
-                EcosystemMessage,
                 Ed25519InstructionData,
                 Ed25519InstructionHeader,
                 Ed25519Pubkey,
                 Ed25519Signature,
+                TestMessage,
             },
             get_expected_message,
             sui::SuiMessage,
@@ -31,13 +31,13 @@ use {
 };
 
 #[derive(Clone)]
-pub struct Ed25519TestIdentityCertificate<T: EcosystemMessage> {
+pub struct Ed25519TestIdentityCertificate<T: TestMessage> {
     pub message:   T,
     pub signature: ed25519_dalek::Signature,
     pub publickey: ed25519_dalek::PublicKey,
 }
 
-impl<T: EcosystemMessage> Ed25519TestIdentityCertificate<T> {
+impl<T: TestMessage> Ed25519TestIdentityCertificate<T> {
     pub fn random(claimant: &Pubkey) -> Self {
         let message = T::new(&get_expected_message(claimant));
         let mut csprng = OsRng {};
@@ -107,6 +107,7 @@ impl Into<Identity> for Ed25519TestIdentityCertificate<SuiMessage> {
     }
 }
 
+
 impl Ed25519TestIdentityCertificate<SuiMessage> {
     pub fn into_proof_of_identity(
         &self,
@@ -133,7 +134,7 @@ pub async fn test_aptos_message() {
 #[tokio::test]
 pub async fn test_verify_signed_message_onchain() {
     let signed_message =
-        Ed25519TestIdentityCertificate::<AptosMessage>::random(&Pubkey::new_unique());
+        Ed25519TestIdentityCertificate::<SuiMessage>::random(&Pubkey::new_unique());
 
     let mut simulator = DispenserSimulator::new().await;
 
@@ -148,7 +149,6 @@ pub async fn test_verify_signed_message_onchain() {
         .process_ix(&[signed_message.into_instruction(0, true)], &vec![])
         .await
         .is_ok());
-
 
     assert!(simulator
         .process_ix(&[signed_message.into_instruction(0, false)], &vec![])
