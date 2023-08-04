@@ -28,9 +28,9 @@ impl EvmPubkey {
 }
 
 #[cfg(test)]
-impl EvmPubkey {
-    pub fn new(bytes: [u8; Self::LEN]) -> Self {
-        Self(bytes)
+impl From<[u8; Self::LEN]> for EvmPubkey {
+    fn from(bytes: [u8; Self::LEN]) -> Self {
+        EvmPubkey(bytes)
     }
 }
 
@@ -41,9 +41,9 @@ impl Secp256k1Signature {
 }
 
 #[cfg(test)]
-impl Secp256k1Signature {
-    pub fn new(bytes: [u8; Self::LEN]) -> Self {
-        Self(bytes)
+impl From<[u8; Self::LEN]> for Secp256k1Signature {
+    fn from(bytes: [u8; Self::LEN]) -> Self {
+        Secp256k1Signature(bytes)
     }
 }
 
@@ -224,19 +224,20 @@ impl UncompressedSecp256k1Pubkey {
 }
 
 #[cfg(test)]
-impl UncompressedSecp256k1Pubkey {
-    pub fn new(bytes: [u8; Self::LEN]) -> Self {
-        Self(bytes)
+impl From<[u8; Self::LEN]> for UncompressedSecp256k1Pubkey {
+    fn from(bytes: [u8; Self::LEN]) -> Self {
+        UncompressedSecp256k1Pubkey(bytes)
     }
 }
+
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct CosmosBech32Address(String);
 
 #[cfg(test)]
-impl CosmosBech32Address {
-    pub fn new(address: &str) -> Self {
-        Self(address.to_string())
+impl From<&str> for CosmosBech32Address {
+    fn from(bytes: &str) -> Self {
+        CosmosBech32Address(bytes.to_string())
     }
 }
 

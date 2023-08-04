@@ -28,7 +28,7 @@ fn test_merkle_tree() {
         ClaimInfo {
             amount:   4000,
             identity: Identity::Cosmwasm {
-                address: CosmosBech32Address::new("cosmos1lv3rrn5trdea7vs43z5m4y34d5r3zxp484wcpu"),
+                address: "cosmos1lv3rrn5trdea7vs43z5m4y34d5r3zxp484wcpu".into(),
             },
         },
         ClaimInfo {
@@ -46,7 +46,7 @@ fn test_merkle_tree() {
         ClaimInfo {
             amount:   2000,
             identity: Identity::Evm {
-                pubkey: EvmPubkey::new(evm_pubkey),
+                pubkey: evm_pubkey.into(),
             },
         },
         ClaimInfo {
