@@ -31,10 +31,10 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly-2023-03-01
+          toolchain: nightly-2023-07-23
           components: rustfmt, clippy
           override: true
       - name: Clippy
         run: |
-          cargo +nightly clippy --tests -- -D warnings
+          cargo +nightly-2023-07-23 clippy --tests -- -D warnings
         working-directory: token-dispenser
