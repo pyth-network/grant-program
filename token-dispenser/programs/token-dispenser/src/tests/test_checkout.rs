@@ -302,7 +302,7 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
         .unwrap();
 
 
-    let claimant_pubkeys = vec![simulator.genesis_keypair.pubkey(), claimant_1.pubkey()];
+    let claimant_pubkeys = [simulator.genesis_keypair.pubkey(), claimant_1.pubkey()];
     for (claim_sum, pubkey) in claim_sums.iter().zip(claimant_pubkeys.iter()) {
         simulator
             .verify_token_account_data(
