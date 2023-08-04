@@ -14,6 +14,7 @@ export function SuiWalletButton() {
     wallets,
     connect,
     isConnecting,
+    currentWallet,
   } = useWalletKit()
 
   return (
@@ -33,7 +34,11 @@ export function SuiWalletButton() {
       }
       walletLoadingButton={<WalletLoadingButton />}
       walletConnectedButton={(address: string) => (
-        <WalletConnectedButton onClick={disconnect} address={address} />
+        <WalletConnectedButton
+          onClick={disconnect}
+          address={address}
+          icon={currentWallet?.icon}
+        />
       )}
     />
   )

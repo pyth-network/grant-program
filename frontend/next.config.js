@@ -6,6 +6,9 @@ module.exports = {
   experimental: {
     externalDir: true,
   },
+  images: {
+    domains: ["cdn.martianwallet.xyz"]
+  },
   swcMinify: false,
   env: {
     ENDPOINT: process.env.ENDPOINT,
