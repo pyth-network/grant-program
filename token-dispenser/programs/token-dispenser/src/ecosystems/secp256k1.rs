@@ -371,3 +371,4 @@ pub fn test_signature_verification() {
         .unwrap_err(),
         BorshIoError("unexpected end of file".to_string()).into()
     );
+}

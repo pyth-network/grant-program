@@ -107,6 +107,9 @@ struct CosmosCoin {
 }
 
 #[cfg(test)]
+use anchor_lang::solana_program::hash;
+
+#[cfg(test)]
 impl CosmosMessage {
     pub fn new(message: &str) -> Self {
         Self(message.as_bytes().to_vec())
