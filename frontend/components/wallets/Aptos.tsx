@@ -7,6 +7,7 @@ import { ReactElement, ReactNode, useMemo, useState } from 'react'
 import Wallet from '../../images/wallet.inline.svg'
 import Modal from '@components/Claim/Modal'
 import Image from 'next/image'
+import { truncateAddress } from 'utils/truncateAddress'
 
 type AptosWalletProviderProps = {
   children: ReactNode
@@ -99,9 +100,4 @@ function AptosWalletModalButton() {
       )}
     </>
   )
-}
-
-export const truncateAddress = (address: string | undefined) => {
-  if (!address) return
-  return `${address.slice(0, 6)}...${address.slice(-5)}`
 }

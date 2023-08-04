@@ -11,6 +11,7 @@ import {
 } from 'wagmi'
 import Down from '../../images/down2.inline.svg'
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit'
+import { truncateAddress } from 'utils/truncateAddress'
 
 const config = createConfig(
   getDefaultConfig({
@@ -125,9 +126,4 @@ function EVMWalletModalButton() {
       )}
     </>
   )
-}
-
-export const truncateAddress = (address: string | undefined) => {
-  if (!address) return
-  return `${address.slice(0, 6)}...${address.slice(-5)}`
 }

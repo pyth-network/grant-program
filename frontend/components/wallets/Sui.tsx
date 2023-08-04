@@ -3,6 +3,7 @@ import Wallet from '../../images/wallet.inline.svg'
 import Modal from '@components/Claim/Modal'
 import Image from 'next/image'
 import { useWalletKit } from '@mysten/wallet-kit'
+import { truncateAddress } from 'utils/truncateAddress'
 
 export function SuiWalletButton() {
   const {
@@ -92,9 +93,4 @@ function SuiWalletModalButton() {
       )}
     </>
   )
-}
-
-export const truncateAddress = (address: string | undefined) => {
-  if (!address) return
-  return `${address.slice(0, 6)}...${address.slice(-5)}`
 }

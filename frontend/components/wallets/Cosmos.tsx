@@ -6,6 +6,7 @@ import { ChainProvider, useChainWallet } from '@cosmos-kit/react-lite'
 import { assets, chains } from 'chain-registry'
 import { wallets as keplrWallets } from '@cosmos-kit/keplr'
 import { MainWalletBase, ChainWalletContext } from '@cosmos-kit/core'
+import { truncateAddress } from 'utils/truncateAddress'
 
 const walletName = 'keplr-extension'
 
@@ -113,9 +114,4 @@ function CosmosWalletModalButton({
       )}
     </>
   )
-}
-
-export const truncateAddress = (address: string | undefined) => {
-  if (!address) return
-  return `${address.slice(0, 6)}...${address.slice(-5)}`
 }
