@@ -14,6 +14,7 @@ import {
   SOLFLARE_WALLET_ADAPTER,
 } from '@components/wallets/Solana'
 import Image from 'next/image'
+import { WalletConnectedButton } from '@components/wallets/Common'
 
 const Step2 = () => {
   const { publicKey, wallet, disconnect, connecting, connected, connect } =
@@ -25,7 +26,7 @@ const Step2 = () => {
     if (base58) return base58.slice(0, 4) + '..' + base58.slice(-4)
     if (connecting) return 'Connecting ...'
     if (connected) return 'Connected'
-    if (wallet) return 'Connect'
+    if (wallet) return 'Install'
   }, [base58, connecting, connected, wallet])
 
   return (
@@ -58,22 +59,15 @@ const Step2 = () => {
           ) : (
             <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <button
-                  className="btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light"
+                <WalletConnectedButton
                   onClick={() => {
                     if (base58 === undefined) connect().catch(() => {})
+                    else disconnect()
                   }}
-                >
-                  <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                    <Image
-                      src={wallet.adapter.icon}
-                      alt="wallet icon"
-                      width={20}
-                      height={20}
-                    />{' '}
-                    <span>{buttonText}</span>
-                  </span>
-                </button>
+                  address={buttonText!}
+                  icon={wallet?.adapter.icon}
+                  onHoverText={base58 ? 'disconnect' : 'install'}
+                />
                 <span
                   className="mt-4 block text-center font-body font-normal underline hover:cursor-pointer"
                   onClick={disconnect}

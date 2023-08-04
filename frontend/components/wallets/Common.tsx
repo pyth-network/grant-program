@@ -7,15 +7,17 @@ import { Listbox, Transition } from '@headlessui/react'
 import Down from '../../images/down2.inline.svg'
 
 export type WalletConnectedButtonProps = {
-  disconnect: () => void
+  onClick: () => void
   address: string
   icon?: string
+  onHoverText?: string
 }
 
 export function WalletConnectedButton({
-  disconnect,
+  onClick,
   address,
   icon,
+  onHoverText = 'disconnect',
 }: WalletConnectedButtonProps) {
   const dispAddress = truncateAddress(address)
 
@@ -28,8 +30,8 @@ export function WalletConnectedButton({
   return (
     <button
       className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light"
-      onClick={() => disconnect()}
-      onMouseEnter={() => setButtonText('disconnect')}
+      onClick={onClick}
+      onMouseEnter={() => setButtonText(onHoverText)}
       onMouseLeave={() => setButtonText(dispAddress)}
     >
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">

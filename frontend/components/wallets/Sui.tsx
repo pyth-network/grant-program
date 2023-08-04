@@ -33,7 +33,7 @@ export function SuiWalletButton() {
       }
       walletLoadingButton={<WalletLoadingButton />}
       walletConnectedButton={(address: string) => (
-        <WalletConnectedButton disconnect={disconnect} address={address} />
+        <WalletConnectedButton onClick={disconnect} address={address} />
       )}
     />
   )

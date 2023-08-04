@@ -62,7 +62,7 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
       }
       walletLoadingButton={<WalletLoadingButton />}
       walletConnectedButton={(address: string) => (
-        <WalletConnectedButton disconnect={disconnect} address={address} />
+        <WalletConnectedButton onClick={disconnect} address={address} />
       )}
     />
   )

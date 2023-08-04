@@ -73,15 +73,31 @@ export function SolanaWalletProvider({
 }
 
 export function SolanaWalletButton() {
-  const { publicKey, disconnect, connecting, connected, select, wallets } =
-    useWallet()
+  const {
+    publicKey,
+    disconnect,
+    connecting,
+    connected,
+    select,
+    wallets,
+    wallet,
+    connect,
+  } = useWallet()
 
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey])
 
+  // Wallet is not installed. Install it.
+  const toInstall = useMemo(
+    () => wallet?.adapter.readyState === 'NotDetected',
+    [wallet?.adapter.readyState]
+  )
+
   return (
     <WalletButton
-      address={base58}
-      connected={connected}
+      // address will only be used when connected or toInstall is true
+      // if toInstall is true bas58 will be undefined
+      address={base58 ?? 'install'}
+      connected={connected || toInstall}
       isLoading={connecting}
       walletModalButton={
         <WalletModalButton
@@ -95,7 +111,13 @@ export function SolanaWalletButton() {
       }
       walletLoadingButton={<WalletLoadingButton />}
       walletConnectedButton={(address: string) => (
-        <WalletConnectedButton disconnect={disconnect} address={address} />
+        // connected will be true only when wallet is undefined
+        <WalletConnectedButton
+          onClick={toInstall ? () => connect().catch(() => {}) : disconnect}
+          address={address}
+          icon={wallet?.adapter.icon}
+          onHoverText={toInstall ? 'install' : 'disconnect'}
+        />
       )}
     />
   )

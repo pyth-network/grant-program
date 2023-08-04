@@ -56,7 +56,7 @@ export function AptosWalletButton() {
       walletLoadingButton={<WalletLoadingButton />}
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton
-          disconnect={disconnect}
+          onClick={disconnect}
           address={address}
           icon={wallet?.icon}
         />
