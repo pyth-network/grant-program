@@ -6,6 +6,9 @@ module.exports = {
   experimental: {
     externalDir: true,
   },
+  images: {
+    domains: ['cdn.martianwallet.xyz'],
+  },
   swcMinify: false,
   env: {
     ENDPOINT: process.env.ENDPOINT,
@@ -24,15 +27,5 @@ module.exports = {
     })
 
     return config
-  },
-
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/staking',
-        permanent: true,
-      },
-    ]
   },
 }
