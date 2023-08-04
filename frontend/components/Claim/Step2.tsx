@@ -96,7 +96,7 @@ const Step2 = () => {
 }
 
 const SelectWallets = () => {
-  const { select } = useWallet()
+  const { select, wallets } = useWallet()
   const [modal, openModal] = useState(false)
   const [wallet, setWallet] = useState(null)
 
@@ -165,23 +165,23 @@ const SelectWallets = () => {
                     leaveTo="transform scale-95 opacity-0"
                   >
                     <Listbox.Options className="absolute -mt-[1px] w-full divide-y divide-light-35 border border-light-35 bg-darkGray1">
-                      {OTHER_WALLETS.map((wallet) => (
+                      {wallets.map((wallet) => (
                         <Listbox.Option
-                          key={wallet.name}
-                          value={wallet.name}
+                          key={wallet.adapter.name}
+                          value={wallet.adapter.name}
                           className="flex cursor-pointer items-center justify-center gap-2.5 py-3 px-8 hover:bg-darkGray3"
                           onClick={() => {
-                            select(wallet.name)
+                            select(wallet.adapter.name)
                             openModal(false)
                           }}
                         >
                           <Image
-                            src={wallet.icon}
+                            src={wallet.adapter.icon}
                             alt="wallet icon"
                             width={20}
                             height={20}
                           />{' '}
-                          {wallet.name}
+                          {wallet.adapter.name}
                         </Listbox.Option>
                       ))}
                     </Listbox.Options>
