@@ -1,13 +1,7 @@
 use {
-    super::secp256k1::{
-        SECP256K1_COMPRESSED_PUBKEY_LENGTH,
-        SECP256K1_EVEN_PREFIX,
-        SECP256K1_ODD_PREFIX,
-    },
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
-        solana_program::hash,
         AnchorDeserialize,
         AnchorSerialize,
     },
@@ -15,8 +9,6 @@ use {
         engine::general_purpose::STANDARD as base64_standard_engine,
         Engine as _,
     },
-    bech32::ToBase32,
-    ripemd::Digest,
     serde::{
         Deserialize,
         Serialize,
