@@ -188,15 +188,6 @@ pub fn secp256k1_sha256_verify_signer(
     }
     Ok(())
 }
-/**
- * A Secp256k1 pubkey used in Cosmos.
- */
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
-pub struct UncompressedSecp256k1Pubkey([u8; Self::LEN]);
-impl UncompressedSecp256k1Pubkey {
-    pub const LEN: usize = 65;
-}
-
 
 impl UncompressedSecp256k1Pubkey {
     /** Cosmos public addresses are different than the public key.
@@ -222,6 +213,16 @@ impl UncompressedSecp256k1Pubkey {
         )
     }
 }
+
+/**
+ * A Secp256k1 pubkey used in Cosmos.
+ */
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
+pub struct UncompressedSecp256k1Pubkey([u8; Self::LEN]);
+impl UncompressedSecp256k1Pubkey {
+    pub const LEN: usize = 65;
+}
+
 
 #[cfg(test)]
 impl From<[u8; Self::LEN]> for UncompressedSecp256k1Pubkey {
