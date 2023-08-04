@@ -20,7 +20,7 @@ import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
 export const BACKPACK_WALLET_ADAPTER = new BackpackWalletAdapter()
-export const SOLFARE_WALLET_ADAPTER = new SolflareWalletAdapter()
+export const SOLFLARE_WALLET_ADAPTER = new SolflareWalletAdapter()
 export const OTHER_WALLETS = [
   new GlowWalletAdapter(),
   new TorusWalletAdapter(),
@@ -38,7 +38,7 @@ export function useSolanaWalletAdapters() {
     () => [
       PHANTOM_WALLET_ADAPTER,
       BACKPACK_WALLET_ADAPTER,
-      SOLFARE_WALLET_ADAPTER,
+      SOLFLARE_WALLET_ADAPTER,
       ...OTHER_WALLETS,
     ],
     []

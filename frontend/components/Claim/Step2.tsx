@@ -12,7 +12,7 @@ import {
   BACKPACK_WALLET_ADAPTER,
   OTHER_WALLETS,
   PHANTOM_WALLET_ADAPTER,
-  SOLFARE_WALLET_ADAPTER,
+  SOLFLARE_WALLET_ADAPTER,
 } from '@components/wallets/Solana'
 import Image from 'next/image'
 
@@ -126,7 +126,7 @@ const SelectWallets = () => {
         <button
           className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
           onClick={() => {
-            select(SOLFARE_WALLET_ADAPTER.name)
+            select(SOLFLARE_WALLET_ADAPTER.name)
           }}
         >
           <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
