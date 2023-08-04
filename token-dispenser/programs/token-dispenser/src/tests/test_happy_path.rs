@@ -94,32 +94,30 @@ impl TestClaimCertificate {
     }
 }
 
-impl Into<ClaimInfo> for TestClaimCertificate {
-    fn into(self) -> ClaimInfo {
+impl From<TestClaimCertificate> for ClaimInfo {
+    fn from(val: TestClaimCertificate) -> Self {
         ClaimInfo {
-            amount:   self.amount,
-            identity: self.off_chain_proof_of_identity.into(),
+            amount:   val.amount,
+            identity: val.off_chain_proof_of_identity.into(),
         }
     }
 }
 
 impl TestClaimCertificate {
-    pub fn into_claim_certificate(
+    pub fn as_claim_certificate(
         &self,
         merkle_tree: &MerkleTree<SolanaHasher>,
         index: u8,
     ) -> (ClaimCertificate, Option<Instruction>) {
         let option_instruction = match &self.off_chain_proof_of_identity {
-            TestIdentityCertificate::Evm(evm) => Some(evm.into_instruction(index, true)),
+            TestIdentityCertificate::Evm(evm) => Some(evm.as_instruction(index, true)),
             TestIdentityCertificate::Discord(_) => None,
             TestIdentityCertificate::Cosmos(_) => None,
         };
         (
             ClaimCertificate {
                 amount:             self.amount,
-                proof_of_identity:  self
-                    .off_chain_proof_of_identity
-                    .into_claim_certificate(index),
+                proof_of_identity:  self.off_chain_proof_of_identity.as_claim_certificate(index),
                 proof_of_inclusion: merkle_tree
                     .prove(&Into::<ClaimInfo>::into(self.clone()).try_to_vec().unwrap())
                     .unwrap(),
@@ -129,25 +127,20 @@ impl TestClaimCertificate {
     }
 }
 
-impl Into<Identity> for TestIdentityCertificate {
-    fn into(self) -> Identity {
-        match self {
-            Self::Evm(evm) => evm.into(),
-            Self::Cosmos(cosmos) => cosmos.into(),
-            Self::Discord(username) => Identity::Discord {
-                username: username.clone(),
-            },
+impl From<TestIdentityCertificate> for Identity {
+    fn from(val: TestIdentityCertificate) -> Self {
+        match val {
+            TestIdentityCertificate::Evm(evm) => evm.into(),
+            TestIdentityCertificate::Cosmos(cosmos) => cosmos.into(),
+            TestIdentityCertificate::Discord(username) => Identity::Discord { username },
         }
     }
 }
 
 impl TestIdentityCertificate {
-    pub fn into_claim_certificate(
-        &self,
-        verification_instruction_index: u8,
-    ) -> IdentityCertificate {
+    pub fn as_claim_certificate(&self, verification_instruction_index: u8) -> IdentityCertificate {
         match self {
-            Self::Evm(evm) => evm.into_proof_of_identity(verification_instruction_index),
+            Self::Evm(evm) => evm.as_proof_of_identity(verification_instruction_index),
             Self::Cosmos(cosmos) => cosmos.clone().into(),
             Self::Discord(username) => IdentityCertificate::Discord {
                 username: username.clone(),
@@ -233,7 +226,7 @@ pub async fn test_happy_path() {
 
     for serialized_item in &merkle_items_serialized {
         assert!(simulator
-            .get_account(get_receipt_pda(&serialized_item).0)
+            .get_account(get_receipt_pda(serialized_item).0)
             .await
             .is_none());
     }
@@ -243,7 +236,7 @@ pub async fn test_happy_path() {
             .claim(
                 &copy_keypair(&simulator.genesis_keypair),
                 &dispenser_guard,
-                &offchain_claim_certificate,
+                offchain_claim_certificate,
                 &merkle_tree,
             )
             .await
@@ -260,7 +253,7 @@ pub async fn test_happy_path() {
                 .claim(
                     &copy_keypair(&simulator.genesis_keypair),
                     &dispenser_guard,
-                    &offchain_claim_certificate,
+                    offchain_claim_certificate,
                     &merkle_tree
                 )
                 .await

@@ -44,22 +44,22 @@ impl CosmosTestIdentityCertificate {
     }
 }
 
-impl Into<Identity> for CosmosTestIdentityCertificate {
-    fn into(self) -> Identity {
+impl From<CosmosTestIdentityCertificate> for Identity {
+    fn from(val: CosmosTestIdentityCertificate) -> Self {
         Identity::Cosmwasm {
-            address: CosmosPubkey(self.recover().serialize()).into_bech32(&self.chain_id),
+            address: CosmosPubkey(val.recover().serialize()).into_bech32(&val.chain_id),
         }
     }
 }
 
-impl Into<IdentityCertificate> for CosmosTestIdentityCertificate {
-    fn into(self) -> IdentityCertificate {
+impl From<CosmosTestIdentityCertificate> for IdentityCertificate {
+    fn from(val: CosmosTestIdentityCertificate) -> Self {
         IdentityCertificate::Cosmwasm {
-            chain_id:    self.chain_id.clone(),
-            signature:   Secp256k1Signature(self.signature.serialize()),
-            recovery_id: self.recovery_id.into(),
-            pubkey:      CosmosPubkey(self.recover().serialize()),
-            message:     self.message.get_message_with_metadata(),
+            chain_id:    val.chain_id.clone(),
+            signature:   Secp256k1Signature(val.signature.serialize()),
+            recovery_id: val.recovery_id.into(),
+            pubkey:      CosmosPubkey(val.recover().serialize()),
+            message:     val.message.get_message_with_metadata(),
         }
     }
 }
