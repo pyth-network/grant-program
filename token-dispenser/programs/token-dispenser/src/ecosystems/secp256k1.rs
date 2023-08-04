@@ -1,5 +1,4 @@
 use {
-    super::cosmos::CosmosPubkey,
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
@@ -12,6 +11,8 @@ use {
         AnchorDeserialize,
         AnchorSerialize,
     },
+    bech32::ToBase32,
+    ripemd::Digest,
 };
 
 
@@ -21,15 +22,29 @@ pub const SECP256K1_EVEN_PREFIX: u8 = 0x02;
 pub const SECP256K1_COMPRESSED_PUBKEY_LENGTH: usize = 33;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
-pub struct EvmPubkey(pub [u8; Self::LEN]);
+pub struct EvmPubkey([u8; Self::LEN]);
 impl EvmPubkey {
     pub const LEN: usize = 20;
 }
 
+#[cfg(test)]
+impl EvmPubkey {
+    pub fn new(bytes: [u8; Self::LEN]) -> Self {
+        Self(bytes)
+    }
+}
+
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub struct Secp256k1Signature(pub [u8; Secp256k1Signature::LEN]);
+pub struct Secp256k1Signature([u8; Secp256k1Signature::LEN]);
 impl Secp256k1Signature {
     pub const LEN: usize = 64;
+}
+
+#[cfg(test)]
+impl Secp256k1Signature {
+    pub fn new(bytes: [u8; Self::LEN]) -> Self {
+        Self(bytes)
+    }
 }
 
 
@@ -159,7 +174,7 @@ impl AnchorSerialize for Secp256k1InstructionData {
 pub fn secp256k1_sha256_verify_signer(
     signature: &Secp256k1Signature,
     recovery_id: &u8,
-    pubkey: &CosmosPubkey,
+    pubkey: &UncompressedSecp256k1Pubkey,
     message: &Vec<u8>,
 ) -> Result<()> {
     let recovered_key = secp256k1_recover(
@@ -173,6 +188,58 @@ pub fn secp256k1_sha256_verify_signer(
     }
     Ok(())
 }
+/**
+ * A Secp256k1 pubkey used in Cosmos.
+ */
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
+pub struct UncompressedSecp256k1Pubkey([u8; Self::LEN]);
+impl UncompressedSecp256k1Pubkey {
+    pub const LEN: usize = 65;
+}
+
+
+impl UncompressedSecp256k1Pubkey {
+    /** Cosmos public addresses are different than the public key.
+     * This one way algorithm converts the public key to the public address.
+     * Note that the claimant needs to submit the public key to the program
+     * to verify the signature.
+     */
+    pub fn into_bech32(self, chain_id: &str) -> CosmosBech32Address {
+        let mut compressed: [u8; SECP256K1_COMPRESSED_PUBKEY_LENGTH] =
+            [0; SECP256K1_COMPRESSED_PUBKEY_LENGTH];
+        compressed[1..].copy_from_slice(&self.0[1..SECP256K1_COMPRESSED_PUBKEY_LENGTH]);
+        compressed[0] = if self.0[Self::LEN - 1] % 2 == 0 {
+            SECP256K1_EVEN_PREFIX
+        } else {
+            SECP256K1_ODD_PREFIX
+        };
+        let hash1 = hash::hashv(&[&compressed]);
+        let mut hasher: ripemd::Ripemd160 = ripemd::Ripemd160::new();
+        hasher.update(hash1);
+        let hash2 = hasher.finalize();
+        CosmosBech32Address(
+            bech32::encode(chain_id, hash2.to_base32(), bech32::Variant::Bech32).unwrap(),
+        )
+    }
+}
+
+#[cfg(test)]
+impl UncompressedSecp256k1Pubkey {
+    pub fn new(bytes: [u8; Self::LEN]) -> Self {
+        Self(bytes)
+    }
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub struct CosmosBech32Address(String);
+
+#[cfg(test)]
+impl CosmosBech32Address {
+    pub fn new(address: &str) -> Self {
+        Self(address.to_string())
+    }
+}
+
 
 #[cfg(test)]
 use anchor_lang::prelude::ProgramError::BorshIoError;
@@ -304,4 +371,3 @@ pub fn test_signature_verification() {
         .unwrap_err(),
         BorshIoError("unexpected end of file".to_string()).into()
     );
-}

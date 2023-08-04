@@ -32,7 +32,7 @@ pub fn construct_evm_pubkey(pubkey: &libsecp256k1::PublicKey) -> EvmPubkey {
     let mut addr = [0u8; EvmPubkey::LEN];
     addr.copy_from_slice(&Keccak256::hashv(&[&pubkey.serialize()[1..]])[12..]);
     assert_eq!(addr.len(), EvmPubkey::LEN);
-    EvmPubkey(addr)
+    EvmPubkey::new(addr)
 }
 
 #[derive(Clone)]
@@ -78,7 +78,7 @@ impl EvmTestIdentityCertificate {
         let instruction_data = Secp256k1InstructionData {
             header,
             eth_address: self.recover_as_evm_address(),
-            signature: Secp256k1Signature(signature_bytes),
+            signature: Secp256k1Signature::new(signature_bytes),
             recovery_id: self.recovery_id.serialize(),
             message: self.message.get_prefixed_message(),
         };

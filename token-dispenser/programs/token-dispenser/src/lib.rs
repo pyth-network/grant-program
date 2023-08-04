@@ -30,17 +30,15 @@ use {
     },
     ecosystems::{
         check_message,
-        cosmos::{
-            CosmosBech32Address,
-            CosmosMessage,
-            CosmosPubkey,
-        },
+        cosmos::CosmosMessage,
         evm::EvmPrefixedMessage,
         secp256k1::{
             secp256k1_sha256_verify_signer,
+            CosmosBech32Address,
             EvmPubkey,
             Secp256k1InstructionData,
             Secp256k1Signature,
+            UncompressedSecp256k1Pubkey,
         },
     },
     pythnet_sdk::{
@@ -290,7 +288,7 @@ pub enum IdentityCertificate {
         chain_id:    String,
         signature:   Secp256k1Signature,
         recovery_id: u8,
-        pubkey:      CosmosPubkey,
+        pubkey:      UncompressedSecp256k1Pubkey,
         message:     Vec<u8>,
     },
 }
