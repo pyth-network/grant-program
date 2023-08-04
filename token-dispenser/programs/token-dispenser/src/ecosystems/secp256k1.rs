@@ -1,9 +1,6 @@
 use {
     super::cosmos::CosmosPubkey,
-    crate::{
-        ErrorCode,
-        ProgramError::BorshIoError,
-    },
+    crate::ErrorCode,
     anchor_lang::{
         prelude::*,
         solana_program::{
@@ -16,6 +13,7 @@ use {
         AnchorSerialize,
     },
 };
+
 
 pub const SECP256K1_FULL_PREFIX: u8 = 0x04;
 pub const SECP256K1_ODD_PREFIX: u8 = 0x03;
@@ -177,6 +175,7 @@ pub fn secp256k1_sha256_verify_signer(
 }
 
 #[cfg(test)]
+use anchor_lang::prelude::ProgramError::BorshIoError;
 #[test]
 pub fn test_signature_verification() {
     let secp256k1_ix = Secp256k1InstructionData {
