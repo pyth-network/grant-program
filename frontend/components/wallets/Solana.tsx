@@ -18,13 +18,7 @@ import {
 import { useMemo, ReactElement, ReactNode } from 'react'
 import { clusterApiUrl } from '@solana/web3.js'
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
-import {
-  WalletButton,
-  WalletConnectedButton,
-  WalletIcon,
-  WalletLoadingButton,
-  WalletModalButton,
-} from './Common'
+import { WalletButton, WalletConnectedButton, WalletIcon } from './WalletButton'
 import { Listbox, Transition } from '@headlessui/react'
 
 import Down from '../../images/down.inline.svg'
@@ -85,7 +79,6 @@ export function SolanaWalletButton() {
     select,
     wallets,
     wallet,
-    connect,
   } = useWallet()
 
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey])
@@ -103,17 +96,11 @@ export function SolanaWalletButton() {
       address={base58 ?? 'install'}
       connected={connected || toInstall}
       isLoading={connecting}
-      walletModalButton={
-        <WalletModalButton
-          connect={select}
-          wallets={wallets.map((wallet) => ({
-            name: wallet.adapter.name,
-            connectId: wallet.adapter.name,
-            icon: wallet.adapter.icon,
-          }))}
-        />
-      }
-      walletLoadingButton={<WalletLoadingButton />}
+      wallets={wallets.map((wallet) => ({
+        name: wallet.adapter.name,
+        connect: () => select(wallet.adapter.name),
+        icon: wallet.adapter.icon,
+      }))}
       walletConnectedButton={(address: string) => {
         if (toInstall === false)
           return (

@@ -1,4 +1,4 @@
-import { ReactElement, ReactNode, useMemo, useState } from 'react'
+import { ReactElement, ReactNode } from 'react'
 import {
   WagmiConfig,
   createConfig,
@@ -7,12 +7,7 @@ import {
   useDisconnect,
 } from 'wagmi'
 import { ConnectKitProvider, getDefaultConfig } from 'connectkit'
-import {
-  WalletButton,
-  WalletConnectedButton,
-  WalletLoadingButton,
-  WalletModalButton,
-} from './Common'
+import { WalletButton, WalletConnectedButton } from './WalletButton'
 
 const config = createConfig(
   getDefaultConfig({
@@ -48,16 +43,10 @@ export function EVMWalletButton() {
       address={address}
       connected={isConnected}
       isLoading={status === 'connecting' || status === 'reconnecting'}
-      walletModalButton={
-        <WalletModalButton
-          connect={connect}
-          wallets={connectors.map((connector) => ({
-            name: connector.name,
-            connectId: { connector },
-          }))}
-        />
-      }
-      walletLoadingButton={<WalletLoadingButton />}
+      wallets={connectors.map((connector) => ({
+        name: connector.name,
+        connect: () => connect({ connector }),
+      }))}
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton onClick={disconnect} address={address} />
       )}

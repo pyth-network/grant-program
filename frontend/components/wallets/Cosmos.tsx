@@ -3,12 +3,7 @@ import { ChainProvider, useChainWallet } from '@cosmos-kit/react-lite'
 import { assets, chains } from 'chain-registry'
 import { wallets as keplrWallets } from '@cosmos-kit/keplr'
 import { MainWalletBase } from '@cosmos-kit/core'
-import {
-  WalletButton,
-  WalletConnectedButton,
-  WalletLoadingButton,
-  WalletModalButton,
-} from './Common'
+import { WalletButton, WalletConnectedButton } from './WalletButton'
 
 const walletName = 'keplr-extension'
 
@@ -54,13 +49,7 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
       address={address}
       connected={isWalletConnected}
       isLoading={isWalletConnecting}
-      walletModalButton={
-        <WalletModalButton
-          connect={connect}
-          wallets={[{ name: 'keplr', icon: logoUrl, connectId: '' }]}
-        />
-      }
-      walletLoadingButton={<WalletLoadingButton />}
+      wallets={[{ name: 'keplr', icon: logoUrl, connect: () => connect() }]}
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton onClick={disconnect} address={address} />
       )}

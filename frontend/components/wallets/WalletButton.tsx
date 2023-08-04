@@ -1,4 +1,4 @@
-import { ReactElement, useLayoutEffect, useMemo, useState } from 'react'
+import { ReactElement, useLayoutEffect, useState } from 'react'
 import { truncateAddress } from 'utils/truncateAddress'
 import Wallet from '../../images/wallet.inline.svg'
 import Image from 'next/image'
@@ -59,10 +59,9 @@ export function WalletLoadingButton({ icon }: WalletLoadingButtonProps) {
 export type WalletButtonProps = {
   connected: boolean
   isLoading: boolean
-  walletModalButton: ReactElement
-  walletLoadingButton: ReactElement
   walletConnectedButton: (address: string) => ReactElement
   address: string | undefined
+  wallets: Wallet[]
 }
 
 // WalletButton expects that the address won't be undefined
@@ -70,29 +69,24 @@ export type WalletButtonProps = {
 export function WalletButton({
   connected,
   isLoading,
-  walletModalButton,
-  walletLoadingButton,
   walletConnectedButton,
+  wallets,
   address,
 }: WalletButtonProps) {
-  if (isLoading === true) return walletLoadingButton
+  if (isLoading === true) return <WalletLoadingButton />
   else if (connected === true) return walletConnectedButton(address!)
-  return walletModalButton
+  return <WalletModalButton wallets={wallets} />
 }
 
-export type Wallet<T> = {
+export type Wallet = {
   icon?: string
   name: string
-  connectId: T
+  connect: () => void
 }
-export type WalletModalButtonProps<T> = {
-  connect: (connectId: T) => void
-  wallets: Wallet<T>[]
+export type WalletModalButtonProps = {
+  wallets: Wallet[]
 }
-export function WalletModalButton<T = string>({
-  connect,
-  wallets,
-}: WalletModalButtonProps<T>) {
+export function WalletModalButton({ wallets }: WalletModalButtonProps) {
   const [modal, openModal] = useState(false)
 
   return (
@@ -115,13 +109,11 @@ export function WalletModalButton<T = string>({
             {wallets.length === 1 ? (
               <SingleWalletView
                 wallet={wallets[0]}
-                connect={connect}
                 onConnect={() => openModal(false)}
               />
             ) : (
               <MultiWalletView
                 wallets={wallets}
-                connect={connect}
                 onConnect={() => openModal(false)}
               />
             )}
@@ -132,21 +124,16 @@ export function WalletModalButton<T = string>({
   )
 }
 
-export type SingleWalletViewProps<T> = {
-  wallet: Wallet<T>
-  connect: (connectId: T) => void
+export type SingleWalletViewProps = {
+  wallet: Wallet
   onConnect: () => void
 }
-export function SingleWalletView<T>({
-  wallet,
-  connect,
-  onConnect,
-}: SingleWalletViewProps<T>) {
+export function SingleWalletView({ wallet, onConnect }: SingleWalletViewProps) {
   return (
     <button
       className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light"
       onClick={() => {
-        connect(wallet.connectId)
+        wallet.connect()
         onConnect()
       }}
     >
@@ -158,15 +145,11 @@ export function SingleWalletView<T>({
   )
 }
 
-export type MultiWalletViewProps<T> = WalletModalButtonProps<T> & {
+export type MultiWalletViewProps = WalletModalButtonProps & {
   onConnect: () => void
 }
 
-export function MultiWalletView<T>({
-  wallets,
-  connect,
-  onConnect,
-}: MultiWalletViewProps<T>) {
+export function MultiWalletView({ wallets, onConnect }: MultiWalletViewProps) {
   return (
     <Listbox>
       {({ open }) => (
@@ -192,7 +175,7 @@ export function MultiWalletView<T>({
                   value={wallet.name}
                   className="flex cursor-pointer items-center justify-center gap-2.5 py-3 px-8 hover:bg-darkGray3"
                   onClick={() => {
-                    connect(wallet.connectId)
+                    wallet.connect()
                     onConnect()
                   }}
                 >

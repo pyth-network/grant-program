@@ -1,10 +1,5 @@
 import { useWalletKit } from '@mysten/wallet-kit'
-import {
-  WalletButton,
-  WalletConnectedButton,
-  WalletLoadingButton,
-  WalletModalButton,
-} from './Common'
+import { WalletButton, WalletConnectedButton } from './WalletButton'
 
 export function SuiWalletButton() {
   const {
@@ -22,17 +17,11 @@ export function SuiWalletButton() {
       address={currentAccount?.address}
       connected={isConnected}
       isLoading={isConnecting}
-      walletModalButton={
-        <WalletModalButton
-          connect={connect}
-          wallets={wallets.map((wallet) => ({
-            name: wallet.name,
-            icon: wallet.icon,
-            connectId: wallet.name,
-          }))}
-        />
-      }
-      walletLoadingButton={<WalletLoadingButton />}
+      wallets={wallets.map((wallet) => ({
+        name: wallet.name,
+        icon: wallet.icon,
+        connect: () => connect(wallet.name),
+      }))}
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton
           onClick={disconnect}

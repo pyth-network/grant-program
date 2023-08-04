@@ -15,7 +15,7 @@ import {
   SolanaWalletDropdownButton,
 } from '@components/wallets/Solana'
 import Image from 'next/image'
-import { WalletConnectedButton } from '@components/wallets/Common'
+import { WalletConnectedButton } from '@components/wallets/WalletButton'
 import { truncateAddress } from 'utils/truncateAddress'
 
 const Step2 = () => {
