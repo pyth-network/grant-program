@@ -351,6 +351,7 @@ pub struct ClaimedEcosystems {
 }
 
 impl ClaimedEcosystems {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         ClaimedEcosystems {
             set: [false; Identity::NUMBER_OF_VARIANTS],

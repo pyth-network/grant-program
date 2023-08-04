@@ -156,7 +156,7 @@ impl DispenserSimulator {
             initialize_mint2(
                 &Token::id(),
                 &mint_keypair.pubkey(),
-                &mint_authority,
+                mint_authority,
                 None,
                 decimals,
             )
@@ -308,7 +308,7 @@ impl DispenserSimulator {
         merkle_tree: &MerkleTree<SolanaHasher>,
     ) -> Result<(), BanksClientError> {
         let (claim_certificate, option_instruction) =
-            off_chain_claim_certificate.into_claim_certificate(merkle_tree, 1);
+            off_chain_claim_certificate.as_claim_certificate(merkle_tree, 1);
         let mut accounts = accounts::Claim::populate(claimant.pubkey(), dispenser_guard.pubkey())
             .to_account_metas(None);
 
@@ -385,8 +385,7 @@ impl DispenserSimulator {
     pub async fn get_account_data<T: AccountDeserialize>(&mut self, cart_key: Pubkey) -> Option<T> {
         self.get_account(cart_key)
             .await
-            .map(|a| <T>::try_deserialize(&mut a.data()).ok())
-            .flatten()
+            .and_then(|a| <T>::try_deserialize(&mut a.data()).ok())
     }
 
     pub async fn create_token_account(
@@ -411,7 +410,7 @@ impl DispenserSimulator {
             )
             .unwrap(),
         ];
-        self.process_ix(init_token_account_ixs, &vec![&token_account])
+        self.process_ix(init_token_account_ixs, &vec![token_account])
             .await
     }
 

@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -24,4 +23,18 @@ jobs:
       - name: Build
         run: |
           cargo test-sbf
+        working-directory: token-dispenser
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly-2023-03-01
+          components: rustfmt, clippy
+          override: true
+      - name: Clippy
+        run: |
+          cargo +nightly clippy --tests -- -D warnings
         working-directory: token-dispenser

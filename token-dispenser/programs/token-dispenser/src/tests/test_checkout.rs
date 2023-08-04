@@ -12,16 +12,12 @@ use {
     anchor_lang::solana_program::{
         instruction::InstructionError::MissingAccount,
         program_option::COption,
-        system_instruction,
     },
     anchor_spl::{
         associated_token::get_associated_token_address,
-        token::{
-            spl_token::error::TokenError::{
-                InsufficientFunds,
-                OwnerMismatch,
-            },
-            TokenAccount,
+        token::spl_token::error::TokenError::{
+            InsufficientFunds,
+            OwnerMismatch,
         },
     },
     solana_program_test::tokio,
@@ -62,7 +58,7 @@ pub async fn test_checkout_fails_with_wrong_accounts() {
                 .claim(
                     &copy_keypair(claimant),
                     &dispenser_guard,
-                    &offchain_claim_certificate,
+                    offchain_claim_certificate,
                     &merkle_tree,
                 )
                 .await
@@ -159,7 +155,7 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
                 .claim(
                     &copy_keypair(claimant),
                     &dispenser_guard,
-                    &offchain_claim_certificate,
+                    offchain_claim_certificate,
                     &merkle_tree,
                 )
                 .await
@@ -310,7 +306,7 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
     for (claim_sum, pubkey) in claim_sums.iter().zip(claimant_pubkeys.iter()) {
         simulator
             .verify_token_account_data(
-                get_associated_token_address(&pubkey, &simulator.mint_keypair.pubkey()),
+                get_associated_token_address(pubkey, &simulator.mint_keypair.pubkey()),
                 *claim_sum,
                 COption::None,
                 0,
@@ -349,7 +345,7 @@ pub async fn test_checkout_fails_if_delegate_revoked() {
                 .claim(
                     &copy_keypair(claimant),
                     &dispenser_guard,
-                    &offchain_claim_certificate,
+                    offchain_claim_certificate,
                     &merkle_tree,
                 )
                 .await
