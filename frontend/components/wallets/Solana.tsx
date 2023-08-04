@@ -89,6 +89,7 @@ export function SolanaWalletButton() {
           wallets={wallets.map((wallet) => ({
             name: wallet.adapter.name,
             connectId: wallet.adapter.name,
+            icon: wallet.adapter.icon,
           }))}
         />
       }
