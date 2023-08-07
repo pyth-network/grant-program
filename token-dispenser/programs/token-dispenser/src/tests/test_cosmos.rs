@@ -1,12 +1,9 @@
 use {
     crate::{
         ecosystems::{
-            cosmos::{
-                CosmosMessage,
-                CosmosPubkey,
-            },
+            cosmos::CosmosMessage,
             get_expected_message,
-            secp256k1::Secp256k1Signature,
+            secp256k1::UncompressedSecp256k1Pubkey,
         },
         Identity,
         IdentityCertificate,
@@ -47,7 +44,8 @@ impl CosmosTestIdentityCertificate {
 impl From<CosmosTestIdentityCertificate> for Identity {
     fn from(val: CosmosTestIdentityCertificate) -> Self {
         Identity::Cosmwasm {
-            address: CosmosPubkey(val.recover().serialize()).into_bech32(&val.chain_id),
+            address: UncompressedSecp256k1Pubkey::from(val.recover().serialize())
+                .into_bech32(&val.chain_id),
         }
     }
 }
@@ -56,9 +54,9 @@ impl From<CosmosTestIdentityCertificate> for IdentityCertificate {
     fn from(val: CosmosTestIdentityCertificate) -> Self {
         IdentityCertificate::Cosmwasm {
             chain_id:    val.chain_id.clone(),
-            signature:   Secp256k1Signature(val.signature.serialize()),
+            signature:   val.signature.serialize().into(),
             recovery_id: val.recovery_id.into(),
-            pubkey:      CosmosPubkey(val.recover().serialize()),
+            pubkey:      val.recover().serialize().into(),
             message:     val.message.get_message_with_metadata(),
         }
     }

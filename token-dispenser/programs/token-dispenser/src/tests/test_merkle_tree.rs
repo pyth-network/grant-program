@@ -1,9 +1,5 @@
 use {
     crate::{
-        ecosystems::{
-            cosmos::CosmosBech32Address,
-            secp256k1::EvmPubkey,
-        },
         ClaimInfo,
         Identity,
         SolanaHasher,
@@ -28,9 +24,7 @@ fn test_merkle_tree() {
         ClaimInfo {
             amount:   4000,
             identity: Identity::Cosmwasm {
-                address: CosmosBech32Address(
-                    "cosmos1lv3rrn5trdea7vs43z5m4y34d5r3zxp484wcpu".to_string(),
-                ),
+                address: "cosmos1lv3rrn5trdea7vs43z5m4y34d5r3zxp484wcpu".into(),
             },
         },
         ClaimInfo {
@@ -48,7 +42,7 @@ fn test_merkle_tree() {
         ClaimInfo {
             amount:   2000,
             identity: Identity::Evm {
-                pubkey: EvmPubkey(evm_pubkey),
+                pubkey: evm_pubkey.into(),
             },
         },
         ClaimInfo {
