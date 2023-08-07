@@ -28,6 +28,7 @@ pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
 /**
 * An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.
 * Only the message payload is stored in this struct.
+* The message signed for Cosmos is a JSON serialized CosmosStdSignDoc containing the payload and ADR036 compliant parameters.
  */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct CosmosMessage(Vec<u8>);

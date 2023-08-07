@@ -21,6 +21,8 @@ pub const SUI_PREFIX: &[u8] = &[3, 0, 0];
 /**
 * An arbitrary message used in Sui
 * Only the message payload is stored in this struct.
+* The message that gets signed for Sui is the blake2b256 hash of the prefixed payload. (i.e. blake2b(SUI_PREFIX + payload))
+*
  */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct SuiMessage(Vec<u8>);
