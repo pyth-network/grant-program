@@ -1,9 +1,11 @@
 use {
     crate::{
         ecosystems::{
-            cosmos::CosmosMessage,
+            cosmos::{
+                CosmosMessage,
+                UncompressedSecp256k1Pubkey,
+            },
             get_expected_message,
-            secp256k1::UncompressedSecp256k1Pubkey,
         },
         Identity,
         IdentityCertificate,

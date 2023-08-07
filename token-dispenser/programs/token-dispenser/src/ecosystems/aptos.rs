@@ -1,9 +1,11 @@
 #[cfg(test)]
 use super::ed25519::Ed25519TestMessage;
 use {
+    super::ed25519::Ed25519Pubkey,
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
+        solana_program::hash,
         AnchorDeserialize,
         AnchorSerialize,
     },
@@ -52,4 +54,21 @@ impl Ed25519TestMessage for AptosMessage {
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub struct AptosAddress(pub [u8; 32]);
+pub struct AptosAddress([u8; 32]);
+
+impl AptosAddress {
+    pub const LEN: usize = 32;
+}
+
+impl From<Ed25519Pubkey> for AptosAddress {
+    fn from(val: Ed25519Pubkey) -> Self {
+        AptosAddress(hash::hashv(&[&val.to_bytes(), &[APTOS_SIGNATURE_SCHEME_ID]]).to_bytes())
+    }
+}
+
+#[cfg(test)]
+impl From<[u8; Self::LEN]> for AptosAddress {
+    fn from(bytes: [u8; Self::LEN]) -> Self {
+        AptosAddress(bytes)
+    }
+}

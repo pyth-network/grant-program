@@ -62,13 +62,13 @@ fn test_merkle_tree() {
         ClaimInfo {
             amount:   3000,
             identity: Identity::Aptos {
-                address: AptosAddress(aptos_address),
+                address: aptos_address.into(),
             },
         },
         ClaimInfo {
             amount:   5000,
             identity: Identity::Sui {
-                address: SuiAddress(sui_address),
+                address: sui_address.into(),
             },
         },
     ];

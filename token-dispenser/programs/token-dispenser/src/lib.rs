@@ -34,7 +34,11 @@ use {
             AptosMessage,
         },
         check_message,
-        cosmos::CosmosMessage,
+        cosmos::{
+            CosmosBech32Address,
+            CosmosMessage,
+            UncompressedSecp256k1Pubkey,
+        },
         ed25519::{
             Ed25519InstructionData,
             Ed25519Pubkey,
@@ -42,11 +46,9 @@ use {
         evm::EvmPrefixedMessage,
         secp256k1::{
             secp256k1_sha256_verify_signer,
-            CosmosBech32Address,
             EvmPubkey,
             Secp256k1InstructionData,
             Secp256k1Signature,
-            UncompressedSecp256k1Pubkey,
         },
         sui::{
             check_hashed_message,

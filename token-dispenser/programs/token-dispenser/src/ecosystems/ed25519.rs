@@ -43,6 +43,12 @@ impl Ed25519Pubkey {
     pub const LEN: usize = 32;
 }
 
+impl Ed25519Pubkey {
+    pub fn to_bytes(&self) -> [u8; Self::LEN] {
+        self.0
+    }
+}
+
 #[cfg(test)]
 impl From<[u8; Self::LEN]> for Ed25519Pubkey {
     fn from(bytes: [u8; Self::LEN]) -> Self {
@@ -169,23 +175,5 @@ where
     fn get_message_with_metadata(&self) -> Vec<u8>;
     fn get_message_length(&self) -> usize {
         self.get_message_with_metadata().len()
-    }
-}
-
-impl From<Ed25519Pubkey> for SuiAddress {
-    fn from(val: Ed25519Pubkey) -> Self {
-        let mut context = Blake2b::new(32);
-        let mut result = SuiAddress([0u8; 32]);
-        context.update(&[SUI_SIGNATURE_SCHEME_ID]);
-        context.update(&val.0);
-
-        result.0.copy_from_slice(context.finalize().as_bytes());
-        result
-    }
-}
-
-impl From<Ed25519Pubkey> for AptosAddress {
-    fn from(val: Ed25519Pubkey) -> Self {
-        AptosAddress(hash::hashv(&[&val.0, &[APTOS_SIGNATURE_SCHEME_ID]]).to_bytes())
     }
 }
