@@ -20,6 +20,16 @@ fn test_merkle_tree() {
     let mut evm_pubkey: [u8; 20] = [0u8; 20];
     evm_pubkey.copy_from_slice(&hex::decode("f3f9225A2166861e745742509CED164183a626d7").unwrap());
 
+    let mut aptos_address: [u8; 32] = [0u8; 32];
+    aptos_address.copy_from_slice(
+        &hex::decode("7e7544df4fc42107d4a60834685dfd9c1e6ff048f49fe477bc19c1551299d5cb").unwrap(),
+    );
+
+    let mut sui_address: [u8; 32] = [0u8; 32];
+    sui_address.copy_from_slice(
+        &hex::decode("87a7ec050788fbaa9cd842b4cf9915949931af94806404bba661f1ac3d338148").unwrap(),
+    );
+
     let merkle_items: Vec<ClaimInfo> = vec![
         ClaimInfo {
             amount:   4000,
@@ -47,7 +57,15 @@ fn test_merkle_tree() {
         },
         ClaimInfo {
             amount:   3000,
-            identity: Identity::Aptos,
+            identity: Identity::Aptos {
+                address: aptos_address.into(),
+            },
+        },
+        ClaimInfo {
+            amount:   5000,
+            identity: Identity::Sui {
+                address: sui_address.into(),
+            },
         },
     ];
 

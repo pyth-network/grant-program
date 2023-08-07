@@ -1,9 +1,11 @@
 use {
     crate::{
         ecosystems::{
-            cosmos::CosmosMessage,
-            get_expected_message,
-            secp256k1::UncompressedSecp256k1Pubkey,
+            cosmos::{
+                CosmosMessage,
+                UncompressedSecp256k1Pubkey,
+            },
+            get_expected_payload,
         },
         Identity,
         IdentityCertificate,
@@ -26,7 +28,7 @@ impl CosmosTestIdentityCertificate {
     }
 
     pub fn random(claimant: &Pubkey) -> Self {
-        let message: CosmosMessage = CosmosMessage::new(&get_expected_message(claimant));
+        let message: CosmosMessage = CosmosMessage::new(&get_expected_payload(claimant));
         let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
         let (signature, recovery_id) = libsecp256k1::sign(&message.hash(), &secret);
         Self {

@@ -29,16 +29,30 @@ use {
         },
     },
     ecosystems::{
-        check_message,
-        cosmos::CosmosMessage,
+        aptos::{
+            AptosAddress,
+            AptosMessage,
+        },
+        check_payload,
+        cosmos::{
+            CosmosBech32Address,
+            CosmosMessage,
+            UncompressedSecp256k1Pubkey,
+        },
+        ed25519::{
+            Ed25519InstructionData,
+            Ed25519Pubkey,
+        },
         evm::EvmPrefixedMessage,
         secp256k1::{
             secp256k1_sha256_verify_signer,
-            CosmosBech32Address,
             EvmPubkey,
             Secp256k1InstructionData,
             Secp256k1Signature,
-            UncompressedSecp256k1Pubkey,
+        },
+        sui::{
+            SuiAddress,
+            SuiMessage,
         },
     },
     pythnet_sdk::{
@@ -252,8 +266,8 @@ pub enum Identity {
     Discord { username: String },
     Solana { pubkey: Pubkey },
     Evm { pubkey: EvmPubkey },
-    Sui,
-    Aptos,
+    Sui { address: SuiAddress },
+    Aptos { address: AptosAddress },
     Cosmwasm { address: CosmosBech32Address },
 }
 
@@ -282,8 +296,14 @@ pub enum IdentityCertificate {
         verification_instruction_index: u8,
     },
     Solana,
-    Sui,
-    Aptos,
+    Sui {
+        pubkey:                         Ed25519Pubkey,
+        verification_instruction_index: u8,
+    },
+    Aptos {
+        pubkey:                         Ed25519Pubkey,
+        verification_instruction_index: u8,
+    },
     Cosmwasm {
         chain_id:    String,
         signature:   Secp256k1Signature,
@@ -382,8 +402,8 @@ pub enum ErrorCode {
     SignatureVerificationWrongProgram,
     SignatureVerificationWrongAccounts,
     SignatureVerificationWrongHeader,
-    SignatureVerificationWrongMessage,
-    SignatureVerificationWrongMessageMetadata,
+    SignatureVerificationWrongPayload,
+    SignatureVerificationWrongPayloadMetadata,
     SignatureVerificationWrongSigner,
     SignatureVerificationWrongClaimant,
 }
@@ -418,7 +438,7 @@ impl IdentityCertificate {
                     *verification_instruction_index as usize,
                     sysvar_instruction,
                 )?;
-                check_message(
+                check_payload(
                     EvmPrefixedMessage::parse(
                         &Secp256k1InstructionData::extract_message_and_check_signature(
                             &signature_verification_instruction,
@@ -439,10 +459,53 @@ impl IdentityCertificate {
                 message,
             } => {
                 secp256k1_sha256_verify_signer(signature, recovery_id, pubkey, message)?;
-                check_message(CosmosMessage::parse(message)?.get_payload(), claimant)?;
+                check_payload(CosmosMessage::parse(message)?.get_payload(), claimant)?;
                 let cosmos_bech32 = pubkey.into_bech32(chain_id);
                 Ok(Identity::Cosmwasm {
                     address: cosmos_bech32,
+                })
+            }
+            IdentityCertificate::Aptos {
+                pubkey,
+                verification_instruction_index,
+            } => {
+                let signature_verification_instruction = load_instruction_at_checked(
+                    *verification_instruction_index as usize,
+                    sysvar_instruction,
+                )?;
+                check_payload(
+                    AptosMessage::parse(
+                        &Ed25519InstructionData::extract_message_and_check_signature(
+                            &signature_verification_instruction,
+                            pubkey,
+                            verification_instruction_index,
+                        )?,
+                    )?
+                    .get_payload(),
+                    claimant,
+                )?;
+                Ok(Identity::Aptos {
+                    address: Into::<AptosAddress>::into(pubkey.clone()),
+                })
+            }
+            IdentityCertificate::Sui {
+                pubkey,
+                verification_instruction_index,
+            } => {
+                let signature_verification_instruction = load_instruction_at_checked(
+                    *verification_instruction_index as usize,
+                    sysvar_instruction,
+                )?;
+                SuiMessage::check_hashed_payload(
+                    &Ed25519InstructionData::extract_message_and_check_signature(
+                        &signature_verification_instruction,
+                        pubkey,
+                        verification_instruction_index,
+                    )?,
+                    claimant,
+                )?;
+                Ok(Identity::Sui {
+                    address: Into::<SuiAddress>::into(pubkey.clone()),
                 })
             }
             _ => Err(ErrorCode::NotImplemented.into()),

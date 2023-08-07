@@ -3,7 +3,7 @@ use {
     crate::{
         ecosystems::{
             evm::EvmPrefixedMessage,
-            get_expected_message,
+            get_expected_payload,
             secp256k1::{
                 EvmPubkey,
                 Secp256k1InstructionData,
@@ -51,11 +51,11 @@ impl EvmTestIdentityCertificate {
     }
 
     pub fn random(claimant: &Pubkey) -> Self {
-        let prefixed_message = EvmPrefixedMessage::new(&get_expected_message(claimant));
+        let prefixed_message = EvmPrefixedMessage::new(&get_expected_payload(claimant));
         let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
         let (signature, recovery_id) = libsecp256k1::sign(&prefixed_message.hash(), &secret);
         Self {
-            message: EvmPrefixedMessage::new(&get_expected_message(claimant)),
+            message: EvmPrefixedMessage::new(&get_expected_payload(claimant)),
             signature,
             recovery_id,
         }

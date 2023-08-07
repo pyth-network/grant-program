@@ -8,8 +8,10 @@ use {
 };
 
 mod dispenser_simulator;
+mod test_aptos;
 mod test_checkout;
 mod test_cosmos;
+mod test_ed25519;
 mod test_evm;
 mod test_happy_path;
 mod test_initialize;

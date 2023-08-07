@@ -1,7 +1,13 @@
 use {
+    super::secp256k1::{
+        SECP256K1_COMPRESSED_PUBKEY_LENGTH,
+        SECP256K1_EVEN_PREFIX,
+        SECP256K1_ODD_PREFIX,
+    },
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
+        solana_program::hash,
         AnchorDeserialize,
         AnchorSerialize,
     },
@@ -9,6 +15,8 @@ use {
         engine::general_purpose::STANDARD as base64_standard_engine,
         Engine as _,
     },
+    bech32::ToBase32,
+    ripemd::Digest,
     serde::{
         Deserialize,
         Serialize,
@@ -20,6 +28,7 @@ pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
 /**
 * An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.
 * Only the message payload is stored in this struct.
+* The message signed for Cosmos is a JSON serialized CosmosStdSignDoc containing the payload and ADR036 compliant parameters.
  */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct CosmosMessage(Vec<u8>);
@@ -27,7 +36,7 @@ pub struct CosmosMessage(Vec<u8>);
 impl CosmosMessage {
     pub fn parse(data: &[u8]) -> Result<Self> {
         let sign_doc: CosmosStdSignDoc = serde_json::from_slice(data)
-            .map_err(|_| ErrorCode::SignatureVerificationWrongMessageMetadata)?;
+            .map_err(|_| ErrorCode::SignatureVerificationWrongPayloadMetadata)?;
 
         if !(sign_doc.account_number == "0"
             && sign_doc.chain_id.is_empty()
@@ -37,16 +46,16 @@ impl CosmosMessage {
             && sign_doc.msgs.len() == 1
             && sign_doc.sequence == "0")
         {
-            return Err(ErrorCode::SignatureVerificationWrongMessageMetadata.into());
+            return Err(ErrorCode::SignatureVerificationWrongPayloadMetadata.into());
         }
 
         if sign_doc.msgs[0].r#type != EXPECTED_COSMOS_MESSAGE_TYPE {
-            return Err(ErrorCode::SignatureVerificationWrongMessageMetadata.into());
+            return Err(ErrorCode::SignatureVerificationWrongPayloadMetadata.into());
         }
         Ok(CosmosMessage(
             base64_standard_engine
                 .decode(sign_doc.msgs[0].value.data.as_bytes())
-                .map_err(|_| ErrorCode::SignatureVerificationWrongMessageMetadata)?,
+                .map_err(|_| ErrorCode::SignatureVerificationWrongPayloadMetadata)?,
         ))
     }
 
@@ -106,13 +115,69 @@ struct CosmosCoin {
     denom:  String,
 }
 
+
+impl UncompressedSecp256k1Pubkey {
+    /** Cosmos public addresses are different than the public key.
+     * This one way algorithm converts the public key to the public address.
+     * Note that the claimant needs to submit the public key to the program
+     * to verify the signature.
+     */
+    pub fn into_bech32(self, chain_id: &str) -> CosmosBech32Address {
+        let mut compressed: [u8; SECP256K1_COMPRESSED_PUBKEY_LENGTH] =
+            [0; SECP256K1_COMPRESSED_PUBKEY_LENGTH];
+        compressed[1..].copy_from_slice(&self.0[1..SECP256K1_COMPRESSED_PUBKEY_LENGTH]);
+        compressed[0] = if self.0[Self::LEN - 1] % 2 == 0 {
+            SECP256K1_EVEN_PREFIX
+        } else {
+            SECP256K1_ODD_PREFIX
+        };
+        let hash1 = hash::hashv(&[&compressed]);
+        let mut hasher: ripemd::Ripemd160 = ripemd::Ripemd160::new();
+        hasher.update(hash1);
+        let hash2 = hasher.finalize();
+        CosmosBech32Address(
+            bech32::encode(chain_id, hash2.to_base32(), bech32::Variant::Bech32).unwrap(),
+        )
+    }
+
+    pub fn as_bytes(&self) -> [u8; Self::LEN] {
+        self.0
+    }
+}
+
+/**
+ * A Secp256k1 pubkey used in Cosmos.
+ */
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
+pub struct UncompressedSecp256k1Pubkey([u8; Self::LEN]);
+impl UncompressedSecp256k1Pubkey {
+    pub const LEN: usize = 65;
+}
+
+
 #[cfg(test)]
-use anchor_lang::solana_program::hash;
+impl From<[u8; Self::LEN]> for UncompressedSecp256k1Pubkey {
+    fn from(bytes: [u8; Self::LEN]) -> Self {
+        UncompressedSecp256k1Pubkey(bytes)
+    }
+}
+
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub struct CosmosBech32Address(String);
+
+#[cfg(test)]
+impl From<&str> for CosmosBech32Address {
+    fn from(bytes: &str) -> Self {
+        CosmosBech32Address(bytes.to_string())
+    }
+}
+
 
 #[cfg(test)]
 impl CosmosMessage {
-    pub fn new(message: &str) -> Self {
-        Self(message.as_bytes().to_vec())
+    pub fn new(payload: &str) -> Self {
+        Self(payload.as_bytes().to_vec())
     }
 
     /**
