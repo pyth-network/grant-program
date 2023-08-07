@@ -182,7 +182,7 @@ pub fn secp256k1_sha256_verify_signer(
         &signature.0,
     )
     .map_err(|_| ErrorCode::SignatureVerificationWrongSigner)?;
-    if !(recovered_key.0 == pubkey.to_bytes()[1..] && pubkey.to_bytes()[0] == SECP256K1_FULL_PREFIX)
+    if !(recovered_key.0 == pubkey.as_bytes()[1..] && pubkey.as_bytes()[0] == SECP256K1_FULL_PREFIX)
     {
         return Err(ErrorCode::SignatureVerificationWrongSigner.into());
     }

@@ -50,7 +50,7 @@ impl<T: Ed25519TestMessage> Ed25519TestIdentityCertificate<T> {
         }
     }
 
-    pub fn into_instruction(&self, instruction_index: u8, valid_signature: bool) -> Instruction {
+    pub fn as_instruction(&self, instruction_index: u8, valid_signature: bool) -> Instruction {
         let header = Ed25519InstructionHeader::expected_header(
             self.message.get_message_length().try_into().unwrap(),
             instruction_index,
@@ -87,10 +87,7 @@ impl From<Ed25519TestIdentityCertificate<AptosMessage>> for Identity {
 }
 
 impl Ed25519TestIdentityCertificate<AptosMessage> {
-    pub fn into_proof_of_identity(
-        &self,
-        verification_instruction_index: u8,
-    ) -> IdentityCertificate {
+    pub fn as_proof_of_identity(&self, verification_instruction_index: u8) -> IdentityCertificate {
         IdentityCertificate::Aptos {
             pubkey: self.publickey.to_bytes().into(),
             verification_instruction_index,
@@ -108,10 +105,7 @@ impl From<Ed25519TestIdentityCertificate<SuiMessage>> for Identity {
 
 
 impl Ed25519TestIdentityCertificate<SuiMessage> {
-    pub fn into_proof_of_identity(
-        &self,
-        verification_instruction_index: u8,
-    ) -> IdentityCertificate {
+    pub fn as_proof_of_identity(&self, verification_instruction_index: u8) -> IdentityCertificate {
         IdentityCertificate::Sui {
             pubkey: Ed25519Pubkey::from(self.publickey.to_bytes()),
             verification_instruction_index,
@@ -134,12 +128,12 @@ pub async fn test_verify_signed_message_onchain() {
     .is_ok());
 
     assert!(simulator
-        .process_ix(&[signed_message.into_instruction(0, true)], &vec![])
+        .process_ix(&[signed_message.as_instruction(0, true)], &vec![])
         .await
         .is_ok());
 
     assert!(simulator
-        .process_ix(&[signed_message.into_instruction(0, false)], &vec![])
+        .process_ix(&[signed_message.as_instruction(0, false)], &vec![])
         .await
         .is_err());
 }

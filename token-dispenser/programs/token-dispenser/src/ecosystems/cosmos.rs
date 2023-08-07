@@ -139,7 +139,7 @@ impl UncompressedSecp256k1Pubkey {
         )
     }
 
-    pub fn to_bytes(&self) -> [u8; Self::LEN] {
+    pub fn as_bytes(&self) -> [u8; Self::LEN] {
         self.0
     }
 }

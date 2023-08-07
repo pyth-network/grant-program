@@ -43,7 +43,7 @@ impl SuiMessage {
  * matches the hash of the expected message
  */
 pub fn check_hashed_message(message: &[u8], claimant: &Pubkey) -> Result<()> {
-    if message != &SuiMessage::get_expected_hash(&get_expected_message(claimant)) {
+    if message != SuiMessage::get_expected_hash(&get_expected_message(claimant)) {
         return Err(ErrorCode::SignatureVerificationWrongMessage.into());
     }
     Ok(())

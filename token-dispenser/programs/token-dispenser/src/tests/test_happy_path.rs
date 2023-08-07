@@ -137,8 +137,8 @@ impl TestClaimCertificate {
             TestIdentityCertificate::Evm(evm) => Some(evm.as_instruction(index, true)),
             TestIdentityCertificate::Discord(_) => None,
             TestIdentityCertificate::Cosmos(_) => None,
-            TestIdentityCertificate::Aptos(aptos) => Some(aptos.into_instruction(index, true)),
-            TestIdentityCertificate::Sui(sui) => Some(sui.into_instruction(index, true)),
+            TestIdentityCertificate::Aptos(aptos) => Some(aptos.as_instruction(index, true)),
+            TestIdentityCertificate::Sui(sui) => Some(sui.as_instruction(index, true)),
         };
         (
             ClaimCertificate {
@@ -173,8 +173,8 @@ impl TestIdentityCertificate {
             Self::Discord(username) => IdentityCertificate::Discord {
                 username: username.clone(),
             },
-            Self::Aptos(aptos) => aptos.into_proof_of_identity(verification_instruction_index),
-            Self::Sui(sui) => sui.into_proof_of_identity(verification_instruction_index),
+            Self::Aptos(aptos) => aptos.as_proof_of_identity(verification_instruction_index),
+            Self::Sui(sui) => sui.as_proof_of_identity(verification_instruction_index),
         }
     }
 }
