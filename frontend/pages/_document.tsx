@@ -10,6 +10,10 @@ class CustomDocument extends Document {
             rel="stylesheet"
           />
           <link
+            href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@300;400;600&family=Red+Hat+Mono&family=Red+Hat+Text&display=swap"
+            rel="stylesheet"
+          />
+          <link
             href="favicon.ico"
             rel="icon"
             media="(prefers-color-scheme: light)"
