@@ -7,6 +7,10 @@ use {
     crate::{
         ecosystems::{
             aptos::AptosMessage,
+            solana::{
+                self,
+                SolanaMessage,
+            },
             sui::SuiMessage,
         },
         get_cart_pda,
@@ -116,6 +120,15 @@ impl TestClaimCertificate {
             ),
         }
     }
+
+    pub fn random_solana(claimant: &Pubkey) -> Self {
+        Self {
+            amount:                      Self::random_amount(),
+            off_chain_proof_of_identity: TestIdentityCertificate::Solana(
+                Ed25519TestIdentityCertificate::<SolanaMessage>::random(claimant),
+            ),
+        }
+    }
 }
 
 impl From<TestClaimCertificate> for ClaimInfo {
@@ -139,6 +152,7 @@ impl TestClaimCertificate {
             TestIdentityCertificate::Cosmos(_) => None,
             TestIdentityCertificate::Aptos(aptos) => Some(aptos.as_instruction(index, true)),
             TestIdentityCertificate::Sui(sui) => Some(sui.as_instruction(index, true)),
+            TestIdentityCertificate::Solana(solana) => Some(solana.as_instruction(index, true)),
         };
         (
             ClaimCertificate {
@@ -161,6 +175,7 @@ impl From<TestIdentityCertificate> for Identity {
             TestIdentityCertificate::Discord(username) => Identity::Discord { username },
             TestIdentityCertificate::Aptos(aptos) => aptos.into(),
             TestIdentityCertificate::Sui(sui) => sui.into(),
+            TestIdentityCertificate::Solana(solana) => solana.into(),
         }
     }
 }
@@ -175,6 +190,7 @@ impl TestIdentityCertificate {
             },
             Self::Aptos(aptos) => aptos.as_proof_of_identity(verification_instruction_index),
             Self::Sui(sui) => sui.as_proof_of_identity(verification_instruction_index),
+            Self::Solana(solana) => solana.as_proof_of_identity(verification_instruction_index),
         }
     }
 }
@@ -186,6 +202,7 @@ pub enum TestIdentityCertificate {
     Cosmos(CosmosTestIdentityCertificate),
     Aptos(Ed25519TestIdentityCertificate<AptosMessage>),
     Sui(Ed25519TestIdentityCertificate<SuiMessage>),
+    Solana(Ed25519TestIdentityCertificate<SolanaMessage>),
 }
 
 #[tokio::test]

@@ -50,6 +50,7 @@ use {
             Secp256k1InstructionData,
             Secp256k1Signature,
         },
+        solana::SolanaMessage,
         sui::{
             check_hashed_message,
             SuiAddress,
@@ -264,7 +265,7 @@ pub struct ClaimInfo {
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub enum Identity {
     Discord { username: String },
-    Solana { pubkey: Pubkey },
+    Solana { pubkey: Ed25519Pubkey },
     Evm { pubkey: EvmPubkey },
     Sui { address: SuiAddress },
     Aptos { address: AptosAddress },
@@ -295,7 +296,10 @@ pub enum IdentityCertificate {
         pubkey:                         EvmPubkey,
         verification_instruction_index: u8,
     },
-    Solana,
+    Solana {
+        pubkey:                         Ed25519Pubkey,
+        verification_instruction_index: u8,
+    },
     Sui {
         pubkey:                         Ed25519Pubkey,
         verification_instruction_index: u8,
@@ -508,7 +512,29 @@ impl IdentityCertificate {
                     address: Into::<SuiAddress>::into(pubkey.clone()),
                 })
             }
-            _ => Err(ErrorCode::NotImplemented.into()),
+            IdentityCertificate::Solana {
+                pubkey,
+                verification_instruction_index,
+            } => {
+                let signature_verification_instruction = load_instruction_at_checked(
+                    *verification_instruction_index as usize,
+                    sysvar_instruction,
+                )?;
+                check_message(
+                    SolanaMessage::parse(
+                        &Ed25519InstructionData::extract_message_and_check_signature(
+                            &signature_verification_instruction,
+                            pubkey,
+                            verification_instruction_index,
+                        )?,
+                    )?
+                    .get_payload(),
+                    claimant,
+                )?;
+                Ok(Identity::Solana {
+                    pubkey: pubkey.clone(),
+                })
+            }
         }
     }
 }
