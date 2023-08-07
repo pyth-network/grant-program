@@ -269,6 +269,7 @@ pub enum Identity {
     Sui { address: SuiAddress },
     Aptos { address: AptosAddress },
     Cosmwasm { address: CosmosBech32Address },
+    Injective { address : CosmosBech32Address }
 }
 
 impl Identity {
@@ -280,10 +281,11 @@ impl Identity {
             Identity::Sui { .. } => 3,
             Identity::Aptos { .. } => 4,
             Identity::Cosmwasm { .. } => 5,
+            Identity::Injective { .. } => 6,
         }
     }
 
-    pub const NUMBER_OF_VARIANTS: usize = 6;
+    pub const NUMBER_OF_VARIANTS: usize = 7;
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
@@ -311,6 +313,10 @@ pub enum IdentityCertificate {
         pubkey:      UncompressedSecp256k1Pubkey,
         message:     Vec<u8>,
     },
+    Injective { 
+        pubkey : EvmPubkey,
+        verification_instruction_index: u8,
+    }
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
@@ -365,7 +371,7 @@ impl Cart {
 }
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimedEcosystems {
-    set: [bool; 6],
+    set: [bool; 7],
 }
 
 impl ClaimedEcosystems {
@@ -508,7 +514,26 @@ impl IdentityCertificate {
                     address: Into::<SuiAddress>::into(pubkey.clone()),
                 })
             }
+            IdentityCertificate::Injective { pubkey, verification_instruction_index } => {
+                let signature_verification_instruction = load_instruction_at_checked(
+                    *verification_instruction_index as usize,
+                    sysvar_instruction,
+                )?;
+                check_payload(
+                    CosmosMessage::parse(
+                        &Secp256k1InstructionData::extract_message_and_check_signature(
+                            &signature_verification_instruction,
+                            pubkey,
+                            verification_instruction_index,
+                        )?,
+                    )?
+                    .get_payload(),
+                    claimant,
+                )?;
+                Ok(Identity::Injective { address: CosmosBech32Address::from(pubkey.clone()) })
+            }
             _ => Err(ErrorCode::NotImplemented.into()),
+
         }
     }
 }

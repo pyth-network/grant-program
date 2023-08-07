@@ -7,7 +7,7 @@ module.exports = {
     externalDir: true,
   },
   images: {
-    domains: ['cdn.martianwallet.xyz'],
+    domains: ['cdn.martianwallet.xyz', 'raw.githubusercontent.com'],
   },
   swcMinify: false,
   env: {

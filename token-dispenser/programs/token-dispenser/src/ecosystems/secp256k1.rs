@@ -33,6 +33,12 @@ impl From<[u8; Self::LEN]> for EvmPubkey {
     }
 }
 
+impl EvmPubkey {
+    pub fn to_bytes(&self) -> [u8; Self::LEN] {
+        self.0
+    }
+}
+
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct Secp256k1Signature([u8; Secp256k1Signature::LEN]);
 impl Secp256k1Signature {

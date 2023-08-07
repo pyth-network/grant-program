@@ -1,3 +1,5 @@
+use crate::{tests::test_injective::InjectiveTestIdentityCertificate, ecosystems::cosmos::CosmosMessage};
+
 use {
     super::dispenser_simulator::DispenserSimulator,
     crate::{
@@ -25,6 +27,12 @@ use {
     solana_program_test::tokio,
     solana_sdk::instruction::Instruction,
 };
+
+use base64::{
+    engine::general_purpose::STANDARD as base64_standard_engine,
+    Engine as _,
+};
+use libsecp256k1::RecoveryId;
 
 /// Creates an Ethereum address from a secp256k1 public key.
 pub fn construct_evm_pubkey(pubkey: &libsecp256k1::PublicKey) -> EvmPubkey {
@@ -109,7 +117,7 @@ impl EvmTestIdentityCertificate {
 
 #[tokio::test]
 pub async fn test_verify_signed_message_onchain() {
-    let signed_message = EvmTestIdentityCertificate::random(&Pubkey::new_unique());
+    let signed_message = InjectiveTestIdentityCertificate::fixed();
 
     let mut simulator = DispenserSimulator::new().await;
 
@@ -123,4 +131,10 @@ pub async fn test_verify_signed_message_onchain() {
         .process_ix(&[signed_message.as_instruction(0, false)], &vec![])
         .await
         .is_err());
+
+    let signature = libsecp256k1::Signature::parse_standard_slice(&base64_standard_engine.decode("6FaHFUQzu1/QpD0l6SoQZDI8yQq40qNRVN+y289/fcZGcUzyBIxbp4W4N3MmRO2cPPYwpK2+AQLl28ZuApqA8Q==").unwrap()).unwrap();
+    let recovery_id = libsecp256k1::RecoveryId::parse(0u8).unwrap();
+    let message = CosmosMessage::new("Pyth grant program");
+    println!("pubkey : {:?}", hex::encode(libsecp256k1::recover(&message.hash(), &signature, &RecoveryId::parse(0).unwrap()).unwrap().serialize_compressed()));
+    println!("pubkey : {:?}", hex::encode(libsecp256k1::recover(&message.hash(), &signature, &RecoveryId::parse(1).unwrap()).unwrap().serialize_compressed()));
 }

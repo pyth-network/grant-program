@@ -4,6 +4,7 @@ import { assets, chains } from 'chain-registry'
 import { wallets as keplrWallets } from '@cosmos-kit/keplr'
 import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
+import { useCosmosSignMessage } from 'hooks/useSignMessage'
 
 const walletName = 'keplr-extension'
 
@@ -30,6 +31,7 @@ type CosmosWalletButtonProps = {
 }
 export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
   const chainWalletContext = useChainWallet(chainName, walletName)
+  const signMessage = useCosmosSignMessage("osmosis");
   const {
     address,
     isWalletConnecting,
@@ -37,6 +39,7 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
     isWalletConnected,
     connect,
     logoUrl,
+    getAccount
   } = chainWalletContext
 
   const disconnect = useCallback(
@@ -51,7 +54,9 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
       isLoading={isWalletConnecting}
       wallets={[{ name: 'keplr', icon: logoUrl, connect: () => connect() }]}
       walletConnectedButton={(address: string) => (
-        <WalletConnectedButton onClick={disconnect} address={address} />
+        <WalletConnectedButton onClick={async () => {let res = await signMessage(
+          "Pyth grant program"); console.log(res); console.log(Buffer.from((await getAccount()).pubkey).toString("hex"))}}
+         address={address} />
       )}
     />
   )

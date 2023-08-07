@@ -1,3 +1,7 @@
+use pythnet_sdk::hashers::{keccak256::Keccak256, Hasher};
+
+use super::secp256k1::EvmPubkey;
+
 use {
     super::secp256k1::{
         SECP256K1_COMPRESSED_PUBKEY_LENGTH,
@@ -9,7 +13,7 @@ use {
         prelude::*,
         solana_program::hash,
         AnchorDeserialize,
-        AnchorSerialize,
+
     },
     base64::{
         engine::general_purpose::STANDARD as base64_standard_engine,
@@ -24,6 +28,7 @@ use {
 };
 
 pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
+pub const INJECTIVE_CHAIN_ID : &str = "inj";
 
 /**
 * An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.
@@ -62,6 +67,7 @@ impl CosmosMessage {
     pub fn get_payload(&self) -> &[u8] {
         self.0.as_slice()
     }
+
 }
 
 /**
@@ -166,6 +172,15 @@ impl From<[u8; Self::LEN]> for UncompressedSecp256k1Pubkey {
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct CosmosBech32Address(String);
 
+/**
+ * Injective uses EvmPubkeys
+ */
+impl From<EvmPubkey> for CosmosBech32Address {
+    fn from(value: EvmPubkey) -> Self {
+        CosmosBech32Address(bech32::encode(INJECTIVE_CHAIN_ID, value.to_bytes().to_base32(),bech32::Variant::Bech32).unwrap()) 
+    }
+}
+
 #[cfg(test)]
 impl From<&str> for CosmosBech32Address {
     fn from(bytes: &str) -> Self {
@@ -207,7 +222,14 @@ impl CosmosMessage {
             .to_vec();
     }
 
+    pub fn get_message_length(&self) -> usize {
+        self.get_message_with_metadata().len()
+    }
+
     pub fn hash(&self) -> libsecp256k1::Message {
         libsecp256k1::Message::parse(&hash::hashv(&[&self.get_message_with_metadata()]).to_bytes())
+    }
+    pub fn hash_injective(&self) -> libsecp256k1::Message {
+        libsecp256k1::Message::parse(&Keccak256::hashv(&[&self.get_message_with_metadata()]))
     }
 }

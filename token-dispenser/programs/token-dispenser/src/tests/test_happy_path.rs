@@ -1,3 +1,5 @@
+use super::test_injective::InjectiveTestIdentityCertificate;
+
 use {
     super::{
         dispenser_simulator::DispenserSimulator,
@@ -116,6 +118,15 @@ impl TestClaimCertificate {
             ),
         }
     }
+    
+    pub fn random_injective(claimant : &Pubkey) -> Self {
+        Self {
+            amount:                      Self::random_amount(),
+            off_chain_proof_of_identity: TestIdentityCertificate::Injective(
+                InjectiveTestIdentityCertificate::random(claimant),
+            ),
+        }
+    }
 }
 
 impl From<TestClaimCertificate> for ClaimInfo {
@@ -139,6 +150,7 @@ impl TestClaimCertificate {
             TestIdentityCertificate::Cosmos(_) => None,
             TestIdentityCertificate::Aptos(aptos) => Some(aptos.as_instruction(index, true)),
             TestIdentityCertificate::Sui(sui) => Some(sui.as_instruction(index, true)),
+            TestIdentityCertificate::Injective(injective) => Some(injective.as_instruction(index, true)),
         };
         (
             ClaimCertificate {
@@ -161,6 +173,7 @@ impl From<TestIdentityCertificate> for Identity {
             TestIdentityCertificate::Discord(username) => Identity::Discord { username },
             TestIdentityCertificate::Aptos(aptos) => aptos.into(),
             TestIdentityCertificate::Sui(sui) => sui.into(),
+            TestIdentityCertificate::Injective(injective) => injective.into(),
         }
     }
 }
@@ -175,6 +188,7 @@ impl TestIdentityCertificate {
             },
             Self::Aptos(aptos) => aptos.as_proof_of_identity(verification_instruction_index),
             Self::Sui(sui) => sui.as_proof_of_identity(verification_instruction_index),
+            Self::Injective(injective) => injective.as_proof_of_identity(verification_instruction_index),
         }
     }
 }
@@ -186,6 +200,7 @@ pub enum TestIdentityCertificate {
     Cosmos(CosmosTestIdentityCertificate),
     Aptos(Ed25519TestIdentityCertificate<AptosMessage>),
     Sui(Ed25519TestIdentityCertificate<SuiMessage>),
+    Injective(InjectiveTestIdentityCertificate),
 }
 
 #[tokio::test]
