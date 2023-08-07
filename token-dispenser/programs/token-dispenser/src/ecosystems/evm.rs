@@ -16,7 +16,7 @@ use {
 pub const EVM_MESSAGE_PREFIX: &str = "\x19Ethereum Signed Message:\n";
 
 /**
- * An EIP-191 prefixed message.
+ * An EIP-191 prefixed signed message.
  * When a browser wallet signs a message, it prepends the payload with a prefix and the length of the payload (encoded as a string).
  * The message is (EVM_MESSAGE_PREFIX + length of the payload + payload).
  * This struct represents the prefixed message and helps with creating and verifying it.
