@@ -2,7 +2,6 @@ import { useWallet as useAptosWallet } from '@aptos-labs/wallet-adapter-react'
 import { useChainWallet } from '@cosmos-kit/react-lite'
 import { useWalletKit } from '@mysten/wallet-kit'
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
-import { stat } from 'fs'
 import { useCallback } from 'react'
 import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
 
