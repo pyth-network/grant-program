@@ -160,7 +160,7 @@ impl From<TestIdentityCertificate> for Identity {
             TestIdentityCertificate::Cosmos(cosmos) => cosmos.into(),
             TestIdentityCertificate::Discord(username) => Identity::Discord { username },
             TestIdentityCertificate::Aptos(aptos) => aptos.into(),
-            TestIdentityCertificate::Sui(sui) => sui.into()
+            TestIdentityCertificate::Sui(sui) => sui.into(),
         }
     }
 }

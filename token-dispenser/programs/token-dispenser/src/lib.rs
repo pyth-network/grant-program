@@ -35,6 +35,10 @@ use {
         },
         check_message,
         cosmos::CosmosMessage,
+        ed25519::{
+            Ed25519InstructionData,
+            Ed25519Pubkey,
+        },
         evm::EvmPrefixedMessage,
         secp256k1::{
             secp256k1_sha256_verify_signer,
