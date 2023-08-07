@@ -85,17 +85,11 @@ impl Ed25519InstructionData {
         }
 
         let result = Self::try_from_slice(&instruction.data)?;
-        let header_instruction_index = result
-            .header
-            .message_instruction_index
-            .try_into()
-            .map_err(|_| ErrorCode::SignatureVerificationWrongHeader)?;
-        if (header_instruction_index != *verification_instruction_index)
-            || (result.header
-                != Ed25519InstructionHeader::expected_header(
-                    result.header.message_data_size,
-                    header_instruction_index,
-                ))
+        if result.header
+            != Ed25519InstructionHeader::expected_header(
+                result.header.message_data_size,
+                *verification_instruction_index,
+            )
         {
             return Err(ErrorCode::SignatureVerificationWrongHeader.into());
         }
