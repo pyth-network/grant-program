@@ -1,13 +1,7 @@
 use {
-    super::secp256k1::{
-        SECP256K1_COMPRESSED_PUBKEY_LENGTH,
-        SECP256K1_EVEN_PREFIX,
-        SECP256K1_ODD_PREFIX,
-    },
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
-        solana_program::hash,
         AnchorDeserialize,
         AnchorSerialize,
     },
@@ -15,8 +9,6 @@ use {
         engine::general_purpose::STANDARD as base64_standard_engine,
         Engine as _,
     },
-    bech32::ToBase32,
-    ripemd::Digest,
     serde::{
         Deserialize,
         Serialize,
@@ -115,6 +107,9 @@ struct CosmosCoin {
 }
 
 #[cfg(test)]
+use anchor_lang::solana_program::hash;
+
+#[cfg(test)]
 impl CosmosMessage {
     pub fn new(message: &str) -> Self {
         Self(message.as_bytes().to_vec())
@@ -149,43 +144,5 @@ impl CosmosMessage {
 
     pub fn hash(&self) -> libsecp256k1::Message {
         libsecp256k1::Message::parse(&hash::hashv(&[&self.get_message_with_metadata()]).to_bytes())
-    }
-}
-
-
-/**
- * A Secp256k1 pubkey used in Cosmos.
- */
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
-pub struct CosmosPubkey(pub [u8; Self::LEN]);
-impl CosmosPubkey {
-    pub const LEN: usize = 65;
-}
-
-#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub struct CosmosBech32Address(pub String);
-
-impl CosmosPubkey {
-    /** Cosmos public addresses are different than the public key.
-     * This one way algorithm converts the public key to the public address.
-     * Note that the claimant needs to submit the public key to the program
-     * to verify the signature.
-     */
-    pub fn into_bech32(self, chain_id: &str) -> CosmosBech32Address {
-        let mut compressed: [u8; SECP256K1_COMPRESSED_PUBKEY_LENGTH] =
-            [0; SECP256K1_COMPRESSED_PUBKEY_LENGTH];
-        compressed[1..].copy_from_slice(&self.0[1..SECP256K1_COMPRESSED_PUBKEY_LENGTH]);
-        compressed[0] = if self.0[Self::LEN - 1] % 2 == 0 {
-            SECP256K1_EVEN_PREFIX
-        } else {
-            SECP256K1_ODD_PREFIX
-        };
-        let hash1 = hash::hashv(&[&compressed]);
-        let mut hasher: ripemd::Ripemd160 = ripemd::Ripemd160::new();
-        hasher.update(hash1);
-        let hash2 = hasher.finalize();
-        CosmosBech32Address(
-            bech32::encode(chain_id, hash2.to_base32(), bech32::Variant::Bech32).unwrap(),
-        )
     }
 }

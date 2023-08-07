@@ -4,10 +4,14 @@ use {
         test_cosmos::CosmosTestIdentityCertificate,
     },
     crate::{
+        get_cart_pda,
         get_config_pda,
         get_receipt_pda,
         tests::{
-            dispenser_simulator::IntoTransactionError,
+            dispenser_simulator::{
+                copy_keypair,
+                IntoTransactionError,
+            },
             merkleize,
             test_evm::EvmTestIdentityCertificate,
         },
@@ -21,18 +25,11 @@ use {
     },
     anchor_lang::{
         prelude::Pubkey,
-        AccountDeserialize,
+        solana_program::program_option::COption,
         AnchorDeserialize,
         AnchorSerialize,
-        Id,
     },
-    anchor_spl::{
-        associated_token::get_associated_token_address_with_program_id,
-        token::{
-            Token,
-            TokenAccount,
-        },
-    },
+    anchor_spl::associated_token::get_associated_token_address,
     pythnet_sdk::accumulators::{
         merkle::MerkleTree,
         Accumulator,
@@ -97,32 +94,30 @@ impl TestClaimCertificate {
     }
 }
 
-impl Into<ClaimInfo> for TestClaimCertificate {
-    fn into(self) -> ClaimInfo {
+impl From<TestClaimCertificate> for ClaimInfo {
+    fn from(val: TestClaimCertificate) -> Self {
         ClaimInfo {
-            amount:   self.amount,
-            identity: self.off_chain_proof_of_identity.into(),
+            amount:   val.amount,
+            identity: val.off_chain_proof_of_identity.into(),
         }
     }
 }
 
 impl TestClaimCertificate {
-    pub fn into_claim_certificate(
+    pub fn as_claim_certificate(
         &self,
         merkle_tree: &MerkleTree<SolanaHasher>,
         index: u8,
     ) -> (ClaimCertificate, Option<Instruction>) {
         let option_instruction = match &self.off_chain_proof_of_identity {
-            TestIdentityCertificate::Evm(evm) => Some(evm.into_instruction(index, true)),
+            TestIdentityCertificate::Evm(evm) => Some(evm.as_instruction(index, true)),
             TestIdentityCertificate::Discord(_) => None,
             TestIdentityCertificate::Cosmos(_) => None,
         };
         (
             ClaimCertificate {
                 amount:             self.amount,
-                proof_of_identity:  self
-                    .off_chain_proof_of_identity
-                    .into_claim_certificate(index),
+                proof_of_identity:  self.off_chain_proof_of_identity.as_claim_certificate(index),
                 proof_of_inclusion: merkle_tree
                     .prove(&Into::<ClaimInfo>::into(self.clone()).try_to_vec().unwrap())
                     .unwrap(),
@@ -132,25 +127,20 @@ impl TestClaimCertificate {
     }
 }
 
-impl Into<Identity> for TestIdentityCertificate {
-    fn into(self) -> Identity {
-        match self {
-            Self::Evm(evm) => evm.into(),
-            Self::Cosmos(cosmos) => cosmos.into(),
-            Self::Discord(username) => Identity::Discord {
-                username: username.clone(),
-            },
+impl From<TestIdentityCertificate> for Identity {
+    fn from(val: TestIdentityCertificate) -> Self {
+        match val {
+            TestIdentityCertificate::Evm(evm) => evm.into(),
+            TestIdentityCertificate::Cosmos(cosmos) => cosmos.into(),
+            TestIdentityCertificate::Discord(username) => Identity::Discord { username },
         }
     }
 }
 
 impl TestIdentityCertificate {
-    pub fn into_claim_certificate(
-        &self,
-        verification_instruction_index: u8,
-    ) -> IdentityCertificate {
+    pub fn as_claim_certificate(&self, verification_instruction_index: u8) -> IdentityCertificate {
         match self {
-            Self::Evm(evm) => evm.into_proof_of_identity(verification_instruction_index),
+            Self::Evm(evm) => evm.as_proof_of_identity(verification_instruction_index),
             Self::Cosmos(cosmos) => cosmos.clone().into(),
             Self::Discord(username) => IdentityCertificate::Discord {
                 username: username.clone(),
@@ -171,13 +161,9 @@ pub async fn test_happy_path() {
     let dispenser_guard: Keypair = Keypair::new();
 
     let mut simulator = DispenserSimulator::new().await;
-    let claimant = simulator.genesis_keypair.pubkey();
 
-    let mock_offchain_certificates = vec![
-        TestClaimCertificate::random_evm(&claimant),
-        TestClaimCertificate::random_cosmos(&claimant),
-        TestClaimCertificate::random_discord(),
-    ];
+    let mock_offchain_certificates =
+        DispenserSimulator::generate_test_claim_certs(simulator.genesis_keypair.pubkey());
 
     let merkle_items: Vec<ClaimInfo> = mock_offchain_certificates
         .iter()
@@ -186,14 +172,21 @@ pub async fn test_happy_path() {
 
     let (merkle_tree, merkle_items_serialized) = merkleize(merkle_items);
 
-    let config_pubkey = get_config_pda().0;
-    let treasury = get_associated_token_address_with_program_id(
-        &(config_pubkey),
-        &simulator.mint_keypair.pubkey(),
-        &Token::id(),
-    );
+    let (config_pubkey, config_bump) = get_config_pda();
+    let treasury = simulator.pyth_treasury;
 
-    let target_config = Config {
+    simulator
+        .initialize(
+            merkle_tree.root.clone(),
+            dispenser_guard.pubkey(),
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+    let expected_target_config = Config {
+        bump: config_bump,
         merkle_root: merkle_tree.root.clone(),
         dispenser_guard: dispenser_guard.pubkey(),
         mint: simulator.mint_keypair.pubkey(),
@@ -201,30 +194,51 @@ pub async fn test_happy_path() {
     };
 
 
-    simulator.initialize(target_config.clone()).await.unwrap();
-
     let config_account: Account = simulator.get_account(config_pubkey).await.unwrap();
     let config_data: Config = Config::try_from_slice(&config_account.data[8..]).unwrap();
-    assert_eq!(target_config, config_data);
+    assert_eq!(expected_target_config, config_data);
+    let claim_sum = mock_offchain_certificates
+        .iter()
+        .map(|item| item.amount)
+        .sum::<u64>();
+    let mint_to_amount = 10 * claim_sum;
 
-    let treasury_account: Account = simulator.get_account(treasury).await.unwrap();
-    let treasury_data: TokenAccount =
-        TokenAccount::try_deserialize_unchecked(&mut treasury_account.data.as_slice()).unwrap();
-    assert_eq!(treasury_data.amount, 0);
-    assert_eq!(treasury_data.mint, simulator.mint_keypair.pubkey());
-    assert_eq!(treasury_data.owner, config_pubkey);
+    simulator.mint_to_treasury(mint_to_amount).await.unwrap();
+    simulator
+        .verify_token_account_data(treasury, mint_to_amount, COption::None, 0)
+        .await
+        .unwrap();
 
+    simulator
+        .approve_treasury_delegate(get_config_pda().0, mint_to_amount)
+        .await
+        .unwrap();
+
+    simulator
+        .verify_token_account_data(
+            treasury,
+            mint_to_amount,
+            COption::Some(config_pubkey),
+            mint_to_amount,
+        )
+        .await
+        .unwrap();
 
     for serialized_item in &merkle_items_serialized {
         assert!(simulator
-            .get_account(get_receipt_pda(&serialized_item).0)
+            .get_account(get_receipt_pda(serialized_item).0)
             .await
             .is_none());
     }
 
     for offchain_claim_certificate in &mock_offchain_certificates {
         simulator
-            .claim(&dispenser_guard, &offchain_claim_certificate, &merkle_tree)
+            .claim(
+                &copy_keypair(&simulator.genesis_keypair),
+                &dispenser_guard,
+                offchain_claim_certificate,
+                &merkle_tree,
+            )
             .await
             .unwrap();
     }
@@ -236,16 +250,59 @@ pub async fn test_happy_path() {
     for offchain_claim_certificate in &mock_offchain_certificates {
         assert_eq!(
             simulator
-                .claim(&dispenser_guard, &offchain_claim_certificate, &merkle_tree)
+                .claim(
+                    &copy_keypair(&simulator.genesis_keypair),
+                    &dispenser_guard,
+                    offchain_claim_certificate,
+                    &merkle_tree
+                )
                 .await
                 .unwrap_err()
                 .unwrap(),
-            ErrorCode::AlreadyClaimed.into_transation_error()
+            ErrorCode::AlreadyClaimed.into_transaction_error()
         );
     }
 
     // Check state
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
+    let cart_pda = get_cart_pda(&simulator.genesis_keypair.pubkey()).0;
+    let cart_data = simulator
+        .get_account_data::<crate::Cart>(cart_pda)
+        .await
+        .unwrap();
+    assert_eq!(cart_data.amount, claim_sum);
+
+
+    // Checkout
+    simulator
+        .checkout(
+            &copy_keypair(&simulator.genesis_keypair),
+            simulator.mint_keypair.pubkey(),
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+
+    simulator
+        .verify_token_account_data(
+            get_associated_token_address(
+                &simulator.genesis_keypair.pubkey(),
+                &simulator.mint_keypair.pubkey(),
+            ),
+            claim_sum,
+            COption::None,
+            0,
+        )
+        .await
+        .unwrap();
+
+    let cart_data = simulator
+        .get_account_data::<crate::Cart>(cart_pda)
+        .await
+        .unwrap();
+    assert_eq!(cart_data.amount, 0);
 }
 
 pub async fn assert_claim_receipts_exist(

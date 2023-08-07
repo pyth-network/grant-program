@@ -8,7 +8,6 @@ use {
                 EvmPubkey,
                 Secp256k1InstructionData,
                 Secp256k1InstructionHeader,
-                Secp256k1Signature,
             },
         },
         Identity,
@@ -32,7 +31,7 @@ pub fn construct_evm_pubkey(pubkey: &libsecp256k1::PublicKey) -> EvmPubkey {
     let mut addr = [0u8; EvmPubkey::LEN];
     addr.copy_from_slice(&Keccak256::hashv(&[&pubkey.serialize()[1..]])[12..]);
     assert_eq!(addr.len(), EvmPubkey::LEN);
-    EvmPubkey(addr)
+    addr.into()
 }
 
 #[derive(Clone)]
@@ -62,7 +61,7 @@ impl EvmTestIdentityCertificate {
         }
     }
 
-    pub fn into_instruction(&self, instruction_index: u8, valid_signature: bool) -> Instruction {
+    pub fn as_instruction(&self, instruction_index: u8, valid_signature: bool) -> Instruction {
         let header = Secp256k1InstructionHeader::expected_header(
             self.message.get_prefix_length().try_into().unwrap(),
             instruction_index,
@@ -78,7 +77,7 @@ impl EvmTestIdentityCertificate {
         let instruction_data = Secp256k1InstructionData {
             header,
             eth_address: self.recover_as_evm_address(),
-            signature: Secp256k1Signature(signature_bytes),
+            signature: signature_bytes.into(),
             recovery_id: self.recovery_id.serialize(),
             message: self.message.get_prefixed_message(),
         };
@@ -91,19 +90,16 @@ impl EvmTestIdentityCertificate {
     }
 }
 
-impl Into<Identity> for EvmTestIdentityCertificate {
-    fn into(self) -> Identity {
+impl From<EvmTestIdentityCertificate> for Identity {
+    fn from(val: EvmTestIdentityCertificate) -> Self {
         Identity::Evm {
-            pubkey: self.recover_as_evm_address(),
+            pubkey: val.recover_as_evm_address(),
         }
     }
 }
 
 impl EvmTestIdentityCertificate {
-    pub fn into_proof_of_identity(
-        &self,
-        verification_instruction_index: u8,
-    ) -> IdentityCertificate {
+    pub fn as_proof_of_identity(&self, verification_instruction_index: u8) -> IdentityCertificate {
         IdentityCertificate::Evm {
             pubkey: self.recover_as_evm_address(),
             verification_instruction_index,
@@ -118,13 +114,13 @@ pub async fn test_verify_signed_message_onchain() {
     let mut simulator = DispenserSimulator::new().await;
 
     assert!(simulator
-        .process_ix(&[signed_message.into_instruction(0, true)], &vec![])
+        .process_ix(&[signed_message.as_instruction(0, true)], &vec![])
         .await
         .is_ok());
 
 
     assert!(simulator
-        .process_ix(&[signed_message.into_instruction(0, false)], &vec![])
+        .process_ix(&[signed_message.as_instruction(0, false)], &vec![])
         .await
         .is_err());
 }

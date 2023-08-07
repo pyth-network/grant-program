@@ -3,12 +3,35 @@ on:
   pull_request:
   push:
     branches: [main]
+
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    env:
+      PGUSER: myuser
+      PGPASSWORD: mypass
+      PGDATABASE: mydb
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: ${{ env.PGUSER }}
+          POSTGRES_PASSWORD: ${{ env.PGPASSWORD }}
+          POSTGRES_DB: ${{ env.PGDATABASE }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     defaults:
       run:
         working-directory: ./frontend
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -20,5 +43,7 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+      - name: Migrate DB
+        run: npm run migrate
       - name: Test
         run: npm run test

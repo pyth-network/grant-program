@@ -1,22 +1,14 @@
 use {
     super::dispenser_simulator::DispenserSimulator,
     crate::{
-        get_config_pda,
         tests::{
+            dispenser_simulator::copy_keypair,
             merkleize,
             test_happy_path::TestClaimCertificate,
         },
         ClaimInfo,
-        Config,
     },
-    anchor_lang::{
-        solana_program::instruction::InstructionError::Custom,
-        Id,
-    },
-    anchor_spl::{
-        associated_token::get_associated_token_address_with_program_id,
-        token::Token,
-    },
+    anchor_lang::solana_program::instruction::InstructionError::Custom,
     solana_program_test::tokio,
     solana_sdk::{
         signature::Keypair,
@@ -46,35 +38,45 @@ pub async fn test_initialize_fails_with_incorrect_accounts() {
 
     let (merkle_tree, _) = merkleize(merkle_items);
 
-    let config_pubkey = get_config_pda().0;
-    let treasury = get_associated_token_address_with_program_id(
-        &(config_pubkey),
-        &simulator.mint_keypair.pubkey(),
-        &Token::id(),
-    );
 
-    let target_config = Config {
-        merkle_root: merkle_tree.root.clone(),
-        dispenser_guard: dispenser_guard.pubkey(),
-        mint: Keypair::new().pubkey(), //incorrect mint
-        treasury,
-    };
-
-
-    let res = simulator.initialize(target_config).await;
+    let res = simulator
+        .initialize(
+            merkle_tree.root.clone(),
+            dispenser_guard.pubkey(),
+            Some(Keypair::new().pubkey()), //invalid mint
+            None,
+        )
+        .await;
     assert!(res.is_err());
-    // 2012 - ConstraintAddress
-    assert_eq!(res.unwrap_err().unwrap(), InstructionError(0, Custom(2012)));
 
-    let target_config = Config {
-        merkle_root:     merkle_tree.root.clone(),
-        dispenser_guard: dispenser_guard.pubkey(),
-        mint:            simulator.mint_keypair.pubkey(),
-        treasury:        Keypair::new().pubkey(), //incorrect treasury
-    };
+    // 3012 - AccountNotInitialized
+    assert_eq!(res.unwrap_err().unwrap(), InstructionError(0, Custom(3012)));
 
-    let res = simulator.initialize(target_config).await;
+    let fake_mint_keypair = Keypair::new();
+    simulator
+        .create_mint(&fake_mint_keypair, &simulator.genesis_keypair.pubkey(), 0)
+        .await
+        .unwrap();
+    // create treasury (associated token account) from a different mint
+    let invalid_treasury = Keypair::new();
+    simulator
+        .create_token_account(
+            fake_mint_keypair.pubkey(),
+            &copy_keypair(&simulator.genesis_keypair),
+            &invalid_treasury,
+        )
+        .await
+        .unwrap();
+
+    let res = simulator
+        .initialize(
+            merkle_tree.root.clone(),
+            dispenser_guard.pubkey(),
+            None,
+            Some(invalid_treasury.pubkey()),
+        )
+        .await;
     assert!(res.is_err());
-    // 2012 - ConstraintAddress
-    assert_eq!(res.unwrap_err().unwrap(), InstructionError(0, Custom(2012)));
+    // 2014- ConstraintTokenMint
+    assert_eq!(res.unwrap_err().unwrap(), InstructionError(0, Custom(2014)));
 }
