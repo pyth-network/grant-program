@@ -1,6 +1,9 @@
 use {
     crate::{
-        ecosystems::aptos::AptosAddress,
+        ecosystems::{
+            aptos::AptosAddress,
+            sui::SuiAddress,
+        },
         ClaimInfo,
         Identity,
         SolanaHasher,
@@ -24,6 +27,11 @@ fn test_merkle_tree() {
     let mut aptos_address: [u8; 32] = [0u8; 32];
     aptos_address.copy_from_slice(
         &hex::decode("7e7544df4fc42107d4a60834685dfd9c1e6ff048f49fe477bc19c1551299d5cb").unwrap(),
+    );
+
+    let mut sui_address: [u8; 32] = [0u8; 32];
+    sui_address.copy_from_slice(
+        &hex::decode("87a7ec050788fbaa9cd842b4cf9915949931af94806404bba661f1ac3d338148").unwrap(),
     );
 
     let merkle_items: Vec<ClaimInfo> = vec![
@@ -55,6 +63,12 @@ fn test_merkle_tree() {
             amount:   3000,
             identity: Identity::Aptos {
                 address: AptosAddress(aptos_address),
+            },
+        },
+        ClaimInfo {
+            amount:   5000,
+            identity: Identity::Sui {
+                address: SuiAddress(sui_address),
             },
         },
     ];

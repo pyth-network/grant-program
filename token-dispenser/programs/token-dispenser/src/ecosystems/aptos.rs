@@ -1,11 +1,9 @@
 #[cfg(test)]
-use super::ed25519::TestMessage;
+use super::ed25519::Ed25519TestMessage;
 use {
-    super::ed25519::Ed25519Pubkey,
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
-        solana_program::hash,
         AnchorDeserialize,
         AnchorSerialize,
     },
@@ -24,20 +22,6 @@ pub const APTOS_SIGNATURE_SCHEME_ID: u8 = 0;
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct AptosMessage(Vec<u8>);
 
-#[cfg(test)]
-impl TestMessage for AptosMessage {
-    fn new(message: &str) -> Self {
-        Self(message.as_bytes().to_vec())
-    }
-
-    fn get_message_with_metadata(&self) -> Vec<u8> {
-        let mut message = APTOS_PREFIX.to_vec();
-        message.extend_from_slice(&self.0);
-        message.extend_from_slice(&APTOS_SUFFIX);
-        message.to_vec()
-    }
-}
-
 impl AptosMessage {
     pub fn get_payload(&self) -> &[u8] {
         self.0.as_slice()
@@ -53,12 +37,19 @@ impl AptosMessage {
     }
 }
 
+#[cfg(test)]
+impl Ed25519TestMessage for AptosMessage {
+    fn new(message: &str) -> Self {
+        Self(message.as_bytes().to_vec())
+    }
+
+    fn get_message_with_metadata(&self) -> Vec<u8> {
+        let mut message = APTOS_PREFIX.to_vec();
+        message.extend_from_slice(&self.0);
+        message.extend_from_slice(APTOS_SUFFIX);
+        message.to_vec()
+    }
+}
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct AptosAddress(pub [u8; 32]);
-
-impl Into<AptosAddress> for Ed25519Pubkey {
-    fn into(self) -> AptosAddress {
-        AptosAddress(hash::hashv(&[&self.0, &[APTOS_SIGNATURE_SCHEME_ID]]).to_bytes())
-    }
-}

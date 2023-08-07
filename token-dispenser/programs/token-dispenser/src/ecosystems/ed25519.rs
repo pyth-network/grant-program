@@ -1,27 +1,53 @@
 use {
+    super::{
+        aptos::{
+            AptosAddress,
+            APTOS_SIGNATURE_SCHEME_ID,
+        },
+        sui::{
+            SuiAddress,
+            SUI_SIGNATURE_SCHEME_ID,
+        },
+    },
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
         solana_program::{
             ed25519_program::ID as ED25519_ID,
+            hash,
             instruction::Instruction,
         },
         AnchorDeserialize,
         AnchorSerialize,
     },
+    blake2_rfc::blake2b::Blake2b,
 };
 
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub struct Ed25519Signature(pub [u8; Ed25519Signature::LEN]);
+pub struct Ed25519Signature([u8; Ed25519Signature::LEN]);
 impl Ed25519Signature {
     pub const LEN: usize = 64;
 }
 
+#[cfg(test)]
+impl From<[u8; Self::LEN]> for Ed25519Signature {
+    fn from(bytes: [u8; Self::LEN]) -> Self {
+        Ed25519Signature(bytes)
+    }
+}
+
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, PartialEq)]
-pub struct Ed25519Pubkey(pub [u8; Ed25519Pubkey::LEN]);
+pub struct Ed25519Pubkey([u8; Ed25519Pubkey::LEN]);
 impl Ed25519Pubkey {
     pub const LEN: usize = 32;
+}
+
+#[cfg(test)]
+impl From<[u8; Self::LEN]> for Ed25519Pubkey {
+    fn from(bytes: [u8; Self::LEN]) -> Self {
+        Ed25519Pubkey(bytes)
+    }
 }
 
 /** The layout of a Ed25519 signature verification instruction on Solana */
@@ -135,7 +161,7 @@ impl AnchorSerialize for Ed25519InstructionData {
 }
 
 #[cfg(test)]
-pub trait TestMessage
+pub trait Ed25519TestMessage
 where
     Self: Sized,
 {
@@ -143,5 +169,23 @@ where
     fn get_message_with_metadata(&self) -> Vec<u8>;
     fn get_message_length(&self) -> usize {
         self.get_message_with_metadata().len()
+    }
+}
+
+impl From<Ed25519Pubkey> for SuiAddress {
+    fn from(val: Ed25519Pubkey) -> Self {
+        let mut context = Blake2b::new(32);
+        let mut result = SuiAddress([0u8; 32]);
+        context.update(&[SUI_SIGNATURE_SCHEME_ID]);
+        context.update(&val.0);
+
+        result.0.copy_from_slice(context.finalize().as_bytes());
+        result
+    }
+}
+
+impl From<Ed25519Pubkey> for AptosAddress {
+    fn from(val: Ed25519Pubkey) -> Self {
+        AptosAddress(hash::hashv(&[&val.0, &[APTOS_SIGNATURE_SCHEME_ID]]).to_bytes())
     }
 }

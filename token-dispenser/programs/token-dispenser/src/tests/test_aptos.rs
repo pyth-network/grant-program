@@ -6,8 +6,7 @@ use {
                 Ed25519InstructionData,
                 Ed25519InstructionHeader,
                 Ed25519Pubkey,
-                Ed25519Signature,
-                TestMessage,
+                Ed25519TestMessage,
             },
             get_expected_message,
             sui::SuiMessage,
@@ -31,13 +30,13 @@ use {
 };
 
 #[derive(Clone)]
-pub struct Ed25519TestIdentityCertificate<T: TestMessage> {
+pub struct Ed25519TestIdentityCertificate<T: Ed25519TestMessage> {
     pub message:   T,
     pub signature: ed25519_dalek::Signature,
     pub publickey: ed25519_dalek::PublicKey,
 }
 
-impl<T: TestMessage> Ed25519TestIdentityCertificate<T> {
+impl<T: Ed25519TestMessage> Ed25519TestIdentityCertificate<T> {
     pub fn random(claimant: &Pubkey) -> Self {
         let message = T::new(&get_expected_message(claimant));
         let mut csprng = OsRng {};
@@ -66,8 +65,8 @@ impl<T: TestMessage> Ed25519TestIdentityCertificate<T> {
 
         let instruction_data = Ed25519InstructionData {
             header,
-            signature: Ed25519Signature(signature_bytes),
-            pubkey: Ed25519Pubkey(self.publickey.to_bytes()),
+            signature: signature_bytes.into(),
+            pubkey: self.publickey.to_bytes().into(),
             message: self.message.get_message_with_metadata(),
         };
 
@@ -79,10 +78,10 @@ impl<T: TestMessage> Ed25519TestIdentityCertificate<T> {
     }
 }
 
-impl Into<Identity> for Ed25519TestIdentityCertificate<AptosMessage> {
-    fn into(self) -> Identity {
+impl From<Ed25519TestIdentityCertificate<AptosMessage>> for Identity {
+    fn from(val: Ed25519TestIdentityCertificate<AptosMessage>) -> Self {
         Identity::Aptos {
-            address: Ed25519Pubkey(self.publickey.to_bytes()).into(),
+            address: Ed25519Pubkey::from(val.publickey.to_bytes()).into(),
         }
     }
 }
@@ -93,16 +92,16 @@ impl Ed25519TestIdentityCertificate<AptosMessage> {
         verification_instruction_index: u8,
     ) -> IdentityCertificate {
         IdentityCertificate::Aptos {
-            pubkey: Ed25519Pubkey(self.publickey.to_bytes()),
+            pubkey: self.publickey.to_bytes().into(),
             verification_instruction_index,
         }
     }
 }
 
-impl Into<Identity> for Ed25519TestIdentityCertificate<SuiMessage> {
-    fn into(self) -> Identity {
+impl From<Ed25519TestIdentityCertificate<SuiMessage>> for Identity {
+    fn from(val: Ed25519TestIdentityCertificate<SuiMessage>) -> Self {
         Identity::Sui {
-            address: Ed25519Pubkey(self.publickey.to_bytes()).into(),
+            address: Ed25519Pubkey::from(val.publickey.to_bytes()).into(),
         }
     }
 }
@@ -114,7 +113,7 @@ impl Ed25519TestIdentityCertificate<SuiMessage> {
         verification_instruction_index: u8,
     ) -> IdentityCertificate {
         IdentityCertificate::Sui {
-            pubkey: Ed25519Pubkey(self.publickey.to_bytes()),
+            pubkey: Ed25519Pubkey::from(self.publickey.to_bytes()),
             verification_instruction_index,
         }
     }
