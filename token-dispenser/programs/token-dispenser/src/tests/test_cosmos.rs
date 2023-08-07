@@ -3,10 +3,7 @@ use {
         ecosystems::{
             cosmos::CosmosMessage,
             get_expected_message,
-            secp256k1::{
-                Secp256k1Signature,
-                UncompressedSecp256k1Pubkey,
-            },
+            secp256k1::UncompressedSecp256k1Pubkey,
         },
         Identity,
         IdentityCertificate,

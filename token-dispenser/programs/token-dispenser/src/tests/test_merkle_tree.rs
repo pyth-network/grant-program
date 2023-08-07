@@ -1,9 +1,5 @@
 use {
     crate::{
-        ecosystems::secp256k1::{
-            CosmosBech32Address,
-            EvmPubkey,
-        },
         ClaimInfo,
         Identity,
         SolanaHasher,
