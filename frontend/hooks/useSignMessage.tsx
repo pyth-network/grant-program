@@ -14,7 +14,7 @@ import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
 type SignMessageFn = (message: string) => Promise<string | undefined>
 
 // This hook returns a function to sign message for the Aptos wallet.
-export function useAptosSignMessage(): SignMessageFn {
+export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
   const { signMessage, connected } = useAptosWallet()
 
   const signMessageCb = useCallback(
@@ -26,7 +26,7 @@ export function useAptosSignMessage(): SignMessageFn {
           (await signMessage({
             message,
             // TODO: do something for the nonce
-            nonce: '1',
+            nonce,
           })) ?? {}
 
         return signature as string | undefined
@@ -34,7 +34,7 @@ export function useAptosSignMessage(): SignMessageFn {
         console.error(e)
       }
     },
-    [connected, signMessage]
+    [connected, signMessage, nonce]
   )
   return signMessageCb
 }
