@@ -1,26 +1,14 @@
 use {
-    super::{
-        aptos::{
-            AptosAddress,
-            APTOS_SIGNATURE_SCHEME_ID,
-        },
-        sui::{
-            SuiAddress,
-            SUI_SIGNATURE_SCHEME_ID,
-        },
-    },
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
         solana_program::{
             ed25519_program::ID as ED25519_ID,
-            hash,
             instruction::Instruction,
         },
         AnchorDeserialize,
         AnchorSerialize,
     },
-    blake2_rfc::blake2b::Blake2b,
 };
 
 

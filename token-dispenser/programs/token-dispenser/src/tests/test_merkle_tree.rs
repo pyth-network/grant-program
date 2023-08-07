@@ -1,9 +1,5 @@
 use {
     crate::{
-        ecosystems::{
-            aptos::AptosAddress,
-            sui::SuiAddress,
-        },
         ClaimInfo,
         Identity,
         SolanaHasher,
