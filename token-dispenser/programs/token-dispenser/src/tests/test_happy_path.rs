@@ -1,8 +1,8 @@
 use {
     super::{
         dispenser_simulator::DispenserSimulator,
-        test_aptos::Ed25519TestIdentityCertificate,
         test_cosmos::CosmosTestIdentityCertificate,
+        test_ed25519::Ed25519TestIdentityCertificate,
     },
     crate::{
         ecosystems::{
