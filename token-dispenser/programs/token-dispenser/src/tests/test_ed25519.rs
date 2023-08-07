@@ -117,7 +117,7 @@ impl Ed25519TestIdentityCertificate<SuiMessage> {
 impl From<Ed25519TestIdentityCertificate<SolanaMessage>> for Identity {
     fn from(val: Ed25519TestIdentityCertificate<SolanaMessage>) -> Self {
         Identity::Solana {
-            pubkey: Ed25519Pubkey::from(val.publickey.to_bytes()).into(),
+            pubkey: Ed25519Pubkey::from(val.publickey.to_bytes()),
         }
     }
 }

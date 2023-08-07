@@ -7,10 +7,7 @@ use {
     crate::{
         ecosystems::{
             aptos::AptosMessage,
-            solana::{
-                self,
-                SolanaMessage,
-            },
+            solana::SolanaMessage,
             sui::SuiMessage,
         },
         get_cart_pda,

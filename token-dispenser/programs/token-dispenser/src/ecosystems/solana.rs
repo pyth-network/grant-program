@@ -15,7 +15,7 @@ impl SolanaMessage {
     }
 
     pub fn parse(data: &[u8]) -> Result<Self> {
-        return Ok(SolanaMessage(data.to_vec()));
+        Ok(SolanaMessage(data.to_vec()))
     }
 }
 
