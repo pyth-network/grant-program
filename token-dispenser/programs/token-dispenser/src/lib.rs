@@ -33,7 +33,7 @@ use {
             AptosAddress,
             AptosMessage,
         },
-        check_message,
+        check_payload,
         cosmos::{
             CosmosBech32Address,
             CosmosMessage,
@@ -51,8 +51,8 @@ use {
             Secp256k1Signature,
         },
         sui::{
-            check_hashed_message,
             SuiAddress,
+            SuiMessage,
         },
     },
     pythnet_sdk::{
@@ -402,8 +402,8 @@ pub enum ErrorCode {
     SignatureVerificationWrongProgram,
     SignatureVerificationWrongAccounts,
     SignatureVerificationWrongHeader,
-    SignatureVerificationWrongMessage,
-    SignatureVerificationWrongMessageMetadata,
+    SignatureVerificationWrongPayload,
+    SignatureVerificationWrongPayloadMetadata,
     SignatureVerificationWrongSigner,
     SignatureVerificationWrongClaimant,
 }
@@ -438,7 +438,7 @@ impl IdentityCertificate {
                     *verification_instruction_index as usize,
                     sysvar_instruction,
                 )?;
-                check_message(
+                check_payload(
                     EvmPrefixedMessage::parse(
                         &Secp256k1InstructionData::extract_message_and_check_signature(
                             &signature_verification_instruction,
@@ -459,7 +459,7 @@ impl IdentityCertificate {
                 message,
             } => {
                 secp256k1_sha256_verify_signer(signature, recovery_id, pubkey, message)?;
-                check_message(CosmosMessage::parse(message)?.get_payload(), claimant)?;
+                check_payload(CosmosMessage::parse(message)?.get_payload(), claimant)?;
                 let cosmos_bech32 = pubkey.into_bech32(chain_id);
                 Ok(Identity::Cosmwasm {
                     address: cosmos_bech32,
@@ -473,7 +473,7 @@ impl IdentityCertificate {
                     *verification_instruction_index as usize,
                     sysvar_instruction,
                 )?;
-                check_message(
+                check_payload(
                     AptosMessage::parse(
                         &Ed25519InstructionData::extract_message_and_check_signature(
                             &signature_verification_instruction,
@@ -496,7 +496,7 @@ impl IdentityCertificate {
                     *verification_instruction_index as usize,
                     sysvar_instruction,
                 )?;
-                check_hashed_message(
+                SuiMessage::check_hashed_payload(
                     &Ed25519InstructionData::extract_message_and_check_signature(
                         &signature_verification_instruction,
                         pubkey,

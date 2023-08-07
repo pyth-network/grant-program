@@ -32,18 +32,18 @@ impl AptosMessage {
 
     pub fn parse(data: &[u8]) -> Result<Self> {
         if let Some(no_prefix) = data.strip_prefix(APTOS_PREFIX) {
-            if let Some(message) = no_prefix.strip_suffix(APTOS_SUFFIX) {
-                return Ok(AptosMessage(message.to_vec()));
+            if let Some(payload) = no_prefix.strip_suffix(APTOS_SUFFIX) {
+                return Ok(AptosMessage(payload.to_vec()));
             }
         }
-        Err(ErrorCode::SignatureVerificationWrongMessageMetadata.into())
+        Err(ErrorCode::SignatureVerificationWrongPayloadMetadata.into())
     }
 }
 
 #[cfg(test)]
 impl Ed25519TestMessage for AptosMessage {
-    fn new(message: &str) -> Self {
-        Self(message.as_bytes().to_vec())
+    fn new(payload: &str) -> Self {
+        Self(payload.as_bytes().to_vec())
     }
 
     fn get_message_with_metadata(&self) -> Vec<u8> {

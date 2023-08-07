@@ -36,7 +36,7 @@ pub struct CosmosMessage(Vec<u8>);
 impl CosmosMessage {
     pub fn parse(data: &[u8]) -> Result<Self> {
         let sign_doc: CosmosStdSignDoc = serde_json::from_slice(data)
-            .map_err(|_| ErrorCode::SignatureVerificationWrongMessageMetadata)?;
+            .map_err(|_| ErrorCode::SignatureVerificationWrongPayloadMetadata)?;
 
         if !(sign_doc.account_number == "0"
             && sign_doc.chain_id.is_empty()
@@ -46,16 +46,16 @@ impl CosmosMessage {
             && sign_doc.msgs.len() == 1
             && sign_doc.sequence == "0")
         {
-            return Err(ErrorCode::SignatureVerificationWrongMessageMetadata.into());
+            return Err(ErrorCode::SignatureVerificationWrongPayloadMetadata.into());
         }
 
         if sign_doc.msgs[0].r#type != EXPECTED_COSMOS_MESSAGE_TYPE {
-            return Err(ErrorCode::SignatureVerificationWrongMessageMetadata.into());
+            return Err(ErrorCode::SignatureVerificationWrongPayloadMetadata.into());
         }
         Ok(CosmosMessage(
             base64_standard_engine
                 .decode(sign_doc.msgs[0].value.data.as_bytes())
-                .map_err(|_| ErrorCode::SignatureVerificationWrongMessageMetadata)?,
+                .map_err(|_| ErrorCode::SignatureVerificationWrongPayloadMetadata)?,
         ))
     }
 
@@ -176,8 +176,8 @@ impl From<&str> for CosmosBech32Address {
 
 #[cfg(test)]
 impl CosmosMessage {
-    pub fn new(message: &str) -> Self {
-        Self(message.as_bytes().to_vec())
+    pub fn new(payload: &str) -> Self {
+        Self(payload.as_bytes().to_vec())
     }
 
     /**

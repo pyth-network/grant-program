@@ -8,7 +8,7 @@ use {
                 Ed25519Pubkey,
                 Ed25519TestMessage,
             },
-            get_expected_message,
+            get_expected_payload,
             sui::SuiMessage,
         },
         tests::dispenser_simulator::DispenserSimulator,
@@ -38,7 +38,7 @@ pub struct Ed25519TestIdentityCertificate<T: Ed25519TestMessage> {
 
 impl<T: Ed25519TestMessage> Ed25519TestIdentityCertificate<T> {
     pub fn random(claimant: &Pubkey) -> Self {
-        let message = T::new(&get_expected_message(claimant));
+        let message = T::new(&get_expected_payload(claimant));
         let mut csprng = OsRng {};
         let keypair: Keypair = Keypair::generate(&mut csprng);
         let signature = keypair.sign(&message.get_message_with_metadata());
