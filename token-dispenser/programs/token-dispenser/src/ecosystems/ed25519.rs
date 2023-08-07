@@ -176,7 +176,7 @@ use anchor_lang::prelude::ProgramError::BorshIoError;
 
 #[test]
 pub fn test_signature_verification() {
-    let secp256k1_ix = Ed25519InstructionData {
+    let ed25519_ix = Ed25519InstructionData {
         header:    Ed25519InstructionHeader::expected_header(5, 0),
         signature: Ed25519Signature([0; Ed25519Signature::LEN]),
         message:   b"hello".to_vec(),
@@ -188,7 +188,7 @@ pub fn test_signature_verification() {
             &Instruction {
                 program_id: ED25519_ID,
                 accounts:   vec![],
-                data:       secp256k1_ix.try_to_vec().unwrap(),
+                data:       ed25519_ix.try_to_vec().unwrap(),
             },
             &Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
             &0,
@@ -202,7 +202,7 @@ pub fn test_signature_verification() {
             &Instruction {
                 program_id: Pubkey::new_unique(),
                 accounts:   vec![],
-                data:       secp256k1_ix.try_to_vec().unwrap(),
+                data:       ed25519_ix.try_to_vec().unwrap(),
             },
             &Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
             &0,
@@ -220,7 +220,7 @@ pub fn test_signature_verification() {
                     is_signer:   true,
                     is_writable: false,
                 }],
-                data:       secp256k1_ix.try_to_vec().unwrap(),
+                data:       ed25519_ix.try_to_vec().unwrap(),
             },
             &Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
             &0,
@@ -234,7 +234,7 @@ pub fn test_signature_verification() {
             &Instruction {
                 program_id: ED25519_ID,
                 accounts:   vec![],
-                data:       secp256k1_ix.try_to_vec().unwrap(),
+                data:       ed25519_ix.try_to_vec().unwrap(),
             },
             &Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
             &1, // wrong instruction index
@@ -248,7 +248,7 @@ pub fn test_signature_verification() {
             &Instruction {
                 program_id: ED25519_ID,
                 accounts:   vec![],
-                data:       secp256k1_ix.try_to_vec().unwrap(),
+                data:       ed25519_ix.try_to_vec().unwrap(),
             },
             &Ed25519Pubkey([1; Ed25519Pubkey::LEN]),
             &0,
@@ -258,7 +258,7 @@ pub fn test_signature_verification() {
     );
 
 
-    let secp256k1_ix_message_too_long = Ed25519InstructionData {
+    let ed25519_ix_message_too_long = Ed25519InstructionData {
         header:    Ed25519InstructionHeader::expected_header(2, 0),
         signature: Ed25519Signature([0; Ed25519Signature::LEN]),
         pubkey:    Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
@@ -270,7 +270,7 @@ pub fn test_signature_verification() {
             &Instruction {
                 program_id: ED25519_ID,
                 accounts:   vec![],
-                data:       secp256k1_ix_message_too_long.try_to_vec().unwrap(),
+                data:       ed25519_ix_message_too_long.try_to_vec().unwrap(),
             },
             &Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
             &0,
@@ -279,7 +279,7 @@ pub fn test_signature_verification() {
         BorshIoError("Not all bytes read".to_string()).into()
     );
 
-    let secp256k1_ix_message_too_short = Ed25519InstructionData {
+    let ed25519_ix_message_too_short = Ed25519InstructionData {
         header:    Ed25519InstructionHeader::expected_header(10, 0),
         signature: Ed25519Signature([0; Ed25519Signature::LEN]),
         pubkey:    Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
@@ -291,7 +291,7 @@ pub fn test_signature_verification() {
             &Instruction {
                 program_id: ED25519_ID,
                 accounts:   vec![],
-                data:       secp256k1_ix_message_too_short.try_to_vec().unwrap(),
+                data:       ed25519_ix_message_too_short.try_to_vec().unwrap(),
             },
             &Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
             &0,

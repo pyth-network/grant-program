@@ -15,31 +15,31 @@ pub mod solana;
 pub mod sui;
 
 /**
- * Ecosystem agnostic authorization message that the identity on the leaf needs to sign.
+ * Ecosystem agnostic authorization payload that the identity on the leaf needs to sign.
  * */
-pub const AUTHORIZATION_MESSAGE: [&str; 3] = [
+pub const AUTHORIZATION_PAYLOAD: [&str; 3] = [
     "Pyth Grant Program ID:\n",
     "\nI irrevocably authorize Solana wallet\n",
     "\nto withdraw my token allocation.\n",
 ];
 
 /**
- * Check a message matches the expected authorization message.
+ * Check a payload matches the expected authorization payload.
  */
-pub fn check_message(message: &[u8], claimant: &Pubkey) -> Result<()> {
-    if message != get_expected_message(claimant).as_bytes() {
-        return Err(ErrorCode::SignatureVerificationWrongMessage.into());
+pub fn check_payload(payload: &[u8], claimant: &Pubkey) -> Result<()> {
+    if payload != get_expected_payload(claimant).as_bytes() {
+        return Err(ErrorCode::SignatureVerificationWrongPayload.into());
     }
     Ok(())
 }
 
 /**
- * Get the expected authorization message given the claimant authorized to receive the claim.
+ * Get the expected authorization payload given the claimant authorized to receive the claim.
  */
-pub fn get_expected_message(claimant: &Pubkey) -> String {
-    AUTHORIZATION_MESSAGE[0].to_string()
+pub fn get_expected_payload(claimant: &Pubkey) -> String {
+    AUTHORIZATION_PAYLOAD[0].to_string()
         + &crate::ID.to_string()
-        + AUTHORIZATION_MESSAGE[1]
+        + AUTHORIZATION_PAYLOAD[1]
         + claimant.to_string().as_str()
-        + AUTHORIZATION_MESSAGE[2]
+        + AUTHORIZATION_PAYLOAD[2]
 }

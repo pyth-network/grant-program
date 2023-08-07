@@ -3,7 +3,7 @@ use super::ed25519::Ed25519TestMessage;
 use {
     super::{
         ed25519::Ed25519Pubkey,
-        get_expected_message,
+        get_expected_payload,
     },
     crate::ErrorCode,
     anchor_lang::{
@@ -21,32 +21,34 @@ pub const SUI_PREFIX: &[u8] = &[3, 0, 0];
 /**
 * An arbitrary message used in Sui
 * Only the message payload is stored in this struct.
+* The message that gets signed for Sui is the blake2b256 hash of the prefixed payload. (i.e. blake2b(SUI_PREFIX + payload))
+*
  */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct SuiMessage(Vec<u8>);
 
 
 impl SuiMessage {
-    pub fn get_expected_hash(message: &str) -> Vec<u8> {
+    pub fn get_expected_hash(payload: &str) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::<u8>::new();
         result.extend(SUI_PREFIX);
-        result.extend_from_slice(message.as_bytes());
+        result.extend_from_slice(payload.as_bytes());
         blake2_rfc::blake2b::blake2b(32, &[], &result)
             .as_bytes()
             .to_vec()
     }
-}
 
-/**
- * Sui hashes the message with Blake2b before signing therefore we can't use the same flow
- * of parsing the message as in other ecosystems. Instead we just check that the hash of the message
- * matches the hash of the expected message
- */
-pub fn check_hashed_message(message: &[u8], claimant: &Pubkey) -> Result<()> {
-    if message != SuiMessage::get_expected_hash(&get_expected_message(claimant)) {
-        return Err(ErrorCode::SignatureVerificationWrongMessage.into());
+    /**
+     * Sui hashes the prefixed payload with Blake2b before signing therefore we can't use the same flow
+     * of parsing the message as in other ecosystems. Instead we just check that the hash of the prefixed payload
+     * matches the hash of the expected payload
+     */
+    pub fn check_hashed_payload(payload: &[u8], claimant: &Pubkey) -> Result<()> {
+        if payload != SuiMessage::get_expected_hash(&get_expected_payload(claimant)) {
+            return Err(ErrorCode::SignatureVerificationWrongPayload.into());
+        }
+        Ok(())
     }
-    Ok(())
 }
 
 

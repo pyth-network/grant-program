@@ -4,13 +4,16 @@
 
 @layer base {
   body {
-    @apply bg-dark font-mono text-base text-light antialiased;
+    @apply bg-dark font-body text-base text-light antialiased;
   }
 }
 
 @layer utilities {
   .gradient-border {
     @apply absolute left-8 bottom-0 h-px w-[calc(100%-64px)] bg-radial opacity-60;
+  }
+  .btn-bg {
+    @apply absolute top-px left-px h-[calc(100%-2px)] w-[calc(100%-2px)]  transition-all;
   }
 }
 
@@ -80,4 +83,48 @@
 
 .wallet-adapter-button.secondary-btn:hover {
   @apply hover:bg-pythPurple;
+}
+
+.claim_li {
+  @apply mb-[1px] block cursor-pointer py-4 px-6 font-header text-base18 font-light transition-colors hover:bg-darkGray5 hover:text-light;
+}
+
+.claim_li span {
+  @apply mr-2.5 inline-block w-[18px] text-center;
+}
+
+.btn {
+  @apply relative inline-block h-[44px] px-8 font-body text-base transition-all;
+}
+
+.btn-square {
+  @apply before:btn-bg btn--dark relative flex h-[42px]  w-[42px] items-center justify-center  transition-all before:bg-dark hover:text-dark hover:before:bg-light;
+}
+
+.btn--dark {
+  @apply bg-radial;
+}
+
+.btn--light {
+  @apply z-10 bg-radial2 text-dark;
+}
+
+.claim-ul li {
+  @apply mb-4 flex gap-2.5 before:h-5 before:w-5 before:flex-shrink-0 before:content-li;
+}
+
+.checkbox {
+  @apply inline-flex items-center gap-2 font-header text-base18 font-light;
+}
+
+.checkbox input {
+  @apply h-6 w-6 flex-shrink-0 appearance-none border border-light-35 bg-light-35;
+}
+
+.checkbox input:checked {
+  @apply bg-check  bg-center bg-no-repeat;
+}
+
+.modal {
+  @apply absolute left-0 top-0 z-10 flex h-[100vh] w-full  items-center justify-center p-6 before:absolute before:inset-0  before:bg-dark-70 before:bg-gradient2 before:blur-[2px];
 }
