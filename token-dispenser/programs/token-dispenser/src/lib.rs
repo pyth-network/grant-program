@@ -475,12 +475,11 @@ impl IdentityCertificate {
                 )?;
                 check_message(
                     AptosMessage::parse(
-                        &Ed25519InstructionData::from_instruction_and_check_signer(
+                        &Ed25519InstructionData::extract_message_and_check_signature(
                             &signature_verification_instruction,
                             pubkey,
                             verification_instruction_index,
-                        )?
-                        .message,
+                        )?,
                     )?
                     .get_payload(),
                     claimant,
@@ -498,12 +497,11 @@ impl IdentityCertificate {
                     sysvar_instruction,
                 )?;
                 check_hashed_message(
-                    &Ed25519InstructionData::from_instruction_and_check_signer(
+                    &Ed25519InstructionData::extract_message_and_check_signature(
                         &signature_verification_instruction,
                         pubkey,
                         verification_instruction_index,
-                    )?
-                    .message,
+                    )?,
                     claimant,
                 )?;
                 Ok(Identity::Sui {

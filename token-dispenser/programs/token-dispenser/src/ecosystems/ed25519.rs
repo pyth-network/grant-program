@@ -91,11 +91,11 @@ impl Ed25519InstructionHeader {
 }
 
 impl Ed25519InstructionData {
-    pub fn from_instruction_and_check_signer(
+    pub fn extract_message_and_check_signature(
         instruction: &Instruction,
         pubkey: &Ed25519Pubkey,
         verification_instruction_index: &u8,
-    ) -> Result<Self> {
+    ) -> Result<Vec<u8>> {
         if instruction.program_id != ED25519_ID {
             return Err(ErrorCode::SignatureVerificationWrongProgram.into());
         }
@@ -118,7 +118,7 @@ impl Ed25519InstructionData {
             return Err(ErrorCode::SignatureVerificationWrongSigner.into());
         }
 
-        Ok(result)
+        Ok(result.message)
     }
 }
 
@@ -129,6 +129,10 @@ impl AnchorDeserialize for Ed25519InstructionData {
         let pubkey = Ed25519Pubkey::deserialize(buf)?;
 
         let mut message: Vec<u8> = vec![];
+        if buf.len() < header.message_data_size as usize {
+            return Err(std::io::Error::from(std::io::ErrorKind::UnexpectedEof));
+        }
+
         message.extend_from_slice(&buf[..header.message_data_size as usize]);
         *buf = &buf[header.message_data_size as usize..];
         Ok(Ed25519InstructionData {
@@ -164,4 +168,135 @@ where
     fn get_message_length(&self) -> usize {
         self.get_message_with_metadata().len()
     }
+}
+
+#[cfg(test)]
+use anchor_lang::prelude::ProgramError::BorshIoError;
+
+
+#[test]
+pub fn test_signature_verification() {
+    let secp256k1_ix = Ed25519InstructionData {
+        header:    Ed25519InstructionHeader::expected_header(5, 0),
+        signature: Ed25519Signature([0; Ed25519Signature::LEN]),
+        message:   b"hello".to_vec(),
+        pubkey:    Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
+    };
+
+    assert_eq!(
+        Ed25519InstructionData::extract_message_and_check_signature(
+            &Instruction {
+                program_id: ED25519_ID,
+                accounts:   vec![],
+                data:       secp256k1_ix.try_to_vec().unwrap(),
+            },
+            &Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
+            &0,
+        )
+        .unwrap(),
+        b"hello".to_vec()
+    );
+
+    assert_eq!(
+        Ed25519InstructionData::extract_message_and_check_signature(
+            &Instruction {
+                program_id: Pubkey::new_unique(),
+                accounts:   vec![],
+                data:       secp256k1_ix.try_to_vec().unwrap(),
+            },
+            &Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
+            &0,
+        )
+        .unwrap_err(),
+        ErrorCode::SignatureVerificationWrongProgram.into()
+    );
+
+    assert_eq!(
+        Ed25519InstructionData::extract_message_and_check_signature(
+            &Instruction {
+                program_id: ED25519_ID,
+                accounts:   vec![AccountMeta {
+                    pubkey:      Pubkey::new_unique(),
+                    is_signer:   true,
+                    is_writable: false,
+                }],
+                data:       secp256k1_ix.try_to_vec().unwrap(),
+            },
+            &Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
+            &0,
+        )
+        .unwrap_err(),
+        ErrorCode::SignatureVerificationWrongAccounts.into()
+    );
+
+    assert_eq!(
+        Ed25519InstructionData::extract_message_and_check_signature(
+            &Instruction {
+                program_id: ED25519_ID,
+                accounts:   vec![],
+                data:       secp256k1_ix.try_to_vec().unwrap(),
+            },
+            &Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
+            &1, // wrong instruction index
+        )
+        .unwrap_err(),
+        ErrorCode::SignatureVerificationWrongHeader.into()
+    );
+
+    assert_eq!(
+        Ed25519InstructionData::extract_message_and_check_signature(
+            &Instruction {
+                program_id: ED25519_ID,
+                accounts:   vec![],
+                data:       secp256k1_ix.try_to_vec().unwrap(),
+            },
+            &Ed25519Pubkey([1; Ed25519Pubkey::LEN]),
+            &0,
+        )
+        .unwrap_err(),
+        ErrorCode::SignatureVerificationWrongSigner.into()
+    );
+
+
+    let secp256k1_ix_message_too_long = Ed25519InstructionData {
+        header:    Ed25519InstructionHeader::expected_header(2, 0),
+        signature: Ed25519Signature([0; Ed25519Signature::LEN]),
+        pubkey:    Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
+        message:   b"hello".to_vec(),
+    };
+
+    assert_eq!(
+        Ed25519InstructionData::extract_message_and_check_signature(
+            &Instruction {
+                program_id: ED25519_ID,
+                accounts:   vec![],
+                data:       secp256k1_ix_message_too_long.try_to_vec().unwrap(),
+            },
+            &Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
+            &0,
+        )
+        .unwrap_err(),
+        BorshIoError("Not all bytes read".to_string()).into()
+    );
+
+    let secp256k1_ix_message_too_short = Ed25519InstructionData {
+        header:    Ed25519InstructionHeader::expected_header(10, 0),
+        signature: Ed25519Signature([0; Ed25519Signature::LEN]),
+        pubkey:    Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
+        message:   b"hello".to_vec(),
+    };
+
+    assert_eq!(
+        Ed25519InstructionData::extract_message_and_check_signature(
+            &Instruction {
+                program_id: ED25519_ID,
+                accounts:   vec![],
+                data:       secp256k1_ix_message_too_short.try_to_vec().unwrap(),
+            },
+            &Ed25519Pubkey([0; Ed25519Pubkey::LEN]),
+            &0,
+        )
+        .unwrap_err(),
+        BorshIoError("unexpected end of file".to_string()).into()
+    );
 }

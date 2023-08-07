@@ -25,6 +25,31 @@ pub const SUI_PREFIX: &[u8] = &[3, 0, 0];
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct SuiMessage(Vec<u8>);
 
+
+impl SuiMessage {
+    pub fn get_expected_hash(message: &str) -> Vec<u8> {
+        let mut result: Vec<u8> = Vec::<u8>::new();
+        result.extend(SUI_PREFIX);
+        result.extend_from_slice(message.as_bytes());
+        blake2_rfc::blake2b::blake2b(32, &[], &result)
+            .as_bytes()
+            .to_vec()
+    }
+}
+
+/**
+ * Sui hashes the message with Blake2b before signing therefore we can't use the same flow
+ * of parsing the message as in other ecosystems. Instead we just check that the hash of the message
+ * matches the hash of the expected message
+ */
+pub fn check_hashed_message(message: &[u8], claimant: &Pubkey) -> Result<()> {
+    if message != &SuiMessage::get_expected_hash(&get_expected_message(claimant)) {
+        return Err(ErrorCode::SignatureVerificationWrongMessage.into());
+    }
+    Ok(())
+}
+
+
 #[cfg(test)]
 impl Ed25519TestMessage for SuiMessage {
     fn new(message: &str) -> Self {
@@ -41,23 +66,6 @@ impl Ed25519TestMessage for SuiMessage {
     }
 }
 
-impl SuiMessage {
-    pub fn get_expected_hash(message: &str) -> Vec<u8> {
-        let mut result: Vec<u8> = Vec::<u8>::new();
-        result.extend(SUI_PREFIX);
-        result.extend_from_slice(message.as_bytes());
-        blake2_rfc::blake2b::blake2b(32, &[], &result)
-            .as_bytes()
-            .to_vec()
-    }
-}
-
-pub fn check_hashed_message(message: &[u8], claimant: &Pubkey) -> Result<()> {
-    if message != &SuiMessage::get_expected_hash(&get_expected_message(claimant)) {
-        return Err(ErrorCode::SignatureVerificationWrongMessage.into());
-    }
-    Ok(())
-}
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct SuiAddress([u8; 32]);

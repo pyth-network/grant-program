@@ -1,4 +1,5 @@
 use {
+    super::cosmos::UncompressedSecp256k1Pubkey,
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
@@ -189,9 +190,10 @@ pub fn secp256k1_sha256_verify_signer(
 }
 
 
-use super::cosmos::UncompressedSecp256k1Pubkey;
 #[cfg(test)]
 use anchor_lang::prelude::ProgramError::BorshIoError;
+
+
 #[test]
 pub fn test_signature_verification() {
     let secp256k1_ix = Secp256k1InstructionData {
