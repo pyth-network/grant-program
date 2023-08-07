@@ -113,9 +113,9 @@ export function useSuiSignMessage(): SignMessageFn {
   const signMessageCb = useCallback(
     async (message: string) => {
       try {
-        // Here is on edge case. Even if the wallet is connected the currentAccount
+        // Here is one edge case. Even if the wallet is connected the currentAccount
         // can be null and hence we can't sign a message. Calling signMessage when
-        // currentAccount throws an error.
+        // currentAccount is null throws an error.
         if (isConnected === false || currentAccount === null) return
         const { signature } = await signMessage({
           message: Buffer.from(message),
