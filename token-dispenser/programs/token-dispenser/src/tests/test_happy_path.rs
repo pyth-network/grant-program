@@ -11,7 +11,6 @@ use {
             solana::SolanaMessage,
             cosmos::CosmosMessage,
             evm::EvmPrefixedMessage,
-            get_expected_payload,
             sui::SuiMessage,
         },
         get_cart_pda,
@@ -44,10 +43,7 @@ use {
             merkle::MerkleTree,
             Accumulator,
         },
-        hashers::{
-            keccak256::Keccak256,
-            keccak256_160::Keccak160,
-        },
+        hashers::keccak256::Keccak256,
     },
     rand::Rng,
     solana_program_test::tokio,
@@ -88,9 +84,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Evm(
-                Secp256k1TestIdentityCertificate::<EvmPrefixedMessage, Keccak256>::random(
-                    &claimant,
-                ),
+                Secp256k1TestIdentityCertificate::<EvmPrefixedMessage, Keccak256>::random(claimant),
             ),
         }
     }
@@ -99,7 +93,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Cosmos(
-                Secp256k1TestIdentityCertificate::<CosmosMessage, Sha256>::random(&claimant),
+                Secp256k1TestIdentityCertificate::<CosmosMessage, Sha256>::random(claimant),
             ),
         }
     }

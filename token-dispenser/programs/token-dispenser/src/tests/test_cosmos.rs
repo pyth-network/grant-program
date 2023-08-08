@@ -6,15 +6,12 @@ use {
                 CosmosMessage,
                 UncompressedSecp256k1Pubkey,
             },
-            get_expected_payload,
             secp256k1::Secp256k1TestMessage,
         },
         Identity,
         IdentityCertificate,
     },
-    anchor_lang::prelude::Pubkey,
     pythnet_sdk::hashers::Hasher,
-    rand::seq::SliceRandom,
     solana_sdk::hash::hashv,
 };
 

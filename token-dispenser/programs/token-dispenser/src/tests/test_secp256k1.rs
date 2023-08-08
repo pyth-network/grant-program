@@ -30,10 +30,7 @@ use {
     rand::seq::SliceRandom,
     solana_program_test::tokio,
     solana_sdk::instruction::Instruction,
-    std::{
-        hash::Hash,
-        marker::PhantomData,
-    },
+    std::marker::PhantomData,
 };
 
 /// Creates an Ethereum address from a secp256k1 public key.
@@ -55,7 +52,7 @@ pub struct Secp256k1TestIdentityCertificate<T: Secp256k1TestMessage, U: Hasher> 
 impl<T: Secp256k1TestMessage, U: Hasher> Secp256k1TestIdentityCertificate<T, U> {
     pub fn hash_message(message: &T) -> libsecp256k1::Message {
         libsecp256k1::Message::parse_slice(
-            &U::hashv(&[&message.get_message_with_metadata()]).as_ref(),
+            U::hashv(&[&message.get_message_with_metadata()]).as_ref(),
         )
         .unwrap()
     }
