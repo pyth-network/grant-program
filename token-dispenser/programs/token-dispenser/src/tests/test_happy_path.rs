@@ -10,10 +10,7 @@ use {
             aptos::AptosMessage,
             cosmos::CosmosMessage,
             evm::EvmPrefixedMessage,
-            discord::{
-                self,
-                DiscordMessage,
-            },
+            discord::DiscordMessage,
             ed25519::Ed25519TestMessage,
             get_expected_payload,
             solana::SolanaMessage,
@@ -109,7 +106,7 @@ impl TestClaimCertificate {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Discord(
                 Ed25519TestIdentityCertificate::<DiscordMessage>::new(
-                    DiscordMessage::random_username(&claimant),
+                    DiscordMessage::random_username(claimant),
                     signer,
                 ),
             ),

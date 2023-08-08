@@ -1,14 +1,10 @@
 use {
     crate::{
-        ecosystems::ed25519::Ed25519Pubkey,
         ClaimInfo,
         Identity,
         SolanaHasher,
     },
-    anchor_lang::{
-        prelude::Pubkey,
-        AnchorSerialize,
-    },
+    anchor_lang::AnchorSerialize,
     pythnet_sdk::accumulators::{
         merkle::MerkleTree,
         Accumulator,

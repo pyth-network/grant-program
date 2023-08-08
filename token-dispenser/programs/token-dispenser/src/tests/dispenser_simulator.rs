@@ -246,7 +246,7 @@ impl DispenserSimulator {
                     let pubkey = c.pubkey();
                     (
                         c,
-                        DispenserSimulator::generate_test_claim_certs(&pubkey, &dispenser_guard),
+                        DispenserSimulator::generate_test_claim_certs(&pubkey, dispenser_guard),
                     )
                 })
                 .collect::<Vec<_>>();

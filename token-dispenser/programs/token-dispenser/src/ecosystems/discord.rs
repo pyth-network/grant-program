@@ -49,10 +49,9 @@ impl Ed25519TestMessage for DiscordMessage {
 #[cfg(test)]
 impl DiscordMessage {
     pub fn random_username(claimant: &Pubkey) -> Self {
-        let result = Self {
+        Self {
             username: Alphanumeric.sample_string(&mut rand::thread_rng(), 16),
             claimant: *claimant,
-        };
-        return result;
+        }
     }
 }

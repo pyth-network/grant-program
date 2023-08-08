@@ -5,7 +5,6 @@ use {
         test_happy_path::TestClaimCertificate,
     },
     crate::{
-        get_config_pda,
         tests::dispenser_simulator::{
             copy_keypair,
             IntoTransactionError,
@@ -13,7 +12,6 @@ use {
         ClaimInfo,
         ErrorCode,
     },
-    anchor_lang::prelude::*,
     solana_program_test::tokio,
     solana_sdk::signer::{
         keypair::Keypair,
@@ -67,7 +65,7 @@ pub async fn test_discord() {
             .await
             .unwrap_err()
             .unwrap(),
-        ErrorCode::SignatureVerificationWrongSigner.into_transaction_error()
+        ErrorCode::SignatureVerificationWrongSigner.into_transaction_error(0)
     );
     assert!(simulator
         .claim(
@@ -90,6 +88,6 @@ pub async fn test_discord() {
             .await
             .unwrap_err()
             .unwrap(),
-        ErrorCode::SignatureVerificationWrongSigner.into_transaction_error()
+        ErrorCode::SignatureVerificationWrongSigner.into_transaction_error(0)
     );
 }
