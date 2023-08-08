@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import Arrow from '../../images/arrow.inline.svg'
 import Coin from '../../images/coin.inline.svg'
 
@@ -13,6 +13,8 @@ import { SuiWalletButton } from '@components/wallets/Sui'
 import { EVMWalletButton } from '@components/wallets/EVM'
 import { CosmosWalletButton } from '@components/wallets/Cosmos'
 import { SolanaWalletButton } from '@components/wallets/Solana'
+import { signIn, signOut, useSession } from 'next-auth/react'
+import Image from 'next/image'
 
 const Eligibility = ({
   openModal,
@@ -194,12 +196,7 @@ const Eligibility = ({
                   Discord Activity
                 </span>
                 <span className="flex items-center gap-5">
-                  <button className="btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light">
-                    <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                      <Discord />
-                      <span>connect</span>
-                    </span>
-                  </button>
+                  <DiscordButton />
                   <TooltipIcon />
                   <Verified className="opacity-0" />
                 </span>
@@ -228,6 +225,49 @@ const Eligibility = ({
         </tbody>
       </table>
     </div>
+  )
+}
+
+function DiscordButton() {
+  const { data, status } = useSession()
+
+  const { logo, text } = useMemo(() => {
+    if (status === 'authenticated')
+      return {
+        logo: data.user?.image ? (
+          <Image
+            src={data.user?.image}
+            alt="user image"
+            width={20}
+            height={20}
+          />
+        ) : (
+          <Discord />
+        ),
+        text: data.user?.name ?? 'Signed In',
+      }
+
+    return {
+      logo: <Discord />,
+      text: 'Sign In',
+    }
+  }, [status, data?.user])
+
+  return (
+    <button
+      className={
+        'btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light'
+      }
+      onClick={() => {
+        if (status === 'unauthenticated') signIn('discord')
+        if (status === 'authenticated') signOut()
+      }}
+    >
+      <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+        {logo}
+        <span>{text}</span>
+      </span>
+    </button>
   )
 }
 
