@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import Arrow from '../../images/arrow.inline.svg'
 import Coin from '../../images/coin.inline.svg'
 
@@ -231,34 +231,37 @@ const Eligibility = ({
 function DiscordButton() {
   const { data, status } = useSession()
 
-  if (status === 'authenticated')
-    return (
-      <button className="btn before:btn-bg  btn--dark before:bg-dark hover:cursor-default">
-        <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-          {data.user?.image ? (
-            <Image
-              src={data.user?.image}
-              alt="user image"
-              width={20}
-              height={20}
-            />
-          ) : (
-            <Discord />
-          )}
-          <span>{data.user?.name ?? 'Logged In'}</span>
-        </span>
-      </button>
-    )
+  const { hoverClass, logo, text } = useMemo(() => {
+    if (status === 'authenticated')
+      return {
+        hoverClass: ' hover:cursor-default ',
+        logo: data.user?.image ? (
+          <Image
+            src={data.user?.image}
+            alt="user image"
+            width={20}
+            height={20}
+          />
+        ) : (
+          <Discord />
+        ),
+        text: data.user?.name ?? 'Signed In',
+      }
 
-  console.log(data, status)
+    return {
+      logo: <Discord />,
+      hoverClass: ' hover:text-dark hover:before:bg-light ',
+      text: 'Sign In',
+    }
+  }, [status, data?.user])
+
   return (
     <button
-      className="btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light"
-      onClick={() => signIn('discord')}
+      className={'btn before:btn-bg  btn--dark before:bg-dark ' + hoverClass}
     >
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-        <Discord />
-        <span>connect</span>
+        {logo}
+        <span>{text}</span>
       </span>
     </button>
   )
