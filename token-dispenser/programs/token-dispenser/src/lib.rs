@@ -39,6 +39,7 @@ use {
             CosmosMessage,
             UncompressedSecp256k1Pubkey,
         },
+        discord::DiscordMessage,
         ed25519::{
             Ed25519InstructionData,
             Ed25519Pubkey,
@@ -121,6 +122,7 @@ pub mod token_dispenser {
             let claim_info = claim_certificate.checked_into_claim_info(
                 &ctx.accounts.sysvar_instruction,
                 ctx.accounts.claimant.key,
+                &ctx.accounts.config.dispenser_guard,
             )?;
             // Each leaf of the tree is a hash of the serialized claim info
             let leaf_vector = claim_info.try_to_vec()?;
@@ -299,7 +301,7 @@ impl Identity {
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub enum IdentityCertificate {
     Discord {
-        username: String,
+        verification_instruction_index: u8,
     },
     Evm {
         pubkey:                         EvmPubkey,
@@ -438,11 +440,28 @@ impl IdentityCertificate {
         &self,
         sysvar_instruction: &AccountInfo,
         claimant: &Pubkey,
+        dispenser_guard: &Pubkey,
     ) -> Result<Identity> {
         match self {
-            IdentityCertificate::Discord { username } => Ok(Identity::Discord {
-                username: username.to_string(),
-            }), // The discord check happens off-chain, it is the responsibility of the dispenser guard to check that the Discord user has been authenticated.
+            IdentityCertificate::Discord {
+                verification_instruction_index,
+            } => {
+                let signature_verification_instruction = load_instruction_at_checked(
+                    *verification_instruction_index as usize,
+                    sysvar_instruction,
+                )?;
+                let username = DiscordMessage::parse_and_check_claimant(
+                    &Ed25519InstructionData::extract_message_and_check_signature(
+                        &signature_verification_instruction,
+                        &Ed25519Pubkey::from(*dispenser_guard),
+                        verification_instruction_index,
+                    )?,
+                    claimant,
+                )?
+                .get_username();
+
+                Ok(Identity::Discord { username })
+            }
             IdentityCertificate::Evm {
                 pubkey,
                 verification_instruction_index,
@@ -559,11 +578,14 @@ impl ClaimCertificate {
         &self,
         sysvar_instruction: &AccountInfo,
         claimant: &Pubkey,
+        dispenser_guard: &Pubkey,
     ) -> Result<ClaimInfo> {
         Ok(ClaimInfo {
-            identity: self
-                .proof_of_identity
-                .checked_into_identity(sysvar_instruction, claimant)?,
+            identity: self.proof_of_identity.checked_into_identity(
+                sysvar_instruction,
+                claimant,
+                dispenser_guard,
+            )?,
             amount:   self.amount,
         })
     }

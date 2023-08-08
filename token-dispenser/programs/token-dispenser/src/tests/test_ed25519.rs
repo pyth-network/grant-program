@@ -2,6 +2,7 @@ use {
     crate::{
         ecosystems::{
             aptos::AptosMessage,
+            discord::DiscordMessage,
             ed25519::{
                 Ed25519InstructionData,
                 Ed25519InstructionHeader,
@@ -38,10 +39,19 @@ pub struct Ed25519TestIdentityCertificate<T: Ed25519TestMessage> {
 }
 
 impl<T: Ed25519TestMessage> Ed25519TestIdentityCertificate<T> {
-    pub fn random(claimant: &Pubkey) -> Self {
-        let message = T::new(&get_expected_payload(claimant));
+    pub fn random(message: T) -> Self {
         let mut csprng = OsRng {};
         let keypair: Keypair = Keypair::generate(&mut csprng);
+        let signature = keypair.sign(&message.get_message_with_metadata());
+        let publickey = keypair.public;
+        Self {
+            message,
+            signature,
+            publickey,
+        }
+    }
+
+    pub fn new(message: T, keypair: &Keypair) -> Self {
         let signature = keypair.sign(&message.get_message_with_metadata());
         let publickey = keypair.public;
         Self {
@@ -132,10 +142,28 @@ impl Ed25519TestIdentityCertificate<SolanaMessage> {
     }
 }
 
+impl From<Ed25519TestIdentityCertificate<DiscordMessage>> for Identity {
+    fn from(val: Ed25519TestIdentityCertificate<DiscordMessage>) -> Self {
+        Identity::Discord {
+            username: val.message.get_username(),
+        }
+    }
+}
+
+
+impl Ed25519TestIdentityCertificate<DiscordMessage> {
+    pub fn as_proof_of_identity(&self, verification_instruction_index: u8) -> IdentityCertificate {
+        IdentityCertificate::Discord {
+            verification_instruction_index,
+        }
+    }
+}
+
 #[tokio::test]
 pub async fn test_verify_signed_message_onchain() {
-    let signed_message =
-        Ed25519TestIdentityCertificate::<SuiMessage>::random(&Pubkey::new_unique());
+    let signed_message = Ed25519TestIdentityCertificate::<SuiMessage>::random(SuiMessage::new(
+        &get_expected_payload(&Pubkey::new_unique()),
+    ));
 
     let mut simulator = DispenserSimulator::new().await;
 

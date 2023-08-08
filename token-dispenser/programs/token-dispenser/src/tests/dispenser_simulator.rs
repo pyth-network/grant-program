@@ -117,14 +117,18 @@ impl DispenserSimulator {
         simulator
     }
 
-    pub fn generate_test_claim_certs(claimant: Pubkey) -> Vec<TestClaimCertificate> {
+    pub fn generate_test_claim_certs(
+        claimant: &Pubkey,
+        dispenser_guard: &Keypair,
+    ) -> Vec<TestClaimCertificate> {
+        let keypair = ed25519_dalek::Keypair::from_bytes(&dispenser_guard.to_bytes()).unwrap();
         vec![
-            TestClaimCertificate::random_evm(&claimant),
-            TestClaimCertificate::random_cosmos(&claimant),
-            TestClaimCertificate::random_discord(),
-            TestClaimCertificate::random_aptos(&claimant),
-            TestClaimCertificate::random_sui(&claimant),
-            TestClaimCertificate::random_solana(&claimant),
+            TestClaimCertificate::random_evm(claimant),
+            TestClaimCertificate::random_cosmos(claimant),
+            TestClaimCertificate::random_discord(claimant, &keypair),
+            TestClaimCertificate::random_aptos(claimant),
+            TestClaimCertificate::random_sui(claimant),
+            TestClaimCertificate::random_solana(claimant),
         ]
     }
 
@@ -240,7 +244,10 @@ impl DispenserSimulator {
                 .into_iter()
                 .map(|c| {
                     let pubkey = c.pubkey();
-                    (c, DispenserSimulator::generate_test_claim_certs(pubkey))
+                    (
+                        c,
+                        DispenserSimulator::generate_test_claim_certs(&pubkey, &dispenser_guard),
+                    )
                 })
                 .collect::<Vec<_>>();
         let merkle_items: Vec<ClaimInfo> = mock_offchain_certificates_and_claimants

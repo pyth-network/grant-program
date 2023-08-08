@@ -10,6 +10,12 @@ use {
             aptos::AptosMessage,
             cosmos::CosmosMessage,
             evm::EvmPrefixedMessage,
+            discord::{
+                self,
+                DiscordMessage,
+            },
+            ed25519::Ed25519TestMessage,
+            get_expected_payload,
             solana::SolanaMessage,
             sui::SuiMessage,
         },
@@ -98,10 +104,15 @@ impl TestClaimCertificate {
         }
     }
 
-    pub fn random_discord() -> Self {
+    pub fn random_discord(claimant: &Pubkey, signer: &ed25519_dalek::Keypair) -> Self {
         Self {
             amount:                      Self::random_amount(),
-            off_chain_proof_of_identity: TestIdentityCertificate::Discord("username".into()),
+            off_chain_proof_of_identity: TestIdentityCertificate::Discord(
+                Ed25519TestIdentityCertificate::<DiscordMessage>::new(
+                    DiscordMessage::random_username(&claimant),
+                    signer,
+                ),
+            ),
         }
     }
 
@@ -109,7 +120,9 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Aptos(
-                Ed25519TestIdentityCertificate::<AptosMessage>::random(claimant),
+                Ed25519TestIdentityCertificate::<AptosMessage>::random(AptosMessage::new(
+                    &get_expected_payload(claimant),
+                )),
             ),
         }
     }
@@ -118,7 +131,9 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Sui(
-                Ed25519TestIdentityCertificate::<SuiMessage>::random(claimant),
+                Ed25519TestIdentityCertificate::<SuiMessage>::random(SuiMessage::new(
+                    &get_expected_payload(claimant),
+                )),
             ),
         }
     }
@@ -127,7 +142,9 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Solana(
-                Ed25519TestIdentityCertificate::<SolanaMessage>::random(claimant),
+                Ed25519TestIdentityCertificate::<SolanaMessage>::random(SolanaMessage::new(
+                    &get_expected_payload(claimant),
+                )),
             ),
         }
     }
@@ -174,7 +191,7 @@ impl From<TestIdentityCertificate> for Identity {
         match val {
             TestIdentityCertificate::Evm(evm) => evm.into(),
             TestIdentityCertificate::Cosmos(cosmos) => cosmos.into(),
-            TestIdentityCertificate::Discord(username) => Identity::Discord { username },
+            TestIdentityCertificate::Discord(discord) => discord.into(),
             TestIdentityCertificate::Aptos(aptos) => aptos.into(),
             TestIdentityCertificate::Sui(sui) => sui.into(),
             TestIdentityCertificate::Solana(solana) => solana.into(),
@@ -187,9 +204,7 @@ impl TestIdentityCertificate {
         match self {
             Self::Evm(evm) => evm.as_proof_of_identity(verification_instruction_index),
             Self::Cosmos(cosmos) => cosmos.clone().into(),
-            Self::Discord(username) => IdentityCertificate::Discord {
-                username: username.clone(),
-            },
+            Self::Discord(discord) => discord.as_proof_of_identity(verification_instruction_index),
             Self::Aptos(aptos) => aptos.as_proof_of_identity(verification_instruction_index),
             Self::Sui(sui) => sui.as_proof_of_identity(verification_instruction_index),
             Self::Solana(solana) => solana.as_proof_of_identity(verification_instruction_index),
@@ -200,7 +215,7 @@ impl TestIdentityCertificate {
 #[derive(Clone)]
 pub enum TestIdentityCertificate {
     Evm(Secp256k1TestIdentityCertificate<EvmPrefixedMessage, Keccak256>),
-    Discord(String),
+    Discord(Ed25519TestIdentityCertificate<DiscordMessage>),
     Cosmos(Secp256k1TestIdentityCertificate<CosmosMessage, Sha256>),
     Aptos(Ed25519TestIdentityCertificate<AptosMessage>),
     Sui(Ed25519TestIdentityCertificate<SuiMessage>),
@@ -213,8 +228,10 @@ pub async fn test_happy_path() {
 
     let mut simulator = DispenserSimulator::new().await;
 
-    let mock_offchain_certificates =
-        DispenserSimulator::generate_test_claim_certs(simulator.genesis_keypair.pubkey());
+    let mock_offchain_certificates = DispenserSimulator::generate_test_claim_certs(
+        &simulator.genesis_keypair.pubkey(),
+        &dispenser_guard,
+    );
 
     let merkle_items: Vec<ClaimInfo> = mock_offchain_certificates
         .iter()
