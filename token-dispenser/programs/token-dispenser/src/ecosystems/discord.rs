@@ -34,24 +34,14 @@ impl DiscordMessage {
 
 #[cfg(test)]
 impl Ed25519TestMessage for DiscordMessage {
-    fn new(username: &str) -> Self {
+    fn expected(claimant: &Pubkey) -> Self {
         Self {
-            username: username.to_string(),
-            claimant: Pubkey::new_unique(),
+            username: Alphanumeric.sample_string(&mut rand::thread_rng(), 16),
+            claimant: *claimant,
         }
     }
 
     fn get_message_with_metadata(&self) -> Vec<u8> {
         self.try_to_vec().unwrap()
-    }
-}
-
-#[cfg(test)]
-impl DiscordMessage {
-    pub fn random_username(claimant: &Pubkey) -> Self {
-        Self {
-            username: Alphanumeric.sample_string(&mut rand::thread_rng(), 16),
-            claimant: *claimant,
-        }
     }
 }

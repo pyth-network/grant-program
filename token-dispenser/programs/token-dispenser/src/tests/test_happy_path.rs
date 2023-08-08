@@ -105,10 +105,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Discord(
-                Ed25519TestIdentityCertificate::<DiscordMessage>::new(
-                    DiscordMessage::random_username(claimant),
-                    signer,
-                ),
+                Ed25519TestIdentityCertificate::<DiscordMessage>::new(claimant, signer),
             ),
         }
     }
@@ -117,9 +114,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Aptos(
-                Ed25519TestIdentityCertificate::<AptosMessage>::random(AptosMessage::new(
-                    &get_expected_payload(claimant),
-                )),
+                Ed25519TestIdentityCertificate::<AptosMessage>::random(&claimant),
             ),
         }
     }
@@ -128,9 +123,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Sui(
-                Ed25519TestIdentityCertificate::<SuiMessage>::random(SuiMessage::new(
-                    &get_expected_payload(claimant),
-                )),
+                Ed25519TestIdentityCertificate::<SuiMessage>::random(&claimant),
             ),
         }
     }
@@ -139,9 +132,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Solana(
-                Ed25519TestIdentityCertificate::<SolanaMessage>::random(SolanaMessage::new(
-                    &get_expected_payload(claimant),
-                )),
+                Ed25519TestIdentityCertificate::<SolanaMessage>::random(&claimant),
             ),
         }
     }

@@ -39,7 +39,8 @@ pub struct Ed25519TestIdentityCertificate<T: Ed25519TestMessage> {
 }
 
 impl<T: Ed25519TestMessage> Ed25519TestIdentityCertificate<T> {
-    pub fn random(message: T) -> Self {
+    pub fn random(claimant: &Pubkey) -> Self {
+        let message = T::expected(claimant);
         let mut csprng = OsRng {};
         let keypair: Keypair = Keypair::generate(&mut csprng);
         let signature = keypair.sign(&message.get_message_with_metadata());
@@ -51,7 +52,8 @@ impl<T: Ed25519TestMessage> Ed25519TestIdentityCertificate<T> {
         }
     }
 
-    pub fn new(message: T, keypair: &Keypair) -> Self {
+    pub fn new(claimant: &Pubkey, keypair: &Keypair) -> Self {
+        let message = T::expected(claimant);
         let signature = keypair.sign(&message.get_message_with_metadata());
         let publickey = keypair.public;
         Self {
@@ -161,9 +163,8 @@ impl Ed25519TestIdentityCertificate<DiscordMessage> {
 
 #[tokio::test]
 pub async fn test_verify_signed_message_onchain() {
-    let signed_message = Ed25519TestIdentityCertificate::<SuiMessage>::random(SuiMessage::new(
-        &get_expected_payload(&Pubkey::new_unique()),
-    ));
+    let signed_message =
+        Ed25519TestIdentityCertificate::<SuiMessage>::random(&Pubkey::new_unique());
 
     let mut simulator = DispenserSimulator::new().await;
 

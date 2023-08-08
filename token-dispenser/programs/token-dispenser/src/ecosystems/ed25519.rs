@@ -172,7 +172,7 @@ pub trait Ed25519TestMessage
 where
     Self: Sized,
 {
-    fn new(message: &str) -> Self;
+    fn expected(claimant: &Pubkey) -> Self;
     fn get_message_with_metadata(&self) -> Vec<u8>;
     fn get_message_length(&self) -> usize {
         self.get_message_with_metadata().len()

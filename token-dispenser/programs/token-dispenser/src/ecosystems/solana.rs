@@ -1,6 +1,9 @@
 #[cfg(test)]
 use super::ed25519::Ed25519TestMessage;
-use anchor_lang::prelude::*;
+use {
+    super::get_expected_payload,
+    anchor_lang::prelude::*,
+};
 
 /**
 * An arbitrary signed message used in Solana
@@ -21,8 +24,8 @@ impl SolanaMessage {
 
 #[cfg(test)]
 impl Ed25519TestMessage for SolanaMessage {
-    fn new(payload: &str) -> Self {
-        Self(payload.as_bytes().to_vec())
+    fn expected(claimant: &Pubkey) -> Self {
+        Self(get_expected_payload(claimant).into_bytes())
     }
 
     fn get_message_with_metadata(&self) -> Vec<u8> {
