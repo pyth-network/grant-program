@@ -449,3 +449,7 @@ pub async fn test_checkout_fails_if_delegate_revoked() {
         .await
         .unwrap();
 }
+
+#[tokio::test]
+pub async fn test_claim_from_discord() {
+}
