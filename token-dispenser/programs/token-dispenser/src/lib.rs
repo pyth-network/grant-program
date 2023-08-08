@@ -525,8 +525,11 @@ impl IdentityCertificate {
                 message,
             } => {
                 secp256k1_sha256_verify_signer(signature, recovery_id, pubkey, message)?;
-                check_payload(CosmosMessage::parse(message)?.get_payload(), claimant)?;
                 let cosmos_bech32 = pubkey.into_bech32(chain_id);
+                check_payload(
+                    CosmosMessage::parse(message, &cosmos_bech32)?.get_payload(),
+                    claimant,
+                )?;
                 Ok(Identity::Cosmwasm {
                     address: cosmos_bech32,
                 })

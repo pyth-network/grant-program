@@ -32,6 +32,7 @@ pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
 * An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.
 * Only the message payload is stored in this struct.
 * The message signed for Cosmos is a JSON serialized CosmosStdSignDoc containing the payload and ADR036 compliant parameters.
+* The message also contains the bech32 address of the signer. We check that the signer corresponds to the public key.
  */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct CosmosMessage {
@@ -40,7 +41,7 @@ pub struct CosmosMessage {
 }
 
 impl CosmosMessage {
-    pub fn parse(data: &[u8]) -> Result<Self> {
+    pub fn parse(data: &[u8], signer: &CosmosBech32Address) -> Result<Self> {
         let sign_doc: CosmosStdSignDoc = serde_json::from_slice(data)
             .map_err(|_| ErrorCode::SignatureVerificationWrongPayloadMetadata)?;
 
@@ -58,6 +59,11 @@ impl CosmosMessage {
         if sign_doc.msgs[0].r#type != EXPECTED_COSMOS_MESSAGE_TYPE {
             return Err(ErrorCode::SignatureVerificationWrongPayloadMetadata.into());
         }
+
+        if sign_doc.msgs[0].value.signer != signer.0 {
+            return Err(ErrorCode::SignatureVerificationWrongPayloadMetadata.into());
+        }
+
         Ok(CosmosMessage {
             payload: base64_standard_engine
                 .decode(sign_doc.msgs[0].value.data.as_bytes())
