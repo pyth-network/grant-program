@@ -38,7 +38,6 @@ use {
             CosmosBech32Address,
             CosmosMessage,
             UncompressedSecp256k1Pubkey,
-            INJECTIVE_CHAIN_ID,
         },
         ed25519::{
             Ed25519InstructionData,

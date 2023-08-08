@@ -216,13 +216,6 @@ where
 
 #[cfg(test)]
 use anchor_lang::prelude::ProgramError::BorshIoError;
-use {
-    super::cosmos::{
-        CosmosBech32Address,
-        INJECTIVE_CHAIN_ID,
-    },
-    bech32::ToBase32,
-};
 
 
 #[test]

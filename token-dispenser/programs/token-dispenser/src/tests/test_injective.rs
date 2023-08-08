@@ -5,7 +5,6 @@ use {
             cosmos::{
                 CosmosMessage,
                 UncompressedSecp256k1Pubkey,
-                INJECTIVE_CHAIN_ID,
             },
             get_expected_payload,
             secp256k1::EvmPubkey,
