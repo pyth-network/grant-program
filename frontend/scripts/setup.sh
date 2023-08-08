@@ -85,20 +85,21 @@ function setup_postgres_docker() {
     echo "starting up postgres docker"
   fi
   start_postgres_docker;
-  sleep 10
+  sleep 5
   if [ "$verbose" -eq 1 ]; then
     echo "running postgres docker migrations"
   fi
   npm run migrate;
 }
 
-function run_frontend_tests() {
+function run_integration_tests() {
   npm run test;
 }
 
 
 function start_test_validator() {
   cd "$TOKEN_DISPENSER_DIR";
+  anchor run export;
   anchor localnet &
 }
 
@@ -143,7 +144,11 @@ function main() {
         echo "test mode"
         echo "running frontend tests"
       fi
-      run_frontend_tests;
+      printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
+      # TODO: this doesn't run the test-validator in the background so it never
+      # starts the frontend tests
+      start_test_validator &
+      run_integration_tests;
   else
       echo "no mode selected"
       usage;

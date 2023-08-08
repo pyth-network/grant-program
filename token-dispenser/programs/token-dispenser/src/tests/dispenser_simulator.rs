@@ -311,7 +311,7 @@ impl DispenserSimulator {
         merkle_tree: &MerkleTree<SolanaHasher>,
     ) -> Result<(), BanksClientError> {
         let (claim_certificate, option_instruction) =
-            off_chain_claim_certificate.as_claim_certificate(merkle_tree, 1);
+            off_chain_claim_certificate.as_claim_certificate(merkle_tree, 0);
         let mut accounts = accounts::Claim::populate(claimant.pubkey(), dispenser_guard.pubkey())
             .to_account_metas(None);
 
@@ -338,15 +338,16 @@ impl DispenserSimulator {
 
         let mut instructions = vec![];
 
+        if let Some(verification_instruction) = option_instruction {
+            instructions.push(verification_instruction);
+        }
+
         instructions.push(Instruction::new_with_bytes(
             crate::id(),
             &instruction_data.data(),
             accounts,
         ));
 
-        if let Some(verification_instruction) = option_instruction {
-            instructions.push(verification_instruction);
-        }
 
         self.process_ix(&instructions, &vec![dispenser_guard, claimant])
             .await
@@ -447,13 +448,13 @@ pub fn copy_keypair(keypair: &Keypair) -> Keypair {
 ////////////////////////////////////////////////////////////////////////////////
 
 pub trait IntoTransactionError {
-    fn into_transaction_error(self) -> TransactionError;
+    fn into_transaction_error(self, instruction_index: u8) -> TransactionError;
 }
 
 impl IntoTransactionError for ErrorCode {
-    fn into_transaction_error(self) -> TransactionError {
+    fn into_transaction_error(self, instruction_index: u8) -> TransactionError {
         TransactionError::InstructionError(
-            0,
+            instruction_index,
             InstructionError::try_from(u64::from(ProgramError::from(
                 anchor_lang::prelude::Error::from(self),
             )))
@@ -463,15 +464,15 @@ impl IntoTransactionError for ErrorCode {
 }
 
 impl IntoTransactionError for TokenError {
-    fn into_transaction_error(self) -> TransactionError {
+    fn into_transaction_error(self, instruction_index: u8) -> TransactionError {
         TransactionError::InstructionError(
-            0,
+            instruction_index,
             InstructionError::try_from(u64::from(ProgramError::from(self))).unwrap(),
         )
     }
 }
 impl IntoTransactionError for InstructionError {
-    fn into_transaction_error(self) -> TransactionError {
-        TransactionError::InstructionError(0, self)
+    fn into_transaction_error(self, instruction_index: u8) -> TransactionError {
+        TransactionError::InstructionError(instruction_index, self)
     }
 }

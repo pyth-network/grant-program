@@ -19,6 +19,22 @@
           "isSigner": false
         },
         {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": ["Mint of the treasury"]
+        },
+        {
+          "name": "treasury",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Treasury token account. This is an externally owned token account and",
+            "the owner of this account will approve the config as a delegate using the",
+            "solana CLI command `spl-token approve <treasury_account_address> <approve_amount> <config_address>`"
+          ]
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -26,10 +42,14 @@
       ],
       "args": [
         {
-          "name": "targetConfig",
+          "name": "merkleRoot",
           "type": {
-            "defined": "Config"
+            "array": ["u8", 32]
           }
+        },
+        {
+          "name": "dispenserGuard",
+          "type": "publicKey"
         }
       ]
     },
@@ -83,6 +103,64 @@
           }
         }
       ]
+    },
+    {
+      "name": "checkout",
+      "accounts": [
+        {
+          "name": "claimant",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "config",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Mint of the treasury & claimant_fund token account.",
+            "Needed if the `claimant_fund` token account needs to be initialized"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "cart",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "claimantFund",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Claimant's associated token account for receiving their claim/token grant"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -92,6 +170,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
             "name": "merkleRoot",
             "type": {
               "array": ["u8", 32]
@@ -99,6 +181,14 @@
           },
           {
             "name": "dispenserGuard",
+            "type": "publicKey"
+          },
+          {
+            "name": "mint",
+            "type": "publicKey"
+          },
+          {
+            "name": "treasury",
             "type": "publicKey"
           }
         ]
@@ -131,6 +221,50 @@
     }
   ],
   "types": [
+    {
+      "name": "Ed25519InstructionHeader",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "numSignatures",
+            "type": "u8"
+          },
+          {
+            "name": "padding",
+            "type": "u8"
+          },
+          {
+            "name": "signatureOffset",
+            "type": "u16"
+          },
+          {
+            "name": "signatureInstructionIndex",
+            "type": "u16"
+          },
+          {
+            "name": "publicKeyOffset",
+            "type": "u16"
+          },
+          {
+            "name": "publicKeyInstructionIndex",
+            "type": "u16"
+          },
+          {
+            "name": "messageDataOffset",
+            "type": "u16"
+          },
+          {
+            "name": "messageDataSize",
+            "type": "u16"
+          },
+          {
+            "name": "messageInstructionIndex",
+            "type": "u16"
+          }
+        ]
+      }
+    },
     {
       "name": "Secp256k1InstructionHeader",
       "type": {
@@ -251,7 +385,9 @@
             "fields": [
               {
                 "name": "pubkey",
-                "type": "publicKey"
+                "type": {
+                  "array": ["u8", 32]
+                }
               }
             ]
           },
@@ -267,10 +403,26 @@
             ]
           },
           {
-            "name": "Sui"
+            "name": "Sui",
+            "fields": [
+              {
+                "name": "address",
+                "type": {
+                  "array": ["u8", 32]
+                }
+              }
+            ]
           },
           {
-            "name": "Aptos"
+            "name": "Aptos",
+            "fields": [
+              {
+                "name": "address",
+                "type": {
+                  "array": ["u8", 32]
+                }
+              }
+            ]
           },
           {
             "name": "Cosmwasm",
@@ -314,13 +466,49 @@
             ]
           },
           {
-            "name": "Solana"
+            "name": "Solana",
+            "fields": [
+              {
+                "name": "pubkey",
+                "type": {
+                  "array": ["u8", 32]
+                }
+              },
+              {
+                "name": "verification_instruction_index",
+                "type": "u8"
+              }
+            ]
           },
           {
-            "name": "Sui"
+            "name": "Sui",
+            "fields": [
+              {
+                "name": "pubkey",
+                "type": {
+                  "array": ["u8", 32]
+                }
+              },
+              {
+                "name": "verification_instruction_index",
+                "type": "u8"
+              }
+            ]
           },
           {
-            "name": "Aptos"
+            "name": "Aptos",
+            "fields": [
+              {
+                "name": "pubkey",
+                "type": {
+                  "array": ["u8", 32]
+                }
+              },
+              {
+                "name": "verification_instruction_index",
+                "type": "u8"
+              }
+            ]
           },
           {
             "name": "Cosmwasm",
@@ -382,30 +570,34 @@
     },
     {
       "code": 6006,
-      "name": "SignatureVerificationWrongProgram"
+      "name": "InsufficientTreasuryFunds"
     },
     {
       "code": 6007,
-      "name": "SignatureVerificationWrongAccounts"
+      "name": "SignatureVerificationWrongProgram"
     },
     {
       "code": 6008,
-      "name": "SignatureVerificationWrongHeader"
+      "name": "SignatureVerificationWrongAccounts"
     },
     {
       "code": 6009,
-      "name": "SignatureVerificationWrongMessage"
+      "name": "SignatureVerificationWrongHeader"
     },
     {
       "code": 6010,
-      "name": "SignatureVerificationWrongMessageMetadata"
+      "name": "SignatureVerificationWrongPayload"
     },
     {
       "code": 6011,
-      "name": "SignatureVerificationWrongSigner"
+      "name": "SignatureVerificationWrongPayloadMetadata"
     },
     {
       "code": 6012,
+      "name": "SignatureVerificationWrongSigner"
+    },
+    {
+      "code": 6013,
       "name": "SignatureVerificationWrongClaimant"
     }
   ]

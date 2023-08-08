@@ -19,6 +19,7 @@ pub const SECP256K1_FULL_PREFIX: u8 = 0x04;
 pub const SECP256K1_ODD_PREFIX: u8 = 0x03;
 pub const SECP256K1_EVEN_PREFIX: u8 = 0x02;
 pub const SECP256K1_COMPRESSED_PUBKEY_LENGTH: usize = 33;
+pub const ETH_ADDRESS_LENGTH: u16 = 20;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
 pub struct EvmPubkey([u8; Self::LEN]);
@@ -73,14 +74,14 @@ pub struct Secp256k1InstructionData {
 }
 
 impl Secp256k1InstructionHeader {
+    /// This follows the layout implemented by`Secp256k1Program.createInstructionWithEthAddress`
+    /// from the [solana/web3.js library](https://github.com/solana-labs/solana-web3.js/blob/master/packages/library-legacy/src/programs/secp256k1.ts)
     pub fn expected_header(message_length: u16, instruction_index: u8) -> Self {
         Secp256k1InstructionHeader {
             num_signatures:                1,
-            signature_offset:              Secp256k1InstructionHeader::LEN,
+            signature_offset:              Secp256k1InstructionHeader::LEN + ETH_ADDRESS_LENGTH,
             signature_instruction_index:   instruction_index,
-            eth_address_offset:            Secp256k1InstructionHeader::LEN
-                + Secp256k1Signature::LEN as u16
-                + 1,
+            eth_address_offset:            Secp256k1InstructionHeader::LEN,
             eth_address_instruction_index: instruction_index,
             message_data_offset:           Secp256k1InstructionHeader::LEN
                 + Secp256k1Signature::LEN as u16
@@ -99,13 +100,12 @@ impl Secp256k1InstructionData {
         verification_instruction_index: &u8,
     ) -> Result<Vec<u8>> {
         if instruction.program_id != SECP256K1_ID {
-            return Err(ErrorCode::SignatureVerificationWrongProgram.into());
+            return err!(ErrorCode::SignatureVerificationWrongProgram);
         }
 
         if !instruction.accounts.is_empty() {
-            return Err(ErrorCode::SignatureVerificationWrongAccounts.into());
+            return err!(ErrorCode::SignatureVerificationWrongAccounts);
         }
-
         let result = Self::try_from_slice(&instruction.data)?;
         if result.header
             != Secp256k1InstructionHeader::expected_header(
@@ -113,11 +113,11 @@ impl Secp256k1InstructionData {
                 *verification_instruction_index,
             )
         {
-            return Err(ErrorCode::SignatureVerificationWrongHeader.into());
+            return err!(ErrorCode::SignatureVerificationWrongHeader);
         }
 
         if result.eth_address != *pubkey {
-            return Err(ErrorCode::SignatureVerificationWrongSigner.into());
+            return err!(ErrorCode::SignatureVerificationWrongSigner);
         }
 
         Ok(result.message)
@@ -127,19 +127,34 @@ impl AnchorDeserialize for Secp256k1InstructionData {
     fn deserialize(
         buf: &mut &[u8],
     ) -> std::result::Result<Secp256k1InstructionData, std::io::Error> {
-        let header = Secp256k1InstructionHeader::deserialize(buf)?;
-        let signature = Secp256k1Signature::deserialize(buf)?;
-        let recovery_id = u8::deserialize(buf)?;
-        let eth_address = EvmPubkey::deserialize(buf)?;
+        let header = Secp256k1InstructionHeader::deserialize(
+            &mut &buf[..Secp256k1InstructionHeader::LEN as usize],
+        )?;
+
+        let signature = Secp256k1Signature::deserialize(
+            &mut &buf[header.signature_offset as usize..(header.signature_offset as usize) + 64],
+        )?;
+
+        let recovery_id = u8::deserialize(
+            &mut &buf
+                [header.signature_offset as usize + 64..(header.signature_offset as usize) + 65],
+        )?;
+
+        let eth_address = EvmPubkey::deserialize(
+            &mut &buf
+                [header.eth_address_offset as usize..(header.eth_address_offset as usize) + 32],
+        )?;
 
         let mut message: Vec<u8> = vec![];
-
-        if buf.len() < header.message_data_size as usize {
+        if (&buf[header.message_data_offset as usize..]).len() < header.message_data_size as usize {
             return Err(std::io::Error::from(std::io::ErrorKind::UnexpectedEof));
         }
+        message.extend_from_slice(
+            &buf[header.message_data_offset as usize
+                ..(header.message_data_offset + header.message_data_size) as usize],
+        );
 
-        message.extend_from_slice(&buf[..header.message_data_size as usize]);
-        *buf = &buf[header.message_data_size as usize..];
+        *buf = &buf[(header.message_data_offset + header.message_data_size) as usize..];
         Ok(Secp256k1InstructionData {
             header,
             eth_address,
@@ -160,11 +175,11 @@ impl AnchorSerialize for Secp256k1InstructionData {
         self.signature.serialize(writer)?;
         self.recovery_id.serialize(writer)?;
         self.eth_address.serialize(writer)?;
-
         writer.write_all(&self.message)?;
         Ok(())
     }
 }
+
 
 /** Cosmos uses a different signing algorith than Evm for signing
  * messages. Instead of using Keccak256, Cosmos uses SHA256. This prevents
@@ -184,7 +199,7 @@ pub fn secp256k1_sha256_verify_signer(
     .map_err(|_| ErrorCode::SignatureVerificationWrongSigner)?;
     if !(recovered_key.0 == pubkey.as_bytes()[1..] && pubkey.as_bytes()[0] == SECP256K1_FULL_PREFIX)
     {
-        return Err(ErrorCode::SignatureVerificationWrongSigner.into());
+        return err!(ErrorCode::SignatureVerificationWrongSigner);
     }
     Ok(())
 }

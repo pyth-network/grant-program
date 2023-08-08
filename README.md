@@ -87,7 +87,15 @@ cargo test-bpf
 ```
 
 The unit tests for the frontend require starting the database and migrating it (per the directions above).
-Then run:
+A script has been provided to handle starting the database, migrating it as well as starting a solana-test-validator
+and deploying the token-dispenser program
+
+```bash
+cd frontend
+./scripts/setup.sh --dev
+```
+
+Then in a separate terminal run:
 
 ```bash
 cd frontend
@@ -95,4 +103,3 @@ npm run test
 ```
 
 TODO: do the anchor tests do anything or can we delete tests/token-dispenser.ts
-TODO: add instructions on using `frontend/scripts/setup.sh` for running tests and local dev environments
