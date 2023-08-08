@@ -33,7 +33,10 @@ pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
 * The message signed for Cosmos is a JSON serialized CosmosStdSignDoc containing the payload and ADR036 compliant parameters.
  */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub struct CosmosMessage(Vec<u8>);
+pub struct CosmosMessage {
+    payload: Vec<u8>,
+    signer:  CosmosBech32Address,
+}
 
 impl CosmosMessage {
     pub fn parse(data: &[u8]) -> Result<Self> {
@@ -54,15 +57,16 @@ impl CosmosMessage {
         if sign_doc.msgs[0].r#type != EXPECTED_COSMOS_MESSAGE_TYPE {
             return Err(ErrorCode::SignatureVerificationWrongPayloadMetadata.into());
         }
-        Ok(CosmosMessage(
-            base64_standard_engine
+        Ok(CosmosMessage {
+            payload: base64_standard_engine
                 .decode(sign_doc.msgs[0].value.data.as_bytes())
                 .map_err(|_| ErrorCode::SignatureVerificationWrongPayloadMetadata)?,
-        ))
+            signer:  CosmosBech32Address(sign_doc.msgs[0].value.signer.clone()),
+        })
     }
 
     pub fn get_payload(&self) -> &[u8] {
-        self.0.as_slice()
+        &self.payload.as_slice()
     }
 }
 
@@ -178,10 +182,6 @@ impl From<&str> for CosmosBech32Address {
 
 #[cfg(test)]
 impl Secp256k1TestMessage for CosmosMessage {
-    fn new(payload: &str) -> Self {
-        Self(payload.as_bytes().to_vec())
-    }
-
     fn get_message_with_metadata(&self) -> Vec<u8> {
         let sign_doc: CosmosStdSignDoc = CosmosStdSignDoc {
             account_number: "0".to_string(),
@@ -194,7 +194,7 @@ impl Secp256k1TestMessage for CosmosMessage {
             msgs:           vec![CosmosStdMsg {
                 r#type: EXPECTED_COSMOS_MESSAGE_TYPE.to_string(),
                 value:  CosmosAdr036Value {
-                    data:   base64_standard_engine.encode(&self.0),
+                    data:   base64_standard_engine.encode(&self.payload),
                     signer: "".to_string(),
                 },
             }],
@@ -204,5 +204,15 @@ impl Secp256k1TestMessage for CosmosMessage {
             .unwrap()
             .as_bytes()
             .to_vec();
+    }
+}
+
+#[cfg(test)]
+impl From<(&[u8], &CosmosBech32Address)> for CosmosMessage {
+    fn from(value: (&[u8], &CosmosBech32Address)) -> Self {
+        CosmosMessage {
+            payload: value.0.to_vec(),
+            signer:  value.1.clone(),
+        }
     }
 }
