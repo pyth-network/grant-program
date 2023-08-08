@@ -1,10 +1,5 @@
 #[cfg(test)]
 use super::secp256k1::Secp256k1TestMessage;
-#[cfg(test)]
-use pythnet_sdk::hashers::{
-    keccak256::Keccak256,
-    Hasher,
-};
 use {
     crate::ErrorCode,
     anchor_lang::{

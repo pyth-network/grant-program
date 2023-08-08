@@ -66,7 +66,7 @@ impl CosmosMessage {
     }
 
     pub fn get_payload(&self) -> &[u8] {
-        &self.payload.as_slice()
+        self.payload.as_slice()
     }
 }
 
