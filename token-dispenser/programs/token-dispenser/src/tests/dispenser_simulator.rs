@@ -125,6 +125,7 @@ impl DispenserSimulator {
             TestClaimCertificate::random_discord(),
             TestClaimCertificate::random_aptos(&claimant),
             TestClaimCertificate::random_sui(&claimant),
+            TestClaimCertificate::random_solana(&claimant),
         ]
     }
 

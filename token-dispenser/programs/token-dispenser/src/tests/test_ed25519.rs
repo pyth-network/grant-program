@@ -9,6 +9,7 @@ use {
                 Ed25519TestMessage,
             },
             get_expected_payload,
+            solana::SolanaMessage,
             sui::SuiMessage,
         },
         tests::dispenser_simulator::DispenserSimulator,
@@ -107,6 +108,24 @@ impl From<Ed25519TestIdentityCertificate<SuiMessage>> for Identity {
 impl Ed25519TestIdentityCertificate<SuiMessage> {
     pub fn as_proof_of_identity(&self, verification_instruction_index: u8) -> IdentityCertificate {
         IdentityCertificate::Sui {
+            pubkey: Ed25519Pubkey::from(self.publickey.to_bytes()),
+            verification_instruction_index,
+        }
+    }
+}
+
+impl From<Ed25519TestIdentityCertificate<SolanaMessage>> for Identity {
+    fn from(val: Ed25519TestIdentityCertificate<SolanaMessage>) -> Self {
+        Identity::Solana {
+            pubkey: Ed25519Pubkey::from(val.publickey.to_bytes()),
+        }
+    }
+}
+
+
+impl Ed25519TestIdentityCertificate<SolanaMessage> {
+    pub fn as_proof_of_identity(&self, verification_instruction_index: u8) -> IdentityCertificate {
+        IdentityCertificate::Solana {
             pubkey: Ed25519Pubkey::from(self.publickey.to_bytes()),
             verification_instruction_index,
         }
