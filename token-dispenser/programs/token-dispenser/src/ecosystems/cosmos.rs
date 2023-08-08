@@ -2,6 +2,7 @@
 use super::secp256k1::Secp256k1TestMessage;
 use {
     super::secp256k1::{
+        EvmPubkey,
         SECP256K1_COMPRESSED_PUBKEY_LENGTH,
         SECP256K1_EVEN_PREFIX,
         SECP256K1_ODD_PREFIX,
@@ -180,6 +181,20 @@ impl From<[u8; Self::LEN]> for UncompressedSecp256k1Pubkey {
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct CosmosBech32Address(String);
+
+impl From<EvmPubkey> for CosmosBech32Address {
+    fn from(value: EvmPubkey) -> Self {
+        CosmosBech32Address(
+            bech32::encode(
+                INJECTIVE_CHAIN_ID,
+                value.as_bytes().to_base32(),
+                bech32::Variant::Bech32,
+            )
+            .unwrap(),
+        )
+    }
+}
+
 
 #[cfg(test)]
 impl From<&str> for CosmosBech32Address {

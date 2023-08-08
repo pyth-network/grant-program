@@ -25,6 +25,10 @@ pub const SECP256K1_COMPRESSED_PUBKEY_LENGTH: usize = 33;
 pub struct EvmPubkey([u8; Self::LEN]);
 impl EvmPubkey {
     pub const LEN: usize = 20;
+
+    pub fn as_bytes(&self) -> [u8; Self::LEN] {
+        self.0
+    }
 }
 
 impl From<UncompressedSecp256k1Pubkey> for EvmPubkey {
@@ -34,7 +38,6 @@ impl From<UncompressedSecp256k1Pubkey> for EvmPubkey {
         EvmPubkey(addr)
     }
 }
-
 
 #[cfg(test)]
 impl From<[u8; Self::LEN]> for EvmPubkey {
@@ -213,6 +216,13 @@ where
 
 #[cfg(test)]
 use anchor_lang::prelude::ProgramError::BorshIoError;
+use {
+    super::cosmos::{
+        CosmosBech32Address,
+        INJECTIVE_CHAIN_ID,
+    },
+    bech32::ToBase32,
+};
 
 
 #[test]

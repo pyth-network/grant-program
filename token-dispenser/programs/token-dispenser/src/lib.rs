@@ -553,12 +553,13 @@ impl IdentityCertificate {
                     *verification_instruction_index as usize,
                     sysvar_instruction,
                 )?;
-                let cosmos_bech32 = pubkey.into_bech32(INJECTIVE_CHAIN_ID);
+                let evm_pubkey = EvmPubkey::from(*pubkey);
+                let cosmos_bech32 = CosmosBech32Address::from(evm_pubkey);
                 check_payload(
                     CosmosMessage::parse(
                         &Secp256k1InstructionData::extract_message_and_check_signature(
                             &signature_verification_instruction,
-                            &EvmPubkey::from(*pubkey),
+                            &evm_pubkey,
                             verification_instruction_index,
                         )?,
                         &cosmos_bech32,
