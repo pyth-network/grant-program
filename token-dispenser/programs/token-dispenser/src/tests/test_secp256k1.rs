@@ -2,10 +2,6 @@ use {
     super::dispenser_simulator::DispenserSimulator,
     crate::{
         ecosystems::{
-            cosmos::{
-                CosmosMessage,
-                UncompressedSecp256k1Pubkey,
-            },
             evm::EvmPrefixedMessage,
             get_expected_payload,
             secp256k1::{
@@ -27,7 +23,6 @@ use {
         keccak256::Keccak256,
         Hasher,
     },
-    rand::seq::SliceRandom,
     solana_program_test::tokio,
     solana_sdk::instruction::Instruction,
     std::marker::PhantomData,
