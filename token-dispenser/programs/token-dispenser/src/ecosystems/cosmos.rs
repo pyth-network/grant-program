@@ -1,7 +1,5 @@
 #[cfg(test)]
 use super::secp256k1::Secp256k1TestMessage;
-
-
 use {
     super::secp256k1::{
         SECP256K1_COMPRESSED_PUBKEY_LENGTH,

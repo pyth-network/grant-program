@@ -1,12 +1,10 @@
 #[cfg(test)]
+use super::secp256k1::Secp256k1TestMessage;
+#[cfg(test)]
 use pythnet_sdk::hashers::{
     keccak256::Keccak256,
     Hasher,
 };
-#[cfg(test)]
-use super::secp256k1::Secp256k1TestMessage;
-
-
 use {
     crate::ErrorCode,
     anchor_lang::{
@@ -76,5 +74,4 @@ impl Secp256k1TestMessage for EvmPrefixedMessage {
         prefixed_message.extend_from_slice(&self.0);
         prefixed_message
     }
-
 }

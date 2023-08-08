@@ -1,11 +1,5 @@
-use pythnet_sdk::hashers::Hasher;
-use solana_sdk::hash::hashv;
-
-use crate::ecosystems::secp256k1::Secp256k1TestMessage;
-
-use super::test_secp256k1::Secp256k1TestIdentityCertificate;
-
 use {
+    super::test_secp256k1::Secp256k1TestIdentityCertificate,
     crate::{
         ecosystems::{
             cosmos::{
@@ -13,12 +7,15 @@ use {
                 UncompressedSecp256k1Pubkey,
             },
             get_expected_payload,
+            secp256k1::Secp256k1TestMessage,
         },
         Identity,
         IdentityCertificate,
     },
     anchor_lang::prelude::Pubkey,
+    pythnet_sdk::hashers::Hasher,
     rand::seq::SliceRandom,
+    solana_sdk::hash::hashv,
 };
 
 
