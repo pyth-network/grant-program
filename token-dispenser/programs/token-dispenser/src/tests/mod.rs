@@ -15,8 +15,8 @@ mod test_ed25519;
 mod test_evm;
 mod test_happy_path;
 mod test_initialize;
-mod test_merkle_tree;
 mod test_injective;
+mod test_merkle_tree;
 
 /// Merkleizes a vector of `ClaimInfo`s and returns the `MerkleTree` and the serialized `ClaimInfo`s.
 pub fn merkleize(merkle_items: Vec<ClaimInfo>) -> (MerkleTree<SolanaHasher>, Vec<Vec<u8>>) {

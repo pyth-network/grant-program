@@ -269,7 +269,7 @@ pub enum Identity {
     Sui { address: SuiAddress },
     Aptos { address: AptosAddress },
     Cosmwasm { address: CosmosBech32Address },
-    Injective { address : CosmosBech32Address }
+    Injective { address: CosmosBech32Address },
 }
 
 impl Identity {
@@ -313,10 +313,10 @@ pub enum IdentityCertificate {
         pubkey:      UncompressedSecp256k1Pubkey,
         message:     Vec<u8>,
     },
-    Injective { 
-        pubkey : EvmPubkey,
+    Injective {
+        pubkey:                         EvmPubkey,
         verification_instruction_index: u8,
-    }
+    },
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
@@ -514,7 +514,10 @@ impl IdentityCertificate {
                     address: Into::<SuiAddress>::into(pubkey.clone()),
                 })
             }
-            IdentityCertificate::Injective { pubkey, verification_instruction_index } => {
+            IdentityCertificate::Injective {
+                pubkey,
+                verification_instruction_index,
+            } => {
                 let signature_verification_instruction = load_instruction_at_checked(
                     *verification_instruction_index as usize,
                     sysvar_instruction,
@@ -530,10 +533,11 @@ impl IdentityCertificate {
                     .get_payload(),
                     claimant,
                 )?;
-                Ok(Identity::Injective { address: CosmosBech32Address::from(pubkey.clone()) })
+                Ok(Identity::Injective {
+                    address: CosmosBech32Address::from(pubkey.clone()),
+                })
             }
             _ => Err(ErrorCode::NotImplemented.into()),
-
         }
     }
 }

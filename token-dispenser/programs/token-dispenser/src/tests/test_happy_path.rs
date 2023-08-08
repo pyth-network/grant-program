@@ -1,10 +1,9 @@
-use super::test_injective::InjectiveTestIdentityCertificate;
-
 use {
     super::{
         dispenser_simulator::DispenserSimulator,
         test_cosmos::CosmosTestIdentityCertificate,
         test_ed25519::Ed25519TestIdentityCertificate,
+        test_injective::InjectiveTestIdentityCertificate,
     },
     crate::{
         ecosystems::{
@@ -118,8 +117,8 @@ impl TestClaimCertificate {
             ),
         }
     }
-    
-    pub fn random_injective(claimant : &Pubkey) -> Self {
+
+    pub fn random_injective(claimant: &Pubkey) -> Self {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Injective(
@@ -150,7 +149,9 @@ impl TestClaimCertificate {
             TestIdentityCertificate::Cosmos(_) => None,
             TestIdentityCertificate::Aptos(aptos) => Some(aptos.as_instruction(index, true)),
             TestIdentityCertificate::Sui(sui) => Some(sui.as_instruction(index, true)),
-            TestIdentityCertificate::Injective(injective) => Some(injective.as_instruction(index, true)),
+            TestIdentityCertificate::Injective(injective) => {
+                Some(injective.as_instruction(index, true))
+            }
         };
         (
             ClaimCertificate {
@@ -188,7 +189,9 @@ impl TestIdentityCertificate {
             },
             Self::Aptos(aptos) => aptos.as_proof_of_identity(verification_instruction_index),
             Self::Sui(sui) => sui.as_proof_of_identity(verification_instruction_index),
-            Self::Injective(injective) => injective.as_proof_of_identity(verification_instruction_index),
+            Self::Injective(injective) => {
+                injective.as_proof_of_identity(verification_instruction_index)
+            }
         }
     }
 }

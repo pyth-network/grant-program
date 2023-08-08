@@ -1,9 +1,8 @@
-use crate::{tests::test_injective::InjectiveTestIdentityCertificate, ecosystems::cosmos::CosmosMessage};
-
 use {
     super::dispenser_simulator::DispenserSimulator,
     crate::{
         ecosystems::{
+            cosmos::CosmosMessage,
             evm::EvmPrefixedMessage,
             get_expected_payload,
             secp256k1::{
@@ -12,6 +11,7 @@ use {
                 Secp256k1InstructionHeader,
             },
         },
+        tests::test_injective::InjectiveTestIdentityCertificate,
         Identity,
         IdentityCertificate,
     },
@@ -20,6 +20,11 @@ use {
         solana_program::secp256k1_program::ID as SECP256K1_ID,
         AnchorSerialize,
     },
+    base64::{
+        engine::general_purpose::STANDARD as base64_standard_engine,
+        Engine as _,
+    },
+    libsecp256k1::RecoveryId,
     pythnet_sdk::hashers::{
         keccak256::Keccak256,
         Hasher,
@@ -27,12 +32,6 @@ use {
     solana_program_test::tokio,
     solana_sdk::instruction::Instruction,
 };
-
-use base64::{
-    engine::general_purpose::STANDARD as base64_standard_engine,
-    Engine as _,
-};
-use libsecp256k1::RecoveryId;
 
 /// Creates an Ethereum address from a secp256k1 public key.
 pub fn construct_evm_pubkey(pubkey: &libsecp256k1::PublicKey) -> EvmPubkey {
@@ -135,6 +134,20 @@ pub async fn test_verify_signed_message_onchain() {
     let signature = libsecp256k1::Signature::parse_standard_slice(&base64_standard_engine.decode("6FaHFUQzu1/QpD0l6SoQZDI8yQq40qNRVN+y289/fcZGcUzyBIxbp4W4N3MmRO2cPPYwpK2+AQLl28ZuApqA8Q==").unwrap()).unwrap();
     let recovery_id = libsecp256k1::RecoveryId::parse(0u8).unwrap();
     let message = CosmosMessage::new("Pyth grant program");
-    println!("pubkey : {:?}", hex::encode(libsecp256k1::recover(&message.hash(), &signature, &RecoveryId::parse(0).unwrap()).unwrap().serialize_compressed()));
-    println!("pubkey : {:?}", hex::encode(libsecp256k1::recover(&message.hash(), &signature, &RecoveryId::parse(1).unwrap()).unwrap().serialize_compressed()));
+    println!(
+        "pubkey : {:?}",
+        hex::encode(
+            libsecp256k1::recover(&message.hash(), &signature, &RecoveryId::parse(0).unwrap())
+                .unwrap()
+                .serialize_compressed()
+        )
+    );
+    println!(
+        "pubkey : {:?}",
+        hex::encode(
+            libsecp256k1::recover(&message.hash(), &signature, &RecoveryId::parse(1).unwrap())
+                .unwrap()
+                .serialize_compressed()
+        )
+    );
 }
