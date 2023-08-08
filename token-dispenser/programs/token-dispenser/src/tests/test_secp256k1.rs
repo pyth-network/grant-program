@@ -69,7 +69,9 @@ impl<T: Secp256k1TestMessage, U: Hasher> Secp256k1TestIdentityCertificate<T, U> 
     pub fn recover_as_evm_address(&self) -> EvmPubkey {
         construct_evm_pubkey(&self.recover())
     }
+}
 
+impl<T: Secp256k1TestMessage> Secp256k1TestIdentityCertificate<T, Keccak256> {
     pub fn as_instruction(&self, instruction_index: u8, valid_signature: bool) -> Instruction {
         let header = Secp256k1InstructionHeader::expected_header(
             self.message.get_message_length().try_into().unwrap(),
@@ -129,35 +131,12 @@ impl Secp256k1TestIdentityCertificate<EvmPrefixedMessage, Keccak256> {
     }
 }
 
-impl<U: Hasher> Secp256k1TestIdentityCertificate<CosmosMessage, U> {
-    pub fn random(claimant: &Pubkey) -> Self {
-        let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
-        let public_key = libsecp256k1::PublicKey::from_secret_key(&secret);
-        let chain_id = ["osmo", "cosmos", "neutron"]
-            .choose(&mut rand::thread_rng())
-            .unwrap()
-            .to_string();
-
-        let message = CosmosMessage::from((
-            get_expected_payload(claimant).as_bytes(),
-            &UncompressedSecp256k1Pubkey::from(public_key.serialize())
-                .into_bech32(chain_id.as_str()),
-        ));
-        let (signature, recovery_id) = libsecp256k1::sign(&Self::hash_message(&message), &secret);
-        Self {
-            message,
-            signature,
-            recovery_id,
-            _hasher: PhantomData,
-        }
-    }
-}
-
 #[tokio::test]
 pub async fn test_verify_signed_message_onchain() {
-    let signed_message = Secp256k1TestIdentityCertificate::<EvmPrefixedMessage, Keccak256>::random(
-        &Pubkey::new_unique(),
-    );
+    let signed_message: Secp256k1TestIdentityCertificate<EvmPrefixedMessage, Keccak256> =
+        Secp256k1TestIdentityCertificate::<EvmPrefixedMessage, Keccak256>::random(
+            &Pubkey::new_unique(),
+        );
 
     let mut simulator = DispenserSimulator::new().await;
 
