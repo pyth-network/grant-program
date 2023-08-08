@@ -1,7 +1,12 @@
+use pythnet_sdk::hashers::{keccak256_160::Keccak160, keccak256::Keccak256};
+
+use crate::ecosystems::{evm::EvmPrefixedMessage, cosmos::CosmosMessage};
+
+use super::{test_secp256k1::Secp256k1TestIdentityCertificate, test_cosmos::Sha256};
+
 use {
     super::{
         dispenser_simulator::DispenserSimulator,
-        test_cosmos::CosmosTestIdentityCertificate,
         test_ed25519::Ed25519TestIdentityCertificate,
     },
     crate::{
@@ -19,7 +24,6 @@ use {
                 IntoTransactionError,
             },
             merkleize,
-            test_evm::EvmTestIdentityCertificate,
         },
         ClaimCertificate,
         ClaimInfo,
@@ -79,7 +83,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Evm(
-                EvmTestIdentityCertificate::random(claimant),
+                Secp256k1TestIdentityCertificate::<EvmPrefixedMessage, Keccak256>::random(claimant),
             ),
         }
     }
@@ -88,7 +92,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Cosmos(
-                CosmosTestIdentityCertificate::random(claimant),
+                Secp256k1TestIdentityCertificate::<CosmosMessage, Sha256>::random(claimant),
             ),
         }
     }
@@ -194,9 +198,9 @@ impl TestIdentityCertificate {
 
 #[derive(Clone)]
 pub enum TestIdentityCertificate {
-    Evm(EvmTestIdentityCertificate),
+    Evm(Secp256k1TestIdentityCertificate<EvmPrefixedMessage, Keccak256>),
     Discord(String),
-    Cosmos(CosmosTestIdentityCertificate),
+    Cosmos(Secp256k1TestIdentityCertificate<CosmosMessage, Sha256>),
     Aptos(Ed25519TestIdentityCertificate<AptosMessage>),
     Sui(Ed25519TestIdentityCertificate<SuiMessage>),
     Solana(Ed25519TestIdentityCertificate<SolanaMessage>),

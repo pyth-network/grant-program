@@ -1,3 +1,7 @@
+#[cfg(test)]
+use super::secp256k1::Secp256k1TestMessage;
+
+
 use {
     super::secp256k1::{
         SECP256K1_COMPRESSED_PUBKEY_LENGTH,
@@ -175,15 +179,12 @@ impl From<&str> for CosmosBech32Address {
 
 
 #[cfg(test)]
-impl CosmosMessage {
-    pub fn new(payload: &str) -> Self {
+impl Secp256k1TestMessage for CosmosMessage {
+    fn new(payload: &str) -> Self {
         Self(payload.as_bytes().to_vec())
     }
 
-    /**
-     * Returns the serialized message including metadata.
-     */
-    pub fn get_message_with_metadata(&self) -> Vec<u8> {
+    fn get_message_with_metadata(&self) -> Vec<u8> {
         let sign_doc: CosmosStdSignDoc = CosmosStdSignDoc {
             account_number: "0".to_string(),
             chain_id:       "".to_string(),
@@ -205,9 +206,5 @@ impl CosmosMessage {
             .unwrap()
             .as_bytes()
             .to_vec();
-    }
-
-    pub fn hash(&self) -> libsecp256k1::Message {
-        libsecp256k1::Message::parse(&hash::hashv(&[&self.get_message_with_metadata()]).to_bytes())
     }
 }
