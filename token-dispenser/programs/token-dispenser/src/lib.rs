@@ -38,6 +38,7 @@ use {
             CosmosBech32Address,
             CosmosMessage,
             UncompressedSecp256k1Pubkey,
+            INJECTIVE_CHAIN_ID,
         },
         ed25519::{
             Ed25519InstructionData,
@@ -270,6 +271,7 @@ pub enum Identity {
     Sui { address: SuiAddress },
     Aptos { address: AptosAddress },
     Cosmwasm { address: CosmosBech32Address },
+    Injective { address: CosmosBech32Address },
 }
 
 impl Identity {
@@ -281,10 +283,11 @@ impl Identity {
             Identity::Sui { .. } => 3,
             Identity::Aptos { .. } => 4,
             Identity::Cosmwasm { .. } => 5,
+            Identity::Injective { .. } => 5,
         }
     }
 
-    pub const NUMBER_OF_VARIANTS: usize = 6;
+    pub const NUMBER_OF_VARIANTS: usize = 7;
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
@@ -314,6 +317,10 @@ pub enum IdentityCertificate {
         recovery_id: u8,
         pubkey:      UncompressedSecp256k1Pubkey,
         message:     Vec<u8>,
+    },
+    Injective {
+        pubkey:                         UncompressedSecp256k1Pubkey,
+        verification_instruction_index: u8,
     },
 }
 
@@ -369,7 +376,7 @@ impl Cart {
 }
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimedEcosystems {
-    set: [bool; 6],
+    set: [bool; 7],
 }
 
 impl ClaimedEcosystems {
@@ -536,6 +543,31 @@ impl IdentityCertificate {
                 )?;
                 Ok(Identity::Solana {
                     pubkey: pubkey.clone(),
+                })
+            }
+            IdentityCertificate::Injective {
+                pubkey,
+                verification_instruction_index,
+            } => {
+                let signature_verification_instruction = load_instruction_at_checked(
+                    *verification_instruction_index as usize,
+                    sysvar_instruction,
+                )?;
+                let cosmos_bech32 = pubkey.into_bech32(INJECTIVE_CHAIN_ID);
+                check_payload(
+                    CosmosMessage::parse(
+                        &Secp256k1InstructionData::extract_message_and_check_signature(
+                            &signature_verification_instruction,
+                            &EvmPubkey::from(pubkey.clone()),
+                            verification_instruction_index,
+                        )?,
+                        &cosmos_bech32,
+                    )?
+                    .get_payload(),
+                    claimant,
+                )?;
+                Ok(Identity::Injective {
+                    address: cosmos_bech32,
                 })
             }
         }

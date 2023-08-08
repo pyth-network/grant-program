@@ -6,6 +6,7 @@ use {
         solana_program::{
             hash,
             instruction::Instruction,
+            keccak,
             secp256k1_program::ID as SECP256K1_ID,
             secp256k1_recover::secp256k1_recover,
         },
@@ -25,6 +26,15 @@ pub struct EvmPubkey([u8; Self::LEN]);
 impl EvmPubkey {
     pub const LEN: usize = 20;
 }
+
+impl From<UncompressedSecp256k1Pubkey> for EvmPubkey {
+    fn from(value: UncompressedSecp256k1Pubkey) -> Self {
+        let mut addr = [0u8; EvmPubkey::LEN];
+        addr.copy_from_slice(&keccak::hashv(&[&value.as_bytes()[1..]]).to_bytes()[12..]);
+        EvmPubkey(addr)
+    }
+}
+
 
 #[cfg(test)]
 impl From<[u8; Self::LEN]> for EvmPubkey {

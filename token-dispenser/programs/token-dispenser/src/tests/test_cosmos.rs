@@ -53,7 +53,7 @@ impl From<Secp256k1TestIdentityCertificate<CosmosMessage, Sha256>> for IdentityC
     }
 }
 
-impl<U: Hasher> Secp256k1TestIdentityCertificate<CosmosMessage, U> {
+impl Secp256k1TestIdentityCertificate<CosmosMessage, Sha256> {
     pub fn random(claimant: &Pubkey) -> Self {
         let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
         let public_key = libsecp256k1::PublicKey::from_secret_key(&secret);

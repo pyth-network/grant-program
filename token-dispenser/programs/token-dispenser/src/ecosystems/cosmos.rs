@@ -2,6 +2,7 @@
 use super::secp256k1::Secp256k1TestMessage;
 use {
     super::secp256k1::{
+        EvmPubkey,
         SECP256K1_COMPRESSED_PUBKEY_LENGTH,
         SECP256K1_EVEN_PREFIX,
         SECP256K1_ODD_PREFIX,
@@ -26,6 +27,7 @@ use {
 };
 
 pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
+pub const INJECTIVE_CHAIN_ID: &str = "inj";
 
 
 /**
@@ -157,6 +159,7 @@ impl UncompressedSecp256k1Pubkey {
         self.0
     }
 }
+
 
 /**
  * A Secp256k1 pubkey used in Cosmos.

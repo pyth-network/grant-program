@@ -126,6 +126,7 @@ impl DispenserSimulator {
             TestClaimCertificate::random_aptos(&claimant),
             TestClaimCertificate::random_sui(&claimant),
             TestClaimCertificate::random_solana(&claimant),
+            TestClaimCertificate::random_injective(&claimant),
         ]
     }
 

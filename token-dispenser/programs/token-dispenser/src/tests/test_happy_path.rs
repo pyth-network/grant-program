@@ -131,6 +131,15 @@ impl TestClaimCertificate {
             ),
         }
     }
+
+    pub fn random_injective(claimant: &Pubkey) -> Self {
+        Self {
+            amount:                      Self::random_amount(),
+            off_chain_proof_of_identity: TestIdentityCertificate::Injective(
+                Secp256k1TestIdentityCertificate::<CosmosMessage, Keccak256>::random(claimant),
+            ),
+        }
+    }
 }
 
 impl From<TestClaimCertificate> for ClaimInfo {
@@ -155,6 +164,9 @@ impl TestClaimCertificate {
             TestIdentityCertificate::Aptos(aptos) => Some(aptos.as_instruction(index, true)),
             TestIdentityCertificate::Sui(sui) => Some(sui.as_instruction(index, true)),
             TestIdentityCertificate::Solana(solana) => Some(solana.as_instruction(index, true)),
+            TestIdentityCertificate::Injective(injective) => {
+                Some(injective.as_instruction(index, true))
+            }
         };
         (
             ClaimCertificate {
@@ -178,6 +190,7 @@ impl From<TestIdentityCertificate> for Identity {
             TestIdentityCertificate::Aptos(aptos) => aptos.into(),
             TestIdentityCertificate::Sui(sui) => sui.into(),
             TestIdentityCertificate::Solana(solana) => solana.into(),
+            TestIdentityCertificate::Injective(injective) => injective.into(),
         }
     }
 }
@@ -193,6 +206,9 @@ impl TestIdentityCertificate {
             Self::Aptos(aptos) => aptos.as_proof_of_identity(verification_instruction_index),
             Self::Sui(sui) => sui.as_proof_of_identity(verification_instruction_index),
             Self::Solana(solana) => solana.as_proof_of_identity(verification_instruction_index),
+            Self::Injective(injective) => {
+                injective.as_proof_of_identity(verification_instruction_index)
+            }
         }
     }
 }
@@ -205,6 +221,7 @@ pub enum TestIdentityCertificate {
     Aptos(Ed25519TestIdentityCertificate<AptosMessage>),
     Sui(Ed25519TestIdentityCertificate<SuiMessage>),
     Solana(Ed25519TestIdentityCertificate<SolanaMessage>),
+    Injective(Secp256k1TestIdentityCertificate<CosmosMessage, Keccak256>),
 }
 
 #[tokio::test]
