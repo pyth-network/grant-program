@@ -11,6 +11,11 @@ use {
     anchor_lang::prelude::*,
 };
 
+/**
+ * This message (borsh-serialized) needs to be signed by the dispenser guard after
+ * verifying the claimant's pubkey controls the discord account.
+ * The dispenser guard key should not be used for anything else.
+ */
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct DiscordMessage {
     username: String,

@@ -90,4 +90,17 @@ pub async fn test_discord() {
             .unwrap(),
         ErrorCode::SignatureVerificationWrongSigner.into_transaction_error(0)
     );
+    assert_eq!(
+        simulator
+            .claim(
+                &copy_keypair(&simulator.genesis_keypair),
+                &dispenser_guard,
+                &mock_offchain_certificates[0],
+                &merkle_tree
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        ErrorCode::AlreadyClaimed.into_transaction_error()
+    );
 }
