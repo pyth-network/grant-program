@@ -34,6 +34,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      #      - name: Setup Anchor
+      #        uses: metaDAOproject/setup-anchor@v1.1
+      #        with:
+      #          anchor-version: '0.27.0'
+      #          solana-cli-version : '1.14.20'
+      #          node-version: '18'
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -43,6 +49,7 @@ jobs:
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/v1.14.20/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          solana-keygen new --no-bip39-passphrase
       - name: Install Anchor
         run: |
           cargo install --git https://github.com/coral-xyz/anchor --tag v0.27.0 anchor-cli --locked
