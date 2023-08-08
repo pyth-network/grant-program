@@ -167,7 +167,7 @@ impl TestClaimCertificate {
     ) -> (ClaimCertificate, Option<Instruction>) {
         let option_instruction = match &self.off_chain_proof_of_identity {
             TestIdentityCertificate::Evm(evm) => Some(evm.as_instruction(index, true)),
-            TestIdentityCertificate::Discord(_) => None,
+            TestIdentityCertificate::Discord(discord) => Some(discord.as_instruction(index, true)),
             TestIdentityCertificate::Cosmos(_) => None,
             TestIdentityCertificate::Aptos(aptos) => Some(aptos.as_instruction(index, true)),
             TestIdentityCertificate::Sui(sui) => Some(sui.as_instruction(index, true)),
