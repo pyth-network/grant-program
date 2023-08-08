@@ -9,7 +9,6 @@ use {
                 Ed25519Pubkey,
                 Ed25519TestMessage,
             },
-            get_expected_payload,
             solana::SolanaMessage,
             sui::SuiMessage,
         },

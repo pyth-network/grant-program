@@ -11,8 +11,6 @@ use {
             cosmos::CosmosMessage,
             evm::EvmPrefixedMessage,
             discord::DiscordMessage,
-            ed25519::Ed25519TestMessage,
-            get_expected_payload,
             solana::SolanaMessage,
             sui::SuiMessage,
         },
@@ -114,7 +112,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Aptos(
-                Ed25519TestIdentityCertificate::<AptosMessage>::random(&claimant),
+                Ed25519TestIdentityCertificate::<AptosMessage>::random(claimant),
             ),
         }
     }
@@ -123,7 +121,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Sui(
-                Ed25519TestIdentityCertificate::<SuiMessage>::random(&claimant),
+                Ed25519TestIdentityCertificate::<SuiMessage>::random(claimant),
             ),
         }
     }
@@ -132,7 +130,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Solana(
-                Ed25519TestIdentityCertificate::<SolanaMessage>::random(&claimant),
+                Ed25519TestIdentityCertificate::<SolanaMessage>::random(claimant),
             ),
         }
     }
