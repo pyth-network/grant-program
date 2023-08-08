@@ -2,7 +2,6 @@
 use super::secp256k1::Secp256k1TestMessage;
 use {
     super::secp256k1::{
-        EvmPubkey,
         SECP256K1_COMPRESSED_PUBKEY_LENGTH,
         SECP256K1_EVEN_PREFIX,
         SECP256K1_ODD_PREFIX,

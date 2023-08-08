@@ -8,7 +8,6 @@ use {
                 INJECTIVE_CHAIN_ID,
             },
             get_expected_payload,
-            secp256k1::Secp256k1TestMessage,
         },
         Identity,
         IdentityCertificate,

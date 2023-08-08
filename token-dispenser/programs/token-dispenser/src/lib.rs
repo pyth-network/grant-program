@@ -558,7 +558,7 @@ impl IdentityCertificate {
                     CosmosMessage::parse(
                         &Secp256k1InstructionData::extract_message_and_check_signature(
                             &signature_verification_instruction,
-                            &EvmPubkey::from(pubkey.clone()),
+                            &EvmPubkey::from(*pubkey),
                             verification_instruction_index,
                         )?,
                         &cosmos_bech32,
