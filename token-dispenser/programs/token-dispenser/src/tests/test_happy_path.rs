@@ -8,9 +8,9 @@ use {
     crate::{
         ecosystems::{
             aptos::AptosMessage,
-            solana::SolanaMessage,
             cosmos::CosmosMessage,
             evm::EvmPrefixedMessage,
+            solana::SolanaMessage,
             sui::SuiMessage,
         },
         get_cart_pda,
