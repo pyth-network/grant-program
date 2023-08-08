@@ -65,10 +65,14 @@ pub fn get_payload_length(l: usize) -> Result<usize> {
 }
 
 #[cfg(test)]
-impl Secp256k1TestMessage for EvmPrefixedMessage {
-    fn new(payload: &str) -> Self {
-        Self(payload.as_bytes().to_vec())
+impl From<&str> for EvmPrefixedMessage {
+    fn from(bytes: &str) -> Self {
+        EvmPrefixedMessage(bytes.as_bytes().to_vec())
     }
+}
+
+#[cfg(test)]
+impl Secp256k1TestMessage for EvmPrefixedMessage {
     fn get_message_with_metadata(&self) -> Vec<u8> {
         let mut prefixed_message = format!("{}{}", EVM_MESSAGE_PREFIX, self.0.len()).into_bytes();
         prefixed_message.extend_from_slice(&self.0);
