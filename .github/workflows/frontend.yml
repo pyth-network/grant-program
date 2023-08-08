@@ -44,7 +44,7 @@ jobs:
       - name: List rustup toolchains
         run: rustup toolchain list
       - name: Generate new keygen
-        run: solana-keygen new
+        run: solana-keygen new --no-bip39-passphrase
       - name: Set solana target cluster to local
         run: solana config set --url http:localhost:8899
       - name: Check solana config
