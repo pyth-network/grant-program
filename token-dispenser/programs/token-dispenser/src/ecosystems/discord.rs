@@ -1,9 +1,10 @@
 #[cfg(test)]
-use super::ed25519::Ed25519TestMessage;
-#[cfg(test)]
-use rand::distributions::{
-    Alphanumeric,
-    DistString,
+use {
+    super::ed25519::Ed25519TestMessage,
+    rand::distributions::{
+        Alphanumeric,
+        DistString,
+    },
 };
 use {
     crate::ErrorCode,
