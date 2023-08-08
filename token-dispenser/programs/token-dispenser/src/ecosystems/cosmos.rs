@@ -27,6 +27,7 @@ use {
 
 pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
 
+
 /**
 * An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.
 * Only the message payload is stored in this struct.
@@ -179,7 +180,6 @@ impl From<&str> for CosmosBech32Address {
     }
 }
 
-
 #[cfg(test)]
 impl Secp256k1TestMessage for CosmosMessage {
     fn get_message_with_metadata(&self) -> Vec<u8> {
@@ -195,7 +195,7 @@ impl Secp256k1TestMessage for CosmosMessage {
                 r#type: EXPECTED_COSMOS_MESSAGE_TYPE.to_string(),
                 value:  CosmosAdr036Value {
                     data:   base64_standard_engine.encode(&self.payload),
-                    signer: "".to_string(),
+                    signer: self.signer.0.clone(),
                 },
             }],
             sequence:       "0".to_string(),
@@ -214,5 +214,25 @@ impl From<(&[u8], &CosmosBech32Address)> for CosmosMessage {
             payload: value.0.to_vec(),
             signer:  value.1.clone(),
         }
+    }
+}
+
+
+#[cfg(test)]
+pub const BECH32_SEPARATOR: &str = "1";
+
+#[cfg(test)]
+impl CosmosMessage {
+    pub fn extract_chain_id(&self) -> String {
+        self.signer
+            .0
+            .split(BECH32_SEPARATOR)
+            .next()
+            .unwrap()
+            .to_string()
+    }
+
+    pub fn get_signer(&self) -> CosmosBech32Address {
+        self.signer.clone()
     }
 }
