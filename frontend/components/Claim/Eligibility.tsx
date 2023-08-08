@@ -258,6 +258,9 @@ function DiscordButton() {
   return (
     <button
       className={'btn before:btn-bg  btn--dark before:bg-dark ' + hoverClass}
+      onClick={() => {
+        if (status === 'authenticated') signIn('discord')
+      }}
     >
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
         {logo}
