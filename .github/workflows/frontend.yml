@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: projectserum/build:v0.27.0
+    container: jetprotocol/builder:rust-1.68.0-node-18.15.0-solana-1.14.17-anchor-0.27.0-1
 
     env:
       PGUSER: myuser
@@ -66,6 +66,12 @@ jobs:
       #      - name: Install Anchor
       #        run: |
       #          cargo install --git https://github.com/coral-xyz/anchor --tag v0.27.0 anchor-cli --locked
+      - name: Anchor export
+        run: anchor run export;
+        working-directory: ./token-dispenser
+      - name: Start test-validator-docker
+        run: ./check in-docker anchor localnet
+        working-directory: .
       - uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -75,9 +81,9 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
-      - name: Setup Test
-        run: npm run setup-test-ci
-      #      - name: Migrate DB
-      #        run: npm run migrate
+      #      - name: Setup Test
+      #        run: npm run setup-test-ci
+      - name: Migrate DB
+        run: npm run migrate
       - name: Test
         run: npm run test
