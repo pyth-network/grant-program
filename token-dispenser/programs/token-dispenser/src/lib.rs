@@ -283,7 +283,7 @@ impl Identity {
             Identity::Sui { .. } => 3,
             Identity::Aptos { .. } => 4,
             Identity::Cosmwasm { .. } => 5,
-            Identity::Injective { .. } => 5,
+            Identity::Injective { .. } => 6,
         }
     }
 
