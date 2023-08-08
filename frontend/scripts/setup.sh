@@ -14,10 +14,11 @@ TOKEN_DISPENSER_DIR="$DIR/../../token-dispenser";
 
 usage() {
   cat <<EOF
-  Usage: $0 -d[--dev]|-t[--test] -v[--verbose] -h[--help]
+  Usage: $0 -d[--dev]|-t[--test] -v[--verbose] --no-postgres -h[--help]
   where:
     -d | --dev  : start up test validator, deploy programs, run postgres docker and migrate
     -t | --test : run tests
+    --no-postgres : run without starting up postgres docker
     -h | --help : print this usage message
 
   -d and -t are mutually exclusive
