@@ -1,18 +1,16 @@
-use pythnet_sdk::hashers::{keccak256_160::Keccak160, keccak256::Keccak256};
-
-use crate::ecosystems::{evm::EvmPrefixedMessage, cosmos::CosmosMessage};
-
-use super::{test_secp256k1::Secp256k1TestIdentityCertificate, test_cosmos::Sha256};
-
 use {
     super::{
         dispenser_simulator::DispenserSimulator,
+        test_cosmos::Sha256,
         test_ed25519::Ed25519TestIdentityCertificate,
+        test_secp256k1::Secp256k1TestIdentityCertificate,
     },
     crate::{
         ecosystems::{
             aptos::AptosMessage,
             solana::SolanaMessage,
+            cosmos::CosmosMessage,
+            evm::EvmPrefixedMessage,
             sui::SuiMessage,
         },
         get_cart_pda,
@@ -40,9 +38,15 @@ use {
         AnchorSerialize,
     },
     anchor_spl::associated_token::get_associated_token_address,
-    pythnet_sdk::accumulators::{
-        merkle::MerkleTree,
-        Accumulator,
+    pythnet_sdk::{
+        accumulators::{
+            merkle::MerkleTree,
+            Accumulator,
+        },
+        hashers::{
+            keccak256::Keccak256,
+            keccak256_160::Keccak160,
+        },
     },
     rand::Rng,
     solana_program_test::tokio,
