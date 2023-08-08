@@ -13,7 +13,7 @@ import { SuiWalletButton } from '@components/wallets/Sui'
 import { EVMWalletButton } from '@components/wallets/EVM'
 import { CosmosWalletButton } from '@components/wallets/Cosmos'
 import { SolanaWalletButton } from '@components/wallets/Solana'
-import { signIn, useSession } from 'next-auth/react'
+import { signIn, signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
 
 const Eligibility = ({
@@ -231,10 +231,9 @@ const Eligibility = ({
 function DiscordButton() {
   const { data, status } = useSession()
 
-  const { hoverClass, logo, text } = useMemo(() => {
+  const { logo, text } = useMemo(() => {
     if (status === 'authenticated')
       return {
-        hoverClass: ' hover:cursor-default ',
         logo: data.user?.image ? (
           <Image
             src={data.user?.image}
@@ -250,16 +249,18 @@ function DiscordButton() {
 
     return {
       logo: <Discord />,
-      hoverClass: ' hover:text-dark hover:before:bg-light ',
       text: 'Sign In',
     }
   }, [status, data?.user])
 
   return (
     <button
-      className={'btn before:btn-bg  btn--dark before:bg-dark ' + hoverClass}
+      className={
+        'btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light'
+      }
       onClick={() => {
         if (status === 'unauthenticated') signIn('discord')
+        if (status === 'authenticated') signOut()
       }}
     >
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
