@@ -1,3 +1,10 @@
+use pythnet_sdk::hashers::Hasher;
+use solana_sdk::hash::hashv;
+
+use crate::ecosystems::secp256k1::Secp256k1TestMessage;
+
+use super::test_secp256k1::Secp256k1TestIdentityCertificate;
+
 use {
     crate::{
         ecosystems::{
@@ -14,48 +21,33 @@ use {
     rand::seq::SliceRandom,
 };
 
-#[derive(Clone)]
-pub struct CosmosTestIdentityCertificate {
-    pub chain_id:    String,
-    pub signature:   libsecp256k1::Signature,
-    pub recovery_id: libsecp256k1::RecoveryId,
-    pub message:     CosmosMessage,
-}
 
-impl CosmosTestIdentityCertificate {
-    pub fn recover(&self) -> libsecp256k1::PublicKey {
-        libsecp256k1::recover(&self.message.hash(), &self.signature, &self.recovery_id).unwrap()
-    }
+/**
+ * A hasher that uses the solana pre-compiled keccak256 function.
+ */
+#[derive(Default, Debug, Clone, PartialEq)]
+pub struct Sha256 {}
+impl Hasher for Sha256 {
+    type Hash = [u8; 32];
 
-    pub fn random(claimant: &Pubkey) -> Self {
-        let message: CosmosMessage = CosmosMessage::new(&get_expected_payload(claimant));
-        let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
-        let (signature, recovery_id) = libsecp256k1::sign(&message.hash(), &secret);
-        Self {
-            chain_id: ["osmo", "cosmos", "neutron"]
-                .choose(&mut rand::thread_rng())
-                .unwrap()
-                .to_string(),
-            message,
-            signature,
-            recovery_id,
-        }
+    fn hashv(data: &[impl AsRef<[u8]>]) -> Self::Hash {
+        hashv(&data.iter().map(|x| x.as_ref()).collect::<Vec<&[u8]>>()).to_bytes()
     }
 }
 
-impl From<CosmosTestIdentityCertificate> for Identity {
-    fn from(val: CosmosTestIdentityCertificate) -> Self {
+impl From<Secp256k1TestIdentityCertificate<CosmosMessage, Sha256>> for Identity {
+    fn from(val: Secp256k1TestIdentityCertificate<CosmosMessage, Sha256>) -> Self {
         Identity::Cosmwasm {
             address: UncompressedSecp256k1Pubkey::from(val.recover().serialize())
-                .into_bech32(&val.chain_id),
+                .into_bech32("osmo"),
         }
     }
 }
 
-impl From<CosmosTestIdentityCertificate> for IdentityCertificate {
-    fn from(val: CosmosTestIdentityCertificate) -> Self {
+impl From<Secp256k1TestIdentityCertificate<CosmosMessage, Sha256>> for IdentityCertificate {
+    fn from(val: Secp256k1TestIdentityCertificate<CosmosMessage, Sha256>) -> Self {
         IdentityCertificate::Cosmwasm {
-            chain_id:    val.chain_id.clone(),
+            chain_id:    "osmo".to_string(),
             signature:   val.signature.serialize().into(),
             recovery_id: val.recovery_id.into(),
             pubkey:      val.recover().serialize().into(),
