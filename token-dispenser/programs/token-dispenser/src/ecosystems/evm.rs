@@ -61,8 +61,8 @@ pub fn get_payload_length(l: usize) -> Result<usize> {
 
 #[cfg(test)]
 impl From<&str> for EvmPrefixedMessage {
-    fn from(bytes: &str) -> Self {
-        EvmPrefixedMessage(bytes.as_bytes().to_vec())
+    fn from(string: &str) -> Self {
+        EvmPrefixedMessage(string.as_bytes().to_vec())
     }
 }
 
