@@ -4,6 +4,7 @@
     "dev": "next dev",
     "build": "next build",
     "test": "jest",
+    "setup-test-ci": "./scripts/setup.sh --dev --no-postgres",
     "serve": "serve out",
     "start": "next start",
     "migrate": "node-pg-migrate up"

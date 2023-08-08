@@ -6,6 +6,7 @@ command -v shellcheck >/dev/null && shellcheck "$0"
 dev=0
 test=0
 verbose=0
+postgres=1;
 
 DIR=$(cd "$(dirname "$0")" && pwd)
 TOKEN_DISPENSER_DIR="$DIR/../../token-dispenser";
@@ -49,6 +50,10 @@ case $i in
     verbose=1
     shift
     ;;
+    --no-postgres)
+    postgres=0
+    shift
+    ;;
     -h|--help)
     usage
     exit 0
@@ -84,7 +89,9 @@ function setup_postgres_docker() {
   if [ "$verbose" -eq 1 ]; then
     echo "starting up postgres docker"
   fi
-  start_postgres_docker;
+  if [ "$postgres" -eq 1 ]; then
+    start_postgres_docker;
+  fi
   sleep 5
   if [ "$verbose" -eq 1 ]; then
     echo "running postgres docker migrations"
@@ -118,7 +125,9 @@ function cleanup() {
   if [ "$verbose" -eq 1 ]; then
     echo "cleaning up postgres docker"
   fi
-  stop_postgres_docker;
+  if [ "$postgres" -eq 1 ]; then
+    stop_postgres_docker;
+  fi
   if [ "$verbose" -eq 1 ]; then
       echo "shutting down solana-test-validator if running"
   fi
