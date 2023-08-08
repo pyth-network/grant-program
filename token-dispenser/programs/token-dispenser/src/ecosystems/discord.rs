@@ -22,7 +22,7 @@ impl DiscordMessage {
         let result = DiscordMessage::try_from_slice(data)?;
 
         if result.claimant != *claimant {
-            return Err(ErrorCode::SignatureVerificationWrongPayloadMetadata.into());
+            return Err(ErrorCode::SignatureVerificationWrongPayload.into());
         }
 
         Ok(result)
