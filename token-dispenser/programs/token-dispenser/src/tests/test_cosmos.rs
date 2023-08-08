@@ -21,7 +21,7 @@ use {
 
 
 /**
- * A hasher that uses the solana pre-compiled keccak256 function.
+ * A Sha256 hasher
  */
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Sha256 {}
