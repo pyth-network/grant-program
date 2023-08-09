@@ -64,6 +64,8 @@ export function EVMWalletButton() {
   const { address, status, isConnected } = useAccount()
   const { connect, connectors } = useConnect()
 
+  // If the wallet is connected or loadable, try to connect to it.
+  // Else, redirect user to the wallet webpage.
   const onSelect = useCallback(
     (connector: Connector) => {
       if (connector.name === 'MetaMask') {

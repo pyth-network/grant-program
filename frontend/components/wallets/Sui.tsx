@@ -13,10 +13,10 @@ export function SuiWalletButton() {
     currentWallet,
   } = useWalletKit()
 
-  // Sui sdk automatically detects the installed wallets.
+  // Sui sdk automatically detects any installed wallets.
   // If none is installed the detectedWallets array will be empty, and hence
-  // We are returning a custom list of wallets - sui, martian
-  // to implement the wallet flow.
+  // we are returning a custom list of wallets - sui, martian
+  // to implement the install wallet flow.
   const wallets = useMemo(() => {
     if (detectedWallets.length !== 0)
       return detectedWallets.map((wallet) => ({
