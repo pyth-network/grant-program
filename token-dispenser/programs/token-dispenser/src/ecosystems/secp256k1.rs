@@ -20,7 +20,7 @@ pub const SECP256K1_ODD_PREFIX: u8 = 0x03;
 pub const SECP256K1_EVEN_PREFIX: u8 = 0x02;
 pub const SECP256K1_COMPRESSED_PUBKEY_LENGTH: usize = 33;
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq, Debug)]
 pub struct EvmPubkey([u8; Self::LEN]);
 impl EvmPubkey {
     pub const LEN: usize = 20;
@@ -33,7 +33,7 @@ impl From<[u8; Self::LEN]> for EvmPubkey {
     }
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, PartialEq, Debug)]
 pub struct Secp256k1Signature([u8; Secp256k1Signature::LEN]);
 impl Secp256k1Signature {
     pub const LEN: usize = 64;
@@ -63,6 +63,7 @@ impl Secp256k1InstructionHeader {
     pub const LEN: u16 = 1 + 2 + 1 + 2 + 1 + 2 + 2 + 1;
 }
 
+#[derive(PartialEq, Debug)]
 /** The layout of a Secp256k1 signature verification instruction on Solana */
 pub struct Secp256k1InstructionData {
     pub header:      Secp256k1InstructionHeader,
@@ -322,4 +323,21 @@ pub fn test_signature_verification() {
         .unwrap_err(),
         BorshIoError("unexpected end of file".to_string()).into()
     );
+}
+
+#[test]
+pub fn test_serde() {
+    let expected_secp256k1_ix = Secp256k1InstructionData {
+        header:      Secp256k1InstructionHeader::expected_header(5, 0),
+        signature:   Secp256k1Signature([1; Secp256k1Signature::LEN]),
+        recovery_id: 2,
+        eth_address: EvmPubkey([3; EvmPubkey::LEN]),
+        message:     b"hello".to_vec(),
+    };
+
+    let secp256k1_ix =
+        Secp256k1InstructionData::try_from_slice(&expected_secp256k1_ix.try_to_vec().unwrap())
+            .unwrap();
+
+    assert_eq!(secp256k1_ix, expected_secp256k1_ix);
 }
