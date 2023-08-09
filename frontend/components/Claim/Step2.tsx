@@ -1,12 +1,9 @@
-import React, { useCallback, useMemo, useState } from 'react'
-import { Listbox, Transition } from '@headlessui/react'
+import React, { useMemo, useState } from 'react'
 
 import Phantom from '../../images/phantom.inline.svg'
 import Backpack from '../../images/backpack.inline.svg'
 import Solflare from '../../images/solflare.inline.svg'
 import Arrow from '../../images/arrow.inline.svg'
-import Modal from './Modal'
-import Down from '../../images/down2.inline.svg'
 import { useWallet } from '@solana/wallet-adapter-react'
 import {
   BACKPACK_WALLET_ADAPTER,
@@ -15,13 +12,11 @@ import {
   useSelectWallet,
   useWallets,
 } from '@components/wallets/Solana'
-import Image from 'next/image'
 import {
   WalletConnectedButton,
   WalletModal,
 } from '@components/wallets/WalletButton'
 import { truncateAddress } from 'utils/truncateAddress'
-import { Adapter } from '@solana/wallet-adapter-base'
 
 const Step2 = () => {
   const { publicKey, wallet, disconnect, connecting, connected, connect } =
@@ -70,7 +65,6 @@ const Step2 = () => {
                   onClick={disconnect}
                   address={buttonText!}
                   icon={wallet?.adapter.icon}
-                  onHoverText={'disconnect'}
                 />
                 <span
                   className="mt-4 block text-center font-body font-normal underline hover:cursor-pointer"
