@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { Listbox, Transition } from '@headlessui/react'
 
 import Phantom from '../../images/phantom.inline.svg'
@@ -12,11 +12,16 @@ import {
   BACKPACK_WALLET_ADAPTER,
   PHANTOM_WALLET_ADAPTER,
   SOLFLARE_WALLET_ADAPTER,
-  SolanaWalletDropdownButton,
+  useSelectWallet,
+  useWallets,
 } from '@components/wallets/Solana'
 import Image from 'next/image'
-import { WalletConnectedButton } from '@components/wallets/WalletButton'
+import {
+  WalletConnectedButton,
+  WalletModal,
+} from '@components/wallets/WalletButton'
 import { truncateAddress } from 'utils/truncateAddress'
+import { Adapter } from '@solana/wallet-adapter-base'
 
 const Step2 = () => {
   const { publicKey, wallet, disconnect, connecting, connected, connect } =
@@ -61,16 +66,12 @@ const Step2 = () => {
           ) : (
             <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
               <div>
-                {base58 !== undefined || connecting === true ? (
-                  <WalletConnectedButton
-                    onClick={disconnect}
-                    address={buttonText!}
-                    icon={wallet?.adapter.icon}
-                    onHoverText={'disconnect'}
-                  />
-                ) : (
-                  <SolanaWalletDropdownButton />
-                )}
+                <WalletConnectedButton
+                  onClick={disconnect}
+                  address={buttonText!}
+                  icon={wallet?.adapter.icon}
+                  onHoverText={'disconnect'}
+                />
                 <span
                   className="mt-4 block text-center font-body font-normal underline hover:cursor-pointer"
                   onClick={disconnect}
@@ -92,18 +93,16 @@ const Step2 = () => {
 }
 
 const SelectWallets = () => {
-  const { select, wallets } = useWallet()
+  const wallets = useWallets()
   const [modal, openModal] = useState(false)
-  const [wallet, setWallet] = useState(null)
+  const selectWallet = useSelectWallet()
 
   return (
     <>
       <div className="mt-6 flex flex-wrap items-center gap-2">
         <button
           className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-          onClick={() => {
-            select(PHANTOM_WALLET_ADAPTER.name)
-          }}
+          onClick={() => selectWallet(PHANTOM_WALLET_ADAPTER)}
         >
           <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
             <Phantom /> Phantom
@@ -111,9 +110,7 @@ const SelectWallets = () => {
         </button>
         <button
           className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-          onClick={() => {
-            select(BACKPACK_WALLET_ADAPTER.name)
-          }}
+          onClick={() => selectWallet(BACKPACK_WALLET_ADAPTER)}
         >
           <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
             <Backpack /> Backpack
@@ -121,9 +118,7 @@ const SelectWallets = () => {
         </button>
         <button
           className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-          onClick={() => {
-            select(SOLFLARE_WALLET_ADAPTER.name)
-          }}
+          onClick={() => selectWallet(SOLFLARE_WALLET_ADAPTER)}
         >
           <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
             <Solflare /> Solflare
@@ -137,57 +132,7 @@ const SelectWallets = () => {
           More wallets
         </button>
       </div>
-      {modal && (
-        <Modal openModal={openModal}>
-          <h3 className="mb-16  font-header text-[36px] font-light">
-            Select Your Wallet
-          </h3>
-          <div className="mx-auto max-w-[200px]">
-            <Listbox value={wallet} onChange={setWallet}>
-              {({ open }) => (
-                <>
-                  <Listbox.Button className="block w-full border border-light-35 py-3 px-8">
-                    <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                      <span>explore options</span>
-                      <Down className={`${open ? 'rotate-0' : 'rotate-180'}`} />
-                    </span>
-                  </Listbox.Button>
-                  <Transition
-                    enter="transition duration-100 ease-out"
-                    enterFrom="transform scale-95 opacity-0"
-                    enterTo="transform scale-100 opacity-100"
-                    leave="transition duration-75 ease-out"
-                    leaveFrom="transform scale-100 opacity-100"
-                    leaveTo="transform scale-95 opacity-0"
-                  >
-                    <Listbox.Options className="absolute -mt-[1px] w-full divide-y divide-light-35 border border-light-35 bg-darkGray1">
-                      {wallets.map((wallet) => (
-                        <Listbox.Option
-                          key={wallet.adapter.name}
-                          value={wallet.adapter.name}
-                          className="flex cursor-pointer items-center justify-center gap-2.5 py-3 px-8 hover:bg-darkGray3"
-                          onClick={() => {
-                            select(wallet.adapter.name)
-                            openModal(false)
-                          }}
-                        >
-                          <Image
-                            src={wallet.adapter.icon}
-                            alt="wallet icon"
-                            width={20}
-                            height={20}
-                          />{' '}
-                          {wallet.adapter.name}
-                        </Listbox.Option>
-                      ))}
-                    </Listbox.Options>
-                  </Transition>
-                </>
-              )}
-            </Listbox>
-          </div>
-        </Modal>
-      )}
+      {modal && <WalletModal openModal={openModal} wallets={wallets} />}
     </>
   )
 }

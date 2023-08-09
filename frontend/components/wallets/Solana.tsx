@@ -15,13 +15,10 @@ import {
   useWallet,
 } from '@solana/wallet-adapter-react'
 
-import { useMemo, ReactElement, ReactNode } from 'react'
+import { useMemo, ReactElement, ReactNode, useCallback } from 'react'
 import { clusterApiUrl } from '@solana/web3.js'
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
-import { WalletButton, WalletConnectedButton, WalletIcon } from './WalletButton'
-import { Listbox, Transition } from '@headlessui/react'
-
-import Down from '../../images/down.inline.svg'
+import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base'
+import { Wallet, WalletButton, WalletConnectedButton } from './WalletButton'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
 export const BACKPACK_WALLET_ADAPTER = new BackpackWalletAdapter()
@@ -70,106 +67,69 @@ export function SolanaWalletProvider({
   )
 }
 
+// This hooks returns a function which can be used to select wallets.
+// If the wallet is installed or is loadable (for ex, ledger), it will
+// try to connect with it. Else, it will redirect the user to the wallet
+// webpage.
+export function useSelectWallet() {
+  const { select } = useWallet()
+  return useCallback(
+    (walletAdapter: Adapter) => {
+      if (
+        walletAdapter.readyState === 'Installed' ||
+        walletAdapter.readyState === 'Loadable'
+      ) {
+        select(walletAdapter.name)
+      } else if (walletAdapter.readyState === 'NotDetected')
+        window.open(walletAdapter.url, '_blank')
+    },
+    [select]
+  )
+}
+
+// This hooks filters out the wallets which are unsupported.
+// And transforms the supported ones into the generic `Wallet` type
+export function useWallets(): Wallet[] {
+  const { wallets } = useWallet()
+
+  const selectWallet = useSelectWallet()
+
+  return useMemo(() => {
+    return wallets
+      .filter((wallet) => wallet.readyState !== 'Unsupported')
+      .map((wallet) => ({
+        name: wallet.adapter.name,
+        connect: () => selectWallet(wallet.adapter),
+        icon: wallet.adapter.icon,
+      }))
+  }, [selectWallet, wallets])
+}
+
 export function SolanaWalletButton() {
-  const {
-    publicKey,
-    disconnect,
-    connecting,
-    connected,
-    select,
-    wallets,
-    wallet,
-  } = useWallet()
+  const { publicKey, disconnect, connecting, connected, wallet } = useWallet()
 
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey])
 
-  // Wallet is not installed. Install it.
-  const toInstall = useMemo(
-    () => wallet?.adapter.readyState === 'NotDetected',
-    [wallet?.adapter.readyState]
-  )
+  const wallets = useWallets()
 
   return (
     <WalletButton
       // address will only be used when connected or toInstall is true
       // if toInstall is true bas58 will be undefined
-      address={base58 ?? 'install'}
-      connected={connected || toInstall}
+      address={base58}
+      connected={connected}
       isLoading={connecting}
-      wallets={wallets.map((wallet) => ({
-        name: wallet.adapter.name,
-        connect: () => select(wallet.adapter.name),
-        icon: wallet.adapter.icon,
-      }))}
+      wallets={wallets}
       walletConnectedButton={(address: string) => {
-        if (toInstall === false)
-          return (
-            // connected will be true only when wallet is undefined
-            <WalletConnectedButton
-              onClick={disconnect}
-              address={address}
-              icon={wallet?.adapter.icon}
-            />
-          )
-        else return <SolanaWalletDropdownButton />
+        return (
+          // connected will be true only when wallet is undefined
+          <WalletConnectedButton
+            onClick={disconnect}
+            address={address}
+            icon={wallet?.adapter.icon}
+          />
+        )
       }}
     />
-  )
-}
-
-export function SolanaWalletDropdownButton() {
-  const { connect, disconnect, wallet } = useWallet()
-  const options = useMemo(() => {
-    return [
-      { label: 'install', action: () => connect().catch(() => {}) },
-      { label: 'disconnect', action: () => disconnect() },
-    ]
-  }, [connect, disconnect])
-
-  return (
-    <div className="relative z-10">
-      <Listbox>
-        {({ open }) => (
-          <>
-            <Listbox.Button
-              className={`btn   min-w-[207px] before:bg-dark hover:text-dark hover:before:bg-light
-          ${
-            open
-              ? 'border border-light-35 bg-darkGray1 hover:bg-light'
-              : 'before:btn-bg btn--dark'
-          }
-          `}
-            >
-              <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                <WalletIcon icon={wallet?.adapter.icon} />
-                <span>{wallet?.adapter.name}</span>
-                <Down className={`${open ? 'rotate-180' : 'rotate-0'}`} />
-              </span>
-            </Listbox.Button>
-            <Transition
-              enter="transition duration-100 ease-out"
-              enterFrom="transform scale-95 opacity-0"
-              enterTo="transform scale-100 opacity-100"
-              leave="transition duration-75 ease-out"
-              leaveFrom="transform scale-100 opacity-100"
-              leaveTo="transform scale-95 opacity-0"
-            >
-              <Listbox.Options className="absolute top-0  -mt-[1px] w-full divide-y divide-light-35 border border-light-35 bg-darkGray1">
-                {options.map((option) => (
-                  <Listbox.Option
-                    key={option.label}
-                    value={option.label}
-                    className="flex cursor-pointer items-center  gap-2.5 py-3 px-6 hover:bg-darkGray3"
-                    onClick={option.action}
-                  >
-                    {option.label}
-                  </Listbox.Option>
-                ))}
-              </Listbox.Options>
-            </Transition>
-          </>
-        )}
-      </Listbox>
-    </div>
   )
 }
