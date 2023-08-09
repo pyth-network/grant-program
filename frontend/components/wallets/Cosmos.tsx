@@ -1,7 +1,7 @@
-import { ReactElement, ReactNode, useCallback } from 'react'
+import { ReactElement, ReactNode, useCallback, useEffect } from 'react'
 import { ChainProvider, useChainWallet } from '@cosmos-kit/react-lite'
 import { assets, chains } from 'chain-registry'
-import { wallets as keplrWallets } from '@cosmos-kit/keplr'
+import { wallets } from '@cosmos-kit/keplr-extension'
 import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 
@@ -18,7 +18,7 @@ export function CosmosWalletProvider({
     <ChainProvider
       chains={chains}
       assetLists={assets}
-      wallets={[...keplrWallets] as unknown as MainWalletBase[]}
+      wallets={[...wallets] as unknown as MainWalletBase[]}
     >
       {children}
     </ChainProvider>
@@ -33,23 +33,28 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
   const {
     address,
     isWalletConnecting,
-    chainWallet,
     isWalletConnected,
     connect,
     logoUrl,
+    isWalletNotExist,
+    disconnect,
   } = chainWalletContext
 
-  const disconnect = useCallback(
-    () => chainWallet?.disconnect(true),
-    [chainWallet]
-  )
+  // The initial value of `isWalletNotExist` is set to false.
+  // When the user clicks on connect, the value of `isWalletNotExist` changes to false
+  // and then if it the wallet doesnot exist the value `isWalletNotExist` will change to true.
+  // Once, the value of `isWalletNotExist` changes to true, this useEffect will redirect
+  // the user to the keplr webpage.
+  useEffect(() => {
+    if (isWalletNotExist) window.open('https://www.keplr.app/download')
+  }, [isWalletNotExist])
 
   return (
     <WalletButton
       address={address}
       connected={isWalletConnected}
       isLoading={isWalletConnecting}
-      wallets={[{ name: 'keplr', icon: logoUrl, connect: () => connect() }]}
+      wallets={[{ name: 'keplr', icon: logoUrl, connect }]}
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton onClick={disconnect} address={address} />
       )}
