@@ -100,27 +100,35 @@ export function WalletModalButton({ wallets }: WalletModalButtonProps) {
           <span>connect wallet</span>
         </span>
       </button>
-      {modal && (
-        <Modal openModal={openModal}>
-          <h3 className="mb-16  font-header text-[36px] font-light">
-            Connect Your Wallet
-          </h3>
-          <div className="mx-auto max-w-[200px]">
-            {wallets.length === 1 ? (
-              <SingleWalletView
-                wallet={wallets[0]}
-                onConnect={() => openModal(false)}
-              />
-            ) : (
-              <MultiWalletView
-                wallets={wallets}
-                onConnect={() => openModal(false)}
-              />
-            )}
-          </div>
-        </Modal>
-      )}
+      {modal && <WalletModal openModal={openModal} wallets={wallets} />}
     </>
+  )
+}
+
+export type WalletModalProps = {
+  openModal: Function
+  wallets: Wallet[]
+}
+export function WalletModal({ openModal, wallets }: WalletModalProps) {
+  return (
+    <Modal openModal={openModal}>
+      <h3 className="mb-16  font-header text-[36px] font-light">
+        Connect Your Wallet
+      </h3>
+      <div className="mx-auto max-w-[200px]">
+        {wallets.length === 1 ? (
+          <SingleWalletView
+            wallet={wallets[0]}
+            onConnect={() => openModal(false)}
+          />
+        ) : (
+          <MultiWalletView
+            wallets={wallets}
+            onConnect={() => openModal(false)}
+          />
+        )}
+      </div>
+    </Modal>
   )
 }
 
