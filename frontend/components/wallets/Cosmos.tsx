@@ -54,7 +54,7 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
       address={address}
       connected={isWalletConnected}
       isLoading={isWalletConnecting}
-      wallets={[{ name: 'keplr', icon: logoUrl, connect }]}
+      wallets={[{ name: 'keplr', icon: logoUrl, onSelect: connect }]}
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton onClick={disconnect} address={address} />
       )}

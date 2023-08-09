@@ -36,7 +36,7 @@ export function AptosWalletButton() {
 
   // If the wallet is connected or loadable, try to connect to it.
   // Else, redirect user to the wallet webpage.
-  const connectWallet = useCallback(
+  const onSelect = useCallback(
     (wallet: Wallet) => {
       if (wallet.readyState === 'Installed' || wallet.readyState === 'Loadable')
         connect(wallet.name)
@@ -54,7 +54,7 @@ export function AptosWalletButton() {
       wallets={wallets.map((wallet) => ({
         icon: wallet.icon,
         name: wallet.name,
-        connect: () => connectWallet(wallet),
+        onSelect: () => onSelect(wallet),
       }))}
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton

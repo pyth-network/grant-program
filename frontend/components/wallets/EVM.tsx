@@ -71,7 +71,7 @@ export function EVMWalletButton() {
   const { address, status, isConnected } = useAccount()
   const { connect, connectors } = useConnect()
 
-  const connectWallet = useCallback(
+  const onSelect = useCallback(
     (connector: Connector) => {
       if (connector.name === 'MetaMask') {
         if (window.ethereum.isMetaMask === true) connect({ connector })
@@ -92,7 +92,7 @@ export function EVMWalletButton() {
       isLoading={status === 'connecting' || status === 'reconnecting'}
       wallets={connectors.map((connector) => ({
         name: connector.name,
-        connect: () => connectWallet(connector),
+        onSelect: () => onSelect(connector),
       }))}
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton onClick={disconnect} address={address} />
