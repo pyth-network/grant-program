@@ -29,6 +29,8 @@ describe('integration test', () => {
   let root: number[]
   beforeAll(async () => {
     // TODO: run database migrations here. This seems difficult with node-pg-migrate though.
+    // clear the pool before each test
+    await pool.query('DELETE FROM claims', [])
 
     const sampleData: any[] = [
       ['solana', solanaClaimant.publicKey.toString(), 1000],

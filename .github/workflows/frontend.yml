@@ -7,7 +7,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: jetprotocol/builder:rust-1.68.0-node-18.15.0-solana-1.14.17-anchor-0.27.0-1
 
     env:
       PGUSER: myuser
@@ -28,52 +27,13 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    #      solana:
-    #        image: projectserum/build:v0.27.0
 
     defaults:
       run:
         working-directory: ./frontend
 
     steps:
-      - name: Setup Docker
-        uses: docker/setup-buildx-action@v1
       - uses: actions/checkout@v3
-      - name: List rustup toolchains
-        run: rustup toolchain list
-      - name: Set default toolchain
-        run: rustup default stable
-      - name: List rustup toolchains
-        run: rustup toolchain list
-      - name: Generate new keygen
-        run: solana-keygen new --no-bip39-passphrase
-      - name: Set solana target cluster to local
-        run: solana config set --url http:localhost:8899
-      - name: Check solana config
-        run: solana config get
-      #      - name: Install yarn dependencies
-      #        run: yarn install
-      #      - uses: actions-rs/toolchain@v1
-      #        with:
-      #          profile: minimal
-      #          toolchain: nightly-2023-03-01
-      #          components: rustfmt, clippy
-      #      - name: Install Solana
-      #        run: |
-      #          sh -c "$(curl -sSfL https://release.solana.com/v1.14.20/install)"
-      #          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-      #      - name: Generate Solana Key
-      #        run: solana-keygen new --no-bip39-passphrase
-      #        shell: bash
-      #      - name: Install Anchor
-      #        run: |
-      #          cargo install --git https://github.com/coral-xyz/anchor --tag v0.27.0 anchor-cli --locked
-      - name: Anchor export
-        run: anchor run export;
-        working-directory: ./token-dispenser
-      - name: Start test-validator-docker
-        run: ./check in-docker anchor localnet
-        working-directory: .
       - uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -83,9 +43,7 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
-      #      - name: Setup Test
-      #        run: npm run setup-test-ci
       - name: Migrate DB
         run: npm run migrate
       - name: Test
-        run: npm run test
+        run: npm run test:api
