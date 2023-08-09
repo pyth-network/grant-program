@@ -44,13 +44,6 @@ const config = createConfig({
         showQrModal: true,
       },
     }),
-    // new InjectedConnector({
-    //   chains,
-    //   options: {
-    //     name: 'Injected',
-    //     shimDisconnect: true,
-    //   },
-    // }),
   ],
   publicClient,
   webSocketPublicClient,
