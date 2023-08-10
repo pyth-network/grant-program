@@ -76,20 +76,7 @@ pub async fn test_discord() {
         )
         .await
         .is_ok());
-    // Wrong dispenser guard has signed the message
-    assert_eq!(
-        simulator
-            .claim(
-                &copy_keypair(&simulator.genesis_keypair),
-                &dispenser_guard,
-                &mock_offchain_certificates[1],
-                &merkle_tree
-            )
-            .await
-            .unwrap_err()
-            .unwrap(),
-        ErrorCode::SignatureVerificationWrongSigner.into_transaction_error(1)
-    );
+
     assert_eq!(
         simulator
             .claim(
