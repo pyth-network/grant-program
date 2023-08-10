@@ -9,8 +9,8 @@ use {
         ecosystems::{
             aptos::AptosMessage,
             cosmos::CosmosMessage,
-            evm::EvmPrefixedMessage,
             discord::DiscordMessage,
+            evm::EvmPrefixedMessage,
             solana::SolanaMessage,
             sui::SuiMessage,
         },

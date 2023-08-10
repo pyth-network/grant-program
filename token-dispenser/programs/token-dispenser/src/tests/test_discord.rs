@@ -65,7 +65,7 @@ pub async fn test_discord() {
             .await
             .unwrap_err()
             .unwrap(),
-        ErrorCode::SignatureVerificationWrongSigner.into_transaction_error(0)
+        ErrorCode::SignatureVerificationWrongSigner.into_transaction_error(1)
     );
     assert!(simulator
         .claim(
@@ -88,7 +88,7 @@ pub async fn test_discord() {
             .await
             .unwrap_err()
             .unwrap(),
-        ErrorCode::SignatureVerificationWrongSigner.into_transaction_error(0)
+        ErrorCode::SignatureVerificationWrongSigner.into_transaction_error(1)
     );
     assert_eq!(
         simulator
@@ -101,6 +101,6 @@ pub async fn test_discord() {
             .await
             .unwrap_err()
             .unwrap(),
-        ErrorCode::AlreadyClaimed.into_transaction_error()
+        ErrorCode::AlreadyClaimed.into_transaction_error(1)
     );
 }
