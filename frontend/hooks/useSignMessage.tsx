@@ -32,7 +32,7 @@ export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
       try {
         if (connected === false || !account) return
 
-        let { signature } =
+        const { signature } =
           (await signMessage({
             message,
             nonce,
@@ -77,7 +77,7 @@ export function useCosmosSignMessage(
       try {
         if (address === undefined || isWalletConnected === false) return
 
-        let { pub_key, signature } = await signArbitrary(address, message)
+        const { pub_key, signature } = await signArbitrary(address, message)
 
         return {
           publicKey: getUncompressedPubkey(
@@ -109,8 +109,8 @@ export function useEVMSignMessage(): SignMessageFn {
           !address
         )
           return
-        let result = await signMessageAsync({ message })
-        let [signature, recoveryId] = splitEvmSignature(result)
+        const result = await signMessageAsync({ message })
+        const [signature, recoveryId] = splitEvmSignature(result)
         return {
           publicKey: Buffer.from(removeLeading0x(address), 'hex'),
           signature,
