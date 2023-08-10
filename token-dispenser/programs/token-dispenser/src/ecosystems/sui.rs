@@ -54,8 +54,8 @@ impl SuiMessage {
 
 #[cfg(test)]
 impl Ed25519TestMessage for SuiMessage {
-    fn new(message: &str) -> Self {
-        Self(message.as_bytes().to_vec())
+    fn for_claimant(claimant: &Pubkey) -> Self {
+        Self(get_expected_payload(claimant).into_bytes())
     }
 
     fn get_message_with_metadata(&self) -> Vec<u8> {

@@ -31,6 +31,14 @@ impl Ed25519Pubkey {
     pub const LEN: usize = 32;
 }
 
+impl From<Pubkey> for Ed25519Pubkey {
+    fn from(pubkey: Pubkey) -> Self {
+        let mut bytes = [0u8; 32];
+        bytes.copy_from_slice(pubkey.as_ref());
+        Self(bytes)
+    }
+}
+
 impl Ed25519Pubkey {
     pub fn to_bytes(&self) -> [u8; Self::LEN] {
         self.0
@@ -164,7 +172,7 @@ pub trait Ed25519TestMessage
 where
     Self: Sized,
 {
-    fn new(message: &str) -> Self;
+    fn for_claimant(claimant: &Pubkey) -> Self;
     fn get_message_with_metadata(&self) -> Vec<u8>;
     fn get_message_length(&self) -> usize {
         self.get_message_with_metadata().len()
