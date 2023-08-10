@@ -30,10 +30,9 @@ export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
   const signMessageCb = useCallback(
     async (message: string) => {
       try {
-        if (connected === false) return
-        if (!account) return
+        if (connected === false || !account) return
 
-        let { signature, fullMessage } =
+        let { signature } =
           (await signMessage({
             message,
             nonce,
@@ -42,13 +41,12 @@ export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
         // Discard multisigs
         if (
           typeof signature != 'string' ||
-          typeof account.publicKey != 'string' ||
-          !fullMessage
+          typeof account.publicKey != 'string'
         )
           return
         return {
           publicKey: new Uint8Array(
-            Buffer.from(account.publicKey.slice(2), 'hex')
+            Buffer.from(removeLeading0x(account.publicKey), 'hex')
           ),
           signature: new Uint8Array(Buffer.from(signature, 'hex')),
           recoveryId: undefined,
@@ -79,18 +77,14 @@ export function useCosmosSignMessage(
       try {
         if (address === undefined || isWalletConnected === false) return
 
-        let { pub_key, signature: base64Signature } = await signArbitrary(
-          address,
-          message
-        )
-        let signature = new Uint8Array(Buffer.from(base64Signature, 'base64'))
+        let { pub_key, signature } = await signArbitrary(address, message)
 
         return {
           publicKey: getUncompressedPubkey(
             new Uint8Array(Buffer.from(pub_key.value, 'base64'))
           ),
-          signature,
-          recoveryId: getRecoveryId(signature), // TO DO : compute this
+          signature: new Uint8Array(Buffer.from(signature, 'base64')),
+          recoveryId: 0, // TO DO : compute this
         }
       } catch (e) {
         console.error(e)
