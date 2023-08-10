@@ -45,10 +45,8 @@ export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
         )
           return
         return {
-          publicKey: new Uint8Array(
-            Buffer.from(removeLeading0x(account.publicKey), 'hex')
-          ),
-          signature: new Uint8Array(Buffer.from(signature, 'hex')),
+          publicKey: Buffer.from(removeLeading0x(account.publicKey), 'hex'),
+          signature: Buffer.from(signature, 'hex'),
           recoveryId: undefined,
         }
       } catch (e) {
@@ -81,9 +79,9 @@ export function useCosmosSignMessage(
 
         return {
           publicKey: getUncompressedPubkey(
-            new Uint8Array(Buffer.from(pub_key.value, 'base64'))
+            Buffer.from(pub_key.value, 'base64')
           ),
-          signature: new Uint8Array(Buffer.from(signature, 'base64')),
+          signature: Buffer.from(signature, 'base64'),
           recoveryId: 0, // TO DO : compute this
         }
       } catch (e) {
