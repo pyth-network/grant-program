@@ -45,7 +45,7 @@ impl AptosMessage {
 
 #[cfg(test)]
 impl Ed25519TestMessage for AptosMessage {
-    fn expected(claimant: &Pubkey) -> Self {
+    fn for_claimant(claimant: &Pubkey) -> Self {
         Self(get_expected_payload(claimant).into_bytes())
     }
 

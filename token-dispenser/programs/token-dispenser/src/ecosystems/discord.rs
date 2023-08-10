@@ -40,7 +40,7 @@ impl DiscordMessage {
 
 #[cfg(test)]
 impl Ed25519TestMessage for DiscordMessage {
-    fn expected(claimant: &Pubkey) -> Self {
+    fn for_claimant(claimant: &Pubkey) -> Self {
         Self {
             username: Alphanumeric.sample_string(&mut rand::thread_rng(), 16),
             claimant: *claimant,

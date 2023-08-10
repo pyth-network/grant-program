@@ -39,7 +39,7 @@ pub struct Ed25519TestIdentityCertificate<T: Ed25519TestMessage> {
 
 impl<T: Ed25519TestMessage> Ed25519TestIdentityCertificate<T> {
     pub fn random(claimant: &Pubkey) -> Self {
-        let message = T::expected(claimant);
+        let message = T::for_claimant(claimant);
         let mut csprng = OsRng {};
         let keypair: Keypair = Keypair::generate(&mut csprng);
         let signature = keypair.sign(&message.get_message_with_metadata());
@@ -52,7 +52,7 @@ impl<T: Ed25519TestMessage> Ed25519TestIdentityCertificate<T> {
     }
 
     pub fn new(claimant: &Pubkey, keypair: &Keypair) -> Self {
-        let message = T::expected(claimant);
+        let message = T::for_claimant(claimant);
         let signature = keypair.sign(&message.get_message_with_metadata());
         let publickey = keypair.public;
         Self {
