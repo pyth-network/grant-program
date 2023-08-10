@@ -1,9 +1,9 @@
 #[cfg(test)]
-use super::ed25519::Ed25519TestMessage;
-use {
-    super::get_expected_payload,
-    anchor_lang::prelude::*,
+use super::{
+    ed25519::Ed25519TestMessage,
+    get_expected_payload,
 };
+use anchor_lang::prelude::*;
 
 /**
 * An arbitrary signed message used in Solana

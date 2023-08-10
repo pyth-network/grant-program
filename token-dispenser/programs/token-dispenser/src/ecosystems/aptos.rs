@@ -1,10 +1,10 @@
 #[cfg(test)]
-use super::ed25519::Ed25519TestMessage;
+use super::{
+    ed25519::Ed25519TestMessage,
+    get_expected_payload,
+};
 use {
-    super::{
-        ed25519::Ed25519Pubkey,
-        get_expected_payload,
-    },
+    super::ed25519::Ed25519Pubkey,
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
