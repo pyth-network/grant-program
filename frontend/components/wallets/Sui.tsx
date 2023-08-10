@@ -17,6 +17,8 @@ export function SuiWalletButton() {
   // If none is installed the detectedWallets array will be empty, and hence
   // we are returning a custom list of wallets - sui, martian
   // to implement the install wallet flow.
+  // Note that, if only one wallet is installed, only that will be shown.
+  // We won't be showing wallets that can be installed.
   const wallets = useMemo(() => {
     if (detectedWallets.length !== 0)
       return detectedWallets.map((wallet) => ({

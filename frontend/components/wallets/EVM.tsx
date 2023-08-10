@@ -15,7 +15,6 @@ import { alchemyProvider } from 'wagmi/providers/alchemy'
 import { publicProvider } from 'wagmi/providers/public'
 
 import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet'
-import { InjectedConnector } from 'wagmi/connectors/injected'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
 
@@ -23,7 +22,10 @@ import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
 // Two popular providers are Alchemy (alchemy.com) and Infura (infura.io)
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   [mainnet],
-  [alchemyProvider({ apiKey: 'yourAlchemyApiKey' }), publicProvider()]
+  [
+    alchemyProvider({ apiKey: process.env.NEXT_PUBLIC_ALCHEMY_KEY! }),
+    publicProvider(),
+  ]
 )
 
 // Set up wagmi config
