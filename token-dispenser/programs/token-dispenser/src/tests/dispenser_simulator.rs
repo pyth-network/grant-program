@@ -25,7 +25,6 @@ use {
                 create_account,
             },
         },
-        system_program,
         AccountDeserialize,
         AnchorSerialize,
         Id,
@@ -326,11 +325,6 @@ impl DispenserSimulator {
             false,
         ));
 
-        accounts.push(AccountMeta::new_readonly(
-            system_program::System::id(),
-            false,
-        ));
-        accounts.push(AccountMeta::new(claimant.pubkey(), true));
 
         let instruction_data: instruction::Claim = instruction::Claim {
             claim_certificates: vec![claim_certificate],

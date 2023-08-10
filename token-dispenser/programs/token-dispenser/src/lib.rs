@@ -133,7 +133,13 @@ pub mod token_dispenser {
             };
 
 
-            Claim::checked_create_claim_receipt(&ctx, index, &leaf_vector)?;
+            checked_create_claim_receipt(
+                index,
+                &leaf_vector,
+                &ctx.accounts.claimant,
+                &ctx.accounts.system_program,
+                ctx.remaining_accounts,
+            )?;
 
             let cart = &mut ctx.accounts.cart;
 
@@ -216,65 +222,6 @@ pub struct Claim<'info> {
     #[account(address = SYSVAR_IX_ID)]
     pub sysvar_instruction: AccountInfo<'info>,
 }
-
-impl<'info> Claim<'info> {
-    /**
-     * Creates a claim receipt for the claimant. This is an account that contains no data. Each leaf
-     * is associated with a unique claim receipt account. Since the number of claim receipt accounts
-     * to be passed to the program is dynamic and equal to the size of `claim_certificates`, it is
-     * awkward to declare them in the anchor context. Instead, we pass them inside
-     * remaining_accounts. If the account is initialized, the assign instruction will fail.
-     */
-    pub fn checked_create_claim_receipt(
-        ctx: &Context<'_, '_, '_, 'info, Claim<'info>>,
-        index: usize,
-        leaf: &[u8],
-    ) -> Result<()> {
-        let (receipt_pubkey, bump) = get_receipt_pda(leaf);
-
-
-        // The claim receipt accounts should appear in remaining accounts in the same order as the claim certificates
-        let claim_receipt_account = &ctx.remaining_accounts[index];
-        require_keys_eq!(
-            claim_receipt_account.key(),
-            receipt_pubkey,
-            ErrorCode::WrongPda
-        );
-
-        check_claim_receipt_is_uninitialized(claim_receipt_account)?;
-
-        let account_infos = vec![
-            claim_receipt_account.clone(),
-            ctx.accounts.claimant.to_account_info(),
-            ctx.accounts.system_program.to_account_info(),
-        ];
-        // Pay rent for the receipt account
-        let transfer_instruction = system_instruction::transfer(
-            &ctx.accounts.claimant.key(),
-            &claim_receipt_account.key(),
-            Rent::get()?.minimum_balance(0),
-        );
-        invoke(&transfer_instruction, &account_infos)?;
-
-        // Assign it to the program, this instruction will fail if the account already belongs to the
-        // program
-        let assign_instruction =
-            system_instruction::assign(&claim_receipt_account.key(), &crate::id());
-        invoke_signed(
-            &assign_instruction,
-            &account_infos,
-            &[&[
-                RECEIPT_SEED,
-                &MerkleTree::<SolanaHasher>::hash_leaf(leaf),
-                &[bump],
-            ]],
-        )
-        .map_err(|_| ErrorCode::AlreadyClaimed)?;
-
-        Ok(())
-    }
-}
-
 
 #[derive(Accounts)]
 pub struct Checkout<'info> {
@@ -621,6 +568,65 @@ impl ClaimCertificate {
         })
     }
 }
+
+
+/**
+ * Creates a claim receipt for the claimant. This is an account that contains no data. Each leaf
+ * is associated with a unique claim receipt account. Since the number of claim receipt accounts
+ * to be passed to the program is dynamic and equal to the size of `claim_certificates`, it is
+ * awkward to declare them in the anchor context. Instead, we pass them inside
+ * remaining_accounts. If the account is initialized, the assign instruction will fail.
+ */
+pub fn checked_create_claim_receipt<'info>(
+    index: usize,
+    leaf: &[u8],
+    claimant: &AccountInfo<'info>,
+    system_program: &AccountInfo<'info>,
+    remaining_accounts: &[AccountInfo<'info>],
+) -> Result<()> {
+    let (receipt_pubkey, bump) = get_receipt_pda(leaf);
+
+
+    // The claim receipt accounts should appear in remaining accounts in the same order as the claim certificates
+    let claim_receipt_account = &remaining_accounts[index];
+    require_keys_eq!(
+        claim_receipt_account.key(),
+        receipt_pubkey,
+        ErrorCode::WrongPda
+    );
+
+    check_claim_receipt_is_uninitialized(claim_receipt_account)?;
+
+    let account_infos = vec![
+        claim_receipt_account.clone(),
+        claimant.to_account_info(),
+        system_program.to_account_info(),
+    ];
+    // Pay rent for the receipt account
+    let transfer_instruction = system_instruction::transfer(
+        &claimant.key(),
+        &claim_receipt_account.key(),
+        Rent::get()?.minimum_balance(0),
+    );
+    invoke(&transfer_instruction, &account_infos)?;
+
+    // Assign it to the program, this instruction will fail if the account already belongs to the
+    // program
+    let assign_instruction = system_instruction::assign(&claim_receipt_account.key(), &crate::id());
+    invoke_signed(
+        &assign_instruction,
+        &account_infos,
+        &[&[
+            RECEIPT_SEED,
+            &MerkleTree::<SolanaHasher>::hash_leaf(leaf),
+            &[bump],
+        ]],
+    )
+    .map_err(|_| ErrorCode::AlreadyClaimed)?;
+
+    Ok(())
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Sdk.
