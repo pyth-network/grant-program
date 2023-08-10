@@ -6,8 +6,6 @@ import { removeLeading0x } from 'claim_sdk'
 import { getUncompressedPubkey } from 'claim_sdk/ecosystems/cosmos'
 import { splitEvmSignature } from 'claim_sdk/ecosystems/evm'
 import { splitSignatureAndPubkey } from 'claim_sdk/ecosystems/sui'
-import { Signature } from 'ethers'
-import { type } from 'os'
 import { useCallback } from 'react'
 import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
 
