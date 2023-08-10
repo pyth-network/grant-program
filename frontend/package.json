@@ -4,6 +4,7 @@
     "dev": "next dev",
     "build": "next build",
     "test": "jest",
+    "test:api": "jest --testPathIgnorePatterns=integrationTest",
     "serve": "serve out",
     "start": "next start",
     "migrate": "node-pg-migrate up"

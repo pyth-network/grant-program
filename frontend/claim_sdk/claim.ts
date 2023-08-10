@@ -2,6 +2,7 @@ import * as anchor from '@coral-xyz/anchor'
 import { PublicKey } from '@solana/web3.js'
 import IDL from './idl/token_dispenser.json'
 import { removeLeading0x } from './index'
+import { ethers } from 'ethers'
 
 // Must be kept in line with the database types and the on-chain program
 export type Ecosystem =
@@ -36,13 +37,15 @@ export class ClaimInfo {
         break
       }
       case 'solana': {
-        identityStruct = { solana: { pubkey: new PublicKey(this.identity) } }
+        identityStruct = {
+          solana: { pubkey: new PublicKey(this.identity).toBuffer() },
+        }
         break
       }
       case 'evm': {
         identityStruct = {
           evm: {
-            pubkey: Buffer.from(removeLeading0x(this.identity), 'hex'),
+            pubkey: Array.from(ethers.getBytes(this.identity)),
           },
         }
         break

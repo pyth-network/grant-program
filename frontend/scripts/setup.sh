@@ -6,6 +6,7 @@ command -v shellcheck >/dev/null && shellcheck "$0"
 dev=0
 test=0
 verbose=0
+postgres=1;
 
 DIR=$(cd "$(dirname "$0")" && pwd)
 TOKEN_DISPENSER_DIR="$DIR/../../token-dispenser";
@@ -13,10 +14,11 @@ TOKEN_DISPENSER_DIR="$DIR/../../token-dispenser";
 
 usage() {
   cat <<EOF
-  Usage: $0 -d[--dev]|-t[--test] -v[--verbose] -h[--help]
+  Usage: $0 -d[--dev]|-t[--test] -v[--verbose] --no-postgres -h[--help]
   where:
     -d | --dev  : start up test validator, deploy programs, run postgres docker and migrate
     -t | --test : run tests
+    --no-postgres : run without starting up postgres docker
     -h | --help : print this usage message
 
   -d and -t are mutually exclusive
@@ -47,6 +49,10 @@ case $i in
     ;;
     -v|--verbose)
     verbose=1
+    shift
+    ;;
+    --no-postgres)
+    postgres=0
     shift
     ;;
     -h|--help)
@@ -84,22 +90,25 @@ function setup_postgres_docker() {
   if [ "$verbose" -eq 1 ]; then
     echo "starting up postgres docker"
   fi
-  start_postgres_docker;
-  sleep 10
+  if [ "$postgres" -eq 1 ]; then
+    start_postgres_docker;
+  fi
+  sleep 5
   if [ "$verbose" -eq 1 ]; then
     echo "running postgres docker migrations"
   fi
   npm run migrate;
 }
 
-function run_frontend_tests() {
+function run_integration_tests() {
   npm run test;
 }
 
 
 function start_test_validator() {
   cd "$TOKEN_DISPENSER_DIR";
-  anchor localnet &
+  anchor run export;
+  anchor localnet --skip-build &
 }
 
 function stop_test_validator() {
@@ -117,7 +126,9 @@ function cleanup() {
   if [ "$verbose" -eq 1 ]; then
     echo "cleaning up postgres docker"
   fi
-  stop_postgres_docker;
+  if [ "$postgres" -eq 1 ]; then
+    stop_postgres_docker;
+  fi
   if [ "$verbose" -eq 1 ]; then
       echo "shutting down solana-test-validator if running"
   fi
@@ -143,7 +154,11 @@ function main() {
         echo "test mode"
         echo "running frontend tests"
       fi
-      run_frontend_tests;
+      printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
+      # TODO: this doesn't run the test-validator in the background so it never
+      # starts the frontend tests
+      start_test_validator &
+      run_integration_tests;
   else
       echo "no mode selected"
       usage;

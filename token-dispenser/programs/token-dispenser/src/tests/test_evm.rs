@@ -73,7 +73,6 @@ impl EvmTestIdentityCertificate {
             signature_bytes[0] ^= 0xff;
         }
 
-
         let instruction_data = Secp256k1InstructionData {
             header,
             eth_address: self.recover_as_evm_address(),

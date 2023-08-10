@@ -109,9 +109,12 @@ pub mod token_dispenser {
      *   DONE
      * - The claimant has not already claimed tokens -- DONE
      */
-    pub fn claim(ctx: Context<Claim>, claim_certificates: Vec<ClaimCertificate>) -> Result<()> {
+    pub fn claim<'info>(
+        ctx: Context<'_, '_, '_, 'info, Claim<'info>>,
+        claim_certificates: Vec<ClaimCertificate>,
+    ) -> Result<()> {
         let config = &ctx.accounts.config;
-        let cart = &mut ctx.accounts.cart;
+
 
         for (index, claim_certificate) in claim_certificates.iter().enumerate() {
             // Check that the identity corresponding to the leaf has authorized the claimant
@@ -126,15 +129,13 @@ pub mod token_dispenser {
                 .merkle_root
                 .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)
             {
-                return Err(ErrorCode::InvalidInclusionProof.into());
+                return err!(ErrorCode::InvalidInclusionProof);
             };
 
-            checked_create_claim_receipt(
-                index,
-                &leaf_vector,
-                ctx.accounts.claimant.key,
-                ctx.remaining_accounts,
-            )?;
+
+            Claim::checked_create_claim_receipt(&ctx, index, &leaf_vector)?;
+
+            let cart = &mut ctx.accounts.cart;
 
             cart.amount = cart
                 .amount
@@ -143,7 +144,7 @@ pub mod token_dispenser {
 
             // Check that the claimant is not claiming tokens more than once per ecosystem
             if cart.set.contains(&claim_info.identity) {
-                return Err(ErrorCode::MoreThanOneIdentityPerEcosystem.into());
+                return err!(ErrorCode::MoreThanOneIdentityPerEcosystem);
             }
             cart.set.insert(&claim_info.identity);
         }
@@ -216,6 +217,65 @@ pub struct Claim<'info> {
     pub sysvar_instruction: AccountInfo<'info>,
 }
 
+impl<'info> Claim<'info> {
+    /**
+     * Creates a claim receipt for the claimant. This is an account that contains no data. Each leaf
+     * is associated with a unique claim receipt account. Since the number of claim receipt accounts
+     * to be passed to the program is dynamic and equal to the size of `claim_certificates`, it is
+     * awkward to declare them in the anchor context. Instead, we pass them inside
+     * remaining_accounts. If the account is initialized, the assign instruction will fail.
+     */
+    pub fn checked_create_claim_receipt(
+        ctx: &Context<'_, '_, '_, 'info, Claim<'info>>,
+        index: usize,
+        leaf: &[u8],
+    ) -> Result<()> {
+        let (receipt_pubkey, bump) = get_receipt_pda(leaf);
+
+
+        // The claim receipt accounts should appear in remaining accounts in the same order as the claim certificates
+        let claim_receipt_account = &ctx.remaining_accounts[index];
+        require_keys_eq!(
+            claim_receipt_account.key(),
+            receipt_pubkey,
+            ErrorCode::WrongPda
+        );
+
+        check_claim_receipt_is_uninitialized(claim_receipt_account)?;
+
+        let account_infos = vec![
+            claim_receipt_account.clone(),
+            ctx.accounts.claimant.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+        ];
+        // Pay rent for the receipt account
+        let transfer_instruction = system_instruction::transfer(
+            &ctx.accounts.claimant.key(),
+            &claim_receipt_account.key(),
+            Rent::get()?.minimum_balance(0),
+        );
+        invoke(&transfer_instruction, &account_infos)?;
+
+        // Assign it to the program, this instruction will fail if the account already belongs to the
+        // program
+        let assign_instruction =
+            system_instruction::assign(&claim_receipt_account.key(), &crate::id());
+        invoke_signed(
+            &assign_instruction,
+            &account_infos,
+            &[&[
+                RECEIPT_SEED,
+                &MerkleTree::<SolanaHasher>::hash_leaf(leaf),
+                &[bump],
+            ]],
+        )
+        .map_err(|_| ErrorCode::AlreadyClaimed)?;
+
+        Ok(())
+    }
+}
+
+
 #[derive(Accounts)]
 pub struct Checkout<'info> {
     #[account(mut)]
@@ -273,6 +333,8 @@ pub enum Identity {
 }
 
 impl Identity {
+    /// Note: the order of this must follow the order of the variants in the enum
+    /// since the typescript code uses this ordering
     pub fn to_discriminant(&self) -> usize {
         match self {
             Identity::Discord { .. } => 0,
@@ -412,7 +474,7 @@ pub enum ErrorCode {
     SignatureVerificationWrongClaimant,
 }
 
-pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -> Result<()> {
+pub fn check_claim_receipt_is_uninitialized(claim_receipt_account: &AccountInfo) -> Result<()> {
     if claim_receipt_account.owner.eq(&crate::id()) {
         return Err(ErrorCode::AlreadyClaimed.into());
     }
@@ -555,54 +617,6 @@ impl ClaimCertificate {
             amount:   self.amount,
         })
     }
-}
-
-/**
- * Creates a claim receipt for the claimant. This is an account that contains no data. Each leaf
- * is associated with a unique claim receipt account. Since the number of claim receipt accounts
- * to be passed to the program is dynamic and equal to the size of `claim_certificates`, it is
- * awkward to declare them in the anchor context. Instead, we pass them inside
- * remaining_accounts. If the account is initialized, the assign instruction will fail.
- */
-pub fn checked_create_claim_receipt(
-    index: usize,
-    leaf: &[u8],
-    payer: &Pubkey,
-    remaining_accounts: &[AccountInfo],
-) -> Result<()> {
-    let (receipt_pubkey, bump) = get_receipt_pda(leaf);
-
-    // The claim receipt accounts should appear in remaining accounts in the same order as the claim certificates
-    let claim_receipt_account = &remaining_accounts[index];
-    if !claim_receipt_account.key.eq(&receipt_pubkey) {
-        return Err(ErrorCode::WrongPda.into());
-    }
-
-    check_claim_receipt_is_unitialized(claim_receipt_account)?;
-
-    // Pay rent for the receipt account
-    let transfer_instruction = system_instruction::transfer(
-        payer,
-        &claim_receipt_account.key(),
-        Rent::get()?.minimum_balance(0),
-    );
-    invoke(&transfer_instruction, remaining_accounts)?;
-
-    // Assign it to the program, this instruction will fail if the account already belongs to the
-    // program
-    let assign_instruction = system_instruction::assign(&claim_receipt_account.key(), &crate::id());
-    invoke_signed(
-        &assign_instruction,
-        remaining_accounts,
-        &[&[
-            RECEIPT_SEED,
-            &MerkleTree::<SolanaHasher>::hash_leaf(leaf),
-            &[bump],
-        ]],
-    )
-    .map_err(|_| ErrorCode::AlreadyClaimed)?;
-
-    Ok(())
 }
 
 ////////////////////////////////////////////////////////////////////////////////
