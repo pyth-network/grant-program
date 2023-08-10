@@ -1,9 +1,10 @@
 import {
   AptosWalletAdapterProvider,
+  Wallet,
   useWallet,
 } from '@aptos-labs/wallet-adapter-react'
 import { PetraWallet } from 'petra-plugin-wallet-adapter'
-import { ReactElement, ReactNode, useMemo } from 'react'
+import { ReactElement, ReactNode, useCallback, useMemo } from 'react'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 
 type AptosWalletProviderProps = {
@@ -33,6 +34,18 @@ export function AptosWalletButton() {
     wallets,
   } = useWallet()
 
+  // If the wallet is connected or loadable, try to connect to it.
+  // Else, redirect user to the wallet webpage.
+  const onSelect = useCallback(
+    (wallet: Wallet) => {
+      if (wallet.readyState === 'Installed' || wallet.readyState === 'Loadable')
+        connect(wallet.name)
+      else if (wallet.readyState === 'NotDetected')
+        window.open(wallet.url, '_blank')
+    },
+    [connect]
+  )
+
   return (
     <WalletButton
       address={account?.address}
@@ -41,7 +54,7 @@ export function AptosWalletButton() {
       wallets={wallets.map((wallet) => ({
         icon: wallet.icon,
         name: wallet.name,
-        connect: () => connect(wallet.name),
+        onSelect: () => onSelect(wallet),
       }))}
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton

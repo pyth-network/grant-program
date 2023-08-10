@@ -81,7 +81,7 @@ export function WalletButton({
 export type Wallet = {
   icon?: string
   name: string
-  connect: () => void
+  onSelect: () => void
 }
 export type WalletModalButtonProps = {
   wallets: Wallet[]
@@ -119,12 +119,12 @@ export function WalletModal({ openModal, wallets }: WalletModalProps) {
         {wallets.length === 1 ? (
           <SingleWalletView
             wallet={wallets[0]}
-            onConnect={() => openModal(false)}
+            onSelect={() => openModal(false)}
           />
         ) : (
           <MultiWalletView
             wallets={wallets}
-            onConnect={() => openModal(false)}
+            onSelect={() => openModal(false)}
           />
         )}
       </div>
@@ -134,15 +134,15 @@ export function WalletModal({ openModal, wallets }: WalletModalProps) {
 
 export type SingleWalletViewProps = {
   wallet: Wallet
-  onConnect: () => void
+  onSelect: () => void
 }
-export function SingleWalletView({ wallet, onConnect }: SingleWalletViewProps) {
+export function SingleWalletView({ wallet, onSelect }: SingleWalletViewProps) {
   return (
     <button
       className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light"
       onClick={() => {
-        wallet.connect()
-        onConnect()
+        wallet.onSelect()
+        onSelect()
       }}
     >
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
@@ -154,10 +154,10 @@ export function SingleWalletView({ wallet, onConnect }: SingleWalletViewProps) {
 }
 
 export type MultiWalletViewProps = WalletModalButtonProps & {
-  onConnect: () => void
+  onSelect: () => void
 }
 
-export function MultiWalletView({ wallets, onConnect }: MultiWalletViewProps) {
+export function MultiWalletView({ wallets, onSelect }: MultiWalletViewProps) {
   return (
     <Listbox>
       {({ open }) => (
@@ -183,8 +183,8 @@ export function MultiWalletView({ wallets, onConnect }: MultiWalletViewProps) {
                   value={wallet.name}
                   className="flex cursor-pointer items-center justify-center gap-2.5 py-3 px-8 hover:bg-darkGray3"
                   onClick={() => {
-                    wallet.connect()
-                    onConnect()
+                    wallet.onSelect()
+                    onSelect()
                   }}
                 >
                   <WalletIcon icon={wallet.icon} />

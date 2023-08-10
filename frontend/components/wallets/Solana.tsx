@@ -92,17 +92,17 @@ export function useSelectWallet() {
 export function useWallets(): Wallet[] {
   const { wallets } = useWallet()
 
-  const selectWallet = useSelectWallet()
+  const onSelect = useSelectWallet()
 
   return useMemo(() => {
     return wallets
       .filter((wallet) => wallet.readyState !== 'Unsupported')
       .map((wallet) => ({
         name: wallet.adapter.name,
-        connect: () => selectWallet(wallet.adapter),
+        onSelect: () => onSelect(wallet.adapter),
         icon: wallet.adapter.icon,
       }))
-  }, [selectWallet, wallets])
+  }, [onSelect, wallets])
 }
 
 export function SolanaWalletButton() {
@@ -114,15 +114,13 @@ export function SolanaWalletButton() {
 
   return (
     <WalletButton
-      // address will only be used when connected or toInstall is true
-      // if toInstall is true bas58 will be undefined
+      // address will only be used when connected is true
       address={base58}
       connected={connected}
       isLoading={connecting}
       wallets={wallets}
       walletConnectedButton={(address: string) => {
         return (
-          // connected will be true only when wallet is undefined
           <WalletConnectedButton
             onClick={disconnect}
             address={address}
