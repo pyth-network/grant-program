@@ -28,7 +28,7 @@ impl From<Secp256k1TestIdentityCertificate<CosmosMessage, Keccak256>> for Identi
 impl Secp256k1TestIdentityCertificate<CosmosMessage, Keccak256> {
     pub fn as_proof_of_identity(&self, verification_instruction_index: u8) -> IdentityCertificate {
         IdentityCertificate::Injective {
-            pubkey: UncompressedSecp256k1Pubkey::from(self.recover().serialize()),
+            pubkey: self.recover_as_evm_address(),
             verification_instruction_index,
         }
     }
