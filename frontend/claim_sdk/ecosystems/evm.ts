@@ -1,9 +1,9 @@
 import { removeLeading0x } from 'claim_sdk'
 
 export function splitEvmSignature(s: string): [Uint8Array, number] {
-  let noLeading0x = removeLeading0x(s)
-  let signature = noLeading0x.slice(0, 128)
-  let recoveryId = correctEvmRecoveryId(
+  const noLeading0x = removeLeading0x(s)
+  const signature = noLeading0x.slice(0, 128)
+  const recoveryId = correctEvmRecoveryId(
     parseInt(noLeading0x.slice(128, 130), 16)
   )
 
