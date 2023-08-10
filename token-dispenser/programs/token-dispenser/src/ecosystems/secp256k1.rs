@@ -189,6 +189,17 @@ pub fn secp256k1_sha256_verify_signer(
     Ok(())
 }
 
+#[cfg(test)]
+pub trait Secp256k1TestMessage
+where
+    Self: Sized + Clone,
+{
+    fn get_message_with_metadata(&self) -> Vec<u8>;
+    fn get_message_length(&self) -> usize {
+        self.get_message_with_metadata().len()
+    }
+}
+
 
 #[cfg(test)]
 use anchor_lang::prelude::ProgramError::BorshIoError;

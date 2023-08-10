@@ -1,12 +1,15 @@
 use {
     super::{
         dispenser_simulator::DispenserSimulator,
-        test_cosmos::CosmosTestIdentityCertificate,
+        test_cosmos::Sha256,
         test_ed25519::Ed25519TestIdentityCertificate,
+        test_secp256k1::Secp256k1TestIdentityCertificate,
     },
     crate::{
         ecosystems::{
             aptos::AptosMessage,
+            cosmos::CosmosMessage,
+            evm::EvmPrefixedMessage,
             solana::SolanaMessage,
             sui::SuiMessage,
         },
@@ -19,7 +22,6 @@ use {
                 IntoTransactionError,
             },
             merkleize,
-            test_evm::EvmTestIdentityCertificate,
         },
         ClaimCertificate,
         ClaimInfo,
@@ -36,9 +38,12 @@ use {
         AnchorSerialize,
     },
     anchor_spl::associated_token::get_associated_token_address,
-    pythnet_sdk::accumulators::{
-        merkle::MerkleTree,
-        Accumulator,
+    pythnet_sdk::{
+        accumulators::{
+            merkle::MerkleTree,
+            Accumulator,
+        },
+        hashers::keccak256::Keccak256,
     },
     rand::Rng,
     solana_program_test::tokio,
@@ -79,7 +84,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Evm(
-                EvmTestIdentityCertificate::random(claimant),
+                Secp256k1TestIdentityCertificate::<EvmPrefixedMessage, Keccak256>::random(claimant),
             ),
         }
     }
@@ -88,7 +93,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Cosmos(
-                CosmosTestIdentityCertificate::random(claimant),
+                Secp256k1TestIdentityCertificate::<CosmosMessage, Sha256>::random(claimant),
             ),
         }
     }
@@ -194,9 +199,9 @@ impl TestIdentityCertificate {
 
 #[derive(Clone)]
 pub enum TestIdentityCertificate {
-    Evm(EvmTestIdentityCertificate),
+    Evm(Secp256k1TestIdentityCertificate<EvmPrefixedMessage, Keccak256>),
     Discord(String),
-    Cosmos(CosmosTestIdentityCertificate),
+    Cosmos(Secp256k1TestIdentityCertificate<CosmosMessage, Sha256>),
     Aptos(Ed25519TestIdentityCertificate<AptosMessage>),
     Sui(Ed25519TestIdentityCertificate<SuiMessage>),
     Solana(Ed25519TestIdentityCertificate<SolanaMessage>),

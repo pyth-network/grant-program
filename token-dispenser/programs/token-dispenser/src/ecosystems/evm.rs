@@ -1,8 +1,5 @@
 #[cfg(test)]
-use pythnet_sdk::hashers::{
-    keccak256::Keccak256,
-    Hasher,
-};
+use super::secp256k1::Secp256k1TestMessage;
 use {
     crate::ErrorCode,
     anchor_lang::{
@@ -63,21 +60,17 @@ pub fn get_payload_length(l: usize) -> Result<usize> {
 }
 
 #[cfg(test)]
-impl EvmPrefixedMessage {
-    pub fn new(payload: &str) -> Self {
-        Self(payload.as_bytes().to_vec())
+impl From<&str> for EvmPrefixedMessage {
+    fn from(string: &str) -> Self {
+        EvmPrefixedMessage(string.as_bytes().to_vec())
     }
-    pub fn get_prefixed_message(&self) -> Vec<u8> {
+}
+
+#[cfg(test)]
+impl Secp256k1TestMessage for EvmPrefixedMessage {
+    fn get_message_with_metadata(&self) -> Vec<u8> {
         let mut prefixed_message = format!("{}{}", EVM_MESSAGE_PREFIX, self.0.len()).into_bytes();
         prefixed_message.extend_from_slice(&self.0);
         prefixed_message
-    }
-
-    pub fn hash(&self) -> libsecp256k1::Message {
-        libsecp256k1::Message::parse(&Keccak256::hashv(&[&self.get_prefixed_message()]))
-    }
-
-    pub fn get_prefix_length(&self) -> usize {
-        EVM_MESSAGE_PREFIX.len() + self.0.len().to_string().len() + self.0.len()
     }
 }

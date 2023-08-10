@@ -1,3 +1,5 @@
+#[cfg(test)]
+use super::secp256k1::Secp256k1TestMessage;
 use {
     super::secp256k1::{
         SECP256K1_COMPRESSED_PUBKEY_LENGTH,
@@ -25,16 +27,21 @@ use {
 
 pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
 
+
 /**
 * An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.
 * Only the message payload is stored in this struct.
 * The message signed for Cosmos is a JSON serialized CosmosStdSignDoc containing the payload and ADR036 compliant parameters.
+* The message also contains the bech32 address of the signer. We check that the signer corresponds to the public key.
  */
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub struct CosmosMessage(Vec<u8>);
+pub struct CosmosMessage {
+    payload: Vec<u8>,
+    signer:  CosmosBech32Address,
+}
 
 impl CosmosMessage {
-    pub fn parse(data: &[u8]) -> Result<Self> {
+    pub fn parse(data: &[u8], signer: &CosmosBech32Address) -> Result<Self> {
         let sign_doc: CosmosStdSignDoc = serde_json::from_slice(data)
             .map_err(|_| ErrorCode::SignatureVerificationWrongPayloadMetadata)?;
 
@@ -52,15 +59,21 @@ impl CosmosMessage {
         if sign_doc.msgs[0].r#type != EXPECTED_COSMOS_MESSAGE_TYPE {
             return Err(ErrorCode::SignatureVerificationWrongPayloadMetadata.into());
         }
-        Ok(CosmosMessage(
-            base64_standard_engine
+
+        if sign_doc.msgs[0].value.signer != signer.0 {
+            return Err(ErrorCode::SignatureVerificationWrongPayloadMetadata.into());
+        }
+
+        Ok(CosmosMessage {
+            payload: base64_standard_engine
                 .decode(sign_doc.msgs[0].value.data.as_bytes())
                 .map_err(|_| ErrorCode::SignatureVerificationWrongPayloadMetadata)?,
-        ))
+            signer:  CosmosBech32Address(sign_doc.msgs[0].value.signer.clone()),
+        })
     }
 
     pub fn get_payload(&self) -> &[u8] {
-        self.0.as_slice()
+        self.payload.as_slice()
     }
 }
 
@@ -173,17 +186,9 @@ impl From<&str> for CosmosBech32Address {
     }
 }
 
-
 #[cfg(test)]
-impl CosmosMessage {
-    pub fn new(payload: &str) -> Self {
-        Self(payload.as_bytes().to_vec())
-    }
-
-    /**
-     * Returns the serialized message including metadata.
-     */
-    pub fn get_message_with_metadata(&self) -> Vec<u8> {
+impl Secp256k1TestMessage for CosmosMessage {
+    fn get_message_with_metadata(&self) -> Vec<u8> {
         let sign_doc: CosmosStdSignDoc = CosmosStdSignDoc {
             account_number: "0".to_string(),
             chain_id:       "".to_string(),
@@ -195,8 +200,8 @@ impl CosmosMessage {
             msgs:           vec![CosmosStdMsg {
                 r#type: EXPECTED_COSMOS_MESSAGE_TYPE.to_string(),
                 value:  CosmosAdr036Value {
-                    data:   base64_standard_engine.encode(&self.0),
-                    signer: "".to_string(),
+                    data:   base64_standard_engine.encode(&self.payload),
+                    signer: self.signer.0.clone(),
                 },
             }],
             sequence:       "0".to_string(),
@@ -206,8 +211,34 @@ impl CosmosMessage {
             .as_bytes()
             .to_vec();
     }
+}
 
-    pub fn hash(&self) -> libsecp256k1::Message {
-        libsecp256k1::Message::parse(&hash::hashv(&[&self.get_message_with_metadata()]).to_bytes())
+#[cfg(test)]
+impl From<(&[u8], &CosmosBech32Address)> for CosmosMessage {
+    fn from(value: (&[u8], &CosmosBech32Address)) -> Self {
+        CosmosMessage {
+            payload: value.0.to_vec(),
+            signer:  value.1.clone(),
+        }
+    }
+}
+
+
+#[cfg(test)]
+pub const BECH32_SEPARATOR: &str = "1";
+
+#[cfg(test)]
+impl CosmosMessage {
+    pub fn extract_chain_id(&self) -> String {
+        self.signer
+            .0
+            .split(BECH32_SEPARATOR)
+            .next()
+            .unwrap()
+            .to_string()
+    }
+
+    pub fn get_signer(&self) -> CosmosBech32Address {
+        self.signer.clone()
     }
 }
