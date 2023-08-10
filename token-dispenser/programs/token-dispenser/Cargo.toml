@@ -35,3 +35,4 @@ libsecp256k1 = "0.7.1"
 rand = "0.8.5"
 rand_compatible = { version = "0.7.0", package = "rand" }
 ed25519-dalek = "1.0.1"
+spl-associated-token-account = { version = "1.1.1", features = ["no-entrypoint"] }

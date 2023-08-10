@@ -2,6 +2,7 @@ use {
     super::test_happy_path::TestClaimCertificate,
     crate::{
         accounts,
+        get_config_pda,
         get_receipt_pda,
         instruction,
         tests::merkleize,
@@ -31,19 +32,22 @@ use {
         InstructionData,
         ToAccountMetas,
     },
-    anchor_spl::token::{
-        spl_token,
-        spl_token::{
-            error::TokenError,
-            instruction::{
-                initialize_account3,
-                initialize_mint2,
-                mint_to,
+    anchor_spl::{
+        associated_token::get_associated_token_address,
+        token::{
+            spl_token,
+            spl_token::{
+                error::TokenError,
+                instruction::{
+                    initialize_account3,
+                    initialize_mint2,
+                    mint_to,
+                },
             },
+            Mint,
+            Token,
+            TokenAccount,
         },
-        Mint,
-        Token,
-        TokenAccount,
     },
     pythnet_sdk::accumulators::merkle::{
         MerkleRoot,
@@ -314,10 +318,21 @@ impl DispenserSimulator {
         claimant: &Keypair,
         off_chain_claim_certificate: &TestClaimCertificate,
         merkle_tree: &MerkleTree<SolanaHasher>,
+        claimant_fund: Option<Pubkey>,
     ) -> Result<(), BanksClientError> {
         let (claim_certificate, option_instruction) =
             off_chain_claim_certificate.as_claim_certificate(merkle_tree, 0);
-        let mut accounts = accounts::Claim::populate(claimant.pubkey()).to_account_metas(None);
+        let config = self
+            .get_account_data::<crate::Config>(get_config_pda().0)
+            .await
+            .unwrap();
+        let mut accounts = accounts::Claim::populate(
+            claimant.pubkey(),
+            claimant_fund
+                .unwrap_or_else(|| get_associated_token_address(&claimant.pubkey(), &config.mint)),
+            config.treasury,
+        )
+        .to_account_metas(None);
 
         accounts.push(AccountMeta::new(
             get_receipt_pda(
@@ -340,35 +355,6 @@ impl DispenserSimulator {
         if let Some(verification_instruction) = option_instruction {
             instructions.push(verification_instruction);
         }
-
-        instructions.push(Instruction::new_with_bytes(
-            crate::id(),
-            &instruction_data.data(),
-            accounts,
-        ));
-
-
-        self.process_ix(&instructions, &vec![claimant]).await
-    }
-
-    pub async fn checkout(
-        &mut self,
-        claimant: &Keypair,
-        mint: Pubkey,
-        cart_override: Option<Pubkey>,
-        claimant_fund_override: Option<Pubkey>,
-    ) -> Result<(), BanksClientError> {
-        let accounts = accounts::Checkout::populate(
-            claimant.pubkey(),
-            mint,
-            self.pyth_treasury,
-            cart_override,
-            claimant_fund_override,
-        )
-        .to_account_metas(None);
-
-        let instruction_data = instruction::Checkout {};
-        let mut instructions = vec![];
 
         instructions.push(Instruction::new_with_bytes(
             crate::id(),
@@ -416,6 +402,22 @@ impl DispenserSimulator {
             .await
     }
 
+    pub async fn create_associated_token_account(
+        &mut self,
+        owner: &Pubkey,
+        mint: &Pubkey,
+    ) -> Result<(), BanksClientError> {
+        let create_associated_token_account_ix =
+            spl_associated_token_account::instruction::create_associated_token_account(
+                &self.genesis_keypair.pubkey(),
+                owner,
+                mint,
+                &spl_token::id(),
+            );
+        self.process_ix(&[create_associated_token_account_ix], &vec![])
+            .await
+    }
+
     pub async fn verify_token_account_data(
         &mut self,
         token_account: Pubkey,
@@ -450,6 +452,18 @@ pub trait IntoTransactionError {
 }
 
 impl IntoTransactionError for ErrorCode {
+    fn into_transaction_error(self, instruction_index: u8) -> TransactionError {
+        TransactionError::InstructionError(
+            instruction_index,
+            InstructionError::try_from(u64::from(ProgramError::from(
+                anchor_lang::prelude::Error::from(self),
+            )))
+            .unwrap(),
+        )
+    }
+}
+
+impl IntoTransactionError for anchor_lang::error::ErrorCode {
     fn into_transaction_error(self, instruction_index: u8) -> TransactionError {
         TransactionError::InstructionError(
             instruction_index,

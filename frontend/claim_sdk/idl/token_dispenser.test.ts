@@ -18,7 +18,7 @@ test('Anchor sanity check', (done) => {
   expect(buffer).toStrictEqual(
     Buffer.concat([
       Buffer.from([
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 49, 50, 51, 52, 2, 0, 0, 0,
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 49, 50, 51, 52, 0, 2, 0, 0, 0,
       ]),
       Buffer.alloc(32, 1),
       Buffer.alloc(32, 2),

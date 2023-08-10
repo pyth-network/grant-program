@@ -4565,6 +4565,7 @@ dependencies = [
  "serde_json",
  "solana-program-test",
  "solana-sdk",
+ "spl-associated-token-account",
 ]
 
 [[package]]

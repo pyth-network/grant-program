@@ -11,11 +11,7 @@ import { ethers } from 'ethers'
 import fs from 'fs'
 import * as path from 'path'
 import { Buffer } from 'buffer'
-import {
-  QueryParams,
-  toDiscriminant,
-  TokenDispenserProvider,
-} from '../claim_sdk/solana'
+import { QueryParams, TokenDispenserProvider } from '../claim_sdk/solana'
 
 //TODO: update this
 const tokenDispenserProgramId = new anchor.web3.PublicKey(
@@ -86,6 +82,7 @@ describe('integration test', () => {
     tokenDispenserProvider.connectWallet('evm', evmWallet)
 
     const dispenserGuard = anchor.web3.Keypair.generate()
+    const mintAuthority = anchor.web3.Keypair.generate()
 
     let mint: Token
     let treasury: PublicKey
@@ -106,13 +103,21 @@ describe('integration test', () => {
       mint = await splToken.Token.createMint(
         tokenDispenserProvider.connection,
         walletKeypair,
-        walletKeypair.publicKey,
+        mintAuthority.publicKey,
         null,
         6,
         splToken.TOKEN_PROGRAM_ID
       )
 
-      treasury = await mint.createAccount(wallet.publicKey)
+      treasury = await mint.createAccount(mintAuthority.publicKey)
+      await mint.mintTo(treasury, mintAuthority, [], 1000000000)
+      await mint.approve(
+        treasury,
+        tokenDispenserProvider.getConfigPda()[0],
+        mintAuthority,
+        [],
+        1000000000
+      )
     }, 10000)
 
     it('initializes the token dispenser', async () => {
@@ -147,33 +152,31 @@ describe('integration test', () => {
         new anchor.BN(result.rows[0].amount)
       )
 
+      const txns = []
+      const createAtaTxn =
+        await tokenDispenserProvider.createAssociatedTokenAccountTxnIfNeeded()
+      if (createAtaTxn) {
+        txns.push({ tx: createAtaTxn })
+      }
+
       const submitClaimTxn = await tokenDispenserProvider.generateClaimTxn(
         claimInfo,
         proof
       )
+      txns.push({ tx: submitClaimTxn })
 
-      //TODO: this is a weird hack for now due to the dispenserGuard also needing to be a signer
-      await tokenDispenserProvider.provider.sendAndConfirm(submitClaimTxn, [
-        dispenserGuard,
-      ])
-
-      const cartData = await tokenDispenserProvider.getCart()
-      if (cartData === undefined) {
-        fail("Cart data shouldn't be undefined")
-      }
-      expect(cartData.amount.eq(claimInfo.amount)).toBeTruthy()
-      const evmDiscriminant = toDiscriminant('evm')
-      for (let i = 0; i < cartData.set.set.length; i++) {
-        if (i === evmDiscriminant) {
-          expect(cartData.set.set[i]).toEqual(true)
-        } else {
-          expect(cartData.set.set[i]).toEqual(false)
-        }
-      }
+      await tokenDispenserProvider.provider.sendAll(txns)
 
       expect(
         await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
       ).toBeTruthy()
+
+      const claimantFundPubkey =
+        await tokenDispenserProvider.getClaimantFundAddress()
+
+      const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
+
+      expect(claimantFund.amount.eq(new anchor.BN(2000))).toBeTruthy()
     })
   })
 })

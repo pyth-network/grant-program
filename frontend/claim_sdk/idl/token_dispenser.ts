@@ -65,9 +65,13 @@ export type TokenDispenser = {
           isSigner: true
         },
         {
-          name: 'dispenserGuard'
-          isMut: false
-          isSigner: true
+          name: 'claimantFund'
+          isMut: true
+          isSigner: false
+          docs: [
+            "Claimant's associated token account to receive the tokens",
+            'Should be initialized outside of this program.'
+          ]
         },
         {
           name: 'config'
@@ -75,8 +79,13 @@ export type TokenDispenser = {
           isSigner: false
         },
         {
-          name: 'cart'
+          name: 'treasury'
           isMut: true
+          isSigner: false
+        },
+        {
+          name: 'tokenProgram'
+          isMut: false
           isSigner: false
         },
         {
@@ -103,64 +112,6 @@ export type TokenDispenser = {
           }
         }
       ]
-    },
-    {
-      name: 'checkout'
-      accounts: [
-        {
-          name: 'claimant'
-          isMut: true
-          isSigner: true
-        },
-        {
-          name: 'config'
-          isMut: false
-          isSigner: false
-        },
-        {
-          name: 'mint'
-          isMut: false
-          isSigner: false
-          docs: [
-            'Mint of the treasury & claimant_fund token account.',
-            'Needed if the `claimant_fund` token account needs to be initialized'
-          ]
-        },
-        {
-          name: 'treasury'
-          isMut: true
-          isSigner: false
-        },
-        {
-          name: 'cart'
-          isMut: true
-          isSigner: false
-        },
-        {
-          name: 'claimantFund'
-          isMut: true
-          isSigner: false
-          docs: [
-            "Claimant's associated token account for receiving their claim/token grant"
-          ]
-        },
-        {
-          name: 'systemProgram'
-          isMut: false
-          isSigner: false
-        },
-        {
-          name: 'tokenProgram'
-          isMut: false
-          isSigner: false
-        },
-        {
-          name: 'associatedTokenProgram'
-          isMut: false
-          isSigner: false
-        }
-      ]
-      args: []
     }
   ]
   accounts: [
@@ -200,27 +151,47 @@ export type TokenDispenser = {
         kind: 'struct'
         fields: []
       }
-    },
+    }
+  ]
+  types: [
     {
-      name: 'Cart'
+      name: 'CosmosMessage'
+      docs: [
+        '* An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.\n* Only the message payload is stored in this struct.\n* The message signed for Cosmos is a JSON serialized CosmosStdSignDoc containing the payload and ADR036 compliant parameters.\n* The message also contains the bech32 address of the signer. We check that the signer corresponds to the public key.'
+      ]
       type: {
         kind: 'struct'
         fields: [
           {
-            name: 'amount'
-            type: 'u64'
+            name: 'payload'
+            type: 'bytes'
           },
           {
-            name: 'set'
-            type: {
-              defined: 'ClaimedEcosystems'
-            }
+            name: 'signer'
+            type: 'string'
           }
         ]
       }
-    }
-  ]
-  types: [
+    },
+    {
+      name: 'DiscordMessage'
+      docs: [
+        "* This message (borsh-serialized) needs to be signed by the dispenser guard after\n * verifying the claimant's pubkey controls the discord account.\n * The dispenser guard key should not be used for anything else."
+      ]
+      type: {
+        kind: 'struct'
+        fields: [
+          {
+            name: 'username'
+            type: 'string'
+          },
+          {
+            name: 'claimant'
+            type: 'publicKey'
+          }
+        ]
+      }
+    },
     {
       name: 'Ed25519InstructionHeader'
       type: {
@@ -350,20 +321,6 @@ export type TokenDispenser = {
       }
     },
     {
-      name: 'ClaimedEcosystems'
-      type: {
-        kind: 'struct'
-        fields: [
-          {
-            name: 'set'
-            type: {
-              array: ['bool', 6]
-            }
-          }
-        ]
-      }
-    },
-    {
       name: 'Identity'
       docs: [
         "* This is the identity that the claimant will use to claim tokens.\n * A claimant can claim tokens for 1 identity on each ecosystem.\n * Typically for a blockchain it is a public key in the blockchain's address space."
@@ -447,6 +404,10 @@ export type TokenDispenser = {
               {
                 name: 'username'
                 type: 'string'
+              },
+              {
+                name: 'verification_instruction_index'
+                type: 'u8'
               }
             ]
           },
@@ -669,9 +630,13 @@ export const IDL: TokenDispenser = {
           isSigner: true,
         },
         {
-          name: 'dispenserGuard',
-          isMut: false,
-          isSigner: true,
+          name: 'claimantFund',
+          isMut: true,
+          isSigner: false,
+          docs: [
+            "Claimant's associated token account to receive the tokens",
+            'Should be initialized outside of this program.',
+          ],
         },
         {
           name: 'config',
@@ -679,8 +644,13 @@ export const IDL: TokenDispenser = {
           isSigner: false,
         },
         {
-          name: 'cart',
+          name: 'treasury',
           isMut: true,
+          isSigner: false,
+        },
+        {
+          name: 'tokenProgram',
+          isMut: false,
           isSigner: false,
         },
         {
@@ -707,64 +677,6 @@ export const IDL: TokenDispenser = {
           },
         },
       ],
-    },
-    {
-      name: 'checkout',
-      accounts: [
-        {
-          name: 'claimant',
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: 'config',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'mint',
-          isMut: false,
-          isSigner: false,
-          docs: [
-            'Mint of the treasury & claimant_fund token account.',
-            'Needed if the `claimant_fund` token account needs to be initialized',
-          ],
-        },
-        {
-          name: 'treasury',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'cart',
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: 'claimantFund',
-          isMut: true,
-          isSigner: false,
-          docs: [
-            "Claimant's associated token account for receiving their claim/token grant",
-          ],
-        },
-        {
-          name: 'systemProgram',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'tokenProgram',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'associatedTokenProgram',
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
     },
   ],
   accounts: [
@@ -805,26 +717,46 @@ export const IDL: TokenDispenser = {
         fields: [],
       },
     },
+  ],
+  types: [
     {
-      name: 'Cart',
+      name: 'CosmosMessage',
+      docs: [
+        '* An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.\n* Only the message payload is stored in this struct.\n* The message signed for Cosmos is a JSON serialized CosmosStdSignDoc containing the payload and ADR036 compliant parameters.\n* The message also contains the bech32 address of the signer. We check that the signer corresponds to the public key.',
+      ],
       type: {
         kind: 'struct',
         fields: [
           {
-            name: 'amount',
-            type: 'u64',
+            name: 'payload',
+            type: 'bytes',
           },
           {
-            name: 'set',
-            type: {
-              defined: 'ClaimedEcosystems',
-            },
+            name: 'signer',
+            type: 'string',
           },
         ],
       },
     },
-  ],
-  types: [
+    {
+      name: 'DiscordMessage',
+      docs: [
+        "* This message (borsh-serialized) needs to be signed by the dispenser guard after\n * verifying the claimant's pubkey controls the discord account.\n * The dispenser guard key should not be used for anything else.",
+      ],
+      type: {
+        kind: 'struct',
+        fields: [
+          {
+            name: 'username',
+            type: 'string',
+          },
+          {
+            name: 'claimant',
+            type: 'publicKey',
+          },
+        ],
+      },
+    },
     {
       name: 'Ed25519InstructionHeader',
       type: {
@@ -954,20 +886,6 @@ export const IDL: TokenDispenser = {
       },
     },
     {
-      name: 'ClaimedEcosystems',
-      type: {
-        kind: 'struct',
-        fields: [
-          {
-            name: 'set',
-            type: {
-              array: ['bool', 6],
-            },
-          },
-        ],
-      },
-    },
-    {
       name: 'Identity',
       docs: [
         "* This is the identity that the claimant will use to claim tokens.\n * A claimant can claim tokens for 1 identity on each ecosystem.\n * Typically for a blockchain it is a public key in the blockchain's address space.",
@@ -1051,6 +969,10 @@ export const IDL: TokenDispenser = {
               {
                 name: 'username',
                 type: 'string',
+              },
+              {
+                name: 'verification_instruction_index',
+                type: 'u8',
               },
             ],
           },

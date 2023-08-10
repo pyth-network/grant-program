@@ -2,18 +2,19 @@ use {
     super::dispenser_simulator::DispenserSimulator,
     crate::{
         tests::{
-            dispenser_simulator::copy_keypair,
+            dispenser_simulator::{
+                copy_keypair,
+                IntoTransactionError,
+            },
             merkleize,
             test_happy_path::TestClaimCertificate,
         },
         ClaimInfo,
     },
-    anchor_lang::solana_program::instruction::InstructionError::Custom,
     solana_program_test::tokio,
     solana_sdk::{
         signature::Keypair,
         signer::Signer,
-        transaction::TransactionError::InstructionError,
     },
 };
 
@@ -36,18 +37,20 @@ pub async fn test_initialize_fails_with_incorrect_accounts() {
     let (merkle_tree, _) = merkleize(merkle_items);
 
 
-    let res = simulator
-        .initialize(
-            merkle_tree.root.clone(),
-            dispenser_guard.pubkey(),
-            Some(Keypair::new().pubkey()), //invalid mint
-            None,
-        )
-        .await;
-    assert!(res.is_err());
+    assert_eq!(
+        simulator
+            .initialize(
+                merkle_tree.root.clone(),
+                dispenser_guard.pubkey(),
+                Some(Keypair::new().pubkey()), //invalid mint
+                None,
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        anchor_lang::error::ErrorCode::AccountNotInitialized.into_transaction_error(0)
+    );
 
-    // 3012 - AccountNotInitialized
-    assert_eq!(res.unwrap_err().unwrap(), InstructionError(0, Custom(3012)));
 
     let fake_mint_keypair = Keypair::new();
     simulator
@@ -65,15 +68,17 @@ pub async fn test_initialize_fails_with_incorrect_accounts() {
         .await
         .unwrap();
 
-    let res = simulator
-        .initialize(
-            merkle_tree.root.clone(),
-            dispenser_guard.pubkey(),
-            None,
-            Some(invalid_treasury.pubkey()),
-        )
-        .await;
-    assert!(res.is_err());
-    // 2014- ConstraintTokenMint
-    assert_eq!(res.unwrap_err().unwrap(), InstructionError(0, Custom(2014)));
+    assert_eq!(
+        simulator
+            .initialize(
+                merkle_tree.root.clone(),
+                dispenser_guard.pubkey(),
+                None,
+                Some(invalid_treasury.pubkey()),
+            )
+            .await
+            .unwrap_err()
+            .unwrap(),
+        anchor_lang::error::ErrorCode::ConstraintTokenMint.into_transaction_error(0)
+    );
 }
