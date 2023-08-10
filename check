@@ -1,0 +1,148 @@
+#!/bin/bash
+# CI validation script.
+#
+# Run a single job from the CI workflow:
+#   ./check <job-name>
+#           (wrap the job name in quotes if it has spaces)
+# Run the entire workflow:
+#   ./check all
+#
+# Run jobs in the container used for CI:
+#   ./check in-docker '<job-name or all>'
+#
+# NOTE you may need to install cypress for the in-docker e2e to run:
+#   ./check in-docker install-cypress
+#
+# This script can also be sourced:
+#   . check
+# Then you can run any of the subcommands without calling ./check:
+#   e2e    # tab completion is available
+
+DOCKER_IMAGE=jetprotocol/builder:rust-1.68.0-node-18.15.0-solana-1.14.17-anchor-0.27.0-1
+SOLANA_MAINNET_RPC=${SOLANA_MAINNET_RPC:-'https://solana-api.projectserum.com'}
+
+#################
+# Workflow Jobs
+
+e2e() { local args=$@
+    extract-arg --skip-yarn || yarn-deps
+    rm -f apps/react-app/public/localnet.config.json
+    anchor test $args -- --features testing
+}
+e2e-tests() { e2e $@; } # alias to avoid frustration. remove if no one is using it
+
+hosted-tests-localnet() { local args=$@
+    extract-arg --skip-build || tests/scripts/on_localnet.sh anchor-build
+    SOLANA_LOGS=${SOLANA_LOGS:-true} \
+    NEXTEST_RETRIES="${NEXTEST_RETRIES:-2}" \
+        tests/scripts/on_localnet.sh test combined $args
+}
+
+cargo-lint() {
+    cargo fmt --all --check
+    cargo clippy --all-targets -- -Dwarnings -A clippy::result_large_err
+}
+
+cargo-test() {
+    if [[ ${CODECOV:-false} == true ]]; then
+        cargo llvm-cov --workspace --lcov --output-path lcov.info nextest --features debug-msg
+    else
+        cargo nextest run --features debug-msg
+    fi
+}
+
+#################
+# Docker
+
+# Starts an interactive bash shell in the docker container where all the
+# functions in this file can be used directly as commands.
+docker-shell() {
+    in-docker bash --rcfile /jet-v2/check
+}
+
+# Runs provided command in a docker container.
+#
+# starts an idle container called "builder" in the background.
+# runs the specified command in the existing container.
+# reuses container to perist caches across builds.
+#
+#   ./check in-docker echo hello world
+#   ./check in-docker hosted-tests-localnet
+#   ./check in-docker solana-test-validator
+#   ./check in-docker bash
+in-docker() {
+    local container_name=${CONTAINER_NAME:-builder}
+    local docker_flags=${DOCKER_FLAGS:--it}
+    if [ "$(docker ps -aq -f status=exited -f name="^$container_name$")" ]; then
+        docker start "$container_name"
+    elif [ ! "$(docker ps -aq -f name="^$container_name$")" ]; then
+        DOCKER_FLAGS="-d --name $container_name" docker-run sleep infinity
+    fi
+    docker exec \
+        -e SOLANA_MAINNET_RPC=$SOLANA_MAINNET_RPC \
+        ${DOCKER_FLAGS:--it} \
+        "$container_name" \
+        /jet-v2/check $@
+}
+
+# you probably don't want to use this directly
+# executes a command in a brand new docker container.
+# build caches will need to be rebuilt from scratch for every execution.
+docker-run() {
+    local docker_flags="${DOCKER_FLAGS:-}"
+    docker run \
+        -e SOLANA_MAINNET_RPC=$SOLANA_MAINNET_RPC \
+        -u $(id -u) \
+        -v "$(dirname $(realpath ${BASH_SOURCE[0]})):/jet-v2" \
+        --workdir /jet-v2 \
+        $docker_flags \
+        $DOCKER_IMAGE \
+        /jet-v2/check $@
+}
+
+
+#################
+# helper functions
+
+install-cypress() {
+    node_modules/cypress/bin/cypress install
+}
+
+yarn-deps() {
+    yarn install --frozen-lockfile
+}
+
+# runs every workflow job. default if no args are given
+all() {
+    cargo-lint
+    cargo-test
+    hosted-tests-localnet $@
+    e2e --skip-build
+}
+
+# assumes "args" variable is set.
+# returns whether args contains the passed in string as an independent argument
+# removes the string from args
+extract-arg() {
+    [[ "$args" == "$1" ]] && args='' || \
+    [[ "$args" == "$1 "* ]] && args="$(sed "s/$1 //g" <<< "$args")" || \
+    [[ "$args" == *" $1" ]] && args="$(sed "s/ $1//g" <<< "$args")" || \
+    [[ "$args" == *" $1 "* ]] && args="$(sed "s/ $1//g" <<< "$args")" || \
+        return 1
+}
+
+#################
+# run
+
+if (return 0 2>/dev/null); then
+    echo sourced
+else
+    set -euxo pipefail
+    if [[ "$@" == '' ]]; then
+        all
+    else
+        $@
+    fi
+    set +x
+    echo -e '\n\n ✔ all good'
+fi

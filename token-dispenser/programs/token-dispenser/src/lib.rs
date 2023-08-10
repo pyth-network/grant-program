@@ -39,6 +39,7 @@ use {
             CosmosMessage,
             UncompressedSecp256k1Pubkey,
         },
+        discord::DiscordMessage,
         ed25519::{
             Ed25519InstructionData,
             Ed25519Pubkey,
@@ -109,15 +110,19 @@ pub mod token_dispenser {
      *   DONE
      * - The claimant has not already claimed tokens -- DONE
      */
-    pub fn claim(ctx: Context<Claim>, claim_certificates: Vec<ClaimCertificate>) -> Result<()> {
+    pub fn claim<'info>(
+        ctx: Context<'_, '_, '_, 'info, Claim<'info>>,
+        claim_certificates: Vec<ClaimCertificate>,
+    ) -> Result<()> {
         let config = &ctx.accounts.config;
-        let cart = &mut ctx.accounts.cart;
+
 
         for (index, claim_certificate) in claim_certificates.iter().enumerate() {
             // Check that the identity corresponding to the leaf has authorized the claimant
             let claim_info = claim_certificate.checked_into_claim_info(
                 &ctx.accounts.sysvar_instruction,
                 ctx.accounts.claimant.key,
+                &ctx.accounts.config.dispenser_guard,
             )?;
             // Each leaf of the tree is a hash of the serialized claim info
             let leaf_vector = claim_info.try_to_vec()?;
@@ -126,15 +131,19 @@ pub mod token_dispenser {
                 .merkle_root
                 .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)
             {
-                return Err(ErrorCode::InvalidInclusionProof.into());
+                return err!(ErrorCode::InvalidInclusionProof);
             };
+
 
             checked_create_claim_receipt(
                 index,
                 &leaf_vector,
-                ctx.accounts.claimant.key,
+                &ctx.accounts.claimant,
+                &ctx.accounts.system_program,
                 ctx.remaining_accounts,
             )?;
+
+            let cart = &mut ctx.accounts.cart;
 
             cart.amount = cart
                 .amount
@@ -143,7 +152,7 @@ pub mod token_dispenser {
 
             // Check that the claimant is not claiming tokens more than once per ecosystem
             if cart.set.contains(&claim_info.identity) {
-                return Err(ErrorCode::MoreThanOneIdentityPerEcosystem.into());
+                return err!(ErrorCode::MoreThanOneIdentityPerEcosystem);
             }
             cart.set.insert(&claim_info.identity);
         }
@@ -274,6 +283,8 @@ pub enum Identity {
 }
 
 impl Identity {
+    /// Note: the order of this must follow the order of the variants in the enum
+    /// since the typescript code uses this ordering
     pub fn to_discriminant(&self) -> usize {
         match self {
             Identity::Discord { .. } => 0,
@@ -292,7 +303,8 @@ impl Identity {
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub enum IdentityCertificate {
     Discord {
-        username: String,
+        username:                       String,
+        verification_instruction_index: u8,
     },
     Evm {
         pubkey:                         EvmPubkey,
@@ -418,7 +430,7 @@ pub enum ErrorCode {
     SignatureVerificationWrongClaimant,
 }
 
-pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -> Result<()> {
+pub fn check_claim_receipt_is_uninitialized(claim_receipt_account: &AccountInfo) -> Result<()> {
     if claim_receipt_account.owner.eq(&crate::id()) {
         return Err(ErrorCode::AlreadyClaimed.into());
     }
@@ -435,11 +447,31 @@ impl IdentityCertificate {
         &self,
         sysvar_instruction: &AccountInfo,
         claimant: &Pubkey,
+        dispenser_guard: &Pubkey,
     ) -> Result<Identity> {
         match self {
-            IdentityCertificate::Discord { username } => Ok(Identity::Discord {
-                username: username.to_string(),
-            }), // The discord check happens off-chain, it is the responsibility of the dispenser guard to check that the Discord user has been authenticated.
+            IdentityCertificate::Discord {
+                username,
+                verification_instruction_index,
+            } => {
+                let signature_verification_instruction = load_instruction_at_checked(
+                    *verification_instruction_index as usize,
+                    sysvar_instruction,
+                )?;
+                let discord_message = DiscordMessage::parse_and_check_claimant_and_username(
+                    &Ed25519InstructionData::extract_message_and_check_signature(
+                        &signature_verification_instruction,
+                        &Ed25519Pubkey::from(*dispenser_guard),
+                        verification_instruction_index,
+                    )?,
+                    username,
+                    claimant,
+                )?;
+
+                Ok(Identity::Discord {
+                    username: discord_message.get_username(),
+                })
+            }
             IdentityCertificate::Evm {
                 pubkey,
                 verification_instruction_index,
@@ -582,15 +614,19 @@ impl ClaimCertificate {
         &self,
         sysvar_instruction: &AccountInfo,
         claimant: &Pubkey,
+        dispenser_guard: &Pubkey,
     ) -> Result<ClaimInfo> {
         Ok(ClaimInfo {
-            identity: self
-                .proof_of_identity
-                .checked_into_identity(sysvar_instruction, claimant)?,
+            identity: self.proof_of_identity.checked_into_identity(
+                sysvar_instruction,
+                claimant,
+                dispenser_guard,
+            )?,
             amount:   self.amount,
         })
     }
 }
+
 
 /**
  * Creates a claim receipt for the claimant. This is an account that contains no data. Each leaf
@@ -599,36 +635,45 @@ impl ClaimCertificate {
  * awkward to declare them in the anchor context. Instead, we pass them inside
  * remaining_accounts. If the account is initialized, the assign instruction will fail.
  */
-pub fn checked_create_claim_receipt(
+pub fn checked_create_claim_receipt<'info>(
     index: usize,
     leaf: &[u8],
-    payer: &Pubkey,
-    remaining_accounts: &[AccountInfo],
+    claimant: &AccountInfo<'info>,
+    system_program: &AccountInfo<'info>,
+    remaining_accounts: &[AccountInfo<'info>],
 ) -> Result<()> {
     let (receipt_pubkey, bump) = get_receipt_pda(leaf);
 
+
     // The claim receipt accounts should appear in remaining accounts in the same order as the claim certificates
     let claim_receipt_account = &remaining_accounts[index];
-    if !claim_receipt_account.key.eq(&receipt_pubkey) {
-        return Err(ErrorCode::WrongPda.into());
-    }
+    require_keys_eq!(
+        claim_receipt_account.key(),
+        receipt_pubkey,
+        ErrorCode::WrongPda
+    );
 
-    check_claim_receipt_is_unitialized(claim_receipt_account)?;
+    check_claim_receipt_is_uninitialized(claim_receipt_account)?;
 
+    let account_infos = vec![
+        claim_receipt_account.clone(),
+        claimant.to_account_info(),
+        system_program.to_account_info(),
+    ];
     // Pay rent for the receipt account
     let transfer_instruction = system_instruction::transfer(
-        payer,
+        &claimant.key(),
         &claim_receipt_account.key(),
         Rent::get()?.minimum_balance(0),
     );
-    invoke(&transfer_instruction, remaining_accounts)?;
+    invoke(&transfer_instruction, &account_infos)?;
 
     // Assign it to the program, this instruction will fail if the account already belongs to the
     // program
     let assign_instruction = system_instruction::assign(&claim_receipt_account.key(), &crate::id());
     invoke_signed(
         &assign_instruction,
-        remaining_accounts,
+        &account_infos,
         &[&[
             RECEIPT_SEED,
             &MerkleTree::<SolanaHasher>::hash_leaf(leaf),
@@ -639,6 +684,7 @@ pub fn checked_create_claim_receipt(
 
     Ok(())
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Sdk.

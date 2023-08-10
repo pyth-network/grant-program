@@ -81,7 +81,7 @@ export function WalletButton({
 export type Wallet = {
   icon?: string
   name: string
-  connect: () => void
+  onSelect: () => void
 }
 export type WalletModalButtonProps = {
   wallets: Wallet[]
@@ -100,41 +100,49 @@ export function WalletModalButton({ wallets }: WalletModalButtonProps) {
           <span>connect wallet</span>
         </span>
       </button>
-      {modal && (
-        <Modal openModal={openModal}>
-          <h3 className="mb-16  font-header text-[36px] font-light">
-            Connect Your Wallet
-          </h3>
-          <div className="mx-auto max-w-[200px]">
-            {wallets.length === 1 ? (
-              <SingleWalletView
-                wallet={wallets[0]}
-                onConnect={() => openModal(false)}
-              />
-            ) : (
-              <MultiWalletView
-                wallets={wallets}
-                onConnect={() => openModal(false)}
-              />
-            )}
-          </div>
-        </Modal>
-      )}
+      {modal && <WalletModal openModal={openModal} wallets={wallets} />}
     </>
+  )
+}
+
+export type WalletModalProps = {
+  openModal: Function
+  wallets: Wallet[]
+}
+export function WalletModal({ openModal, wallets }: WalletModalProps) {
+  return (
+    <Modal openModal={openModal}>
+      <h3 className="mb-16  font-header text-[36px] font-light">
+        Connect Your Wallet
+      </h3>
+      <div className="mx-auto max-w-[200px]">
+        {wallets.length === 1 ? (
+          <SingleWalletView
+            wallet={wallets[0]}
+            onSelect={() => openModal(false)}
+          />
+        ) : (
+          <MultiWalletView
+            wallets={wallets}
+            onSelect={() => openModal(false)}
+          />
+        )}
+      </div>
+    </Modal>
   )
 }
 
 export type SingleWalletViewProps = {
   wallet: Wallet
-  onConnect: () => void
+  onSelect: () => void
 }
-export function SingleWalletView({ wallet, onConnect }: SingleWalletViewProps) {
+export function SingleWalletView({ wallet, onSelect }: SingleWalletViewProps) {
   return (
     <button
       className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light"
       onClick={() => {
-        wallet.connect()
-        onConnect()
+        wallet.onSelect()
+        onSelect()
       }}
     >
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
@@ -146,10 +154,10 @@ export function SingleWalletView({ wallet, onConnect }: SingleWalletViewProps) {
 }
 
 export type MultiWalletViewProps = WalletModalButtonProps & {
-  onConnect: () => void
+  onSelect: () => void
 }
 
-export function MultiWalletView({ wallets, onConnect }: MultiWalletViewProps) {
+export function MultiWalletView({ wallets, onSelect }: MultiWalletViewProps) {
   return (
     <Listbox>
       {({ open }) => (
@@ -175,8 +183,8 @@ export function MultiWalletView({ wallets, onConnect }: MultiWalletViewProps) {
                   value={wallet.name}
                   className="flex cursor-pointer items-center justify-center gap-2.5 py-3 px-8 hover:bg-darkGray3"
                   onClick={() => {
-                    wallet.connect()
-                    onConnect()
+                    wallet.onSelect()
+                    onSelect()
                   }}
                 >
                   <WalletIcon icon={wallet.icon} />

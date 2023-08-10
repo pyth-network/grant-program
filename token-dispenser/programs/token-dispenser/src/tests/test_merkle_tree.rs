@@ -1,28 +1,16 @@
 use {
     crate::{
-        ecosystems::ed25519::Ed25519Pubkey,
         ClaimInfo,
         Identity,
         SolanaHasher,
     },
-    anchor_lang::{
-        prelude::Pubkey,
-        AnchorSerialize,
-    },
+    anchor_lang::AnchorSerialize,
     pythnet_sdk::accumulators::{
         merkle::MerkleTree,
         Accumulator,
     },
     solana_sdk::pubkey,
 };
-
-impl From<Pubkey> for Ed25519Pubkey {
-    fn from(pubkey: Pubkey) -> Self {
-        let mut bytes = [0u8; 32];
-        bytes.copy_from_slice(pubkey.as_ref());
-        Self::from(bytes)
-    }
-}
 
 /**
  * The goal of this test is generating an arbitrary merkle tree to check against the JS implementation.

@@ -46,4 +46,4 @@ jobs:
       - name: Migrate DB
         run: npm run migrate
       - name: Test
-        run: npm run test
+        run: npm run test:api

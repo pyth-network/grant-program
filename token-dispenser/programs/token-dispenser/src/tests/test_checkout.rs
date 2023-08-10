@@ -174,7 +174,7 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
             .await
             .unwrap_err()
             .unwrap(),
-        ErrorCode::InsufficientTreasuryFunds.into_transaction_error()
+        ErrorCode::InsufficientTreasuryFunds.into_transaction_error(0)
     );
 
 
@@ -235,7 +235,7 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
             .await
             .unwrap_err()
             .unwrap(),
-        InsufficientFunds.into_transaction_error()
+        InsufficientFunds.into_transaction_error(0)
     );
 
     let delegated_amount = claim_sums[1] - 1;
@@ -265,7 +265,7 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
             .await
             .unwrap_err()
             .unwrap(),
-        InsufficientFunds.into_transaction_error()
+        InsufficientFunds.into_transaction_error(0)
     );
 
     let delegated_amount = claim_sums[1];
@@ -396,7 +396,7 @@ pub async fn test_checkout_fails_if_delegate_revoked() {
             .await
             .unwrap_err()
             .unwrap(),
-        OwnerMismatch.into_transaction_error()
+        OwnerMismatch.into_transaction_error(0)
     );
 
     simulator

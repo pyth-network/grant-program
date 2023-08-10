@@ -114,8 +114,8 @@ const Claim = () => {
             <div className="mt-6">
               <p className="font-body text-[15px] ">
                 Useful links:{' '}
-                <Link href="/">
-                  <a className="ml-5 inline-block underline">FAQ</a>
+                <Link href="/" className="ml-5 inline-block underline">
+                  FAQ
                 </Link>
               </p>
             </div>

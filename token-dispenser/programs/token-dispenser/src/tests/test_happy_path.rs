@@ -9,6 +9,7 @@ use {
         ecosystems::{
             aptos::AptosMessage,
             cosmos::CosmosMessage,
+            discord::DiscordMessage,
             evm::EvmPrefixedMessage,
             solana::SolanaMessage,
             sui::SuiMessage,
@@ -98,10 +99,12 @@ impl TestClaimCertificate {
         }
     }
 
-    pub fn random_discord() -> Self {
+    pub fn random_discord(claimant: &Pubkey, signer: &ed25519_dalek::Keypair) -> Self {
         Self {
             amount:                      Self::random_amount(),
-            off_chain_proof_of_identity: TestIdentityCertificate::Discord("username".into()),
+            off_chain_proof_of_identity: TestIdentityCertificate::Discord(
+                Ed25519TestIdentityCertificate::<DiscordMessage>::new(claimant, signer),
+            ),
         }
     }
 
@@ -159,7 +162,7 @@ impl TestClaimCertificate {
     ) -> (ClaimCertificate, Option<Instruction>) {
         let option_instruction = match &self.off_chain_proof_of_identity {
             TestIdentityCertificate::Evm(evm) => Some(evm.as_instruction(index, true)),
-            TestIdentityCertificate::Discord(_) => None,
+            TestIdentityCertificate::Discord(discord) => Some(discord.as_instruction(index, true)),
             TestIdentityCertificate::Cosmos(_) => None,
             TestIdentityCertificate::Aptos(aptos) => Some(aptos.as_instruction(index, true)),
             TestIdentityCertificate::Sui(sui) => Some(sui.as_instruction(index, true)),
@@ -186,7 +189,7 @@ impl From<TestIdentityCertificate> for Identity {
         match val {
             TestIdentityCertificate::Evm(evm) => evm.into(),
             TestIdentityCertificate::Cosmos(cosmos) => cosmos.into(),
-            TestIdentityCertificate::Discord(username) => Identity::Discord { username },
+            TestIdentityCertificate::Discord(discord) => discord.into(),
             TestIdentityCertificate::Aptos(aptos) => aptos.into(),
             TestIdentityCertificate::Sui(sui) => sui.into(),
             TestIdentityCertificate::Solana(solana) => solana.into(),
@@ -200,9 +203,7 @@ impl TestIdentityCertificate {
         match self {
             Self::Evm(evm) => evm.as_proof_of_identity(verification_instruction_index),
             Self::Cosmos(cosmos) => cosmos.clone().into(),
-            Self::Discord(username) => IdentityCertificate::Discord {
-                username: username.clone(),
-            },
+            Self::Discord(discord) => discord.as_proof_of_identity(verification_instruction_index),
             Self::Aptos(aptos) => aptos.as_proof_of_identity(verification_instruction_index),
             Self::Sui(sui) => sui.as_proof_of_identity(verification_instruction_index),
             Self::Solana(solana) => solana.as_proof_of_identity(verification_instruction_index),
@@ -216,7 +217,7 @@ impl TestIdentityCertificate {
 #[derive(Clone)]
 pub enum TestIdentityCertificate {
     Evm(Secp256k1TestIdentityCertificate<EvmPrefixedMessage, Keccak256>),
-    Discord(String),
+    Discord(Ed25519TestIdentityCertificate<DiscordMessage>),
     Cosmos(Secp256k1TestIdentityCertificate<CosmosMessage, Sha256>),
     Aptos(Ed25519TestIdentityCertificate<AptosMessage>),
     Sui(Ed25519TestIdentityCertificate<SuiMessage>),
@@ -230,8 +231,10 @@ pub async fn test_happy_path() {
 
     let mut simulator = DispenserSimulator::new().await;
 
-    let mock_offchain_certificates =
-        DispenserSimulator::generate_test_claim_certs(simulator.genesis_keypair.pubkey());
+    let mock_offchain_certificates = DispenserSimulator::generate_test_claim_certs(
+        &simulator.genesis_keypair.pubkey(),
+        &dispenser_guard,
+    );
 
     let merkle_items: Vec<ClaimInfo> = mock_offchain_certificates
         .iter()
@@ -316,6 +319,15 @@ pub async fn test_happy_path() {
 
     // Can't claim twice
     for offchain_claim_certificate in &mock_offchain_certificates {
+        let ix_index_error = if offchain_claim_certificate
+            .as_claim_certificate(&merkle_tree, 0)
+            .1
+            .is_some()
+        {
+            1
+        } else {
+            0
+        };
         assert_eq!(
             simulator
                 .claim(
@@ -327,7 +339,7 @@ pub async fn test_happy_path() {
                 .await
                 .unwrap_err()
                 .unwrap(),
-            ErrorCode::AlreadyClaimed.into_transaction_error()
+            ErrorCode::AlreadyClaimed.into_transaction_error(ix_index_error)
         );
     }
 

@@ -2,13 +2,13 @@ use {
     crate::{
         ecosystems::{
             aptos::AptosMessage,
+            discord::DiscordMessage,
             ed25519::{
                 Ed25519InstructionData,
                 Ed25519InstructionHeader,
                 Ed25519Pubkey,
                 Ed25519TestMessage,
             },
-            get_expected_payload,
             solana::SolanaMessage,
             sui::SuiMessage,
         },
@@ -32,22 +32,33 @@ use {
 
 #[derive(Clone)]
 pub struct Ed25519TestIdentityCertificate<T: Ed25519TestMessage> {
-    pub message:   T,
-    pub signature: ed25519_dalek::Signature,
-    pub publickey: ed25519_dalek::PublicKey,
+    pub message:    T,
+    pub signature:  ed25519_dalek::Signature,
+    pub public_key: ed25519_dalek::PublicKey,
 }
 
 impl<T: Ed25519TestMessage> Ed25519TestIdentityCertificate<T> {
     pub fn random(claimant: &Pubkey) -> Self {
-        let message = T::new(&get_expected_payload(claimant));
+        let message = T::for_claimant(claimant);
         let mut csprng = OsRng {};
         let keypair: Keypair = Keypair::generate(&mut csprng);
         let signature = keypair.sign(&message.get_message_with_metadata());
-        let publickey = keypair.public;
+        let public_key = keypair.public;
         Self {
             message,
             signature,
-            publickey,
+            public_key,
+        }
+    }
+
+    pub fn new(claimant: &Pubkey, keypair: &Keypair) -> Self {
+        let message = T::for_claimant(claimant);
+        let signature = keypair.sign(&message.get_message_with_metadata());
+        let public_key = keypair.public;
+        Self {
+            message,
+            signature,
+            public_key,
         }
     }
 
@@ -67,7 +78,7 @@ impl<T: Ed25519TestMessage> Ed25519TestIdentityCertificate<T> {
         let instruction_data = Ed25519InstructionData {
             header,
             signature: signature_bytes.into(),
-            pubkey: self.publickey.to_bytes().into(),
+            pubkey: self.public_key.to_bytes().into(),
             message: self.message.get_message_with_metadata(),
         };
 
@@ -82,7 +93,7 @@ impl<T: Ed25519TestMessage> Ed25519TestIdentityCertificate<T> {
 impl From<Ed25519TestIdentityCertificate<AptosMessage>> for Identity {
     fn from(val: Ed25519TestIdentityCertificate<AptosMessage>) -> Self {
         Identity::Aptos {
-            address: Ed25519Pubkey::from(val.publickey.to_bytes()).into(),
+            address: Ed25519Pubkey::from(val.public_key.to_bytes()).into(),
         }
     }
 }
@@ -90,7 +101,7 @@ impl From<Ed25519TestIdentityCertificate<AptosMessage>> for Identity {
 impl Ed25519TestIdentityCertificate<AptosMessage> {
     pub fn as_proof_of_identity(&self, verification_instruction_index: u8) -> IdentityCertificate {
         IdentityCertificate::Aptos {
-            pubkey: self.publickey.to_bytes().into(),
+            pubkey: self.public_key.to_bytes().into(),
             verification_instruction_index,
         }
     }
@@ -99,7 +110,7 @@ impl Ed25519TestIdentityCertificate<AptosMessage> {
 impl From<Ed25519TestIdentityCertificate<SuiMessage>> for Identity {
     fn from(val: Ed25519TestIdentityCertificate<SuiMessage>) -> Self {
         Identity::Sui {
-            address: Ed25519Pubkey::from(val.publickey.to_bytes()).into(),
+            address: Ed25519Pubkey::from(val.public_key.to_bytes()).into(),
         }
     }
 }
@@ -108,7 +119,7 @@ impl From<Ed25519TestIdentityCertificate<SuiMessage>> for Identity {
 impl Ed25519TestIdentityCertificate<SuiMessage> {
     pub fn as_proof_of_identity(&self, verification_instruction_index: u8) -> IdentityCertificate {
         IdentityCertificate::Sui {
-            pubkey: Ed25519Pubkey::from(self.publickey.to_bytes()),
+            pubkey: Ed25519Pubkey::from(self.public_key.to_bytes()),
             verification_instruction_index,
         }
     }
@@ -117,7 +128,7 @@ impl Ed25519TestIdentityCertificate<SuiMessage> {
 impl From<Ed25519TestIdentityCertificate<SolanaMessage>> for Identity {
     fn from(val: Ed25519TestIdentityCertificate<SolanaMessage>) -> Self {
         Identity::Solana {
-            pubkey: Ed25519Pubkey::from(val.publickey.to_bytes()),
+            pubkey: Ed25519Pubkey::from(val.public_key.to_bytes()),
         }
     }
 }
@@ -126,7 +137,25 @@ impl From<Ed25519TestIdentityCertificate<SolanaMessage>> for Identity {
 impl Ed25519TestIdentityCertificate<SolanaMessage> {
     pub fn as_proof_of_identity(&self, verification_instruction_index: u8) -> IdentityCertificate {
         IdentityCertificate::Solana {
-            pubkey: Ed25519Pubkey::from(self.publickey.to_bytes()),
+            pubkey: Ed25519Pubkey::from(self.public_key.to_bytes()),
+            verification_instruction_index,
+        }
+    }
+}
+
+impl From<Ed25519TestIdentityCertificate<DiscordMessage>> for Identity {
+    fn from(val: Ed25519TestIdentityCertificate<DiscordMessage>) -> Self {
+        Identity::Discord {
+            username: val.message.get_username(),
+        }
+    }
+}
+
+
+impl Ed25519TestIdentityCertificate<DiscordMessage> {
+    pub fn as_proof_of_identity(&self, verification_instruction_index: u8) -> IdentityCertificate {
+        IdentityCertificate::Discord {
+            username: self.message.get_username(),
             verification_instruction_index,
         }
     }
@@ -140,7 +169,7 @@ pub async fn test_verify_signed_message_onchain() {
     let mut simulator = DispenserSimulator::new().await;
 
     assert!(ed25519_dalek::Verifier::verify(
-        &signed_message.publickey,
+        &signed_message.public_key,
         &signed_message.message.get_message_with_metadata(),
         &signed_message.signature
     )

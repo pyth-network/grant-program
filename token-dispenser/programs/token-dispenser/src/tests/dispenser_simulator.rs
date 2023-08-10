@@ -25,7 +25,6 @@ use {
                 create_account,
             },
         },
-        system_program,
         AccountDeserialize,
         AnchorSerialize,
         Id,
@@ -118,15 +117,19 @@ impl DispenserSimulator {
         simulator
     }
 
-    pub fn generate_test_claim_certs(claimant: Pubkey) -> Vec<TestClaimCertificate> {
+    pub fn generate_test_claim_certs(
+        claimant: &Pubkey,
+        dispenser_guard: &Keypair,
+    ) -> Vec<TestClaimCertificate> {
+        let keypair = ed25519_dalek::Keypair::from_bytes(&dispenser_guard.to_bytes()).unwrap();
         vec![
-            TestClaimCertificate::random_evm(&claimant),
-            TestClaimCertificate::random_cosmos(&claimant),
-            TestClaimCertificate::random_discord(),
-            TestClaimCertificate::random_aptos(&claimant),
-            TestClaimCertificate::random_sui(&claimant),
-            TestClaimCertificate::random_solana(&claimant),
-            TestClaimCertificate::random_injective(&claimant),
+            TestClaimCertificate::random_evm(claimant),
+            TestClaimCertificate::random_cosmos(claimant),
+            TestClaimCertificate::random_discord(claimant, &keypair),
+            TestClaimCertificate::random_aptos(claimant),
+            TestClaimCertificate::random_sui(claimant),
+            TestClaimCertificate::random_solana(claimant),
+            TestClaimCertificate::random_injective(claimant),
         ]
     }
 
@@ -242,7 +245,10 @@ impl DispenserSimulator {
                 .into_iter()
                 .map(|c| {
                     let pubkey = c.pubkey();
-                    (c, DispenserSimulator::generate_test_claim_certs(pubkey))
+                    (
+                        c,
+                        DispenserSimulator::generate_test_claim_certs(&pubkey, dispenser_guard),
+                    )
                 })
                 .collect::<Vec<_>>();
         let merkle_items: Vec<ClaimInfo> = mock_offchain_certificates_and_claimants
@@ -312,7 +318,7 @@ impl DispenserSimulator {
         merkle_tree: &MerkleTree<SolanaHasher>,
     ) -> Result<(), BanksClientError> {
         let (claim_certificate, option_instruction) =
-            off_chain_claim_certificate.as_claim_certificate(merkle_tree, 1);
+            off_chain_claim_certificate.as_claim_certificate(merkle_tree, 0);
         let mut accounts = accounts::Claim::populate(claimant.pubkey(), dispenser_guard.pubkey())
             .to_account_metas(None);
 
@@ -327,11 +333,6 @@ impl DispenserSimulator {
             false,
         ));
 
-        accounts.push(AccountMeta::new_readonly(
-            system_program::System::id(),
-            false,
-        ));
-        accounts.push(AccountMeta::new(claimant.pubkey(), true));
 
         let instruction_data: instruction::Claim = instruction::Claim {
             claim_certificates: vec![claim_certificate],
@@ -339,15 +340,16 @@ impl DispenserSimulator {
 
         let mut instructions = vec![];
 
+        if let Some(verification_instruction) = option_instruction {
+            instructions.push(verification_instruction);
+        }
+
         instructions.push(Instruction::new_with_bytes(
             crate::id(),
             &instruction_data.data(),
             accounts,
         ));
 
-        if let Some(verification_instruction) = option_instruction {
-            instructions.push(verification_instruction);
-        }
 
         self.process_ix(&instructions, &vec![dispenser_guard, claimant])
             .await
@@ -448,13 +450,13 @@ pub fn copy_keypair(keypair: &Keypair) -> Keypair {
 ////////////////////////////////////////////////////////////////////////////////
 
 pub trait IntoTransactionError {
-    fn into_transaction_error(self) -> TransactionError;
+    fn into_transaction_error(self, instruction_index: u8) -> TransactionError;
 }
 
 impl IntoTransactionError for ErrorCode {
-    fn into_transaction_error(self) -> TransactionError {
+    fn into_transaction_error(self, instruction_index: u8) -> TransactionError {
         TransactionError::InstructionError(
-            0,
+            instruction_index,
             InstructionError::try_from(u64::from(ProgramError::from(
                 anchor_lang::prelude::Error::from(self),
             )))
@@ -464,15 +466,15 @@ impl IntoTransactionError for ErrorCode {
 }
 
 impl IntoTransactionError for TokenError {
-    fn into_transaction_error(self) -> TransactionError {
+    fn into_transaction_error(self, instruction_index: u8) -> TransactionError {
         TransactionError::InstructionError(
-            0,
+            instruction_index,
             InstructionError::try_from(u64::from(ProgramError::from(self))).unwrap(),
         )
     }
 }
 impl IntoTransactionError for InstructionError {
-    fn into_transaction_error(self) -> TransactionError {
-        TransactionError::InstructionError(0, self)
+    fn into_transaction_error(self, instruction_index: u8) -> TransactionError {
+        TransactionError::InstructionError(instruction_index, self)
     }
 }
