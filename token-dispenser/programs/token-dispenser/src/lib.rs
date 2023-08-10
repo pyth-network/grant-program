@@ -129,7 +129,7 @@ pub mod token_dispenser {
                 .merkle_root
                 .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)
             {
-                return Err(ErrorCode::InvalidInclusionProof.into());
+                return err!(ErrorCode::InvalidInclusionProof);
             };
 
 
@@ -144,7 +144,7 @@ pub mod token_dispenser {
 
             // Check that the claimant is not claiming tokens more than once per ecosystem
             if cart.set.contains(&claim_info.identity) {
-                return Err(ErrorCode::MoreThanOneIdentityPerEcosystem.into());
+                return err!(ErrorCode::MoreThanOneIdentityPerEcosystem);
             }
             cart.set.insert(&claim_info.identity);
         }
@@ -241,7 +241,7 @@ impl<'info> Claim<'info> {
             ErrorCode::WrongPda
         );
 
-        check_claim_receipt_is_unitialized(&claim_receipt_account)?;
+        check_claim_receipt_is_uninitialized(claim_receipt_account)?;
 
         let account_infos = vec![
             claim_receipt_account.clone(),
@@ -333,6 +333,8 @@ pub enum Identity {
 }
 
 impl Identity {
+    /// Note: the order of this must follow the order of the variants in the enum
+    /// since the typescript code uses this ordering
     pub fn to_discriminant(&self) -> usize {
         match self {
             Identity::Discord { .. } => 0,
@@ -472,7 +474,7 @@ pub enum ErrorCode {
     SignatureVerificationWrongClaimant,
 }
 
-pub fn check_claim_receipt_is_unitialized(claim_receipt_account: &AccountInfo) -> Result<()> {
+pub fn check_claim_receipt_is_uninitialized(claim_receipt_account: &AccountInfo) -> Result<()> {
     if claim_receipt_account.owner.eq(&crate::id()) {
         return Err(ErrorCode::AlreadyClaimed.into());
     }
@@ -696,14 +698,4 @@ pub fn test_number_of_identities() {
         Identity::NUMBER_OF_VARIANTS,
         ClaimedEcosystems::new().set.len()
     );
-}
-
-#[cfg(test)]
-#[test]
-pub fn account_discrimnators() {
-    use anchor_lang::Discriminator;
-
-
-    let config_disc = Config::discriminator();
-    println!("Config discriminator: {:?}", config_disc);
 }

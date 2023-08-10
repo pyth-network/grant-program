@@ -108,7 +108,7 @@ function run_integration_tests() {
 function start_test_validator() {
   cd "$TOKEN_DISPENSER_DIR";
   anchor run export;
-  anchor localnet &
+  anchor localnet --skip-build &
 }
 
 function stop_test_validator() {

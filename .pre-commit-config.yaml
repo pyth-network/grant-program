@@ -13,10 +13,16 @@ repos:
   - repo: local
     hooks:
       # Hooks for the token dispenser
-      - id: cargo-fmt-token-dispeser
+      - id: cargo-fmt-token-dispenser
         name: Cargo format for token dispenser
         language: "rust"
         entry: cargo +nightly-2023-03-01 fmt --manifest-path ./token-dispenser/Cargo.toml --all -- --config-path ./token-dispenser/rustfmt.toml
+        pass_filenames: false
+        files: token-dispenser
+      - id: cargo-clippy-token-dispenser
+        name: Cargo clippy for token dispenser
+        language: "rust"
+        entry: cargo +nightly-2023-07-23 clippy --manifest-path ./token-dispenser/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: token-dispenser
   - repo: https://github.com/pre-commit/mirrors-prettier

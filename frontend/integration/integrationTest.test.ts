@@ -11,7 +11,11 @@ import { ethers } from 'ethers'
 import fs from 'fs'
 import * as path from 'path'
 import { Buffer } from 'buffer'
-import { QueryParams, TokenDispenserProvider } from '../claim_sdk/solana'
+import {
+  QueryParams,
+  toDiscriminant,
+  TokenDispenserProvider,
+} from '../claim_sdk/solana'
 
 //TODO: update this
 const tokenDispenserProgramId = new anchor.web3.PublicKey(
@@ -66,18 +70,6 @@ describe('integration test', () => {
     await pool.end()
   })
 
-  describe('backend test', () => {
-    // TODO: this should hit the actual API, not just query the database.
-    test('Find claims', async () => {
-      const result = await pool.query(
-        'SELECT amount FROM claims WHERE ecosystem = $1 AND identity = $2',
-        ['evm', evmWallet.address.toString()]
-      )
-
-      expect(result.rows[0].amount).toBe('2000')
-    })
-  })
-
   describe('token dispenser e2e', () => {
     const walletKeypair = anchor.web3.Keypair.generate()
     const wallet = new NodeWallet(walletKeypair)
@@ -86,6 +78,7 @@ describe('integration test', () => {
       wallet,
       tokenDispenserProgramId,
       {
+        skipPreflight: true,
         preflightCommitment: 'processed',
         commitment: 'processed',
       }
@@ -165,9 +158,13 @@ describe('integration test', () => {
       ])
 
       const cartData = await tokenDispenserProvider.getCart()
+      if (cartData === undefined) {
+        fail("Cart data shouldn't be undefined")
+      }
       expect(cartData.amount.eq(claimInfo.amount)).toBeTruthy()
+      const evmDiscriminant = toDiscriminant('evm')
       for (let i = 0; i < cartData.set.set.length; i++) {
-        if (i === 2) {
+        if (i === evmDiscriminant) {
           expect(cartData.set.set[i]).toEqual(true)
         } else {
           expect(cartData.set.set[i]).toEqual(false)
@@ -175,9 +172,7 @@ describe('integration test', () => {
       }
 
       expect(
-        await tokenDispenserProvider.isClaimAlreadySubmitted(
-          claimInfo.toBuffer()
-        )
+        await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
       ).toBeTruthy()
     })
   })

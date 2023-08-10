@@ -23,10 +23,7 @@ use {
         Hasher,
     },
     solana_program_test::tokio,
-    solana_sdk::{
-        instruction::Instruction,
-        secp256k1_instruction::new_secp256k1_instruction,
-    },
+    solana_sdk::instruction::Instruction,
 };
 
 /// Creates an Ethereum address from a secp256k1 public key.
@@ -40,7 +37,6 @@ pub fn construct_evm_pubkey(pubkey: &libsecp256k1::PublicKey) -> EvmPubkey {
 #[derive(Clone)]
 pub struct EvmTestIdentityCertificate {
     pub message:     EvmPrefixedMessage,
-    pub secret:      libsecp256k1_compatible::SecretKey,
     pub signature:   libsecp256k1::Signature,
     pub recovery_id: libsecp256k1::RecoveryId,
 }
@@ -57,11 +53,8 @@ impl EvmTestIdentityCertificate {
     pub fn random(claimant: &Pubkey) -> Self {
         let prefixed_message = EvmPrefixedMessage::new(&get_expected_payload(claimant));
         let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
-        let compatible_secret =
-            libsecp256k1_compatible::SecretKey::parse(&secret.serialize()).unwrap();
         let (signature, recovery_id) = libsecp256k1::sign(&prefixed_message.hash(), &secret);
         Self {
-            secret: compatible_secret,
             message: EvmPrefixedMessage::new(&get_expected_payload(claimant)),
             signature,
             recovery_id,
@@ -69,13 +62,6 @@ impl EvmTestIdentityCertificate {
     }
 
     pub fn as_instruction(&self, instruction_index: u8, valid_signature: bool) -> Instruction {
-        if valid_signature {
-            return new_secp256k1_instruction(
-                &self.secret,
-                self.message.get_prefixed_message().as_slice(),
-            );
-        }
-
         let header = Secp256k1InstructionHeader::expected_header(
             self.message.get_prefix_length().try_into().unwrap(),
             instruction_index,
@@ -86,7 +72,6 @@ impl EvmTestIdentityCertificate {
             // Flip the first byte of the signature to make it invalid
             signature_bytes[0] ^= 0xff;
         }
-
 
         let instruction_data = Secp256k1InstructionData {
             header,

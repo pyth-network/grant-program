@@ -294,9 +294,10 @@ pub async fn test_happy_path() {
 
     // Can't claim twice
     for offchain_claim_certificate in &mock_offchain_certificates {
-        let ix_index_error = if let Some(_) = &offchain_claim_certificate
+        let ix_index_error = if offchain_claim_certificate
             .as_claim_certificate(&merkle_tree, 0)
             .1
+            .is_some()
         {
             1
         } else {

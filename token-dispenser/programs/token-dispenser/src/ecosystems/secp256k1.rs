@@ -19,7 +19,6 @@ pub const SECP256K1_FULL_PREFIX: u8 = 0x04;
 pub const SECP256K1_ODD_PREFIX: u8 = 0x03;
 pub const SECP256K1_EVEN_PREFIX: u8 = 0x02;
 pub const SECP256K1_COMPRESSED_PUBKEY_LENGTH: usize = 33;
-pub const ETH_ADDRESS_LENGTH: u16 = 20;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, PartialEq)]
 pub struct EvmPubkey([u8; Self::LEN]);
@@ -79,7 +78,7 @@ impl Secp256k1InstructionHeader {
     pub fn expected_header(message_length: u16, instruction_index: u8) -> Self {
         Secp256k1InstructionHeader {
             num_signatures:                1,
-            signature_offset:              Secp256k1InstructionHeader::LEN + ETH_ADDRESS_LENGTH,
+            signature_offset:              Secp256k1InstructionHeader::LEN + EvmPubkey::LEN as u16,
             signature_instruction_index:   instruction_index,
             eth_address_offset:            Secp256k1InstructionHeader::LEN,
             eth_address_instruction_index: instruction_index,
@@ -127,34 +126,19 @@ impl AnchorDeserialize for Secp256k1InstructionData {
     fn deserialize(
         buf: &mut &[u8],
     ) -> std::result::Result<Secp256k1InstructionData, std::io::Error> {
-        let header = Secp256k1InstructionHeader::deserialize(
-            &mut &buf[..Secp256k1InstructionHeader::LEN as usize],
-        )?;
+        let header = Secp256k1InstructionHeader::deserialize(buf)?;
+        let eth_address = EvmPubkey::deserialize(buf)?;
+        let signature = Secp256k1Signature::deserialize(buf)?;
 
-        let signature = Secp256k1Signature::deserialize(
-            &mut &buf[header.signature_offset as usize..(header.signature_offset as usize) + 64],
-        )?;
-
-        let recovery_id = u8::deserialize(
-            &mut &buf
-                [header.signature_offset as usize + 64..(header.signature_offset as usize) + 65],
-        )?;
-
-        let eth_address = EvmPubkey::deserialize(
-            &mut &buf
-                [header.eth_address_offset as usize..(header.eth_address_offset as usize) + 32],
-        )?;
-
+        let recovery_id = u8::deserialize(buf)?;
         let mut message: Vec<u8> = vec![];
-        if (&buf[header.message_data_offset as usize..]).len() < header.message_data_size as usize {
+        if buf.len() < header.message_data_size as usize {
             return Err(std::io::Error::from(std::io::ErrorKind::UnexpectedEof));
         }
-        message.extend_from_slice(
-            &buf[header.message_data_offset as usize
-                ..(header.message_data_offset + header.message_data_size) as usize],
-        );
 
-        *buf = &buf[(header.message_data_offset + header.message_data_size) as usize..];
+        message.extend_from_slice(&buf[..header.message_data_size as usize]);
+
+        *buf = &buf[header.message_data_size as usize..];
         Ok(Secp256k1InstructionData {
             header,
             eth_address,
@@ -172,9 +156,9 @@ impl AnchorSerialize for Secp256k1InstructionData {
         writer: &mut W,
     ) -> std::result::Result<(), std::io::Error> {
         self.header.serialize(writer)?;
+        self.eth_address.serialize(writer)?;
         self.signature.serialize(writer)?;
         self.recovery_id.serialize(writer)?;
-        self.eth_address.serialize(writer)?;
         writer.write_all(&self.message)?;
         Ok(())
     }
