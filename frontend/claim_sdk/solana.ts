@@ -21,6 +21,13 @@ const AUTHORIZATION_PAYLOAD = [
   '\nto withdraw my token allocation.\n',
 ]
 
+/**
+ * This class wraps the interaction with the TokenDispenser
+ * program for a specific claimant. The claimant will be the
+ * solana pubkey of the wallet used in the constructor.
+ *
+ * TODO: add more documentation
+ */
 export class TokenDispenserProvider {
   tokenDispenserProgram: anchor.Program<TokenDispenser>
   configPda: [anchor.web3.PublicKey, bump]
