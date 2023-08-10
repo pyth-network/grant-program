@@ -452,7 +452,7 @@ impl IdentityCertificate {
                     *verification_instruction_index as usize,
                     sysvar_instruction,
                 )?;
-                let username = DiscordMessage::parse_and_check_claimant_and_username(
+                let discord_message = DiscordMessage::parse_and_check_claimant_and_username(
                     &Ed25519InstructionData::extract_message_and_check_signature(
                         &signature_verification_instruction,
                         &Ed25519Pubkey::from(*dispenser_guard),
@@ -460,10 +460,11 @@ impl IdentityCertificate {
                     )?,
                     username,
                     claimant,
-                )?
-                .get_username();
+                )?;
 
-                Ok(Identity::Discord { username })
+                Ok(Identity::Discord {
+                    username: discord_message.get_username(),
+                })
             }
             IdentityCertificate::Evm {
                 pubkey,
