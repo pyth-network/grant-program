@@ -126,7 +126,7 @@ export function useEVMSignMessage(): SignMessageFn {
   return signMessageCb
 }
 
-// // This hook returns a function to sign message for the Solana wallet.
+// This hook returns a function to sign message for the Solana wallet.
 export function useSolanaSignMessage(): SignMessageFn {
   const { connected, signMessage, publicKey } = useSolanaWallet()
   const signMessageCb = useCallback(
@@ -135,7 +135,6 @@ export function useSolanaSignMessage(): SignMessageFn {
         if (signMessage === undefined || connected === false || !publicKey)
           return
         const signature = await signMessage(Buffer.from(message))
-        console.log(signature)
         return {
           publicKey: publicKey.toBytes(),
           signature: signature,
@@ -151,7 +150,7 @@ export function useSolanaSignMessage(): SignMessageFn {
   return signMessageCb
 }
 
-// // This hook returns a function to sign message for the Sui wallet.
+// This hook returns a function to sign message for the Sui wallet.
 export function useSuiSignMessage(): SignMessageFn {
   const { signMessage, isConnected, currentAccount } = useWalletKit()
 
