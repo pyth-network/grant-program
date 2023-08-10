@@ -58,7 +58,6 @@ pub async fn test_discord() {
         simulator
             .claim(
                 &copy_keypair(&simulator.genesis_keypair),
-                &dispenser_guard,
                 &mock_offchain_certificates[1],
                 &merkle_tree
             )
@@ -70,7 +69,6 @@ pub async fn test_discord() {
     assert!(simulator
         .claim(
             &copy_keypair(&simulator.genesis_keypair),
-            &dispenser_guard,
             &mock_offchain_certificates[0],
             &merkle_tree
         )
@@ -81,7 +79,6 @@ pub async fn test_discord() {
         simulator
             .claim(
                 &copy_keypair(&simulator.genesis_keypair),
-                &dispenser_guard,
                 &mock_offchain_certificates[0],
                 &merkle_tree
             )

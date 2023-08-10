@@ -57,7 +57,6 @@ pub async fn test_checkout_fails_with_wrong_accounts() {
             simulator
                 .claim(
                     &copy_keypair(claimant),
-                    &dispenser_guard,
                     offchain_claim_certificate,
                     &merkle_tree,
                 )
@@ -154,7 +153,6 @@ pub async fn test_checkout_fails_with_insufficient_funds() {
             simulator
                 .claim(
                     &copy_keypair(claimant),
-                    &dispenser_guard,
                     offchain_claim_certificate,
                     &merkle_tree,
                 )
@@ -344,7 +342,6 @@ pub async fn test_checkout_fails_if_delegate_revoked() {
             simulator
                 .claim(
                     &copy_keypair(claimant),
-                    &dispenser_guard,
                     offchain_claim_certificate,
                     &merkle_tree,
                 )
