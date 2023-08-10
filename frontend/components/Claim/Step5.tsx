@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Arrow from '../../images/arrow.inline.svg'
-
+import Modal from './Modal'
 const Step5 = () => {
+  const [modal, openModal] = useState(false)
   return (
     <>
       <div className=" border border-light-35 bg-dark">
@@ -24,7 +25,10 @@ const Step5 = () => {
                 back
               </span>
             </button>
-            <button className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark">
+            <button
+              className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
+              onClick={() => openModal(true)}
+            >
               <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
                 proceed
                 <Arrow />
@@ -33,6 +37,32 @@ const Step5 = () => {
           </div>
         </div>
       </div>
+      {modal && (
+        <Modal openModal={openModal}>
+          <h3 className="mb-8  font-header text-[36px] font-light">
+            Claim Airdrop
+          </h3>
+          <p className="mx-auto max-w-[454px] font-body text-base16">
+            By choosing to proceed to the next step, you confirm that you have
+            connected all relevant wallets and your Discord account associated
+            with your claim.
+          </p>
+          <div className="mt-12 flex justify-center gap-4">
+            <button className="btn before:btn-bg  btn--dark before:bg-darkGray hover:text-dark hover:before:bg-light">
+              <span className="relative inline-flex items-center whitespace-nowrap">
+                <Arrow className="mr-2.5 origin-center rotate-180" />
+                back
+              </span>
+            </button>
+            <button className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark">
+              <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+                proceed
+                <Arrow />
+              </span>
+            </button>
+          </div>
+        </Modal>
+      )}
     </>
   )
 }
