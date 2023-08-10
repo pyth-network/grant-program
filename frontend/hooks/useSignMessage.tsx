@@ -109,8 +109,8 @@ export function useEVMSignMessage(): SignMessageFn {
           !address
         )
           return
-        const result = await signMessageAsync({ message })
-        const [signature, recoveryId] = splitEvmSignature(result)
+        const response = await signMessageAsync({ message })
+        const [signature, recoveryId] = splitEvmSignature(response)
         return {
           publicKey: Buffer.from(removeLeading0x(address), 'hex'),
           signature,
