@@ -1,11 +1,5 @@
 #[cfg(test)]
-use {
-    super::ed25519::Ed25519TestMessage,
-    rand::distributions::{
-        Alphanumeric,
-        DistString,
-    },
-};
+use super::ed25519::Ed25519TestMessage;
 use {
     crate::ErrorCode,
     anchor_lang::prelude::*,
@@ -42,7 +36,7 @@ impl DiscordMessage {
 impl Ed25519TestMessage for DiscordMessage {
     fn for_claimant(claimant: &Pubkey) -> Self {
         Self {
-            username: Alphanumeric.sample_string(&mut rand::thread_rng(), 16),
+            username: claimant.to_string(),
             claimant: *claimant,
         }
     }
