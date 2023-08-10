@@ -31,8 +31,6 @@ pub const AUTHORIZATION_PAYLOAD: [&str; 3] = [
  */
 pub fn check_payload(payload: &[u8], claimant: &Pubkey) -> Result<()> {
     if payload != get_expected_payload(claimant).as_bytes() {
-        msg!("payload: {:?}", payload);
-        msg!("expected: {:?}", get_expected_payload(claimant).as_bytes());
         return err!(ErrorCode::SignatureVerificationWrongPayload);
     }
     Ok(())

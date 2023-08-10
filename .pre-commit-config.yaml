@@ -16,7 +16,7 @@ repos:
       - id: cargo-fmt-token-dispenser
         name: Cargo format for token dispenser
         language: "rust"
-        entry: cargo +nightly-2023-03-01 fmt --manifest-path ./token-dispenser/Cargo.toml --all -- --config-path ./token-dispenser/rustfmt.toml
+        entry: cargo +nightly-2023-07-23 fmt --manifest-path ./token-dispenser/Cargo.toml --all -- --config-path ./token-dispenser/rustfmt.toml
         pass_filenames: false
         files: token-dispenser
       - id: cargo-clippy-token-dispenser
