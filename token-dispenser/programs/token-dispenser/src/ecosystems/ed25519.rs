@@ -12,7 +12,7 @@ use {
 };
 
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, PartialEq, Debug)]
 pub struct Ed25519Signature([u8; Ed25519Signature::LEN]);
 impl Ed25519Signature {
     pub const LEN: usize = 64;
@@ -25,7 +25,7 @@ impl From<[u8; Self::LEN]> for Ed25519Signature {
     }
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, PartialEq)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, PartialEq, Debug)]
 pub struct Ed25519Pubkey([u8; Ed25519Pubkey::LEN]);
 impl Ed25519Pubkey {
     pub const LEN: usize = 32;
@@ -44,6 +44,7 @@ impl From<[u8; Self::LEN]> for Ed25519Pubkey {
     }
 }
 
+#[derive(PartialEq, Debug)]
 /** The layout of a Ed25519 signature verification instruction on Solana */
 pub struct Ed25519InstructionData {
     pub header:    Ed25519InstructionHeader,
@@ -299,4 +300,19 @@ pub fn test_signature_verification() {
         .unwrap_err(),
         BorshIoError("unexpected end of file".to_string()).into()
     );
+}
+
+#[test]
+pub fn test_serde() {
+    let expected_ed25519_ix = Ed25519InstructionData {
+        header:    Ed25519InstructionHeader::expected_header(5, 0),
+        signature: Ed25519Signature([1; Ed25519Signature::LEN]),
+        pubkey:    Ed25519Pubkey([2; Ed25519Pubkey::LEN]),
+        message:   b"hello".to_vec(),
+    };
+
+    let ed25519_ix =
+        Ed25519InstructionData::try_from_slice(&expected_ed25519_ix.try_to_vec().unwrap()).unwrap();
+
+    assert_eq!(ed25519_ix, expected_ed25519_ix);
 }
