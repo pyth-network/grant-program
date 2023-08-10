@@ -155,6 +155,7 @@ impl From<Ed25519TestIdentityCertificate<DiscordMessage>> for Identity {
 impl Ed25519TestIdentityCertificate<DiscordMessage> {
     pub fn as_proof_of_identity(&self, verification_instruction_index: u8) -> IdentityCertificate {
         IdentityCertificate::Discord {
+            username: self.message.get_username(),
             verification_instruction_index,
         }
     }

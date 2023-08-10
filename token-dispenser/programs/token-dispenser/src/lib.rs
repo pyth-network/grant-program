@@ -301,6 +301,7 @@ impl Identity {
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub enum IdentityCertificate {
     Discord {
+        username:                       String,
         verification_instruction_index: u8,
     },
     Evm {
@@ -444,18 +445,20 @@ impl IdentityCertificate {
     ) -> Result<Identity> {
         match self {
             IdentityCertificate::Discord {
+                username,
                 verification_instruction_index,
             } => {
                 let signature_verification_instruction = load_instruction_at_checked(
                     *verification_instruction_index as usize,
                     sysvar_instruction,
                 )?;
-                let username = DiscordMessage::parse_and_check_claimant(
+                let username = DiscordMessage::parse_and_check_claimant_and_username(
                     &Ed25519InstructionData::extract_message_and_check_signature(
                         &signature_verification_instruction,
                         &Ed25519Pubkey::from(*dispenser_guard),
                         verification_instruction_index,
                     )?,
+                    username,
                     claimant,
                 )?
                 .get_username();

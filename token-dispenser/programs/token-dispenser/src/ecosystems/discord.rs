@@ -17,8 +17,16 @@ pub struct DiscordMessage {
 }
 
 impl DiscordMessage {
-    pub fn parse_and_check_claimant(data: &[u8], claimant: &Pubkey) -> Result<Self> {
+    pub fn parse_and_check_claimant_and_username(
+        data: &[u8],
+        username: &str,
+        claimant: &Pubkey,
+    ) -> Result<Self> {
         let result = DiscordMessage::try_from_slice(data)?;
+
+        if result.username != *username {
+            return Err(ErrorCode::SignatureVerificationWrongPayload.into());
+        }
 
         if result.claimant != *claimant {
             return Err(ErrorCode::SignatureVerificationWrongPayload.into());
