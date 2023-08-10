@@ -312,14 +312,12 @@ impl DispenserSimulator {
     pub async fn claim(
         &mut self,
         claimant: &Keypair,
-        dispenser_guard: &Keypair,
         off_chain_claim_certificate: &TestClaimCertificate,
         merkle_tree: &MerkleTree<SolanaHasher>,
     ) -> Result<(), BanksClientError> {
         let (claim_certificate, option_instruction) =
             off_chain_claim_certificate.as_claim_certificate(merkle_tree, 0);
-        let mut accounts = accounts::Claim::populate(claimant.pubkey(), dispenser_guard.pubkey())
-            .to_account_metas(None);
+        let mut accounts = accounts::Claim::populate(claimant.pubkey()).to_account_metas(None);
 
         accounts.push(AccountMeta::new(
             get_receipt_pda(
@@ -350,8 +348,7 @@ impl DispenserSimulator {
         ));
 
 
-        self.process_ix(&instructions, &vec![dispenser_guard, claimant])
-            .await
+        self.process_ix(&instructions, &vec![claimant]).await
     }
 
     pub async fn checkout(

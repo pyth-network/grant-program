@@ -213,9 +213,7 @@ pub struct Initialize<'info> {
 pub struct Claim<'info> {
     #[account(mut)]
     pub claimant:           Signer<'info>,
-    pub dispenser_guard:    Signer<'info>, /* Check that the dispenser guard has signed and matches
-                                            * the config - Done */
-    #[account(seeds = [CONFIG_SEED], bump = config.bump, has_one = dispenser_guard)]
+    #[account(seeds = [CONFIG_SEED], bump = config.bump)]
     pub config:             Account<'info, Config>,
     #[account(init_if_needed, space = Cart::LEN, payer = claimant, seeds = [CART_SEED, claimant.key.as_ref()], bump)]
     pub cart:               Account<'info, Cart>,
@@ -686,10 +684,9 @@ impl crate::accounts::Initialize {
 }
 
 impl crate::accounts::Claim {
-    pub fn populate(claimant: Pubkey, dispenser_guard: Pubkey) -> Self {
+    pub fn populate(claimant: Pubkey) -> Self {
         crate::accounts::Claim {
             claimant,
-            dispenser_guard,
             config: get_config_pda().0,
             cart: get_cart_pda(&claimant).0,
             system_program: system_program::System::id(),

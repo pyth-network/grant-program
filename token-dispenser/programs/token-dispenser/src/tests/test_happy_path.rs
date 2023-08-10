@@ -289,7 +289,6 @@ pub async fn test_happy_path() {
         simulator
             .claim(
                 &copy_keypair(&simulator.genesis_keypair),
-                &dispenser_guard,
                 offchain_claim_certificate,
                 &merkle_tree,
             )
@@ -315,7 +314,6 @@ pub async fn test_happy_path() {
             simulator
                 .claim(
                     &copy_keypair(&simulator.genesis_keypair),
-                    &dispenser_guard,
                     offchain_claim_certificate,
                     &merkle_tree
                 )
