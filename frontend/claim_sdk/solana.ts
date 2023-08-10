@@ -84,6 +84,7 @@ export class TokenDispenserProvider {
   }
 
   public async getConfig(): Promise<IdlAccounts<TokenDispenser>['Config']> {
+    // config is immutable once its been initialized so this is safe.
     if (this.config === undefined) {
       this.config = await this.fetchConfigData()
     }
