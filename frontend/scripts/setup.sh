@@ -1,5 +1,5 @@
 #!/bin/bash
-set -o errexit -o nounset -o pipefail
+set -euxo pipefail
 command -v shellcheck >/dev/null && shellcheck "$0"
 
 # initialize variables
@@ -91,17 +91,25 @@ function stop_postgres_docker() {
 }
 
 function setup_postgres_docker() {
-  if [ "$verbose" -eq 1 ]; then
-    echo "starting up postgres docker"
-  fi
   if [ "$postgres" -eq 1 ]; then
+    if [ "$verbose" -eq 1 ]; then
+      echo "starting up postgres docker"
+    fi
     start_postgres_docker;
+    sleep 5
   fi
-  sleep 5
   if [ "$verbose" -eq 1 ]; then
     echo "running postgres docker migrations"
   fi
   npm run migrate;
+
+
+#  if [ "$postgres" -eq 1 ]; then
+#    npm run migrate;
+#  else
+#    PGUSER='myuser' PGPASSWORD='mypass' PGDATABASE='mydb' npm run migrate;
+#  fi
+
 }
 
 function run_integration_tests() {

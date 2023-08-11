@@ -7,6 +7,13 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    container:
+      image: jetprotocol/builder:rust-1.68.0-node-18.15.0-solana-1.14.17-anchor-0.27.0-1
+      env:
+        PGUSER: ${{ env.PGUSER }}
+        PGPASSWORD: ${{ env.PGPASSWORD }}
+        PGDATABASE: ${{ env.PGDATABASE }}
+        PGHOST: postgres
 
     env:
       PGUSER: myuser
@@ -34,6 +41,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: setup os dependencies
+        run: apt-get update && apt-get install -y jq
       - uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -45,7 +54,8 @@ jobs:
         run: npm run build
       - name: Test
         run: npm run test:ci
-#      - name: Migrate DB
-#        run: npm run migrate
-#      - name: Test
-#        run: npm run test:api
+#        env:
+#          PGUSER: myuser
+#          PGPASSWORD: mypass
+#          PGDATABASE: mydb
+#          PGHOST: postgres
