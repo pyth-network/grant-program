@@ -1,3 +1,4 @@
+import { Hash } from '@keplr-wallet/crypto'
 import { removeLeading0x } from 'claim_sdk'
 
 export function splitEvmSignature(s: string): [Uint8Array, number] {
@@ -13,4 +14,8 @@ export function splitEvmSignature(s: string): [Uint8Array, number] {
 export function correctEvmRecoveryId(p: number): number {
   if (27 <= p && p < 30) return p - 27
   return p
+}
+
+export function uncompressedToEvmPubkey(pubkey: Uint8Array): Uint8Array {
+  return Hash.keccak256(pubkey.slice(1)).slice(12)
 }
