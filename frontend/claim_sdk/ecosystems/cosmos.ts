@@ -8,9 +8,9 @@ export function getUncompressedPubkey(pubkey: Uint8Array): Uint8Array {
 
 export function cosmosGetFullMessage(
   address: string,
-  message: string
+  payload: string
 ): Uint8Array {
-  return serializeSignDoc(makeADR36AminoSignDoc(address, message))
+  return serializeSignDoc(makeADR36AminoSignDoc(address, payload))
 }
 
 export function extractRecoveryId(

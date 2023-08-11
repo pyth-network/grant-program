@@ -19,3 +19,12 @@ export function correctEvmRecoveryId(p: number): number {
 export function uncompressedToEvmPubkey(pubkey: Uint8Array): Uint8Array {
   return Hash.keccak256(pubkey.slice(1)).slice(12)
 }
+
+export function evmGetFullMessage(payload: string): Uint8Array {
+  const bufferArr = [
+    Buffer.from('\x19Ethereum Signed Message:\n', 'utf-8'),
+    Buffer.from(payload.length.toString(), 'utf-8'),
+    Buffer.from(payload, 'utf-8'),
+  ]
+  return Buffer.concat(bufferArr)
+}
