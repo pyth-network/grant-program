@@ -337,10 +337,16 @@ pub async fn test_happy_path() {
     // Check state
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
 
-    let _claimant_fund = get_associated_token_address(
+    let claimant_fund = get_associated_token_address(
         &simulator.genesis_keypair.pubkey(),
         &simulator.mint_keypair.pubkey(),
     );
+
+
+    simulator
+        .verify_token_account_data(claimant_fund, claim_sum, COption::None, 0)
+        .await
+        .unwrap();
 }
 
 pub async fn assert_claim_receipts_exist(

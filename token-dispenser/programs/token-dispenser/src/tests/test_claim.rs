@@ -6,7 +6,6 @@ use {
             copy_keypair,
             IntoTransactionError,
         },
-        ErrorCode,
     },
     anchor_lang::solana_program::program_option::COption,
     anchor_spl::{
@@ -206,26 +205,6 @@ pub async fn test_claim_fails_with_insufficient_funds() {
             .unwrap();
     }
 
-
-    for (claimant, offchain_claim_certificates) in &mock_offchain_certificates_and_claimants {
-        for offchain_claim_certificate in offchain_claim_certificates {
-            let ix_index_error =
-                offchain_claim_certificate.as_instruction_error_index(&merkle_tree);
-            assert_eq!(
-                simulator
-                    .claim(
-                        &copy_keypair(claimant),
-                        offchain_claim_certificate,
-                        &merkle_tree,
-                        None
-                    )
-                    .await
-                    .unwrap_err()
-                    .unwrap(),
-                ErrorCode::InsufficientTreasuryFunds.into_transaction_error(ix_index_error)
-            )
-        }
-    }
 
     let claim_sums = mock_offchain_certificates_and_claimants
         .iter()

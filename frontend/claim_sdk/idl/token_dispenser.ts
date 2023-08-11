@@ -531,34 +531,30 @@ export type TokenDispenser = {
     },
     {
       code: 6006
-      name: 'InsufficientTreasuryFunds'
-    },
-    {
-      code: 6007
       name: 'SignatureVerificationWrongProgram'
     },
     {
-      code: 6008
+      code: 6007
       name: 'SignatureVerificationWrongAccounts'
     },
     {
-      code: 6009
+      code: 6008
       name: 'SignatureVerificationWrongHeader'
     },
     {
-      code: 6010
+      code: 6009
       name: 'SignatureVerificationWrongPayload'
     },
     {
-      code: 6011
+      code: 6010
       name: 'SignatureVerificationWrongPayloadMetadata'
     },
     {
-      code: 6012
+      code: 6011
       name: 'SignatureVerificationWrongSigner'
     },
     {
-      code: 6013
+      code: 6012
       name: 'SignatureVerificationWrongClaimant'
     }
   ]
@@ -1096,34 +1092,30 @@ export const IDL: TokenDispenser = {
     },
     {
       code: 6006,
-      name: 'InsufficientTreasuryFunds',
-    },
-    {
-      code: 6007,
       name: 'SignatureVerificationWrongProgram',
     },
     {
-      code: 6008,
+      code: 6007,
       name: 'SignatureVerificationWrongAccounts',
     },
     {
-      code: 6009,
+      code: 6008,
       name: 'SignatureVerificationWrongHeader',
     },
     {
-      code: 6010,
+      code: 6009,
       name: 'SignatureVerificationWrongPayload',
     },
     {
-      code: 6011,
+      code: 6010,
       name: 'SignatureVerificationWrongPayloadMetadata',
     },
     {
-      code: 6012,
+      code: 6011,
       name: 'SignatureVerificationWrongSigner',
     },
     {
-      code: 6013,
+      code: 6012,
       name: 'SignatureVerificationWrongClaimant',
     },
   ],

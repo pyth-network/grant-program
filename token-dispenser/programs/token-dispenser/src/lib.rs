@@ -139,11 +139,6 @@ pub mod token_dispenser {
                 ctx.remaining_accounts,
             )?;
 
-            require_gte!(
-                treasury.amount,
-                claim_info.amount,
-                ErrorCode::InsufficientTreasuryFunds
-            );
 
             token::transfer(
                 CpiContext::new_with_signer(
@@ -317,7 +312,6 @@ pub enum ErrorCode {
     InvalidInclusionProof,
     WrongPda,
     NotImplemented,
-    InsufficientTreasuryFunds,
     // Signature verification errors
     SignatureVerificationWrongProgram,
     SignatureVerificationWrongAccounts,
