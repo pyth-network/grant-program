@@ -54,8 +54,3 @@ jobs:
         run: npm run build
       - name: Test
         run: npm run test:ci
-#        env:
-#          PGUSER: myuser
-#          PGPASSWORD: mypass
-#          PGDATABASE: mydb
-#          PGHOST: postgres

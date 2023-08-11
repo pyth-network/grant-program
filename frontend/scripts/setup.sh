@@ -102,14 +102,6 @@ function setup_postgres_docker() {
     echo "running postgres docker migrations"
   fi
   npm run migrate;
-
-
-#  if [ "$postgres" -eq 1 ]; then
-#    npm run migrate;
-#  else
-#    PGUSER='myuser' PGPASSWORD='mypass' PGDATABASE='mydb' npm run migrate;
-#  fi
-
 }
 
 function run_integration_tests() {
@@ -127,18 +119,8 @@ function start_test_validator() {
     &
   VALIDATOR_PID=$!
   sleep 5
-#  anchor localnet --skip-build &
 }
 
-#function stop_test_validator() {
-#  solana_pid=$(pgrep -f '[s]olana-test-validator' || true)
-#  if [ -n "$solana_pid" ]; then
-#    echo "killing solana-test-validator with pid: $solana_pid"
-#    kill "$solana_pid"
-#  else
-#    echo "No solana-test-validator process found to stop"
-#  fi
-#}
 
 function stop_test_validator() {
   set +e
@@ -182,9 +164,6 @@ function main() {
         echo "test mode"
         echo "running frontend tests"
       fi
-      printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
-      # TODO: this doesn't run the test-validator in the background so it never
-      # starts the frontend tests
       start_test_validator
       sleep 5
       run_integration_tests;
