@@ -17,13 +17,13 @@ const wallets = [
   { id: 2, name: 'Solflare', icon: <Solflare /> },
 ]
 
-const Step4 = () => {
+const Step4 = ({ step, setStep }: { step: number; setStep: Function }) => {
   const [wallet, setWallet] = useState(null)
   const [modal, openModal] = useState(false)
-  const [step, setStep] = useState(1)
+  const [screen, setScreem] = useState(1)
   return (
     <>
-      {step == 1 ? (
+      {screen == 1 ? (
         <div className=" border border-light-35 bg-dark">
           <h4 className="border-b border-light-35 bg-[#242339] py-8 px-10  font-header text-[28px] font-light leading-[1.2]">
             Verify Eligibility
@@ -41,7 +41,10 @@ const Step4 = () => {
             </p>
 
             <div className="mt-12 flex justify-end gap-4">
-              <button className="btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light">
+              <button
+                className="btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light"
+                onClick={() => setStep(3)}
+              >
                 <span className="relative inline-flex items-center whitespace-nowrap">
                   <Arrow className="mr-2.5 origin-center rotate-180" />
                   back
@@ -49,7 +52,7 @@ const Step4 = () => {
               </button>
               <button
                 className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-                onClick={() => setStep(2)}
+                onClick={() => setScreem(2)}
               >
                 <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
                   proceed
@@ -60,7 +63,7 @@ const Step4 = () => {
           </div>
         </div>
       ) : (
-        <Eligibility openModal={openModal} setStep={setStep} />
+        <Eligibility setScreem={setScreem} openModal={openModal} />
       )}
       {modal && (
         <Modal openModal={openModal}>
@@ -68,7 +71,7 @@ const Step4 = () => {
             Select Your Wallet
           </h3>
           <div className="mx-auto max-w-[200px]">
-            <Listbox value={wallet} onChange={setWallet}>
+            <Listbox value={wallet} onChange={() => setStep(5)}>
               <Listbox.Button className="block w-full border border-light-35 py-3 px-8">
                 <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
                   <span>explore options</span>
