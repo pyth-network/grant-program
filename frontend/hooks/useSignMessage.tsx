@@ -9,10 +9,14 @@ import {
   getUncompressedPubkey,
 } from 'claim_sdk/ecosystems/cosmos'
 import {
+  evmGetFullMessage,
   splitEvmSignature,
   uncompressedToEvmPubkey,
 } from 'claim_sdk/ecosystems/evm'
-import { splitSignatureAndPubkey } from 'claim_sdk/ecosystems/sui'
+import {
+  SuiGetFullMessage,
+  splitSignatureAndPubkey,
+} from 'claim_sdk/ecosystems/sui'
 import { Hash } from '@keplr-wallet/crypto'
 import { useCallback } from 'react'
 import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
@@ -172,7 +176,7 @@ export function useEVMSignMessage(): SignMessageFn {
           publicKey: Buffer.from(removeLeading0x(address), 'hex'),
           signature,
           recoveryId,
-          fullMessage: Buffer.alloc(0),
+          fullMessage: evmGetFullMessage(message),
         }
       } catch (e) {
         console.error(e)
@@ -232,7 +236,7 @@ export function useSuiSignMessage(): SignMessageFn {
           publicKey,
           signature,
           recoveryId: undefined,
-          fullMessage: Buffer.alloc(0),
+          fullMessage: SuiGetFullMessage(message),
         }
       } catch (e) {
         console.error(e)

@@ -23,6 +23,7 @@
     "@heroicons/react": "^1.0.6",
     "@keplr-wallet/cosmos": "^0.12.20",
     "@keplr-wallet/crypto": "^0.12.20",
+    "@mysten/sui.js": "^0.40.0",
     "@mysten/wallet-kit": "^0.5.1",
     "@noble/secp256k1": "^2.0.0",
     "@solana/spl-token": "^0.1.8",
