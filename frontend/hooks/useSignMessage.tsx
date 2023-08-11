@@ -99,7 +99,7 @@ export function useCosmosSignMessage(
             Buffer.from(pub_key.value, 'base64')
           )
           return {
-            publicKey,
+            publicKey: uncompressedToEvmPubkey(publicKey),
             signature,
             recoveryId: extractRecoveryId(
               signature,
@@ -134,7 +134,7 @@ export function useCosmosSignMessage(
             Buffer.from(pub_key.value, 'base64')
           )
           return {
-            publicKey: uncompressedToEvmPubkey(publicKey),
+            publicKey,
             signature,
             recoveryId: extractRecoveryId(
               signature,
