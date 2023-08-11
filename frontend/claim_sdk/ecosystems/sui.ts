@@ -7,7 +7,7 @@ export function splitSignatureAndPubkey(
   return [buffer.slice(1, 65), buffer.slice(65)]
 }
 
-export function SuiGetFullMessage(payload: string): Uint8Array {
+export function suiGetFullMessage(payload: string): Uint8Array {
   return messageWithIntent(
     IntentScope.PersonalMessage,
     bcs.ser(['vector', 'u8'], Buffer.from(payload, 'utf-8')).toBytes()

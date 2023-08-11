@@ -27,7 +27,7 @@ import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
 // 2. If the user denies the sign request.
 // 3. If there is some error. This is an edge case which happens rarely.
 // We don't know of any special case we should handle right now.
-type SignMessageFn = (message: string) => Promise<SignedMessage | undefined>
+type SignMessageFn = (payload: string) => Promise<SignedMessage | undefined>
 
 type SignedMessage = {
   publicKey: Uint8Array
@@ -42,13 +42,13 @@ export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
   const { signMessage, connected, account } = useAptosWallet()
 
   const signMessageCb = useCallback(
-    async (message: string) => {
+    async (payload: string) => {
       try {
         if (connected === false || !account) return
 
         const { signature, fullMessage } =
           (await signMessage({
-            message,
+            message: payload,
             nonce,
           })) ?? {}
 
@@ -84,24 +84,24 @@ export function useCosmosSignMessage(
     walletName
   )
 
-  if (chainName == 'injective') {
-    const signMessageCb = useCallback(
-      async (message: string) => {
-        // Wallets have some weird edge cases. There may be a case where the
-        // wallet is connected but the address is undefined.
-        // Using both in this condition to handle those.
-        try {
-          if (address === undefined || isWalletConnected === false) return
+  const signMessageCb = useCallback(
+    async (payload: string) => {
+      // Wallets have some weird edge cases. There may be a case where the
+      // wallet is connected but the address is undefined.
+      // Using both in this condition to handle those.
+      try {
+        if (address === undefined || isWalletConnected === false) return
 
-          const { pub_key, signature: signatureBase64 } = await signArbitrary(
-            address,
-            message
-          )
-          const fullMessage = cosmosGetFullMessage(address, message)
-          const signature = Buffer.from(signatureBase64, 'base64')
-          const publicKey = getUncompressedPubkey(
-            Buffer.from(pub_key.value, 'base64')
-          )
+        const { pub_key, signature: signatureBase64 } = await signArbitrary(
+          address,
+          payload
+        )
+        const fullMessage = cosmosGetFullMessage(address, payload)
+        const signature = Buffer.from(signatureBase64, 'base64')
+        const publicKey = getUncompressedPubkey(
+          Buffer.from(pub_key.value, 'base64')
+        )
+        if (chainName == 'injective') {
           return {
             publicKey: uncompressedToEvmPubkey(publicKey),
             signature,
@@ -112,31 +112,7 @@ export function useCosmosSignMessage(
             ),
             fullMessage,
           }
-        } catch (e) {
-          console.error(e)
-        }
-      },
-      [signArbitrary, address, isWalletConnected]
-    )
-    return signMessageCb
-  } else {
-    const signMessageCb = useCallback(
-      async (message: string) => {
-        // Wallets have some weird edge cases. There may be a case where the
-        // wallet is connected but the address is undefined.
-        // Using both in this condition to handle those.
-        try {
-          if (address === undefined || isWalletConnected === false) return
-
-          const { pub_key, signature: signatureBase64 } = await signArbitrary(
-            address,
-            message
-          )
-          const fullMessage = cosmosGetFullMessage(address, message)
-          const signature = Buffer.from(signatureBase64, 'base64')
-          const publicKey = getUncompressedPubkey(
-            Buffer.from(pub_key.value, 'base64')
-          )
+        } else {
           return {
             publicKey,
             signature,
@@ -147,14 +123,14 @@ export function useCosmosSignMessage(
             ),
             fullMessage,
           }
-        } catch (e) {
-          console.error(e)
         }
-      },
-      [signArbitrary, address, isWalletConnected]
-    )
-    return signMessageCb
-  }
+      } catch (e) {
+        console.error(e)
+      }
+    },
+    [signArbitrary, address, isWalletConnected]
+  )
+  return signMessageCb
 }
 
 // This hook returns a function to sign message for the EVM wallet.
@@ -162,7 +138,7 @@ export function useEVMSignMessage(): SignMessageFn {
   const { signMessageAsync } = useWagmiSignMessage()
   const { isConnected: isWalletConnected, address } = useAccount()
   const signMessageCb = useCallback(
-    async (message: string) => {
+    async (payload: string) => {
       try {
         if (
           signMessageAsync === undefined ||
@@ -170,13 +146,13 @@ export function useEVMSignMessage(): SignMessageFn {
           !address
         )
           return
-        const response = await signMessageAsync({ message })
+        const response = await signMessageAsync({ message: payload })
         const [signature, recoveryId] = splitEvmSignature(response)
         return {
           publicKey: Buffer.from(removeLeading0x(address), 'hex'),
           signature,
           recoveryId,
-          fullMessage: evmGetFullMessage(message),
+          fullMessage: evmGetFullMessage(payload),
         }
       } catch (e) {
         console.error(e)
@@ -192,16 +168,16 @@ export function useEVMSignMessage(): SignMessageFn {
 export function useSolanaSignMessage(): SignMessageFn {
   const { connected, signMessage, publicKey } = useSolanaWallet()
   const signMessageCb = useCallback(
-    async (message: string) => {
+    async (payload: string) => {
       try {
         if (signMessage === undefined || connected === false || !publicKey)
           return
-        const signature = await signMessage(Buffer.from(message))
+        const signature = await signMessage(Buffer.from(payload))
         return {
           publicKey: publicKey.toBytes(),
           signature: signature,
           recoveryId: undefined,
-          fullMessage: Buffer.from(message, 'utf-8'),
+          fullMessage: Buffer.from(payload, 'utf-8'),
         }
       } catch (e) {
         console.error(e)
@@ -218,7 +194,7 @@ export function useSuiSignMessage(): SignMessageFn {
   const { signMessage, isConnected, currentAccount } = useWalletKit()
 
   const signMessageCb = useCallback(
-    async (message: string) => {
+    async (payload: string) => {
       try {
         // Here is one edge case. Even if the wallet is connected the currentAccount
         // can be null and hence we can't sign a message. Calling signMessage when
@@ -226,7 +202,7 @@ export function useSuiSignMessage(): SignMessageFn {
         if (isConnected === false || currentAccount === null) return
         const response = (
           await signMessage({
-            message: Buffer.from(message),
+            message: Buffer.from(payload),
           })
         ).signature
         const [signature, publicKey] = splitSignatureAndPubkey(
@@ -236,7 +212,7 @@ export function useSuiSignMessage(): SignMessageFn {
           publicKey,
           signature,
           recoveryId: undefined,
-          fullMessage: suiGetFullMessage(message),
+          fullMessage: suiGetFullMessage(payload),
         }
       } catch (e) {
         console.error(e)

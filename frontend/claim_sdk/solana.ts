@@ -171,9 +171,9 @@ export class TokenDispenserProvider {
 
   private async createSecp256K1SignatureVerificationIx(ecosystemWallet: {
     address: string
-    signMessage(message: string): Promise<string>
+    signMessage(payload: string): Promise<string>
   }): Promise<TransactionInstruction> {
-    const authorizationMessage = this.generateAuthorizationMessage()
+    const authorizationMessage = this.generateAuthorizationPayload()
     const evmSignedMessage = await ecosystemWallet.signMessage(
       authorizationMessage
     )
@@ -192,15 +192,13 @@ export class TokenDispenserProvider {
     })
   }
 
-  private generateAuthorizationMessage() {
-    const message = AUTHORIZATION_PAYLOAD[0].concat(
+  private generateAuthorizationPayload() {
+    return AUTHORIZATION_PAYLOAD[0].concat(
       this.programId.toString(),
       AUTHORIZATION_PAYLOAD[1],
       this.claimant.toString(),
       AUTHORIZATION_PAYLOAD[2]
     )
-
-    return message
   }
 
   public async createAssociatedTokenAccountTxnIfNeeded(): Promise<Transaction | null> {
