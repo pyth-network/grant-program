@@ -84,24 +84,24 @@ export function useCosmosSignMessage(
     walletName
   )
 
-  if (chainName == 'injective') {
-    const signMessageCb = useCallback(
-      async (payload: string) => {
-        // Wallets have some weird edge cases. There may be a case where the
-        // wallet is connected but the address is undefined.
-        // Using both in this condition to handle those.
-        try {
-          if (address === undefined || isWalletConnected === false) return
+  const signMessageCb = useCallback(
+    async (payload: string) => {
+      // Wallets have some weird edge cases. There may be a case where the
+      // wallet is connected but the address is undefined.
+      // Using both in this condition to handle those.
+      try {
+        if (address === undefined || isWalletConnected === false) return
 
-          const { pub_key, signature: signatureBase64 } = await signArbitrary(
-            address,
-            payload
-          )
-          const fullMessage = cosmosGetFullMessage(address, payload)
-          const signature = Buffer.from(signatureBase64, 'base64')
-          const publicKey = getUncompressedPubkey(
-            Buffer.from(pub_key.value, 'base64')
-          )
+        const { pub_key, signature: signatureBase64 } = await signArbitrary(
+          address,
+          payload
+        )
+        const fullMessage = cosmosGetFullMessage(address, payload)
+        const signature = Buffer.from(signatureBase64, 'base64')
+        const publicKey = getUncompressedPubkey(
+          Buffer.from(pub_key.value, 'base64')
+        )
+        if (chainName == 'injective') {
           return {
             publicKey: uncompressedToEvmPubkey(publicKey),
             signature,
@@ -112,31 +112,7 @@ export function useCosmosSignMessage(
             ),
             fullMessage,
           }
-        } catch (e) {
-          console.error(e)
-        }
-      },
-      [signArbitrary, address, isWalletConnected]
-    )
-    return signMessageCb
-  } else {
-    const signMessageCb = useCallback(
-      async (payload: string) => {
-        // Wallets have some weird edge cases. There may be a case where the
-        // wallet is connected but the address is undefined.
-        // Using both in this condition to handle those.
-        try {
-          if (address === undefined || isWalletConnected === false) return
-
-          const { pub_key, signature: signatureBase64 } = await signArbitrary(
-            address,
-            payload
-          )
-          const fullMessage = cosmosGetFullMessage(address, payload)
-          const signature = Buffer.from(signatureBase64, 'base64')
-          const publicKey = getUncompressedPubkey(
-            Buffer.from(pub_key.value, 'base64')
-          )
+        } else {
           return {
             publicKey,
             signature,
@@ -147,14 +123,14 @@ export function useCosmosSignMessage(
             ),
             fullMessage,
           }
-        } catch (e) {
-          console.error(e)
         }
-      },
-      [signArbitrary, address, isWalletConnected]
-    )
-    return signMessageCb
-  }
+      } catch (e) {
+        console.error(e)
+      }
+    },
+    [signArbitrary, address, isWalletConnected]
+  )
+  return signMessageCb
 }
 
 // This hook returns a function to sign message for the EVM wallet.
