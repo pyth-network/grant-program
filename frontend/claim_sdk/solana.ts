@@ -12,6 +12,7 @@ import {
 } from '@solana/web3.js'
 import { ClaimInfo, Ecosystem } from './claim'
 import { ethers } from 'ethers'
+import { evmGetFullMessage } from './ecosystems/evm'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -195,12 +196,7 @@ export class TokenDispenserProvider {
     const evmSignedMessage = await ecosystemWallet.signMessage(
       authorizationMessage
     )
-    const bufferArr = [
-      Buffer.from('\x19Ethereum Signed Message:\n', 'utf-8'),
-      Buffer.from(authorizationMessage.length.toString(), 'utf-8'),
-      Buffer.from(authorizationMessage, 'utf-8'),
-    ]
-    const actualMessage = Buffer.concat(bufferArr)
+    const actualMessage = evmGetFullMessage(authorizationMessage)
 
     const full_signature_bytes = ethers.getBytes(evmSignedMessage)
     const signature = full_signature_bytes.slice(0, 64)
