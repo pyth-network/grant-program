@@ -2,6 +2,10 @@ import { useWallet as useAptosWallet } from '@aptos-labs/wallet-adapter-react'
 import { useChainWallet } from '@cosmos-kit/react-lite'
 import { useWalletKit } from '@mysten/wallet-kit'
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
+import { removeLeading0x } from 'claim_sdk'
+import { getUncompressedPubkey } from 'claim_sdk/ecosystems/cosmos'
+import { splitEvmSignature } from 'claim_sdk/ecosystems/evm'
+import { splitSignatureAndPubkey } from 'claim_sdk/ecosystems/sui'
 import { useCallback } from 'react'
 import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
 
@@ -11,25 +15,41 @@ import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
 // 2. If the user denies the sign request.
 // 3. If there is some error. This is an edge case which happens rarely.
 // We don't know of any special case we should handle right now.
-type SignMessageFn = (message: string) => Promise<string | undefined>
+type SignMessageFn = (message: string) => Promise<SignedMessage | undefined>
+
+type SignedMessage = {
+  publicKey: Uint8Array
+  signature: Uint8Array
+  // recoveryId is undefined for ed25519
+  recoveryId: number | undefined
+}
 
 // This hook returns a function to sign message for the Aptos wallet.
 export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
-  const { signMessage, connected } = useAptosWallet()
+  const { signMessage, connected, account } = useAptosWallet()
 
   const signMessageCb = useCallback(
     async (message: string) => {
       try {
-        if (connected === false) return
+        if (connected === false || !account) return
 
         const { signature } =
           (await signMessage({
             message,
-            // TODO: do something for the nonce
             nonce,
           })) ?? {}
 
-        return signature as string | undefined
+        // Discard multisigs
+        if (
+          typeof signature != 'string' ||
+          typeof account.publicKey != 'string'
+        )
+          return
+        return {
+          publicKey: Buffer.from(removeLeading0x(account.publicKey), 'hex'),
+          signature: Buffer.from(signature, 'hex'),
+          recoveryId: undefined,
+        }
       } catch (e) {
         console.error(e)
       }
@@ -55,7 +75,16 @@ export function useCosmosSignMessage(
       // Using both in this condition to handle those.
       try {
         if (address === undefined || isWalletConnected === false) return
-        return (await signArbitrary(address, message)).signature
+
+        const { pub_key, signature } = await signArbitrary(address, message)
+
+        return {
+          publicKey: getUncompressedPubkey(
+            Buffer.from(pub_key.value, 'base64')
+          ),
+          signature: Buffer.from(signature, 'base64'),
+          recoveryId: 0, // TO DO : compute this
+        }
       } catch (e) {
         console.error(e)
       }
@@ -69,13 +98,23 @@ export function useCosmosSignMessage(
 // This hook returns a function to sign message for the EVM wallet.
 export function useEVMSignMessage(): SignMessageFn {
   const { signMessageAsync } = useWagmiSignMessage()
-  const { isConnected: isWalletConnected } = useAccount()
+  const { isConnected: isWalletConnected, address } = useAccount()
   const signMessageCb = useCallback(
     async (message: string) => {
       try {
-        if (signMessageAsync === undefined || isWalletConnected === false)
+        if (
+          signMessageAsync === undefined ||
+          isWalletConnected === false ||
+          !address
+        )
           return
-        return await signMessageAsync({ message })
+        const response = await signMessageAsync({ message })
+        const [signature, recoveryId] = splitEvmSignature(response)
+        return {
+          publicKey: Buffer.from(removeLeading0x(address), 'hex'),
+          signature,
+          recoveryId,
+        }
       } catch (e) {
         console.error(e)
       }
@@ -88,13 +127,18 @@ export function useEVMSignMessage(): SignMessageFn {
 
 // This hook returns a function to sign message for the Solana wallet.
 export function useSolanaSignMessage(): SignMessageFn {
-  const { connected, signMessage } = useSolanaWallet()
+  const { connected, signMessage, publicKey } = useSolanaWallet()
   const signMessageCb = useCallback(
     async (message: string) => {
       try {
-        if (signMessage === undefined || connected === false) return
+        if (signMessage === undefined || connected === false || !publicKey)
+          return
         const signature = await signMessage(Buffer.from(message))
-        return Buffer.from(signature).toString('base64')
+        return {
+          publicKey: publicKey.toBytes(),
+          signature: signature,
+          recoveryId: undefined,
+        }
       } catch (e) {
         console.error(e)
       }
@@ -107,8 +151,7 @@ export function useSolanaSignMessage(): SignMessageFn {
 
 // This hook returns a function to sign message for the Sui wallet.
 export function useSuiSignMessage(): SignMessageFn {
-  const { signMessage, isConnected, currentWallet, status, currentAccount } =
-    useWalletKit()
+  const { signMessage, isConnected, currentAccount } = useWalletKit()
 
   const signMessageCb = useCallback(
     async (message: string) => {
@@ -117,10 +160,19 @@ export function useSuiSignMessage(): SignMessageFn {
         // can be null and hence we can't sign a message. Calling signMessage when
         // currentAccount is null throws an error.
         if (isConnected === false || currentAccount === null) return
-        const { signature } = await signMessage({
-          message: Buffer.from(message),
-        })
-        return signature
+        const response = (
+          await signMessage({
+            message: Buffer.from(message),
+          })
+        ).signature
+        const [signature, publicKey] = splitSignatureAndPubkey(
+          Buffer.from(response, 'base64')
+        )
+        return {
+          publicKey,
+          signature,
+          recoveryId: undefined,
+        }
       } catch (e) {
         console.error(e)
       }
