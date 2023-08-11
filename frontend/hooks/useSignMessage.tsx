@@ -8,7 +8,10 @@ import {
   extractRecoveryId,
   getUncompressedPubkey,
 } from 'claim_sdk/ecosystems/cosmos'
-import { splitEvmSignature } from 'claim_sdk/ecosystems/evm'
+import {
+  splitEvmSignature,
+  uncompressedToEvmPubkey,
+} from 'claim_sdk/ecosystems/evm'
 import { splitSignatureAndPubkey } from 'claim_sdk/ecosystems/sui'
 import { Hash } from '@keplr-wallet/crypto'
 import { useCallback } from 'react'
@@ -131,7 +134,7 @@ export function useCosmosSignMessage(
             Buffer.from(pub_key.value, 'base64')
           )
           return {
-            publicKey,
+            publicKey: uncompressedToEvmPubkey(publicKey),
             signature,
             recoveryId: extractRecoveryId(
               signature,
