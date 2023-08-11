@@ -6,7 +6,7 @@ export function getUncompressedPubkey(pubkey: Uint8Array): Uint8Array {
   return point.toRawBytes(false)
 }
 
-export function cosmosGetMessageWithMetadata(
+export function cosmosGetFullMessage(
   address: string,
   message: string
 ): Uint8Array {
