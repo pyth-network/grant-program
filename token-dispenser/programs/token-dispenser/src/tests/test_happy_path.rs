@@ -14,7 +14,6 @@ use {
             solana::SolanaMessage,
             sui::SuiMessage,
         },
-        get_cart_pda,
         get_config_pda,
         get_receipt_pda,
         tests::{
@@ -198,6 +197,15 @@ impl TestIdentityCertificate {
     }
 }
 
+impl TestClaimCertificate {
+    pub fn as_instruction_error_index(&self, merkle_tree: &MerkleTree<SolanaHasher>) -> u8 {
+        match self.as_claim_certificate(merkle_tree, 0).1 {
+            Some(_) => 1,
+            None => 0,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub enum TestIdentityCertificate {
     Evm(Secp256k1TestIdentityCertificate<EvmPrefixedMessage, Keccak256>),
@@ -228,6 +236,14 @@ pub async fn test_happy_path() {
 
     let (config_pubkey, config_bump) = get_config_pda();
     let treasury = simulator.pyth_treasury;
+
+    simulator
+        .create_associated_token_account(
+            &simulator.genesis_keypair.pubkey(),
+            &simulator.mint_keypair.pubkey(),
+        )
+        .await
+        .unwrap();
 
     simulator
         .initialize(
@@ -291,6 +307,7 @@ pub async fn test_happy_path() {
                 &copy_keypair(&simulator.genesis_keypair),
                 offchain_claim_certificate,
                 &merkle_tree,
+                None,
             )
             .await
             .unwrap();
@@ -301,21 +318,14 @@ pub async fn test_happy_path() {
 
     // Can't claim twice
     for offchain_claim_certificate in &mock_offchain_certificates {
-        let ix_index_error = if offchain_claim_certificate
-            .as_claim_certificate(&merkle_tree, 0)
-            .1
-            .is_some()
-        {
-            1
-        } else {
-            0
-        };
+        let ix_index_error = offchain_claim_certificate.as_instruction_error_index(&merkle_tree);
         assert_eq!(
             simulator
                 .claim(
                     &copy_keypair(&simulator.genesis_keypair),
                     offchain_claim_certificate,
-                    &merkle_tree
+                    &merkle_tree,
+                    None
                 )
                 .await
                 .unwrap_err()
@@ -326,44 +336,17 @@ pub async fn test_happy_path() {
 
     // Check state
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
-    let cart_pda = get_cart_pda(&simulator.genesis_keypair.pubkey()).0;
-    let cart_data = simulator
-        .get_account_data::<crate::Cart>(cart_pda)
-        .await
-        .unwrap();
-    assert_eq!(cart_data.amount, claim_sum);
 
-
-    // Checkout
-    simulator
-        .checkout(
-            &copy_keypair(&simulator.genesis_keypair),
-            simulator.mint_keypair.pubkey(),
-            None,
-            None,
-        )
-        .await
-        .unwrap();
+    let claimant_fund = get_associated_token_address(
+        &simulator.genesis_keypair.pubkey(),
+        &simulator.mint_keypair.pubkey(),
+    );
 
 
     simulator
-        .verify_token_account_data(
-            get_associated_token_address(
-                &simulator.genesis_keypair.pubkey(),
-                &simulator.mint_keypair.pubkey(),
-            ),
-            claim_sum,
-            COption::None,
-            0,
-        )
+        .verify_token_account_data(claimant_fund, claim_sum, COption::None, 0)
         .await
         .unwrap();
-
-    let cart_data = simulator
-        .get_account_data::<crate::Cart>(cart_pda)
-        .await
-        .unwrap();
-    assert_eq!(cart_data.amount, 0);
 }
 
 pub async fn assert_claim_receipts_exist(

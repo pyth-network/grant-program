@@ -5,13 +5,16 @@ import { Idl, IdlAccounts, IdlTypes, Program } from '@coral-xyz/anchor'
 import { Buffer } from 'buffer'
 import { MerkleTree } from './merkleTree'
 import {
+  PublicKey,
   Secp256k1Program,
   Transaction,
   TransactionInstruction,
   TransactionSignature,
 } from '@solana/web3.js'
+import * as splToken from '@solana/spl-token'
 import { ClaimInfo, Ecosystem } from './claim'
 import { ethers } from 'ethers'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -104,28 +107,6 @@ export class TokenDispenserProvider {
       'Config',
       configAccountInfo.data
     )
-  }
-
-  public getCartPda(): [anchor.web3.PublicKey, bump] {
-    return anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from('cart'), this.claimant.toBuffer()],
-      this.programId
-    )
-  }
-
-  public async getCart(): Promise<
-    IdlAccounts<TokenDispenser>['Cart'] | undefined
-  > {
-    const cartAccountInfo = await this.provider.connection.getAccountInfo(
-      this.getCartPda()[0]
-    )
-
-    return cartAccountInfo
-      ? this.tokenDispenserProgram.coder.accounts.decode(
-          'Cart',
-          cartAccountInfo!.data
-        )
-      : undefined
   }
 
   public getReceiptPda(claimInfo: ClaimInfo): [anchor.web3.PublicKey, bump] {
@@ -226,10 +207,34 @@ export class TokenDispenserProvider {
     return message
   }
 
+  public async createAssociatedTokenAccountTxnIfNeeded(): Promise<Transaction | null> {
+    const config = await this.getConfig()
+    const associatedTokenAccount = await this.getClaimantFundAddress()
+    if (
+      (await this.provider.connection.getAccountInfo(
+        associatedTokenAccount
+      )) === null
+    ) {
+      const createAssociatedTokenAccountIx =
+        splToken.Token.createAssociatedTokenAccountInstruction(
+          splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+          splToken.TOKEN_PROGRAM_ID,
+          config.mint,
+          associatedTokenAccount,
+          this.claimant,
+          this.claimant
+        )
+      const txn = new Transaction()
+      txn.add(createAssociatedTokenAccountIx)
+      return txn
+    }
+    return null
+  }
+
   /**
-   * Note: this function currently only generates the transaction It doesn't submit it
-   * because we need to add the `dispenserGuard` signature to the transaction but
-   * the `TokenDispenserProvider` won't have access to the `dispenserGuard` private key
+   * Note: this function currently only generates the transaction. It doesn't submit it
+   * because we need to possibly submit a transaction to create a new associated token account
+   * if the claimant doesn't have one yet.
    */
   public async generateClaimTxn(
     claimInfo: ClaimInfo,
@@ -276,17 +281,15 @@ export class TokenDispenserProvider {
     }
     const receiptPda = this.getReceiptPda(claimInfo)[0]
 
-    // 4. derive cart PDA
-    const cartPda = this.getCartPda()[0]
-
     // 4. submit claim
     return this.tokenDispenserProgram.methods
       .claim([claimCert])
       .accounts({
-        config: this.getConfigPda()[0],
         claimant: this.claimant,
-        dispenserGuard: (await this.getConfig()).dispenserGuard,
-        cart: cartPda,
+        claimantFund: await this.getClaimantFundAddress(),
+        config: this.getConfigPda()[0],
+        treasury: (await this.getConfig()).treasury,
+        tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
         sysvarInstruction: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
       })
@@ -300,15 +303,18 @@ export class TokenDispenserProvider {
       .preInstructions(preIxs)
       .transaction()
   }
+
+  public async getClaimantFundAddress(): Promise<PublicKey> {
+    const config = await this.getConfig()
+    const associatedTokenAccount =
+      await splToken.Token.getAssociatedTokenAddress(
+        splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+        splToken.TOKEN_PROGRAM_ID,
+        config.mint,
+        this.claimant
+      )
+    return associatedTokenAccount
+  }
 }
 
 export type QueryParams = [Ecosystem, string]
-export function toDiscriminant(ecosystem: Ecosystem): number {
-  const identityType = tokenDispenser.types
-    .find((t) => t.name === 'Identity')
-    ?.type.variants?.findIndex((v) => v.name.toLowerCase() === ecosystem)
-  if (identityType === undefined || identityType === -1) {
-    throw new Error(`Unknown ecosystem: ${ecosystem}`)
-  }
-  return identityType
-}

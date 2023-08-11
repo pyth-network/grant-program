@@ -17,16 +17,11 @@ use {
         },
         system_program,
     },
-    anchor_spl::{
-        associated_token::{
-            get_associated_token_address,
-            AssociatedToken,
-        },
-        token::{
-            Mint,
-            Token,
-            TokenAccount,
-        },
+    anchor_spl::token::{
+        spl_token,
+        Mint,
+        Token,
+        TokenAccount,
     },
     ecosystems::{
         aptos::{
@@ -76,7 +71,6 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 const CONFIG_SEED: &[u8] = b"config";
 const RECEIPT_SEED: &[u8] = b"receipt";
-const CART_SEED: &[u8] = b"cart";
 #[program]
 pub mod token_dispenser {
     use {
@@ -115,6 +109,8 @@ pub mod token_dispenser {
         claim_certificates: Vec<ClaimCertificate>,
     ) -> Result<()> {
         let config = &ctx.accounts.config;
+        let treasury = &ctx.accounts.treasury;
+        let claimant_fund = &ctx.accounts.claimant_fund;
 
 
         for (index, claim_certificate) in claim_certificates.iter().enumerate() {
@@ -143,47 +139,21 @@ pub mod token_dispenser {
                 ctx.remaining_accounts,
             )?;
 
-            let cart = &mut ctx.accounts.cart;
 
-            cart.amount = cart
-                .amount
-                .checked_add(claim_info.amount)
-                .ok_or(ErrorCode::ArithmeticOverflow)?;
-
-            // Check that the claimant is not claiming tokens more than once per ecosystem
-            if cart.set.contains(&claim_info.identity) {
-                return err!(ErrorCode::MoreThanOneIdentityPerEcosystem);
-            }
-            cart.set.insert(&claim_info.identity);
+            token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    token::Transfer {
+                        from:      treasury.to_account_info(),
+                        to:        claimant_fund.to_account_info(),
+                        authority: config.to_account_info(),
+                    },
+                    &[&[CONFIG_SEED, &[config.bump]]],
+                ),
+                claim_info.amount,
+            )?;
         }
 
-        // TO DO : Send tokens to claimant (we will also initialize a vesting account for them)
-        Ok(())
-    }
-
-    pub fn checkout(ctx: Context<Checkout>) -> Result<()> {
-        let cart = &mut ctx.accounts.cart;
-        let claimant_fund = &ctx.accounts.claimant_fund;
-        let treasury = &mut ctx.accounts.treasury;
-        let config = &ctx.accounts.config;
-        require_gte!(
-            treasury.amount,
-            cart.amount,
-            ErrorCode::InsufficientTreasuryFunds
-        );
-        token::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                token::Transfer {
-                    from:      treasury.to_account_info(),
-                    to:        claimant_fund.to_account_info(),
-                    authority: config.to_account_info(),
-                },
-                &[&[CONFIG_SEED, &[config.bump]]],
-            ),
-            cart.amount,
-        )?;
-        cart.amount = 0;
         Ok(())
     }
 }
@@ -213,46 +183,25 @@ pub struct Initialize<'info> {
 pub struct Claim<'info> {
     #[account(mut)]
     pub claimant:           Signer<'info>,
-    #[account(seeds = [CONFIG_SEED], bump = config.bump)]
+    /// Claimant's associated token account to receive the tokens
+    /// Should be initialized outside of this program.
+    #[account(
+        mut,
+        associated_token::authority = claimant,
+        associated_token::mint = config.mint,
+    )]
+    pub claimant_fund:      Account<'info, TokenAccount>,
+    #[account(seeds = [CONFIG_SEED], bump = config.bump, has_one = treasury)]
     pub config:             Account<'info, Config>,
-    #[account(init_if_needed, space = Cart::LEN, payer = claimant, seeds = [CART_SEED, claimant.key.as_ref()], bump)]
-    pub cart:               Account<'info, Cart>,
+    #[account(mut)]
+    pub treasury:           Account<'info, TokenAccount>,
+    pub token_program:      Program<'info, Token>,
     pub system_program:     Program<'info, System>,
     /// CHECK : Anchor wants me to write this comment because I'm using AccountInfo which doesn't check for ownership and doesn't deserialize the account automatically. But it's fine because I check the address and I load it using load_instruction_at_checked.
     #[account(address = SYSVAR_IX_ID)]
     pub sysvar_instruction: AccountInfo<'info>,
 }
 
-#[derive(Accounts)]
-pub struct Checkout<'info> {
-    #[account(mut)]
-    pub claimant:                 Signer<'info>,
-    #[account(
-        seeds = [CONFIG_SEED],
-        bump = config.bump,
-        has_one = mint,
-        has_one = treasury,
-    )]
-    pub config:                   Account<'info, Config>,
-    /// Mint of the treasury & claimant_fund token account.
-    /// Needed if the `claimant_fund` token account needs to be initialized
-    pub mint:                     Account<'info, Mint>,
-    #[account(mut)]
-    pub treasury:                 Account<'info, TokenAccount>,
-    #[account(mut, seeds = [CART_SEED, claimant.key.as_ref()], bump)]
-    pub cart:                     Account<'info, Cart>,
-    /// Claimant's associated token account for receiving their claim/token grant
-    #[account(
-        init_if_needed,
-        payer = claimant,
-        associated_token::authority = claimant,
-        associated_token::mint = mint,
-    )]
-    pub claimant_fund:            Account<'info, TokenAccount>,
-    pub system_program:           Program<'info, System>,
-    pub token_program:            Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Instruction calldata.
@@ -277,23 +226,6 @@ pub enum Identity {
     Sui { address: SuiAddress },
     Aptos { address: AptosAddress },
     Cosmwasm { address: CosmosBech32Address },
-}
-
-impl Identity {
-    /// Note: the order of this must follow the order of the variants in the enum
-    /// since the typescript code uses this ordering
-    pub fn to_discriminant(&self) -> usize {
-        match self {
-            Identity::Discord { .. } => 0,
-            Identity::Solana { .. } => 1,
-            Identity::Evm { .. } => 2,
-            Identity::Sui { .. } => 3,
-            Identity::Aptos { .. } => 4,
-            Identity::Cosmwasm { .. } => 5,
-        }
-    }
-
-    pub const NUMBER_OF_VARIANTS: usize = 6;
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
@@ -368,37 +300,6 @@ impl Config {
 #[account]
 pub struct Receipt {}
 
-#[account]
-pub struct Cart {
-    pub amount: u64,
-    pub set:    ClaimedEcosystems,
-}
-
-impl Cart {
-    pub const LEN: usize = 8 + 8 + Identity::NUMBER_OF_VARIANTS;
-}
-#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub struct ClaimedEcosystems {
-    set: [bool; 6],
-}
-
-impl ClaimedEcosystems {
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        ClaimedEcosystems {
-            set: [false; Identity::NUMBER_OF_VARIANTS],
-        }
-    }
-
-    pub fn insert(&mut self, item: &Identity) {
-        let index = item.to_discriminant();
-        self.set[index] = true;
-    }
-    pub fn contains(&self, item: &Identity) -> bool {
-        self.set[item.to_discriminant()]
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Error.
 ////////////////////////////////////////////////////////////////////////////////
@@ -411,7 +312,6 @@ pub enum ErrorCode {
     InvalidInclusionProof,
     WrongPda,
     NotImplemented,
-    InsufficientTreasuryFunds,
     // Signature verification errors
     SignatureVerificationWrongProgram,
     SignatureVerificationWrongAccounts,
@@ -667,10 +567,6 @@ pub fn get_receipt_pda(leaf: &[u8]) -> (Pubkey, u8) {
     )
 }
 
-pub fn get_cart_pda(claimant: &Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[CART_SEED, claimant.as_ref()], &crate::id())
-}
-
 impl crate::accounts::Initialize {
     pub fn populate(payer: Pubkey, mint: Pubkey, treasury: Pubkey) -> Self {
         crate::accounts::Initialize {
@@ -684,50 +580,15 @@ impl crate::accounts::Initialize {
 }
 
 impl crate::accounts::Claim {
-    pub fn populate(claimant: Pubkey) -> Self {
+    pub fn populate(claimant: Pubkey, claimant_fund: Pubkey, treasury: Pubkey) -> Self {
         crate::accounts::Claim {
             claimant,
+            claimant_fund,
             config: get_config_pda().0,
-            cart: get_cart_pda(&claimant).0,
+            treasury,
+            token_program: spl_token::id(),
             system_program: system_program::System::id(),
             sysvar_instruction: SYSVAR_IX_ID,
         }
     }
-}
-
-impl crate::accounts::Checkout {
-    pub fn populate(
-        claimant: Pubkey,
-        mint: Pubkey,
-        treasury: Pubkey,
-        cart_override: Option<Pubkey>,
-        claimant_fund_override: Option<Pubkey>,
-    ) -> Self {
-        let config = get_config_pda().0;
-        crate::accounts::Checkout {
-            claimant,
-            config,
-            mint,
-            treasury,
-            cart: cart_override.unwrap_or_else(|| get_cart_pda(&claimant).0),
-            claimant_fund: claimant_fund_override
-                .unwrap_or_else(|| get_associated_token_address(&claimant, &mint)),
-            system_program: system_program::System::id(),
-            token_program: Token::id(),
-            associated_token_program: AssociatedToken::id(),
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Tests.
-/////////////////////////////////////////////////////////////////////////////////
-
-#[cfg(test)]
-#[test]
-pub fn test_number_of_identities() {
-    assert_eq!(
-        Identity::NUMBER_OF_VARIANTS,
-        ClaimedEcosystems::new().set.len()
-    );
 }
