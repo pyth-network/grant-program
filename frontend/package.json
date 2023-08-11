@@ -5,6 +5,7 @@
     "build": "next build",
     "test": "jest",
     "test:api": "jest --testPathIgnorePatterns=integrationTest",
+    "test:ci": "./scripts/setup.sh --test --no-postgres",
     "serve": "serve out",
     "start": "next start",
     "migrate": "node-pg-migrate up"

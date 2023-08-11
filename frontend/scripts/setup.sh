@@ -11,6 +11,10 @@ postgres=1;
 DIR=$(cd "$(dirname "$0")" && pwd)
 TOKEN_DISPENSER_DIR="$DIR/../../token-dispenser";
 
+TOKEN_DISPENSER_PID=Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS
+TOKEN_DISPENSER_SO="$TOKEN_DISPENSER_DIR/target/deploy/token_dispenser.so"
+
+VALIDATOR_PID=
 
 usage() {
   cat <<EOF
@@ -101,6 +105,7 @@ function setup_postgres_docker() {
 }
 
 function run_integration_tests() {
+  cd "$DIR";
   npm run test;
 }
 
@@ -108,19 +113,34 @@ function run_integration_tests() {
 function start_test_validator() {
   cd "$TOKEN_DISPENSER_DIR";
   anchor run export;
-  anchor localnet --skip-build &
+  solana-test-validator -r \
+    --bpf-program "$TOKEN_DISPENSER_PID" "$TOKEN_DISPENSER_SO" \
+    --quiet \
+    &
+  VALIDATOR_PID=$!
+  sleep 5
+#  anchor localnet --skip-build &
 }
+
+#function stop_test_validator() {
+#  solana_pid=$(pgrep -f '[s]olana-test-validator' || true)
+#  if [ -n "$solana_pid" ]; then
+#    echo "killing solana-test-validator with pid: $solana_pid"
+#    kill "$solana_pid"
+#  else
+#    echo "No solana-test-validator process found to stop"
+#  fi
+#}
 
 function stop_test_validator() {
-  solana_pid=$(pgrep -f '[s]olana-test-validator' || true)
-  if [ -n "$solana_pid" ]; then
-    echo "killing solana-test-validator with pid: $solana_pid"
-    kill "$solana_pid"
-  else
-    echo "No solana-test-validator process found to stop"
-  fi
+  set +e
+  [ -z $VALIDATOR_PID ] || (
+      kill $VALIDATOR_PID
+      pkill solana-test-validator
+      killall solana-test-validator
+  )
+  return 0
 }
-
 
 function cleanup() {
   if [ "$verbose" -eq 1 ]; then
@@ -157,7 +177,8 @@ function main() {
       printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
       # TODO: this doesn't run the test-validator in the background so it never
       # starts the frontend tests
-      start_test_validator &
+      start_test_validator
+      sleep 5
       run_integration_tests;
   else
       echo "no mode selected"
