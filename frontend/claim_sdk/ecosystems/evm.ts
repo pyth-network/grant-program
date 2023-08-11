@@ -1,5 +1,5 @@
 import { Hash } from '@keplr-wallet/crypto'
-import { removeLeading0x } from 'claim_sdk'
+import { removeLeading0x } from '../index'
 
 export function splitEvmSignature(s: string): [Uint8Array, number] {
   const noLeading0x = removeLeading0x(s)
