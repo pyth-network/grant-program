@@ -14,7 +14,7 @@ import {
   uncompressedToEvmPubkey,
 } from 'claim_sdk/ecosystems/evm'
 import {
-  SuiGetFullMessage,
+  suiGetFullMessage,
   splitSignatureAndPubkey,
 } from 'claim_sdk/ecosystems/sui'
 import { Hash } from '@keplr-wallet/crypto'
@@ -236,7 +236,7 @@ export function useSuiSignMessage(): SignMessageFn {
           publicKey,
           signature,
           recoveryId: undefined,
-          fullMessage: SuiGetFullMessage(message),
+          fullMessage: suiGetFullMessage(message),
         }
       } catch (e) {
         console.error(e)
