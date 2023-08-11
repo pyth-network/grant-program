@@ -4,7 +4,7 @@ import { useWalletKit } from '@mysten/wallet-kit'
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
 import { removeLeading0x } from 'claim_sdk'
 import {
-  cosmosGetMessageWithMetadata,
+  cosmosGetFullMessage,
   extractRecoveryId,
   getUncompressedPubkey,
 } from 'claim_sdk/ecosystems/cosmos'
@@ -93,7 +93,7 @@ export function useCosmosSignMessage(
             address,
             message
           )
-          const fullMessage = cosmosGetMessageWithMetadata(address, message)
+          const fullMessage = cosmosGetFullMessage(address, message)
           const signature = Buffer.from(signatureBase64, 'base64')
           const publicKey = getUncompressedPubkey(
             Buffer.from(pub_key.value, 'base64')
@@ -128,7 +128,7 @@ export function useCosmosSignMessage(
             address,
             message
           )
-          const fullMessage = cosmosGetMessageWithMetadata(address, message)
+          const fullMessage = cosmosGetFullMessage(address, message)
           const signature = Buffer.from(signatureBase64, 'base64')
           const publicKey = getUncompressedPubkey(
             Buffer.from(pub_key.value, 'base64')
