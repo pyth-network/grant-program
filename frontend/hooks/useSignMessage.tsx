@@ -3,9 +3,14 @@ import { useChainWallet } from '@cosmos-kit/react-lite'
 import { useWalletKit } from '@mysten/wallet-kit'
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
 import { removeLeading0x } from 'claim_sdk'
-import { getUncompressedPubkey } from 'claim_sdk/ecosystems/cosmos'
+import {
+  cosmosGetMessageWithMetadata,
+  extractRecoveryId,
+  getUncompressedPubkey,
+} from 'claim_sdk/ecosystems/cosmos'
 import { splitEvmSignature } from 'claim_sdk/ecosystems/evm'
 import { splitSignatureAndPubkey } from 'claim_sdk/ecosystems/sui'
+import { Hash } from '@keplr-wallet/crypto'
 import { useCallback } from 'react'
 import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
 
@@ -22,6 +27,7 @@ type SignedMessage = {
   signature: Uint8Array
   // recoveryId is undefined for ed25519
   recoveryId: number | undefined
+  fullMessage: Uint8Array
 }
 
 // This hook returns a function to sign message for the Aptos wallet.
@@ -33,7 +39,7 @@ export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
       try {
         if (connected === false || !account) return
 
-        const { signature } =
+        const { signature, fullMessage } =
           (await signMessage({
             message,
             nonce,
@@ -42,13 +48,15 @@ export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
         // Discard multisigs
         if (
           typeof signature != 'string' ||
-          typeof account.publicKey != 'string'
+          typeof account.publicKey != 'string' ||
+          !fullMessage
         )
           return
         return {
           publicKey: Buffer.from(removeLeading0x(account.publicKey), 'hex'),
           signature: Buffer.from(signature, 'hex'),
           recoveryId: undefined,
+          fullMessage: Buffer.from(fullMessage, 'utf-8'),
         }
       } catch (e) {
         console.error(e)
@@ -68,31 +76,78 @@ export function useCosmosSignMessage(
     chainName,
     walletName
   )
-  const signMessageCb = useCallback(
-    async (message: string) => {
-      // Wallets have some weird edge cases. There may be a case where the
-      // wallet is connected but the address is undefined.
-      // Using both in this condition to handle those.
-      try {
-        if (address === undefined || isWalletConnected === false) return
 
-        const { pub_key, signature } = await signArbitrary(address, message)
+  if (chainName == 'injective') {
+    const signMessageCb = useCallback(
+      async (message: string) => {
+        // Wallets have some weird edge cases. There may be a case where the
+        // wallet is connected but the address is undefined.
+        // Using both in this condition to handle those.
+        try {
+          if (address === undefined || isWalletConnected === false) return
 
-        return {
-          publicKey: getUncompressedPubkey(
+          const { pub_key, signature: signatureBase64 } = await signArbitrary(
+            address,
+            message
+          )
+          const fullMessage = cosmosGetMessageWithMetadata(address, message)
+          const signature = Buffer.from(signatureBase64, 'base64')
+          const publicKey = getUncompressedPubkey(
             Buffer.from(pub_key.value, 'base64')
-          ),
-          signature: Buffer.from(signature, 'base64'),
-          recoveryId: 0, // TO DO : compute this
+          )
+          return {
+            publicKey,
+            signature,
+            recoveryId: extractRecoveryId(
+              signature,
+              publicKey,
+              Hash.keccak256(fullMessage)
+            ),
+            fullMessage,
+          }
+        } catch (e) {
+          console.error(e)
         }
-      } catch (e) {
-        console.error(e)
-      }
-    },
-    [signArbitrary, address, isWalletConnected]
-  )
+      },
+      [signArbitrary, address, isWalletConnected]
+    )
+    return signMessageCb
+  } else {
+    const signMessageCb = useCallback(
+      async (message: string) => {
+        // Wallets have some weird edge cases. There may be a case where the
+        // wallet is connected but the address is undefined.
+        // Using both in this condition to handle those.
+        try {
+          if (address === undefined || isWalletConnected === false) return
 
-  return signMessageCb
+          const { pub_key, signature: signatureBase64 } = await signArbitrary(
+            address,
+            message
+          )
+          const fullMessage = cosmosGetMessageWithMetadata(address, message)
+          const signature = Buffer.from(signatureBase64, 'base64')
+          const publicKey = getUncompressedPubkey(
+            Buffer.from(pub_key.value, 'base64')
+          )
+          return {
+            publicKey,
+            signature,
+            recoveryId: extractRecoveryId(
+              signature,
+              publicKey,
+              Hash.sha256(fullMessage)
+            ),
+            fullMessage,
+          }
+        } catch (e) {
+          console.error(e)
+        }
+      },
+      [signArbitrary, address, isWalletConnected]
+    )
+    return signMessageCb
+  }
 }
 
 // This hook returns a function to sign message for the EVM wallet.
@@ -114,6 +169,7 @@ export function useEVMSignMessage(): SignMessageFn {
           publicKey: Buffer.from(removeLeading0x(address), 'hex'),
           signature,
           recoveryId,
+          fullMessage: Buffer.alloc(0),
         }
       } catch (e) {
         console.error(e)
@@ -138,6 +194,7 @@ export function useSolanaSignMessage(): SignMessageFn {
           publicKey: publicKey.toBytes(),
           signature: signature,
           recoveryId: undefined,
+          fullMessage: Buffer.from(message, 'utf-8'),
         }
       } catch (e) {
         console.error(e)
@@ -172,6 +229,7 @@ export function useSuiSignMessage(): SignMessageFn {
           publicKey,
           signature,
           recoveryId: undefined,
+          fullMessage: Buffer.alloc(0),
         }
       } catch (e) {
         console.error(e)
