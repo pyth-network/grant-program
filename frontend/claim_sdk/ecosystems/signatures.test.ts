@@ -1,9 +1,7 @@
-import { Wallet, ethers } from 'ethers'
+import { ethers } from 'ethers'
 import { SignedMessage, evmBuildSignedMessage } from './signatures'
-import { TokenDispenserProvider } from '../solana'
 import {
   LAMPORTS_PER_SOL,
-  PublicKey,
   Secp256k1Program,
   Transaction,
 } from '@solana/web3.js'
@@ -47,10 +45,7 @@ test('Evm signature', async () => {
   const evmTestWallet = new TestEvmWallet(
     new ethers.Wallet(ethers.Wallet.createRandom().privateKey)
   )
-  const payload = TokenDispenserProvider.getAuthorizationPayload(
-    PublicKey.unique(),
-    PublicKey.unique()
-  )
+  const payload = 'Test payload'
   const signedMessage = await evmTestWallet.signMessage(payload)
   const signature = secp256k1.Signature.fromCompact(signedMessage.signature)
   const recovered = uncompressedToEvmPubkey(
@@ -65,16 +60,16 @@ test('Evm signature', async () => {
     )
   )
 
-  const walletKeypair = anchor.web3.Keypair.generate()
+  const solanaKeypair = anchor.web3.Keypair.generate()
   const connection = new anchor.web3.Connection('http://localhost:8899')
   const provider = new anchor.AnchorProvider(
     connection,
-    new NodeWallet(walletKeypair),
+    new NodeWallet(solanaKeypair),
     { preflightCommitment: 'processed', commitment: 'processed' }
   )
 
   const airdropTxn = await connection.requestAirdrop(
-    walletKeypair.publicKey,
+    solanaKeypair.publicKey,
     LAMPORTS_PER_SOL
   )
   await connection.confirmTransaction({
@@ -92,5 +87,5 @@ test('Evm signature', async () => {
   const txn = new Transaction()
   txn.add(ix)
 
-  await provider.sendAndConfirm(txn, [walletKeypair])
+  await provider.sendAndConfirm(txn, [solanaKeypair])
 }, 20000)
