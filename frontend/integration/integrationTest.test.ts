@@ -7,8 +7,6 @@ import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import * as splToken from '@solana/spl-token'
 import { Token } from '@solana/spl-token'
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
-import { ethers } from 'ethers'
-import fs from 'fs'
 import * as path from 'path'
 import { Buffer } from 'buffer'
 import { QueryParams, TokenDispenserProvider } from '../claim_sdk/solana'
@@ -79,7 +77,6 @@ describe('integration test', () => {
         commitment: 'processed',
       }
     )
-    tokenDispenserProvider.connectWallet('evm', evmWallet)
 
     const dispenserGuard = anchor.web3.Keypair.generate()
     const mintAuthority = anchor.web3.Keypair.generate()

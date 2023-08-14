@@ -8,14 +8,11 @@ import {
   PublicKey,
   Secp256k1Program,
   Transaction,
-  TransactionInstruction,
   TransactionSignature,
 } from '@solana/web3.js'
 import * as splToken from '@solana/spl-token'
 import { ClaimInfo, Ecosystem } from './claim'
-import { ethers } from 'ethers'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { evmGetFullMessage } from './ecosystems/evm'
 import { SignedMessage } from './ecosystems/signatures'
 
 type bump = number
@@ -37,7 +34,6 @@ export class TokenDispenserProvider {
   tokenDispenserProgram: anchor.Program<TokenDispenser>
   configPda: [anchor.web3.PublicKey, bump]
   config: IdlAccounts<TokenDispenser>['Config'] | undefined
-  wallets: Map<Ecosystem, any>
 
   constructor(
     endpoint: string,
@@ -58,8 +54,6 @@ export class TokenDispenserProvider {
     ) as unknown as Program<TokenDispenser>
 
     this.configPda = this.getConfigPda()
-    this.wallets = new Map<Ecosystem, any>()
-    this.wallets.set('solana', wallet)
   }
 
   get programId(): anchor.web3.PublicKey {
@@ -143,56 +137,6 @@ export class TokenDispenserProvider {
       .rpc()
   }
 
-  public connectWallet(ecosystem: Ecosystem, wallet: any): void {
-    this.wallets.set(ecosystem, wallet)
-  }
-
-  private async createSignatureVerificationIxForEcosystemWallet(
-    ecosystem: Ecosystem,
-    ecosystemWallet: any
-  ): Promise<TransactionInstruction | undefined> {
-    switch (ecosystem) {
-      case 'evm': {
-        return this.createSecp256K1SignatureVerificationIx(ecosystemWallet)
-        break
-      }
-      case 'discord': {
-        // TODO:
-        break
-      }
-      case 'solana': {
-        // TODO:
-        break
-      }
-      default: {
-        throw new Error(`unknown ecosystem type: ${ecosystem}`)
-      }
-    }
-  }
-
-  private async createSecp256K1SignatureVerificationIx(ecosystemWallet: {
-    address: string
-    signMessage(payload: string): Promise<string>
-  }): Promise<TransactionInstruction> {
-    const authorizationMessage = this.generateAuthorizationPayload()
-    const evmSignedMessage = await ecosystemWallet.signMessage(
-      authorizationMessage
-    )
-    const actualMessage = evmGetFullMessage(authorizationMessage)
-
-    const full_signature_bytes = ethers.getBytes(evmSignedMessage)
-    const signature = full_signature_bytes.slice(0, 64)
-    const recoveryId = full_signature_bytes[64] - 27
-    return Secp256k1Program.createInstructionWithEthAddress({
-      ethAddress: ecosystemWallet.address,
-      message: actualMessage,
-      signature,
-      recoveryId,
-      //TODO: add support for other instruction indexes
-      instructionIndex: 0,
-    })
-  }
-
   public generateAuthorizationPayload(): string {
     return AUTHORIZATION_PAYLOAD[0].concat(
       this.programId.toString(),
@@ -263,6 +207,7 @@ export class TokenDispenserProvider {
       new Error('Not implemented')
     }
 
+    // 1. generate claim certificate
     const identityProof: IdlTypes<TokenDispenser>['IdentityCertificate'] = {
       [claimInfo.ecosystem]: {
         pubkey: signedMessage.publicKey,
@@ -276,11 +221,7 @@ export class TokenDispenserProvider {
       proofOfInclusion: [proofOfInclusion],
     }
 
-    if (await this.isClaimAlreadySubmitted(claimInfo)) {
-      throw new Error('Claim already submitted')
-    }
-    const receiptPda = this.getReceiptPda(claimInfo)[0]
-
+    // 2. generate signature verification instruction if needed
     const signatureVerificationIx =
       Secp256k1Program.createInstructionWithEthAddress({
         ethAddress: signedMessage.publicKey,
@@ -288,6 +229,12 @@ export class TokenDispenserProvider {
         signature: signedMessage.signature,
         recoveryId: 0,
       })
+
+    // 3. derive receipt pda
+    if (await this.isClaimAlreadySubmitted(claimInfo)) {
+      throw new Error('Claim already submitted')
+    }
+    const receiptPda = this.getReceiptPda(claimInfo)[0]
 
     // 4. submit claim
     return this.tokenDispenserProgram.methods
