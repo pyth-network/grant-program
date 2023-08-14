@@ -227,7 +227,7 @@ export class TokenDispenserProvider {
         ethAddress: signedMessage.publicKey,
         message: signedMessage.fullMessage,
         signature: signedMessage.signature,
-        recoveryId: 0,
+        recoveryId: signedMessage.recoveryId!,
       })
 
     // 3. derive receipt pda
