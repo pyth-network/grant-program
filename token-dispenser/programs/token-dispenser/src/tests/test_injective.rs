@@ -1,13 +1,12 @@
 use {
-    super::test_secp256k1::Secp256k1TestIdentityCertificate,
+    super::test_secp256k1::{
+        construct_evm_pubkey,
+        Secp256k1TestIdentityCertificate,
+    },
     crate::{
         ecosystems::{
-            cosmos::{
-                CosmosMessage,
-                UncompressedSecp256k1Pubkey,
-            },
+            cosmos::CosmosMessage,
             get_expected_payload,
-            secp256k1::EvmPubkey,
         },
         Identity,
         IdentityCertificate,
@@ -41,7 +40,7 @@ impl Secp256k1TestIdentityCertificate<CosmosMessage, Keccak256> {
         let public_key = libsecp256k1::PublicKey::from_secret_key(&secret);
         let message = CosmosMessage::from((
             get_expected_payload(claimant).as_bytes(),
-            &EvmPubkey::from(UncompressedSecp256k1Pubkey::from(public_key.serialize())).into(),
+            &construct_evm_pubkey(&public_key).into(),
         ));
         let (signature, recovery_id) = libsecp256k1::sign(&Self::hash_message(&message), &secret);
         Self {
