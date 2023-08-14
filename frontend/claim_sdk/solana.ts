@@ -194,20 +194,10 @@ export class TokenDispenserProvider {
   }
 
   public generateAuthorizationPayload(): string {
-    return TokenDispenserProvider.getAuthorizationPayload(
-      this.programId,
-      this.claimant
-    )
-  }
-
-  static getAuthorizationPayload(
-    programId: PublicKey,
-    claimant: PublicKey
-  ): string {
     return AUTHORIZATION_PAYLOAD[0].concat(
-      programId.toString(),
+      this.programId.toString(),
       AUTHORIZATION_PAYLOAD[1],
-      claimant.toString(),
+      this.claimant.toString(),
       AUTHORIZATION_PAYLOAD[2]
     )
   }
@@ -319,78 +309,6 @@ export class TokenDispenserProvider {
         },
       ])
       .preInstructions([signatureVerificationIx])
-      .transaction()
-  }
-  /**
-   * Note: this function currently only generates the transaction. It doesn't submit it
-   * because we need to possibly submit a transaction to create a new associated token account
-   * if the claimant doesn't have one yet.
-   */
-  public async generateClaimTxn(
-    claimInfo: ClaimInfo,
-    proofOfInclusion: Buffer
-  ): Promise<Transaction> {
-    // from claimInfo and proofOfInclusion,
-    // 1. generate identity proof
-    const ecosystem = claimInfo.ecosystem
-    const ecosystemWallet = this.wallets.get(ecosystem)
-    if (ecosystemWallet === undefined) {
-      throw new Error(`Wallet for ${ecosystem} not connected`)
-    }
-    if (ecosystemWallet.address !== claimInfo.identity) {
-      throw new Error(`Wallet address for ${ecosystem} does not match identity`)
-    }
-    const identityProof: IdlTypes<TokenDispenser>['IdentityCertificate'] = {
-      [ecosystem]: {
-        pubkey: ethers.getBytes(claimInfo.identity),
-        verificationInstructionIndex: 0,
-      },
-    }
-
-    // 2. generate signature verification instruction if needed
-
-    const signatureVerificationIx =
-      await this.createSignatureVerificationIxForEcosystemWallet(
-        claimInfo.ecosystem,
-        ecosystemWallet
-      )
-
-    const preIxs =
-      signatureVerificationIx === undefined ? [] : [signatureVerificationIx]
-
-    // 2. generate claim certificate
-    const claimCert: IdlTypes<TokenDispenser>['ClaimCertificate'] = {
-      amount: claimInfo.amount,
-      proofOfIdentity: identityProof,
-      proofOfInclusion: [proofOfInclusion],
-    }
-
-    // 3. derive receipt PDA
-    if (await this.isClaimAlreadySubmitted(claimInfo)) {
-      throw new Error('Claim already submitted')
-    }
-    const receiptPda = this.getReceiptPda(claimInfo)[0]
-
-    // 4. submit claim
-    return this.tokenDispenserProgram.methods
-      .claim([claimCert])
-      .accounts({
-        claimant: this.claimant,
-        claimantFund: await this.getClaimantFundAddress(),
-        config: this.getConfigPda()[0],
-        treasury: (await this.getConfig()).treasury,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: anchor.web3.SystemProgram.programId,
-        sysvarInstruction: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-      })
-      .remainingAccounts([
-        {
-          pubkey: receiptPda,
-          isWritable: true,
-          isSigner: false,
-        },
-      ])
-      .preInstructions(preIxs)
       .transaction()
   }
 
