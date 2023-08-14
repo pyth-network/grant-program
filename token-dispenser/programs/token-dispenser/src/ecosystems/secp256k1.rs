@@ -30,14 +30,6 @@ impl EvmPubkey {
     }
 }
 
-// impl From<UncompressedSecp256k1Pubkey> for EvmPubkey {
-//     fn from(value: UncompressedSecp256k1Pubkey) -> Self {
-//         let mut addr = [0u8; EvmPubkey::LEN];
-//         addr.copy_from_slice(&keccak::hashv(&[&value.as_bytes()[1..]]).to_bytes()[12..]);
-//         EvmPubkey(addr)
-//     }
-// }
-
 #[cfg(test)]
 impl From<[u8; Self::LEN]> for EvmPubkey {
     fn from(bytes: [u8; Self::LEN]) -> Self {
