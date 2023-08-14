@@ -12,7 +12,7 @@ import fs from 'fs'
 import * as path from 'path'
 import { Buffer } from 'buffer'
 import { QueryParams, TokenDispenserProvider } from '../claim_sdk/solana'
-
+import { TestEvmWallet } from '../claim_sdk/ecosystems/signatures.test'
 //TODO: update this
 const tokenDispenserProgramId = new anchor.web3.PublicKey(
   'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'
@@ -25,7 +25,7 @@ describe('integration test', () => {
   const solanaClaimant = anchor.web3.Keypair.generate()
   const evmPrivateKeyPath = path.resolve(__dirname, 'keys/evm_private_key.json')
   // public key: 0xb80Eb09f118ca9Df95b2DF575F68E41aC7B9E2f8
-  const evmWallet = loadEvmWalletFromPrivateKey(evmPrivateKeyPath)
+  const evmWallet = TestEvmWallet.fromKeyfile(evmPrivateKeyPath)
   let root: number[]
   beforeAll(async () => {
     // TODO: run database migrations here. This seems difficult with node-pg-migrate though.
@@ -34,7 +34,7 @@ describe('integration test', () => {
 
     const sampleData: any[] = [
       ['solana', solanaClaimant.publicKey.toString(), 1000],
-      ['evm', evmWallet.address.toString(), 2000],
+      ['evm', evmWallet.address().toString(), 2000],
       // ['aptos', '0x7e7544df4fc42107d4a60834685dfd9c1e6ff048f49fe477bc19c1551299d5cb', 3000],
       // ['cosmwasm', 'cosmos1lv3rrn5trdea7vs43z5m4y34d5r3zxp484wcpu', 4000]
     ]
@@ -139,7 +139,7 @@ describe('integration test', () => {
     })
 
     it('submits a claim', async () => {
-      const queryParams: QueryParams = ['evm', evmWallet.address.toString()]
+      const queryParams: QueryParams = ['evm', evmWallet.address()]
       const result = await pool.query(
         'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
         queryParams
@@ -152,20 +152,17 @@ describe('integration test', () => {
         new anchor.BN(result.rows[0].amount)
       )
 
-      const txns = []
-      const createAtaTxn =
-        await tokenDispenserProvider.createAssociatedTokenAccountTxnIfNeeded()
-      if (createAtaTxn) {
-        txns.push({ tx: createAtaTxn })
-      }
-
-      const submitClaimTxn = await tokenDispenserProvider.generateClaimTxn(
-        claimInfo,
-        proof
+      const signedMessage = await evmWallet.signMessage(
+        tokenDispenserProvider.generateAuthorizationPayload()
       )
-      txns.push({ tx: submitClaimTxn })
 
-      await tokenDispenserProvider.provider.sendAll(txns)
+      await tokenDispenserProvider.submitClaims([
+        {
+          claimInfo,
+          proofOfInclusion: proof,
+          signedMessage,
+        },
+      ])
 
       expect(
         await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
@@ -177,14 +174,6 @@ describe('integration test', () => {
       const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
 
       expect(claimantFund.amount.eq(new anchor.BN(2000))).toBeTruthy()
-    })
+    }, 10000)
   })
 })
-
-/* Test Utility functions */
-
-export function loadEvmWalletFromPrivateKey(keyFile: string): ethers.Wallet {
-  const jsonContent = fs.readFileSync(keyFile, 'utf8')
-  const privateKey = JSON.parse(jsonContent).privateKey
-  return new ethers.Wallet(privateKey)
-}

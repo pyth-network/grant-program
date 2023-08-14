@@ -1,8 +1,8 @@
-import { ProjectivePoint, Signature } from '@noble/secp256k1'
+import { secp256k1 } from '@noble/curves/secp256k1'
 import { makeADR36AminoSignDoc, serializeSignDoc } from '@keplr-wallet/cosmos'
 
 export function getUncompressedPubkey(pubkey: Uint8Array): Uint8Array {
-  const point = ProjectivePoint.fromHex(pubkey)
+  const point = secp256k1.ProjectivePoint.fromHex(pubkey)
   return point.toRawBytes(false)
 }
 
@@ -18,7 +18,7 @@ export function extractRecoveryId(
   publicKey: Uint8Array,
   hashedMessage: Uint8Array
 ): number {
-  const sig = Signature.fromCompact(signature)
+  const sig = secp256k1.Signature.fromCompact(signature)
   for (let recoveryId = 0; recoveryId < 4; recoveryId++) {
     const recovered = sig
       .addRecoveryBit(recoveryId)

@@ -16,6 +16,7 @@ import { ClaimInfo, Ecosystem } from './claim'
 import { ethers } from 'ethers'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { evmGetFullMessage } from './ecosystems/evm'
+import { SignedMessage } from './ecosystems/signatures'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -192,11 +193,21 @@ export class TokenDispenserProvider {
     })
   }
 
-  private generateAuthorizationPayload() {
+  public generateAuthorizationPayload(): string {
+    return TokenDispenserProvider.getAuthorizationPayload(
+      this.programId,
+      this.claimant
+    )
+  }
+
+  static getAuthorizationPayload(
+    programId: PublicKey,
+    claimant: PublicKey
+  ): string {
     return AUTHORIZATION_PAYLOAD[0].concat(
-      this.programId.toString(),
+      programId.toString(),
       AUTHORIZATION_PAYLOAD[1],
-      this.claimant.toString(),
+      claimant.toString(),
       AUTHORIZATION_PAYLOAD[2]
     )
   }
@@ -225,6 +236,91 @@ export class TokenDispenserProvider {
     return null
   }
 
+  public async submitClaims(
+    claims: {
+      claimInfo: ClaimInfo
+      proofOfInclusion: Buffer
+      signedMessage: SignedMessage
+    }[]
+  ): Promise<void> {
+    /// This is only eth for now
+    let txs: { tx: Transaction }[] = []
+
+    const createAtaTxn = await this.createAssociatedTokenAccountTxnIfNeeded()
+    if (createAtaTxn) {
+      txs.push({ tx: createAtaTxn })
+    }
+    for (const claim of claims) {
+      txs.push({
+        tx: await this.generateClaimTransaction(
+          claim.claimInfo,
+          claim.proofOfInclusion,
+          claim.signedMessage
+        ),
+      })
+    }
+    if (this.tokenDispenserProgram.provider.sendAll) {
+      await this.tokenDispenserProgram.provider.sendAll(txs)
+    }
+  }
+
+  public async generateClaimTransaction(
+    claimInfo: ClaimInfo,
+    proofOfInclusion: Buffer,
+    signedMessage: SignedMessage
+  ): Promise<Transaction> {
+    if (claimInfo.ecosystem !== 'evm') {
+      new Error('Not implemented')
+    }
+
+    const identityProof: IdlTypes<TokenDispenser>['IdentityCertificate'] = {
+      [claimInfo.ecosystem]: {
+        pubkey: signedMessage.publicKey,
+        verificationInstructionIndex: 0,
+      },
+    }
+
+    const claimCert: IdlTypes<TokenDispenser>['ClaimCertificate'] = {
+      amount: claimInfo.amount,
+      proofOfIdentity: identityProof,
+      proofOfInclusion: [proofOfInclusion],
+    }
+
+    if (await this.isClaimAlreadySubmitted(claimInfo)) {
+      throw new Error('Claim already submitted')
+    }
+    const receiptPda = this.getReceiptPda(claimInfo)[0]
+
+    const signatureVerificationIx =
+      Secp256k1Program.createInstructionWithEthAddress({
+        ethAddress: signedMessage.publicKey,
+        message: signedMessage.fullMessage,
+        signature: signedMessage.signature,
+        recoveryId: 0,
+      })
+
+    // 4. submit claim
+    return this.tokenDispenserProgram.methods
+      .claim([claimCert])
+      .accounts({
+        claimant: this.claimant,
+        claimantFund: await this.getClaimantFundAddress(),
+        config: this.getConfigPda()[0],
+        treasury: (await this.getConfig()).treasury,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        sysvarInstruction: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+      })
+      .remainingAccounts([
+        {
+          pubkey: receiptPda,
+          isWritable: true,
+          isSigner: false,
+        },
+      ])
+      .preInstructions([signatureVerificationIx])
+      .transaction()
+  }
   /**
    * Note: this function currently only generates the transaction. It doesn't submit it
    * because we need to possibly submit a transaction to create a new associated token account
