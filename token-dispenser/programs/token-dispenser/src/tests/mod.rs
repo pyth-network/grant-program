@@ -9,7 +9,7 @@ use {
 
 mod dispenser_simulator;
 mod test_aptos;
-mod test_checkout;
+mod test_claim;
 mod test_cosmos;
 mod test_discord;
 mod test_ed25519;

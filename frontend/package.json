@@ -21,7 +21,11 @@
     "@emotion/styled": "11.10.6",
     "@headlessui/react": "^1.7.16",
     "@heroicons/react": "^1.0.6",
+    "@keplr-wallet/cosmos": "^0.12.20",
+    "@keplr-wallet/crypto": "^0.12.20",
+    "@mysten/sui.js": "^0.40.0",
     "@mysten/wallet-kit": "^0.5.1",
+    "@noble/secp256k1": "^2.0.0",
     "@solana/spl-token": "^0.1.8",
     "@solana/wallet-adapter-base": "^0.9.22",
     "@solana/wallet-adapter-react": "^0.15.32",
@@ -49,6 +53,7 @@
     "wagmi": "^1.2.0"
   },
   "devDependencies": {
+    "@coral-xyz/spl-token": "^0.27.0",
     "@tailwindcss/typography": "^0.5.2",
     "@types/bn.js": "^5.1.1",
     "@types/jest": "^29.5.3",

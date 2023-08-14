@@ -5,6 +5,7 @@ use {
         test_happy_path::TestClaimCertificate,
     },
     crate::{
+        get_config_pda,
         tests::dispenser_simulator::{
             copy_keypair,
             IntoTransactionError,
@@ -25,6 +26,7 @@ pub async fn test_discord() {
 
     let mut simulator = DispenserSimulator::new().await;
 
+
     let mock_offchain_certificates: Vec<TestClaimCertificate> = vec![
         TestClaimCertificate::random_discord(
             &simulator.genesis_keypair.pubkey(),
@@ -41,6 +43,7 @@ pub async fn test_discord() {
         .map(|item: &TestClaimCertificate| item.clone().into())
         .collect();
 
+    let total_claim_sum = merkle_items.iter().fold(0, |acc, item| acc + item.amount);
     let (merkle_tree, _) = merkleize(merkle_items);
 
     simulator
@@ -53,14 +56,29 @@ pub async fn test_discord() {
         .await
         .unwrap();
 
+    simulator
+        .create_associated_token_account(
+            &simulator.genesis_keypair.pubkey(),
+            &simulator.mint_keypair.pubkey(),
+        )
+        .await
+        .unwrap();
+
+    simulator.mint_to_treasury(total_claim_sum).await.unwrap();
+    simulator
+        .approve_treasury_delegate(get_config_pda().0, total_claim_sum)
+        .await
+        .unwrap();
+
+
     // Wrong dispenser guard has signed the message
     assert_eq!(
         simulator
             .claim(
                 &copy_keypair(&simulator.genesis_keypair),
-                &dispenser_guard,
                 &mock_offchain_certificates[1],
-                &merkle_tree
+                &merkle_tree,
+                None
             )
             .await
             .unwrap_err()
@@ -70,9 +88,9 @@ pub async fn test_discord() {
     assert!(simulator
         .claim(
             &copy_keypair(&simulator.genesis_keypair),
-            &dispenser_guard,
             &mock_offchain_certificates[0],
-            &merkle_tree
+            &merkle_tree,
+            None
         )
         .await
         .is_ok());
@@ -81,9 +99,9 @@ pub async fn test_discord() {
         simulator
             .claim(
                 &copy_keypair(&simulator.genesis_keypair),
-                &dispenser_guard,
                 &mock_offchain_certificates[0],
-                &merkle_tree
+                &merkle_tree,
+                None
             )
             .await
             .unwrap_err()
