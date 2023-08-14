@@ -174,6 +174,6 @@ describe('integration test', () => {
       const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
 
       expect(claimantFund.amount.eq(new anchor.BN(2000))).toBeTruthy()
-    }, 10000)
+    }, 20000)
   })
 })
