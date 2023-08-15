@@ -24,6 +24,7 @@ import {
   SignedMessage,
   evmBuildSignedMessage,
 } from 'claim_sdk/ecosystems/signatures'
+import { Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js'
 
 // SignMessageFn signs the message and returns it.
 // It will return undefined:
@@ -156,13 +157,60 @@ export function useEVMSignMessage(): SignMessageFn {
   return signMessageCb
 }
 
+export async function prepareSolanaOffchainMessage({
+  message,
+  encoding = "UTF-8",
+  maxLength = 1212,
+}: {
+  message: Uint8Array;
+  encoding: "ASCII" | "UTF-8";
+  maxLength: 1212 | 65515;
+}): Promise<Uint8Array> {
+  // https://github.com/solana-labs/solana/blob/e80f67dd58b7fa3901168055211f346164efa43a/docs/src/proposals/off-chain-message-signing.md
+
+  if (message.length > maxLength) {
+    throw new Error(`Max message length (${maxLength}) exeeded!`);
+  }
+  const firstByte = new Uint8Array([255]);
+  const domain8Bit = Uint8Array.from("solana offchain", (x) =>
+    x.charCodeAt(0)
+  );
+  const headerVersion8Bit = new Uint8Array([0]);
+  const headerFormat8Bit =
+    encoding === "ASCII"
+      ? new Uint8Array([0])
+      : maxLength === 1212
+      ? new Uint8Array([1])
+      : new Uint8Array([2]);
+
+  const headerLength16Bit = new Uint16Array([message.length]);
+  const headerLength8Bit = new Uint8Array(
+    headerLength16Bit.buffer,
+    headerLength16Bit.byteOffset,
+    headerLength16Bit.byteLength
+  );
+
+  const payload = Buffer.concat([
+    firstByte,
+    domain8Bit,
+    headerVersion8Bit,
+    headerFormat8Bit,
+    headerLength8Bit,
+    message,
+  ]);
+
+  return payload;
+}
+
+
+
 // This hook returns a function to sign message for the Solana wallet.
 export function useSolanaSignMessage(): SignMessageFn {
-  const { connected, signMessage, publicKey } = useSolanaWallet()
+  const { connected, signMessage, publicKey, signTransaction } = useSolanaWallet()
   const signMessageCb = useCallback(
     async (payload: string) => {
       try {
-        if (signMessage === undefined || connected === false || !publicKey)
+        if (signMessage === undefined || !signTransaction || connected === false || !publicKey)
           return
         const signBuffer = Buffer.concat([
           Buffer.alloc(1, 'ff'),
@@ -172,12 +220,24 @@ export function useSolanaSignMessage(): SignMessageFn {
           Buffer.from('0001', 'hex'),
           Buffer.from('a', 'utf-8'),
         ])
+
+
         console.log(signBuffer)
         console.log(signBuffer.length)
-        const signature = await signMessage(signBuffer)
+         let transaction = new Transaction();
+         transaction.add(new TransactionInstruction({
+            keys : [],
+            data : Buffer.from(''),
+            programId: PublicKey.unique()
+         }));
+         transaction.recentBlockhash = (await new Connection("http://mainnet.xyz.pyth.network").getLatestBlockhash()).blockhash;
+         transaction.feePayer = publicKey; 
+         const messagePayload = await prepareSolanaOffchainMessage({message : Buffer.from("test", "utf-8"), encoding: "ASCII", maxLength: 1212});
+         await signMessage(messagePayload)
+         console.log("SUCCESS")
         return {
           publicKey: publicKey.toBytes(),
-          signature: signature,
+          signature: Buffer.from(''),
           recoveryId: undefined,
           fullMessage: Buffer.from(payload, 'utf-8'),
         }
