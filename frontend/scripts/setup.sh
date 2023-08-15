@@ -126,8 +126,6 @@ function stop_test_validator() {
   set +e
   [ -z $VALIDATOR_PID ] || (
       kill $VALIDATOR_PID
-      pkill solana-test-validator
-      killall solana-test-validator
   )
   return 0
 }
