@@ -19,6 +19,7 @@ import { useMemo, ReactElement, ReactNode, useCallback } from 'react'
 import { clusterApiUrl } from '@solana/web3.js'
 import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import { Wallet, WalletButton, WalletConnectedButton } from './WalletButton'
+import { useSolanaSignMessage } from 'hooks/useSignMessage'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
 export const BACKPACK_WALLET_ADAPTER = new BackpackWalletAdapter()
@@ -111,6 +112,7 @@ export function SolanaWalletButton() {
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey])
 
   const wallets = useWallets()
+  const signMessage = useSolanaSignMessage()
 
   return (
     <WalletButton
@@ -122,7 +124,7 @@ export function SolanaWalletButton() {
       walletConnectedButton={(address: string) => {
         return (
           <WalletConnectedButton
-            onClick={disconnect}
+            onClick={() => signMessage('Pyth grant program')}
             address={address}
             icon={wallet?.adapter.icon}
           />

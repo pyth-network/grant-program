@@ -164,7 +164,17 @@ export function useSolanaSignMessage(): SignMessageFn {
       try {
         if (signMessage === undefined || connected === false || !publicKey)
           return
-        const signature = await signMessage(Buffer.from(payload))
+        const signBuffer = Buffer.concat([
+          Buffer.alloc(1, 'ff'),
+          Buffer.from('solana offchain', 'utf-8'),
+          Buffer.from('00', 'hex'),
+          Buffer.from('01', 'hex'),
+          Buffer.from('0001', 'hex'),
+          Buffer.from('a', 'utf-8'),
+        ])
+        console.log(signBuffer)
+        console.log(signBuffer.length)
+        const signature = await signMessage(signBuffer)
         return {
           publicKey: publicKey.toBytes(),
           signature: signature,

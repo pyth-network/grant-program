@@ -68,6 +68,7 @@ test('Evm signature', async () => {
     { preflightCommitment: 'processed', commitment: 'processed' }
   )
 
+  new NodeWallet(solanaKeypair).signMessage()
   const airdropTxn = await connection.requestAirdrop(
     solanaKeypair.publicKey,
     LAMPORTS_PER_SOL
