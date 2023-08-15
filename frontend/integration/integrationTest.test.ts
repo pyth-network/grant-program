@@ -10,7 +10,11 @@ import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import * as path from 'path'
 import { Buffer } from 'buffer'
 import { QueryParams, TokenDispenserProvider } from '../claim_sdk/solana'
-import { TestEvmWallet } from '../claim_sdk/ecosystems/signatures.test'
+import {
+  TestCosmosWallet,
+  TestEvmWallet,
+} from '../claim_sdk/ecosystems/signatures.test'
+import { Secp256k1HdWallet } from '@cosmjs/amino'
 //TODO: update this
 const tokenDispenserProgramId = new anchor.web3.PublicKey(
   'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'
@@ -24,8 +28,22 @@ describe('integration test', () => {
   const evmPrivateKeyPath = path.resolve(__dirname, 'keys/evm_private_key.json')
   // public key: 0xb80Eb09f118ca9Df95b2DF575F68E41aC7B9E2f8
   const evmWallet = TestEvmWallet.fromKeyfile(evmPrivateKeyPath)
+
+  const cosmPrivateKeyPath = path.resolve(
+    __dirname,
+    'keys/cosmos_private_key.json'
+  )
+  //cosmos1q67j5vk66p0dm6rg5tjfuhkm8t78t5m56w3ekn
+  let cosmWallet: TestCosmosWallet
+
+  // const cosmosWallet =
   let root: number[]
   beforeAll(async () => {
+    cosmWallet = await TestCosmosWallet.fromKeyFile(
+      cosmPrivateKeyPath,
+      'cosmwasm'
+    )
+
     // TODO: run database migrations here. This seems difficult with node-pg-migrate though.
     // clear the pool before each test
     await pool.query('DELETE FROM claims', [])
@@ -34,7 +52,7 @@ describe('integration test', () => {
       ['solana', solanaClaimant.publicKey.toString(), 1000],
       ['evm', evmWallet.address().toString(), 2000],
       // ['aptos', '0x7e7544df4fc42107d4a60834685dfd9c1e6ff048f49fe477bc19c1551299d5cb', 3000],
-      // ['cosmwasm', 'cosmos1lv3rrn5trdea7vs43z5m4y34d5r3zxp484wcpu', 4000]
+      ['cosmwasm', cosmWallet.address(), 4000],
     ]
 
     const leaves = sampleData.map((value) => {
@@ -135,7 +153,7 @@ describe('integration test', () => {
       expect(configAccount.dispenserGuard).toEqual(dispenserGuard.publicKey)
     })
 
-    it('submits a claim', async () => {
+    it('submits an evm claim', async () => {
       const queryParams: QueryParams = ['evm', evmWallet.address()]
       const result = await pool.query(
         'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
@@ -171,6 +189,44 @@ describe('integration test', () => {
       const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
 
       expect(claimantFund.amount.eq(new anchor.BN(2000))).toBeTruthy()
+    }, 20000)
+
+    it('submits a cosmwasm claim', async () => {
+      const queryParams: QueryParams = ['cosmwasm', cosmWallet.address()]
+      const result = await pool.query(
+        'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
+        queryParams
+      )
+
+      const proof: Buffer = result.rows[0].proof_of_inclusion
+      const claimInfo = new ClaimInfo(
+        queryParams[0],
+        queryParams[1],
+        new anchor.BN(result.rows[0].amount)
+      )
+
+      const signedMessage = await cosmWallet.signMessage(
+        tokenDispenserProvider.generateAuthorizationPayload()
+      )
+
+      await tokenDispenserProvider.submitClaims([
+        {
+          claimInfo,
+          proofOfInclusion: proof,
+          signedMessage,
+        },
+      ])
+
+      expect(
+        await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
+      ).toBeTruthy()
+
+      const claimantFundPubkey =
+        await tokenDispenserProvider.getClaimantFundAddress()
+
+      const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
+
+      expect(claimantFund.amount.eq(new anchor.BN(4000))).toBeTruthy()
     }, 20000)
   })
 })

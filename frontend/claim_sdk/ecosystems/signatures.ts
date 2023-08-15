@@ -3,6 +3,7 @@ import { removeLeading0x } from '../index'
 import { evmGetFullMessage, splitEvmSignature } from './evm'
 import { ethers } from 'ethers'
 import fs from 'fs'
+import { Pubkey } from '@cosmjs/amino'
 
 export type SignedMessage = {
   publicKey: Uint8Array
@@ -25,3 +26,13 @@ export function evmBuildSignedMessage(
     fullMessage: evmGetFullMessage(payload),
   }
 }
+
+// export function cosmosBuildSignedMessage(
+//     pub_key: Pubkey,
+//
+//     payload: string,
+// ): SignedMessage {
+//
+//   return
+//
+// }

@@ -46,7 +46,17 @@ export class ClaimInfo {
         identityStruct = {
           evm: {
             pubkey: Array.from(ethers.getBytes(this.identity)),
+            // pubkey: Buffer.from(
+            //     removeLeading0x(this.identity),
+            //     'hex'
+            // ),
           },
+        }
+        break
+      }
+      case 'cosmwasm': {
+        identityStruct = {
+          cosmwasm: { address: this.identity },
         }
         break
       }

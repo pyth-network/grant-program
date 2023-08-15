@@ -121,6 +121,12 @@ function start_test_validator() {
   sleep 5
 }
 
+function start_anchor_localnet() {
+  cd "$TOKEN_DISPENSER_DIR";
+  anchor run export;
+  anchor localnet;
+}
+
 
 function stop_test_validator() {
   set +e
@@ -128,6 +134,16 @@ function stop_test_validator() {
       kill $VALIDATOR_PID
   )
   return 0
+}
+
+function stop_anchor_localnet() {
+  solana_pid=$(pgrep -f '[s]olana-test-validator' || true)
+  if [ -n "$solana_pid" ]; then
+    echo "killing solana-test-validator with pid: $solana_pid"
+    kill "$solana_pid"
+  else
+    echo "No solana-test-validator process found to stop"
+  fi
 }
 
 function cleanup() {
@@ -140,7 +156,9 @@ function cleanup() {
   if [ "$verbose" -eq 1 ]; then
       echo "shutting down solana-test-validator if running"
   fi
+  stop_anchor_localnet;
   stop_test_validator;
+
 }
 
 function main() {
@@ -154,7 +172,7 @@ function main() {
         echo "deploy solana-test-validator using anchor localnet"
       fi
       printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
-      start_test_validator;
+      start_anchor_localnet;
       # wait for ctrl-c
       ( trap exit SIGINT ; read -r -d '' _ </dev/tty )
   elif [ "$test" -eq 1 ]; then

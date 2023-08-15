@@ -12,6 +12,16 @@ import { removeLeading0x } from '..'
 import * as anchor from '@coral-xyz/anchor'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import fs from 'fs'
+import { Keplr as IKeplrWallet } from '@keplr-wallet/types'
+import { DirectSecp256k1Wallet } from '@cosmjs/proto-signing'
+import {
+  cosmosGetFullMessage,
+  extractRecoveryId,
+  getUncompressedPubkey,
+} from './cosmos'
+import { makeADR36AminoSignDoc } from '@keplr-wallet/cosmos'
+import { Secp256k1HdWallet } from '@cosmjs/amino'
+import path from 'path'
 
 interface TestWallet {
   signMessage(payload: string): Promise<SignedMessage>
@@ -38,6 +48,90 @@ export class TestEvmWallet implements TestWallet {
 
   public address(): string {
     return this.wallet.address
+  }
+}
+export class TestCosmosWallet implements TestWallet {
+  private addressStr: string | undefined
+  private pubkey: Uint8Array | undefined
+  private _chainName: string | undefined
+  constructor(readonly wallet: Secp256k1HdWallet) {}
+  static async fromKeyFile(
+    keyFile: string,
+    chainName: string
+  ): Promise<TestCosmosWallet> {
+    const jsonContent = fs.readFileSync(keyFile, 'utf8')
+    const privateKey = JSON.parse(jsonContent).mnemonic
+    const wallet = new TestCosmosWallet(
+      await Secp256k1HdWallet.fromMnemonic(privateKey)
+    )
+    const accountData = (await wallet.wallet.getAccounts())[0]
+    wallet.addressStr = accountData.address
+    wallet.pubkey = accountData.pubkey
+    wallet._chainName = chainName
+    return wallet
+  }
+
+  get chainName(): string {
+    if (this._chainName === undefined) {
+      throw new Error('Chain name is not set')
+    }
+    return this._chainName
+  }
+
+  public address(): string {
+    if (this.addressStr === undefined) {
+      throw new Error('Address is not set')
+    }
+    return this.addressStr
+  }
+
+  async signMessage(payload: string): Promise<SignedMessage> {
+    /**
+     * Only supports sign doc in the format of Amino. (in the case of protobuf, ADR-36 (opens new window)requirements aren't fully specified for implementation)
+     * sign doc message should be single and the message type should be "sign/MsgSignData"
+     * sign doc "sign/MsgSignData" message should have "signer" and "data" as its value. "data" should be base64 encoded
+     * sign doc chain_id should be an empty string("")
+     * sign doc memo should be an empty string("")
+     * sign doc account_number should be "0"
+     * sign doc sequence should be "0"
+     * sign doc fee should be {gas: "0", amount: []}
+     */
+    const {
+      signed,
+      signature: { pub_key, signature: signatureBase64 },
+    } = await this.wallet.signAmino(
+      this.address(),
+      makeADR36AminoSignDoc(this.address(), payload)
+    )
+
+    const fullMessage = cosmosGetFullMessage(this.address(), payload)
+    const signature = Buffer.from(signatureBase64, 'base64')
+    const publicKey = getUncompressedPubkey(
+      Buffer.from(pub_key.value, 'base64')
+    )
+    if (this.chainName == 'injective') {
+      return {
+        publicKey: uncompressedToEvmPubkey(publicKey),
+        signature,
+        recoveryId: extractRecoveryId(
+          signature,
+          publicKey,
+          Hash.keccak256(fullMessage)
+        ),
+        fullMessage,
+      }
+    } else {
+      return {
+        publicKey,
+        signature,
+        recoveryId: extractRecoveryId(
+          signature,
+          publicKey,
+          Hash.sha256(fullMessage)
+        ),
+        fullMessage,
+      }
+    }
   }
 }
 
@@ -89,3 +183,19 @@ test('Evm signature', async () => {
 
   await provider.sendAndConfirm(txn, [solanaKeypair])
 }, 20000)
+
+test('Comsmos dummy', async () => {
+  const cosmosPrivateKeyPath = path.resolve(
+    __dirname,
+    '../../integration/keys/cosmos_private_key.json'
+  )
+
+  //testCosmosWallet.address = cosmos1q67j5vk66p0dm6rg5tjfuhkm8t78t5m56w3ekn;
+  const testCosmosWallet = await TestCosmosWallet.fromKeyFile(
+    cosmosPrivateKeyPath,
+    'osmosis'
+  )
+  console.log(`testCosmosWallet.address(): ${testCosmosWallet.address()}`)
+  //
+  // console.log(`pneumonic: ${mnemonic}`);
+})
