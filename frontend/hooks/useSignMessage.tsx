@@ -20,6 +20,10 @@ import {
 import { Hash } from '@keplr-wallet/crypto'
 import { useCallback } from 'react'
 import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
+import {
+  SignedMessage,
+  evmBuildSignedMessage,
+} from 'claim_sdk/ecosystems/signatures'
 
 // SignMessageFn signs the message and returns it.
 // It will return undefined:
@@ -27,15 +31,9 @@ import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
 // 2. If the user denies the sign request.
 // 3. If there is some error. This is an edge case which happens rarely.
 // We don't know of any special case we should handle right now.
-type SignMessageFn = (payload: string) => Promise<SignedMessage | undefined>
-
-type SignedMessage = {
-  publicKey: Uint8Array
-  signature: Uint8Array
-  // recoveryId is undefined for ed25519
-  recoveryId: number | undefined
-  fullMessage: Uint8Array
-}
+export type SignMessageFn = (
+  payload: string
+) => Promise<SignedMessage | undefined>
 
 // This hook returns a function to sign message for the Aptos wallet.
 export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
@@ -147,13 +145,7 @@ export function useEVMSignMessage(): SignMessageFn {
         )
           return
         const response = await signMessageAsync({ message: payload })
-        const [signature, recoveryId] = splitEvmSignature(response)
-        return {
-          publicKey: Buffer.from(removeLeading0x(address), 'hex'),
-          signature,
-          recoveryId,
-          fullMessage: evmGetFullMessage(payload),
-        }
+        return evmBuildSignedMessage(response, address, payload)
       } catch (e) {
         console.error(e)
       }
