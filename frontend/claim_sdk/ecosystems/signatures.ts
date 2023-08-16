@@ -1,14 +1,10 @@
-import { SignMessageArgs } from '@wagmi/core'
 import { removeLeading0x } from '../index'
 import {
   evmGetFullMessage,
   splitEvmSignature,
   uncompressedToEvmPubkey,
 } from './evm'
-import { ethers } from 'ethers'
-import fs from 'fs'
 import { Pubkey as AminoPubkey, StdSignDoc } from '@cosmjs/amino'
-import { serializeSignDoc } from '@keplr-wallet/cosmos'
 import {
   cosmosGetFullMessage,
   extractChainId,
