@@ -1,5 +1,9 @@
 import { ethers } from 'ethers'
-import { SignedMessage, evmBuildSignedMessage } from './signatures'
+import {
+  SignedMessage,
+  evmBuildSignedMessage,
+  cosmwasmBuildSignedMessage,
+} from './signatures'
 import {
   LAMPORTS_PER_SOL,
   Secp256k1Program,
@@ -12,16 +16,8 @@ import { removeLeading0x } from '..'
 import * as anchor from '@coral-xyz/anchor'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import fs from 'fs'
-import { Keplr as IKeplrWallet } from '@keplr-wallet/types'
-import { DirectSecp256k1Wallet } from '@cosmjs/proto-signing'
-import {
-  cosmosGetFullMessage,
-  extractRecoveryId,
-  getUncompressedPubkey,
-} from './cosmos'
-import { makeADR36AminoSignDoc, serializeSignDoc } from '@keplr-wallet/cosmos'
+import { makeADR36AminoSignDoc } from '@keplr-wallet/cosmos'
 import { Secp256k1HdWallet } from '@cosmjs/amino'
-import path from 'path'
 
 interface TestWallet {
   signMessage(payload: string): Promise<SignedMessage>
@@ -52,26 +48,27 @@ export class TestEvmWallet implements TestWallet {
 }
 export class TestCosmWasmWallet implements TestWallet {
   private addressStr: string | undefined
-  private pubkey: Uint8Array | undefined
   private _chainName: string | undefined
   constructor(readonly wallet: Secp256k1HdWallet) {}
   static async fromKeyFile(
     keyFile: string,
-    chainName: string
+    chainName?: string
   ): Promise<TestCosmWasmWallet> {
     const jsonContent = fs.readFileSync(keyFile, 'utf8')
     const privateKey = JSON.parse(jsonContent).mnemonic
     const wallet = new TestCosmWasmWallet(
-      await Secp256k1HdWallet.fromMnemonic(privateKey)
+      await Secp256k1HdWallet.fromMnemonic(
+        privateKey,
+        chainName ? { prefix: chainName } : {}
+      )
     )
     const accountData = (await wallet.wallet.getAccounts())[0]
     wallet.addressStr = accountData.address
-    wallet.pubkey = accountData.pubkey
-    wallet._chainName = chainName
+    wallet._chainName = chainName ?? 'cosmos'
     return wallet
   }
 
-  get chainName(): string {
+  get chainId(): string {
     if (this._chainName === undefined) {
       throw new Error('Chain name is not set')
     }
@@ -86,16 +83,6 @@ export class TestCosmWasmWallet implements TestWallet {
   }
 
   async signMessage(payload: string): Promise<SignedMessage> {
-    /**
-     * Only supports sign doc in the format of Amino. (in the case of protobuf, ADR-36 (opens new window)requirements aren't fully specified for implementation)
-     * sign doc message should be single and the message type should be "sign/MsgSignData"
-     * sign doc "sign/MsgSignData" message should have "signer" and "data" as its value. "data" should be base64 encoded
-     * sign doc chain_id should be an empty string("")
-     * sign doc memo should be an empty string("")
-     * sign doc account_number should be "0"
-     * sign doc sequence should be "0"
-     * sign doc fee should be {gas: "0", amount: []}
-     */
     const {
       signed,
       signature: { pub_key, signature: signatureBase64 },
@@ -104,35 +91,12 @@ export class TestCosmWasmWallet implements TestWallet {
       makeADR36AminoSignDoc(this.address(), payload)
     )
 
-    // const fullMessage = cosmosGetFullMessage(this.address(), payload)
-    const fullMessage = serializeSignDoc(signed)
-    const signature = Buffer.from(signatureBase64, 'base64')
-    const publicKey = getUncompressedPubkey(
-      Buffer.from(pub_key.value, 'base64')
+    return cosmwasmBuildSignedMessage(
+      pub_key,
+      signed,
+      signatureBase64,
+      this.chainId
     )
-    if (this.chainName == 'injective') {
-      return {
-        publicKey: uncompressedToEvmPubkey(publicKey),
-        signature,
-        recoveryId: extractRecoveryId(
-          signature,
-          publicKey,
-          Hash.keccak256(fullMessage)
-        ),
-        fullMessage,
-      }
-    } else {
-      return {
-        publicKey,
-        signature,
-        recoveryId: extractRecoveryId(
-          signature,
-          publicKey,
-          Hash.sha256(fullMessage)
-        ),
-        fullMessage,
-      }
-    }
   }
 }
 

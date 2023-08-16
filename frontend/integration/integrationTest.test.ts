@@ -14,7 +14,6 @@ import {
   TestCosmWasmWallet,
   TestEvmWallet,
 } from '../claim_sdk/ecosystems/signatures.test'
-import { Secp256k1HdWallet } from '@cosmjs/amino'
 //TODO: update this
 const tokenDispenserProgramId = new anchor.web3.PublicKey(
   'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'
@@ -33,7 +32,8 @@ describe('integration test', () => {
     __dirname,
     'keys/cosmos_private_key.json'
   )
-  //cosmos1q67j5vk66p0dm6rg5tjfuhkm8t78t5m56w3ekn
+  const cosmwasmPrefix = 'osmo'
+  //<chainName>1q67j5vk66p0dm6rg5tjfuhkm8t78t5m56w3ekn
   let cosmWallet: TestCosmWasmWallet
 
   // const cosmosWallet =
@@ -41,10 +41,9 @@ describe('integration test', () => {
   beforeAll(async () => {
     cosmWallet = await TestCosmWasmWallet.fromKeyFile(
       cosmPrivateKeyPath,
-      'cosmwasm'
+      cosmwasmPrefix
     )
 
-    // TODO: run database migrations here. This seems difficult with node-pg-migrate though.
     // clear the pool before each test
     await pool.query('DELETE FROM claims', [])
 
@@ -214,7 +213,7 @@ describe('integration test', () => {
           claimInfo,
           proofOfInclusion: proof,
           signedMessage,
-          chainId: 'cosmos',
+          chainId: cosmWallet.chainId,
         },
       ])
 

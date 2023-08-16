@@ -1,9 +1,16 @@
 import { SignMessageArgs } from '@wagmi/core'
 import { removeLeading0x } from '../index'
-import { evmGetFullMessage, splitEvmSignature } from './evm'
+import {
+  evmGetFullMessage,
+  splitEvmSignature,
+  uncompressedToEvmPubkey,
+} from './evm'
 import { ethers } from 'ethers'
 import fs from 'fs'
-import { Pubkey } from '@cosmjs/amino'
+import { Pubkey as AminoPubkey, StdSignDoc } from '@cosmjs/amino'
+import { serializeSignDoc } from '@keplr-wallet/cosmos'
+import { extractRecoveryId, getUncompressedPubkey } from './cosmos'
+import { Hash } from '@keplr-wallet/crypto'
 
 export type SignedMessage = {
   publicKey: Uint8Array
@@ -27,12 +34,36 @@ export function evmBuildSignedMessage(
   }
 }
 
-// export function cosmosBuildSignedMessage(
-//     pub_key: Pubkey,
-//
-//     payload: string,
-// ): SignedMessage {
-//
-//   return
-//
-// }
+export function cosmwasmBuildSignedMessage(
+  pub_key: AminoPubkey,
+  signed: StdSignDoc,
+  signatureBase64: string,
+  chainName: string
+): SignedMessage {
+  const fullMessage = serializeSignDoc(signed)
+  const signature = Buffer.from(signatureBase64, 'base64')
+  const publicKey = getUncompressedPubkey(Buffer.from(pub_key.value, 'base64'))
+  if (chainName == 'injective') {
+    return {
+      publicKey: uncompressedToEvmPubkey(publicKey),
+      signature,
+      recoveryId: extractRecoveryId(
+        signature,
+        publicKey,
+        Hash.keccak256(fullMessage)
+      ),
+      fullMessage,
+    }
+  } else {
+    return {
+      publicKey,
+      signature,
+      recoveryId: extractRecoveryId(
+        signature,
+        publicKey,
+        Hash.sha256(fullMessage)
+      ),
+      fullMessage,
+    }
+  }
+}
