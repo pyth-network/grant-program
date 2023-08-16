@@ -1,5 +1,6 @@
 import React from 'react'
 import Arrow from '../../images/arrow.inline.svg'
+import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
 
 const Step3 = () => {
   return (
@@ -16,41 +17,17 @@ const Step3 = () => {
 
           <p className="mb-6 font-light">I am active on…</p>
           <div className="mb-6 grid max-w-[420px] grid-cols-4 gap-4">
-            <label className="checkbox">
-              <input type="checkbox" name="solana" id="" />
-              Solana
-            </label>
-            <label className="checkbox">
-              <input type="checkbox" name="solana" id="" />
-              EVM
-            </label>
-            <label className="checkbox">
-              <input type="checkbox" name="solana" id="" />
-              Aptos
-            </label>
-            <label className="checkbox">
-              <input type="checkbox" name="solana" id="" />
-              Sui
-            </label>
-            <label className="checkbox">
-              <input type="checkbox" name="solana" id="" />
-              Injective
-            </label>
-            <label className="checkbox">
-              <input type="checkbox" name="solana" id="" />
-              Osmosis
-            </label>
-            <label className="checkbox">
-              <input type="checkbox" name="solana" id="" />
-              Neutron
-            </label>
+            <CheckBox ecosystem={ECOSYSTEM.SOLANA} />
+            <CheckBox ecosystem={ECOSYSTEM.EVM} />
+            <CheckBox ecosystem={ECOSYSTEM.APTOS} />
+            <CheckBox ecosystem={ECOSYSTEM.SUI} />
+            <CheckBox ecosystem={ECOSYSTEM.INJECTIVE} />
+            <CheckBox ecosystem={ECOSYSTEM.OSMOSIS} />
+            <CheckBox ecosystem={ECOSYSTEM.NEUTRON} />
           </div>
           <p className="mb-6 font-light">I am an active member of…</p>
           <div>
-            <label className="checkbox">
-              <input type="checkbox" name="solana" id="" />
-              Pyth Discord
-            </label>
+            <CheckBox ecosystem={ECOSYSTEM.DISCORD} />
           </div>
 
           <div className="mt-12 flex justify-end gap-4 ">
@@ -70,6 +47,26 @@ const Step3 = () => {
         </div>
       </div>
     </>
+  )
+}
+
+type CheckBoxProps = {
+  ecosystem: ECOSYSTEM
+}
+function CheckBox({ ecosystem }: CheckBoxProps) {
+  const { map, setActive } = useEcosystem()
+
+  return (
+    <label className="checkbox">
+      <input
+        type="checkbox"
+        checked={map[ecosystem].isActive}
+        onChange={(e) => {
+          setActive(ecosystem, e.target.checked)
+        }}
+      />
+      {ecosystem}
+    </label>
   )
 }
 
