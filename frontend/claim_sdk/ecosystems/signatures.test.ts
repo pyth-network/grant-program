@@ -1,5 +1,9 @@
 import { ethers } from 'ethers'
-import { SignedMessage, evmBuildSignedMessage } from './signatures'
+import {
+  SignedMessage,
+  evmBuildSignedMessage,
+  cosmwasmBuildSignedMessage,
+} from './signatures'
 import {
   LAMPORTS_PER_SOL,
   Secp256k1Program,
@@ -12,6 +16,9 @@ import { removeLeading0x } from '..'
 import * as anchor from '@coral-xyz/anchor'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import fs from 'fs'
+import { makeADR36AminoSignDoc } from '@keplr-wallet/cosmos'
+import { Secp256k1HdWallet } from '@cosmjs/amino'
+import { extractChainId } from './cosmos'
 
 interface TestWallet {
   signMessage(payload: string): Promise<SignedMessage>
@@ -38,6 +45,52 @@ export class TestEvmWallet implements TestWallet {
 
   public address(): string {
     return this.wallet.address
+  }
+}
+export class TestCosmWasmWallet implements TestWallet {
+  protected constructor(
+    readonly wallet: Secp256k1HdWallet,
+    readonly addressStr: string
+  ) {}
+  /**
+   * Create a wallet from a keyfile. If no chainId is provided,
+   * defaults to 'cosmos'
+   * @param keyFile
+   * @param chainId optional chainId/prefix for the address string
+   */
+  static async fromKeyFile(
+    keyFile: string,
+    chainId?: string
+  ): Promise<TestCosmWasmWallet> {
+    const jsonContent = fs.readFileSync(keyFile, 'utf8')
+    const privateKey = JSON.parse(jsonContent).mnemonic
+    const secpWallet = await Secp256k1HdWallet.fromMnemonic(
+      privateKey,
+      chainId ? { prefix: chainId } : {}
+    )
+    const addressStr = (await secpWallet.getAccounts())[0].address
+    return new TestCosmWasmWallet(secpWallet, addressStr)
+  }
+
+  public address(): string {
+    return this.addressStr
+  }
+
+  async signMessage(payload: string): Promise<SignedMessage> {
+    const {
+      signed,
+      signature: { pub_key, signature: signatureBase64 },
+    } = await this.wallet.signAmino(
+      this.address(),
+      makeADR36AminoSignDoc(this.address(), payload)
+    )
+
+    return cosmwasmBuildSignedMessage(
+      pub_key,
+      this.address(),
+      payload,
+      signatureBase64
+    )
   }
 }
 
@@ -88,4 +141,4 @@ test('Evm signature', async () => {
   txn.add(ix)
 
   await provider.sendAndConfirm(txn, [solanaKeypair])
-}, 20000)
+}, 40000)

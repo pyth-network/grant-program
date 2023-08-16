@@ -14,6 +14,7 @@ import * as splToken from '@solana/spl-token'
 import { ClaimInfo, Ecosystem } from './claim'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { SignedMessage } from './ecosystems/signatures'
+import { extractChainId } from './ecosystems/cosmos'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -177,7 +178,7 @@ export class TokenDispenserProvider {
       signedMessage: SignedMessage
     }[]
   ): Promise<void> {
-    /// This is only eth for now
+    /// This is only eth & cosmwasm for now
     let txs: { tx: Transaction }[] = []
 
     const createAtaTxn = await this.createAssociatedTokenAccountTxnIfNeeded()
@@ -203,32 +204,30 @@ export class TokenDispenserProvider {
     proofOfInclusion: Buffer,
     signedMessage: SignedMessage
   ): Promise<Transaction> {
-    if (claimInfo.ecosystem !== 'evm') {
-      new Error('Not implemented')
-    }
-
     // 1. generate claim certificate
-    const identityProof: IdlTypes<TokenDispenser>['IdentityCertificate'] = {
-      [claimInfo.ecosystem]: {
-        pubkey: signedMessage.publicKey,
-        verificationInstructionIndex: 0,
-      },
-    }
+    //    a. create identityProof
+    const identityProof = this.createIdentityProof(claimInfo, signedMessage)
 
+    //    b. split proof of inclusion into 32 byte chunks
+    if (proofOfInclusion.length % 32 !== 0) {
+      throw new Error('Proof of inclusion must be a multiple of 32 bytes')
+    }
+    const proofOfInclusionArr = []
+    for (let i = 0; i < proofOfInclusion.length; i += 32) {
+      proofOfInclusionArr.push(proofOfInclusion.subarray(i, i + 32))
+    }
     const claimCert: IdlTypes<TokenDispenser>['ClaimCertificate'] = {
       amount: claimInfo.amount,
       proofOfIdentity: identityProof,
-      proofOfInclusion: [proofOfInclusion],
+      proofOfInclusion: proofOfInclusionArr,
     }
 
     // 2. generate signature verification instruction if needed
     const signatureVerificationIx =
-      Secp256k1Program.createInstructionWithEthAddress({
-        ethAddress: signedMessage.publicKey,
-        message: signedMessage.fullMessage,
-        signature: signedMessage.signature,
-        recoveryId: signedMessage.recoveryId!,
-      })
+      this.generateSignatureVerificationInstruction(
+        claimInfo.ecosystem,
+        signedMessage
+      )
 
     // 3. derive receipt pda
     if (await this.isClaimAlreadySubmitted(claimInfo)) {
@@ -255,10 +254,64 @@ export class TokenDispenserProvider {
           isSigner: false,
         },
       ])
-      .preInstructions([signatureVerificationIx])
+      .preInstructions(signatureVerificationIx ? [signatureVerificationIx] : [])
       .transaction()
   }
 
+  private createIdentityProof(
+    claimInfo: ClaimInfo,
+    signedMessage: SignedMessage
+  ): IdlTypes<TokenDispenser>['IdentityCertificate'] {
+    switch (claimInfo.ecosystem) {
+      case 'evm': {
+        return {
+          evm: {
+            pubkey: Array.from(signedMessage.publicKey),
+            verificationInstructionIndex: 0,
+          },
+        }
+      }
+      case 'cosmwasm': {
+        return {
+          cosmwasm: {
+            pubkey: Array.from(signedMessage.publicKey),
+            chainId: extractChainId(claimInfo.identity),
+            signature: Array.from(signedMessage.signature),
+            recoveryId: signedMessage.recoveryId!,
+            message: Buffer.from(signedMessage.fullMessage),
+          },
+        }
+      }
+      //TODO: implement other ecosystems
+      default: {
+        throw new Error(`unknown ecosystem type: ${claimInfo.ecosystem}`)
+      }
+    }
+  }
+
+  private generateSignatureVerificationInstruction(
+    ecosystem: Ecosystem,
+    signedMessage: SignedMessage
+  ): anchor.web3.TransactionInstruction | undefined {
+    switch (ecosystem) {
+      case 'evm': {
+        return Secp256k1Program.createInstructionWithEthAddress({
+          ethAddress: signedMessage.publicKey,
+          message: signedMessage.fullMessage,
+          signature: signedMessage.signature,
+          recoveryId: signedMessage.recoveryId!,
+        })
+      }
+      case 'cosmwasm': {
+        return undefined
+      }
+
+      default: {
+        // TODO: support the other ecosystems
+        throw new Error(`unknown ecosystem type: ${ecosystem}`)
+      }
+    }
+  }
   public async getClaimantFundAddress(): Promise<PublicKey> {
     const config = await this.getConfig()
     const associatedTokenAccount =

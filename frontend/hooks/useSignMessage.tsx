@@ -4,25 +4,15 @@ import { useWalletKit } from '@mysten/wallet-kit'
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
 import { removeLeading0x } from 'claim_sdk'
 import {
-  cosmosGetFullMessage,
-  extractRecoveryId,
-  getUncompressedPubkey,
-} from 'claim_sdk/ecosystems/cosmos'
-import {
-  evmGetFullMessage,
-  splitEvmSignature,
-  uncompressedToEvmPubkey,
-} from 'claim_sdk/ecosystems/evm'
-import {
   suiGetFullMessage,
   splitSignatureAndPubkey,
 } from 'claim_sdk/ecosystems/sui'
-import { Hash } from '@keplr-wallet/crypto'
 import { useCallback } from 'react'
 import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
 import {
   SignedMessage,
   evmBuildSignedMessage,
+  cosmwasmBuildSignedMessage,
 } from 'claim_sdk/ecosystems/signatures'
 
 // SignMessageFn signs the message and returns it.
@@ -94,34 +84,12 @@ export function useCosmosSignMessage(
           address,
           payload
         )
-        const fullMessage = cosmosGetFullMessage(address, payload)
-        const signature = Buffer.from(signatureBase64, 'base64')
-        const publicKey = getUncompressedPubkey(
-          Buffer.from(pub_key.value, 'base64')
+        return cosmwasmBuildSignedMessage(
+          pub_key,
+          address,
+          payload,
+          signatureBase64
         )
-        if (chainName == 'injective') {
-          return {
-            publicKey: uncompressedToEvmPubkey(publicKey),
-            signature,
-            recoveryId: extractRecoveryId(
-              signature,
-              publicKey,
-              Hash.keccak256(fullMessage)
-            ),
-            fullMessage,
-          }
-        } else {
-          return {
-            publicKey,
-            signature,
-            recoveryId: extractRecoveryId(
-              signature,
-              publicKey,
-              Hash.sha256(fullMessage)
-            ),
-            fullMessage,
-          }
-        }
       } catch (e) {
         console.error(e)
       }

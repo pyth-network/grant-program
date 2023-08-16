@@ -50,6 +50,12 @@ export class ClaimInfo {
         }
         break
       }
+      case 'cosmwasm': {
+        identityStruct = {
+          cosmwasm: { address: this.identity },
+        }
+        break
+      }
       default: {
         // TODO: support the other ecosystems
         throw new Error(`unknown ecosystem type: ${this.ecosystem}`)
