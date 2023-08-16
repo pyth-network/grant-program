@@ -57,7 +57,7 @@ export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
         console.error(e)
       }
     },
-    [connected, signMessage, nonce]
+    [connected, account, signMessage, nonce]
   )
   return signMessageCb
 }
@@ -94,7 +94,7 @@ export function useCosmosSignMessage(
         console.error(e)
       }
     },
-    [signArbitrary, address, isWalletConnected]
+    [address, isWalletConnected, signArbitrary, chainName]
   )
   return signMessageCb
 }
@@ -118,7 +118,7 @@ export function useEVMSignMessage(): SignMessageFn {
         console.error(e)
       }
     },
-    [signMessageAsync, isWalletConnected]
+    [signMessageAsync, isWalletConnected, address]
   )
 
   return signMessageCb
@@ -143,7 +143,7 @@ export function useSolanaSignMessage(): SignMessageFn {
         console.error(e)
       }
     },
-    [signMessage, connected]
+    [signMessage, connected, publicKey]
   )
 
   return signMessageCb
