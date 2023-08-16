@@ -122,13 +122,13 @@ export class TokenDispenserProvider {
   }
 
   public async initialize(
-    root: number[],
+    root: Buffer,
     mint: anchor.web3.PublicKey,
     treasury: anchor.web3.PublicKey,
     dispenserGuard: anchor.web3.PublicKey
   ): Promise<TransactionSignature> {
     return this.tokenDispenserProgram.methods
-      .initialize(root, dispenserGuard)
+      .initialize(Array.from(root), dispenserGuard)
       .accounts({
         config: this.getConfigPda()[0],
         mint,

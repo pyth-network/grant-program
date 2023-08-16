@@ -21,7 +21,7 @@ export default async function handler(
 
   try {
     const result = await pool.query(
-      'SELECT amount FROM amounts WHERE ecosystem = $1 AND identity = $2',
+      'SELECT amount FROM claims WHERE ecosystem = $1 AND identity = $2',
       [ecosystem, identity]
     )
     if (result.rows.length == 0) {

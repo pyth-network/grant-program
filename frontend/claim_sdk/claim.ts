@@ -1,7 +1,6 @@
 import * as anchor from '@coral-xyz/anchor'
 import { PublicKey } from '@solana/web3.js'
-import IDL from './idl/token_dispenser.json'
-import { removeLeading0x } from './index'
+import tokenDispenser from './idl/token_dispenser.json'
 import { ethers } from 'ethers'
 
 // Must be kept in line with the database types and the on-chain program
@@ -12,7 +11,7 @@ export type Ecosystem =
   | 'sui'
   | 'aptos'
   | 'cosmwasm'
-export const Ecosystems = [
+export const Ecosystems: Ecosystem[] = [
   'discord',
   'solana',
   'evm',
@@ -62,7 +61,7 @@ export class ClaimInfo {
       }
     }
 
-    const coder = new anchor.BorshCoder(IDL as any)
+    const coder = new anchor.BorshCoder(tokenDispenser as anchor.Idl)
     // type ascription needed because typescript doesn't think the two buffer types are equal for some reason.
     return coder.types.encode('ClaimInfo', {
       amount: this.amount,

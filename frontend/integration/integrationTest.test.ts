@@ -1,19 +1,19 @@
 import * as anchor from '@coral-xyz/anchor'
 import { expect } from '@jest/globals'
-import { getDatabasePool } from '../utils/db'
+import {
+  addTestWalletsToDatabase,
+  clearDatabase,
+  getDatabasePool,
+} from '../utils/db'
 import { ClaimInfo, Ecosystem } from '../claim_sdk/claim'
-import { MerkleTree } from '../claim_sdk/merkleTree'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import * as splToken from '@solana/spl-token'
 import { Token } from '@solana/spl-token'
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
-import * as path from 'path'
 import { Buffer } from 'buffer'
 import { QueryParams, TokenDispenserProvider } from '../claim_sdk/solana'
-import {
-  TestCosmWasmWallet,
-  TestEvmWallet,
-} from '../claim_sdk/ecosystems/signatures.test'
+import { TestWallet } from '../claim_sdk/testWallets'
+import { loadTestWallets } from '../claim_sdk/testWallets'
 //TODO: update this
 const tokenDispenserProgramId = new anchor.web3.PublicKey(
   'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'
@@ -21,74 +21,29 @@ const tokenDispenserProgramId = new anchor.web3.PublicKey(
 const pool = getDatabasePool()
 
 describe('integration test', () => {
-  let merkleTree: MerkleTree
-  // TODO: load this in from local keys directory
-  const solanaClaimant = anchor.web3.Keypair.generate()
-  const evmPrivateKeyPath = path.resolve(__dirname, 'keys/evm_private_key.json')
-  const evmWallet = TestEvmWallet.fromKeyfile(evmPrivateKeyPath)
+  let root: Buffer
+  let testWallets: Record<Ecosystem, TestWallet[]>
 
-  const cosmPrivateKeyPath = path.resolve(
-    __dirname,
-    'keys/cosmos_private_key.json'
-  )
-
-  let cosmWallet1: TestCosmWasmWallet
-  const cosmwasmPrefix2 = 'osmo'
-  let cosmWallet2: TestCosmWasmWallet
-  const cosmwasmPrefix3 = 'neutron'
-  let cosmWallet3: TestCosmWasmWallet
-
-  let root: number[]
   beforeAll(async () => {
-    cosmWallet1 = await TestCosmWasmWallet.fromKeyFile(cosmPrivateKeyPath)
-
-    cosmWallet2 = await TestCosmWasmWallet.fromKeyFile(
-      cosmPrivateKeyPath,
-      cosmwasmPrefix2
-    )
-
-    cosmWallet3 = await TestCosmWasmWallet.fromKeyFile(
-      cosmPrivateKeyPath,
-      cosmwasmPrefix3
-    )
-
-    // clear the pool before each test
-    await pool.query('DELETE FROM claims', [])
-
-    const sampleData: any[] = [
-      ['solana', solanaClaimant.publicKey.toString(), 1000],
-      ['evm', evmWallet.address().toString(), 2000],
-      // ['aptos', '0x7e7544df4fc42107d4a60834685dfd9c1e6ff048f49fe477bc19c1551299d5cb', 3000],
-      ['cosmwasm', cosmWallet1.address(), 4000],
-      ['cosmwasm', cosmWallet2.address(), 5000],
-      ['cosmwasm', cosmWallet3.address(), 6000],
-    ]
-
-    const leaves = sampleData.map((value) => {
-      const claimInfo = new ClaimInfo(
-        value[0],
-        value[1],
-        new anchor.BN(value[2])
-      )
-      return claimInfo.toBuffer()
-    })
-
-    merkleTree = new MerkleTree(leaves)
-    root = Array.from(merkleTree.root)
-    for (let i = 0; i < sampleData.length; i++) {
-      const proof = merkleTree.prove(leaves[i])!
-      const datum = sampleData[i]
-
-      await pool.query(
-        'INSERT INTO claims VALUES($1::ecosystem_type, $2, $3, $4)',
-        [datum[0], datum[1], datum[2], proof]
-      )
-    }
+    await clearDatabase(pool)
+    testWallets = await loadTestWallets()
+    root = await addTestWalletsToDatabase(pool, await loadTestWallets())
   })
 
   afterAll(async () => {
-    await pool.query('DELETE FROM claims', [])
+    await clearDatabase(pool)
     await pool.end()
+  })
+
+  describe('Api test', () => {
+    it('returns the correct amount for a claim', async () => {
+      const result = await pool.query(
+        'SELECT amount FROM claims WHERE ecosystem = $1 AND identity = $2',
+        ['evm', '0xb80Eb09f118ca9Df95b2DF575F68E41aC7B9E2f8']
+      )
+
+      expect(result.rows[0].amount).toBe('3000000')
+    })
   })
 
   describe('token dispenser e2e', () => {
@@ -156,14 +111,14 @@ describe('integration test', () => {
       const configAccount = await tokenDispenserProvider.getConfig()
 
       expect(configAccount.bump).toEqual(configBump)
-      expect(configAccount.merkleRoot).toEqual(root)
+      expect(configAccount.merkleRoot).toEqual(Array.from(root))
       expect(configAccount.mint).toEqual(mint.publicKey)
       expect(configAccount.treasury).toEqual(treasury)
       expect(configAccount.dispenserGuard).toEqual(dispenserGuard.publicKey)
     })
 
     it('submits an evm claim', async () => {
-      const queryParams: QueryParams = ['evm', evmWallet.address()]
+      const queryParams: QueryParams = ['evm', testWallets.evm[0].address()]
       const result = await pool.query(
         'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
         queryParams
@@ -176,7 +131,7 @@ describe('integration test', () => {
         new anchor.BN(result.rows[0].amount)
       )
 
-      const signedMessage = await evmWallet.signMessage(
+      const signedMessage = await testWallets.evm[0].signMessage(
         tokenDispenserProvider.generateAuthorizationPayload()
       )
 
@@ -197,11 +152,14 @@ describe('integration test', () => {
 
       const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
 
-      expect(claimantFund.amount.eq(new anchor.BN(2000))).toBeTruthy()
+      expect(claimantFund.amount.eq(new anchor.BN(3000000))).toBeTruthy()
     }, 40000)
 
     it('submits a cosmwasm claim', async () => {
-      const queryParams: QueryParams = ['cosmwasm', cosmWallet1.address()]
+      const queryParams: QueryParams = [
+        'cosmwasm',
+        testWallets.cosmwasm[0].address(),
+      ]
       const result = await pool.query(
         'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
         queryParams
@@ -214,7 +172,7 @@ describe('integration test', () => {
         new anchor.BN(result.rows[0].amount)
       )
 
-      const signedMessage = await cosmWallet1.signMessage(
+      const signedMessage = await testWallets.cosmwasm[0].signMessage(
         tokenDispenserProvider.generateAuthorizationPayload()
       )
 
@@ -223,7 +181,6 @@ describe('integration test', () => {
           claimInfo,
           proofOfInclusion: proof,
           signedMessage,
-          // chainId: cosmWallet1.chainId,
         },
       ])
 
@@ -236,21 +193,23 @@ describe('integration test', () => {
 
       const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
 
-      expect(claimantFund.amount.eq(new anchor.BN(6000))).toBeTruthy()
+      expect(
+        claimantFund.amount.eq(new anchor.BN(3000000 + 6000000))
+      ).toBeTruthy()
     }, 40000)
 
     it('submits multiple claims at once', async () => {
       const queryParamsArr: {
-        wallet: TestCosmWasmWallet
+        wallet: TestWallet
         queryParams: QueryParams
       }[] = [
         {
-          wallet: cosmWallet2,
-          queryParams: ['cosmwasm', cosmWallet2.address()],
+          wallet: testWallets.cosmwasm[1],
+          queryParams: ['cosmwasm', testWallets.cosmwasm[1].address()],
         },
         {
-          wallet: cosmWallet3,
-          queryParams: ['cosmwasm', cosmWallet3.address()],
+          wallet: testWallets.cosmwasm[2],
+          queryParams: ['cosmwasm', testWallets.cosmwasm[2].address()],
         },
       ]
       const claims = await Promise.all(
@@ -295,7 +254,11 @@ describe('integration test', () => {
 
       const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
 
-      expect(claimantFund.amount.eq(new anchor.BN(17000))).toBeTruthy()
+      expect(
+        claimantFund.amount.eq(
+          new anchor.BN(3000000 + 6000000 + 6100000 + 6200000)
+        )
+      ).toBeTruthy()
     })
   })
 })
