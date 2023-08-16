@@ -26,7 +26,7 @@ export async function addTestWalletsToDatabase(
         return new ClaimInfo(
           ecosystem,
           testWallet.address(),
-          new anchor.BN(1000000 * (ecosystemIndex + 1) + 100000 * index)
+          new anchor.BN(1000000 * (ecosystemIndex + 1) + 100000 * index) // The amount of tokens is deterministic based on the order of the test wallets
         )
       })
     }
