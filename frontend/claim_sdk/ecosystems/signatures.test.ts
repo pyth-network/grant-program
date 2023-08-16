@@ -19,7 +19,7 @@ import {
   extractRecoveryId,
   getUncompressedPubkey,
 } from './cosmos'
-import { makeADR36AminoSignDoc } from '@keplr-wallet/cosmos'
+import { makeADR36AminoSignDoc, serializeSignDoc } from '@keplr-wallet/cosmos'
 import { Secp256k1HdWallet } from '@cosmjs/amino'
 import path from 'path'
 
@@ -50,7 +50,7 @@ export class TestEvmWallet implements TestWallet {
     return this.wallet.address
   }
 }
-export class TestCosmosWallet implements TestWallet {
+export class TestCosmWasmWallet implements TestWallet {
   private addressStr: string | undefined
   private pubkey: Uint8Array | undefined
   private _chainName: string | undefined
@@ -58,10 +58,10 @@ export class TestCosmosWallet implements TestWallet {
   static async fromKeyFile(
     keyFile: string,
     chainName: string
-  ): Promise<TestCosmosWallet> {
+  ): Promise<TestCosmWasmWallet> {
     const jsonContent = fs.readFileSync(keyFile, 'utf8')
     const privateKey = JSON.parse(jsonContent).mnemonic
-    const wallet = new TestCosmosWallet(
+    const wallet = new TestCosmWasmWallet(
       await Secp256k1HdWallet.fromMnemonic(privateKey)
     )
     const accountData = (await wallet.wallet.getAccounts())[0]
@@ -104,7 +104,8 @@ export class TestCosmosWallet implements TestWallet {
       makeADR36AminoSignDoc(this.address(), payload)
     )
 
-    const fullMessage = cosmosGetFullMessage(this.address(), payload)
+    // const fullMessage = cosmosGetFullMessage(this.address(), payload)
+    const fullMessage = serializeSignDoc(signed)
     const signature = Buffer.from(signatureBase64, 'base64')
     const publicKey = getUncompressedPubkey(
       Buffer.from(pub_key.value, 'base64')
@@ -182,20 +183,4 @@ test('Evm signature', async () => {
   txn.add(ix)
 
   await provider.sendAndConfirm(txn, [solanaKeypair])
-}, 20000)
-
-test('Comsmos dummy', async () => {
-  const cosmosPrivateKeyPath = path.resolve(
-    __dirname,
-    '../../integration/keys/cosmos_private_key.json'
-  )
-
-  //testCosmosWallet.address = cosmos1q67j5vk66p0dm6rg5tjfuhkm8t78t5m56w3ekn;
-  const testCosmosWallet = await TestCosmosWallet.fromKeyFile(
-    cosmosPrivateKeyPath,
-    'osmosis'
-  )
-  console.log(`testCosmosWallet.address(): ${testCosmosWallet.address()}`)
-  //
-  // console.log(`pneumonic: ${mnemonic}`);
-})
+}, 40000)

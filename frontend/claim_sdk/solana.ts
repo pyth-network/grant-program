@@ -175,9 +175,10 @@ export class TokenDispenserProvider {
       claimInfo: ClaimInfo
       proofOfInclusion: Buffer
       signedMessage: SignedMessage
+      chainId?: string
     }[]
   ): Promise<void> {
-    /// This is only eth for now
+    /// This is only eth & cosmwasm for now
     let txs: { tx: Transaction }[] = []
 
     const createAtaTxn = await this.createAssociatedTokenAccountTxnIfNeeded()
@@ -189,7 +190,8 @@ export class TokenDispenserProvider {
         tx: await this.generateClaimTransaction(
           claim.claimInfo,
           claim.proofOfInclusion,
-          claim.signedMessage
+          claim.signedMessage,
+          claim.chainId
         ),
       })
     }
@@ -201,34 +203,37 @@ export class TokenDispenserProvider {
   public async generateClaimTransaction(
     claimInfo: ClaimInfo,
     proofOfInclusion: Buffer,
-    signedMessage: SignedMessage
+    signedMessage: SignedMessage,
+    chainId?: string
   ): Promise<Transaction> {
-    if (claimInfo.ecosystem !== 'evm') {
-      new Error('Not implemented')
-    }
-
     // 1. generate claim certificate
-    const identityProof: IdlTypes<TokenDispenser>['IdentityCertificate'] = {
-      [claimInfo.ecosystem]: {
-        pubkey: signedMessage.publicKey,
-        verificationInstructionIndex: 0,
-      },
-    }
+    //    a. create identityProof
+    const identityProof = this.createIdentityProof(
+      claimInfo,
+      signedMessage,
+      chainId
+    )
 
+    // split proof of inclusion into 32 byte chunks
+    if (proofOfInclusion.length % 32 !== 0) {
+      throw new Error('Proof of inclusion must be a multiple of 32 bytes')
+    }
+    const proofOfInclusionArr = []
+    for (let i = 0; i < proofOfInclusion.length; i += 32) {
+      proofOfInclusionArr.push(proofOfInclusion.subarray(i, i + 32))
+    }
     const claimCert: IdlTypes<TokenDispenser>['ClaimCertificate'] = {
       amount: claimInfo.amount,
       proofOfIdentity: identityProof,
-      proofOfInclusion: [proofOfInclusion],
+      proofOfInclusion: proofOfInclusionArr,
     }
 
     // 2. generate signature verification instruction if needed
     const signatureVerificationIx =
-      Secp256k1Program.createInstructionWithEthAddress({
-        ethAddress: signedMessage.publicKey,
-        message: signedMessage.fullMessage,
-        signature: signedMessage.signature,
-        recoveryId: signedMessage.recoveryId!,
-      })
+      this.generateSignatureVerificationInstruction(
+        claimInfo.ecosystem,
+        signedMessage
+      )
 
     // 3. derive receipt pda
     if (await this.isClaimAlreadySubmitted(claimInfo)) {
@@ -255,10 +260,69 @@ export class TokenDispenserProvider {
           isSigner: false,
         },
       ])
-      .preInstructions([signatureVerificationIx])
+      .preInstructions(signatureVerificationIx ? [signatureVerificationIx] : [])
       .transaction()
   }
 
+  private createIdentityProof(
+    claimInfo: ClaimInfo,
+    signedMessage: SignedMessage,
+    chainId?: string
+  ): IdlTypes<TokenDispenser>['IdentityCertificate'] {
+    switch (claimInfo.ecosystem) {
+      case 'evm': {
+        return {
+          evm: {
+            pubkey: signedMessage.publicKey,
+            verificationInstructionIndex: 0,
+          },
+        }
+      }
+      case 'cosmwasm': {
+        if (!chainId) {
+          throw new Error('chainId is required for cosmwasm')
+        }
+        return {
+          cosmwasm: {
+            pubkey: signedMessage.publicKey,
+            chainId,
+            signature: signedMessage.signature,
+            recoveryId: signedMessage.recoveryId!,
+            message: Buffer.from(signedMessage.fullMessage),
+          },
+        }
+      }
+      //TODO: implement other ecosystems
+      default: {
+        throw new Error(`unknown ecosystem type: ${claimInfo.ecosystem}`)
+      }
+    }
+  }
+
+  private generateSignatureVerificationInstruction(
+    ecosystem: Ecosystem,
+    signedMessage: SignedMessage,
+    chainId?: string
+  ): anchor.web3.TransactionInstruction | undefined {
+    switch (ecosystem) {
+      case 'evm': {
+        return Secp256k1Program.createInstructionWithEthAddress({
+          ethAddress: signedMessage.publicKey,
+          message: signedMessage.fullMessage,
+          signature: signedMessage.signature,
+          recoveryId: signedMessage.recoveryId!,
+        })
+      }
+      case 'cosmwasm': {
+        return undefined
+      }
+
+      default: {
+        // TODO: support the other ecosystems
+        throw new Error(`unknown ecosystem type: ${ecosystem}`)
+      }
+    }
+  }
   public async getClaimantFundAddress(): Promise<PublicKey> {
     const config = await this.getConfig()
     const associatedTokenAccount =

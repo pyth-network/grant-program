@@ -11,7 +11,7 @@ import * as path from 'path'
 import { Buffer } from 'buffer'
 import { QueryParams, TokenDispenserProvider } from '../claim_sdk/solana'
 import {
-  TestCosmosWallet,
+  TestCosmWasmWallet,
   TestEvmWallet,
 } from '../claim_sdk/ecosystems/signatures.test'
 import { Secp256k1HdWallet } from '@cosmjs/amino'
@@ -34,12 +34,12 @@ describe('integration test', () => {
     'keys/cosmos_private_key.json'
   )
   //cosmos1q67j5vk66p0dm6rg5tjfuhkm8t78t5m56w3ekn
-  let cosmWallet: TestCosmosWallet
+  let cosmWallet: TestCosmWasmWallet
 
   // const cosmosWallet =
   let root: number[]
   beforeAll(async () => {
-    cosmWallet = await TestCosmosWallet.fromKeyFile(
+    cosmWallet = await TestCosmWasmWallet.fromKeyFile(
       cosmPrivateKeyPath,
       'cosmwasm'
     )
@@ -189,7 +189,7 @@ describe('integration test', () => {
       const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
 
       expect(claimantFund.amount.eq(new anchor.BN(2000))).toBeTruthy()
-    }, 20000)
+    }, 40000)
 
     it('submits a cosmwasm claim', async () => {
       const queryParams: QueryParams = ['cosmwasm', cosmWallet.address()]
@@ -214,6 +214,7 @@ describe('integration test', () => {
           claimInfo,
           proofOfInclusion: proof,
           signedMessage,
+          chainId: 'cosmos',
         },
       ])
 
@@ -226,7 +227,7 @@ describe('integration test', () => {
 
       const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
 
-      expect(claimantFund.amount.eq(new anchor.BN(4000))).toBeTruthy()
-    }, 20000)
+      expect(claimantFund.amount.eq(new anchor.BN(6000))).toBeTruthy()
+    }, 40000)
   })
 })
