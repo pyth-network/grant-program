@@ -4,21 +4,9 @@ import { useWalletKit } from '@mysten/wallet-kit'
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
 import { removeLeading0x } from 'claim_sdk'
 import {
-  cosmosGetFullMessage,
-  extractChainId,
-  extractRecoveryId,
-  getUncompressedPubkey,
-} from 'claim_sdk/ecosystems/cosmos'
-import {
-  evmGetFullMessage,
-  splitEvmSignature,
-  uncompressedToEvmPubkey,
-} from 'claim_sdk/ecosystems/evm'
-import {
   suiGetFullMessage,
   splitSignatureAndPubkey,
 } from 'claim_sdk/ecosystems/sui'
-import { Hash } from '@keplr-wallet/crypto'
 import { useCallback } from 'react'
 import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
 import {
@@ -26,7 +14,6 @@ import {
   evmBuildSignedMessage,
   cosmwasmBuildSignedMessage,
 } from 'claim_sdk/ecosystems/signatures'
-import { signature } from '@solana/web3.js/src/layout'
 
 // SignMessageFn signs the message and returns it.
 // It will return undefined:
