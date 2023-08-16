@@ -48,7 +48,7 @@ export class TestEvmWallet implements TestWallet {
   }
 }
 export class TestCosmWasmWallet implements TestWallet {
-  constructor(
+  protected constructor(
     readonly wallet: Secp256k1HdWallet,
     readonly addressStr: string
   ) {}
@@ -69,8 +69,7 @@ export class TestCosmWasmWallet implements TestWallet {
       chainId ? { prefix: chainId } : {}
     )
     const addressStr = (await secpWallet.getAccounts())[0].address
-    const wallet = new TestCosmWasmWallet(secpWallet, addressStr)
-    return wallet
+    return new TestCosmWasmWallet(secpWallet, addressStr)
   }
 
   public address(): string {
