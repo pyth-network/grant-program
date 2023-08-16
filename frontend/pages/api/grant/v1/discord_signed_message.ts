@@ -4,7 +4,7 @@ import { authOptions } from '../../auth/[...nextauth]'
 import IDL from '../../../../claim_sdk/idl/token_dispenser.json'
 import * as anchor from '@coral-xyz/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { hardDriveSignMessage } from 'claim_sdk/ecosystems/solana'
+import { hardDriveSignMessage } from '../../../../claim_sdk/ecosystems/solana'
 
 const dispenserGuard = Keypair.fromSecretKey(
   Uint8Array.from(JSON.parse(process.env.DISPENSER_GUARD!))
@@ -23,7 +23,7 @@ export default async function handler(
   }
 
   try {
-    const publicKey = new PublicKey(req.query.publicKey)
+    new PublicKey(req.query.publicKey)
   } catch {
     res.status(400).json({
       error: "Invalid 'publicKey' query parameter",
