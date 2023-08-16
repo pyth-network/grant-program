@@ -214,7 +214,7 @@ export class TokenDispenserProvider {
       chainId
     )
 
-    // split proof of inclusion into 32 byte chunks
+    //    b. split proof of inclusion into 32 byte chunks
     if (proofOfInclusion.length % 32 !== 0) {
       throw new Error('Proof of inclusion must be a multiple of 32 bytes')
     }
