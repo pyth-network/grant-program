@@ -34,12 +34,17 @@ export type EcosystemMap = Record<
 >
 
 export type ContextType = {
+  // The state of all the ecosystems
   map: EcosystemMap
+  // Set the isActive property of the given ecosystem
   setActive: (ecosystem: ECOSYSTEM, isActive: boolean) => void
+  // TODO: add other methods - setEligibility, setSignedMessage
 }
 export const EcosystemContext = createContext<ContextType | undefined>(
   undefined
 )
+
+// The default value for ecosystem
 const ecosystemMap = Object.values(ECOSYSTEM).reduce((map, currentValue) => {
   map[currentValue] = { isActive: false, isEligible: false }
   return map
@@ -65,5 +70,10 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
 }
 
 export function useEcosystem() {
-  return useContext(EcosystemContext)!
+  const ctx = useContext(EcosystemContext)!
+  if (ctx === undefined)
+    throw new Error(
+      'This hook should only be used when one of its ancestor is EcosystemProvider.'
+    )
+  return ctx
 }
