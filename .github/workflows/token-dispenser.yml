@@ -22,5 +22,5 @@ jobs:
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Build
         run: |
-          cargo test-sbf
+          cargo test-bpf
         working-directory: token-dispenser
