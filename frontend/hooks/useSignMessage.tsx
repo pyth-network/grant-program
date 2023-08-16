@@ -228,22 +228,22 @@ export function useSolanaSignMessage(): SignMessageFn {
           Buffer.from('a', 'utf-8'),
         ])
 
-        console.log(signBuffer)
-        console.log(signBuffer.length)
-        let transaction = new Transaction()
-        transaction.add(
-          new TransactionInstruction({
-            keys: [],
-            data: Buffer.from(''),
-            programId: PublicKey.unique(),
-          })
-        )
-        transaction.recentBlockhash = (
-          await new Connection(
-            'http://mainnet.xyz.pyth.network'
-          ).getLatestBlockhash()
-        ).blockhash
-        transaction.feePayer = publicKey
+        // console.log(signBuffer)
+        // console.log(signBuffer.length)
+        // let transaction = new Transaction()
+        // transaction.add(
+        //   new TransactionInstruction({
+        //     keys: [],
+        //     data: Buffer.from(''),
+        //     programId: PublicKey.unique(),
+        //   })
+        // )
+        // transaction.recentBlockhash = (
+        //   await new Connection(
+        //     'http://mainnet.xyz.pyth.network'
+        //   ).getLatestBlockhash()
+        // ).blockhash
+        // transaction.feePayer = publicKey
         const messagePayload = await prepareSolanaOffchainMessage({
           message: Buffer.from('a', 'utf-8'),
           encoding: 'UTF-8',
