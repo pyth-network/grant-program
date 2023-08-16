@@ -25,23 +25,31 @@ describe('integration test', () => {
   // TODO: load this in from local keys directory
   const solanaClaimant = anchor.web3.Keypair.generate()
   const evmPrivateKeyPath = path.resolve(__dirname, 'keys/evm_private_key.json')
-  // public key: 0xb80Eb09f118ca9Df95b2DF575F68E41aC7B9E2f8
   const evmWallet = TestEvmWallet.fromKeyfile(evmPrivateKeyPath)
 
   const cosmPrivateKeyPath = path.resolve(
     __dirname,
     'keys/cosmos_private_key.json'
   )
-  const cosmwasmPrefix = 'osmo'
-  //<chainName>1q67j5vk66p0dm6rg5tjfuhkm8t78t5m56w3ekn
-  let cosmWallet: TestCosmWasmWallet
 
-  // const cosmosWallet =
+  let cosmWallet1: TestCosmWasmWallet
+  const cosmwasmPrefix2 = 'osmo'
+  let cosmWallet2: TestCosmWasmWallet
+  const cosmwasmPrefix3 = 'neutron'
+  let cosmWallet3: TestCosmWasmWallet
+
   let root: number[]
   beforeAll(async () => {
-    cosmWallet = await TestCosmWasmWallet.fromKeyFile(
+    cosmWallet1 = await TestCosmWasmWallet.fromKeyFile(cosmPrivateKeyPath)
+
+    cosmWallet2 = await TestCosmWasmWallet.fromKeyFile(
       cosmPrivateKeyPath,
-      cosmwasmPrefix
+      cosmwasmPrefix2
+    )
+
+    cosmWallet3 = await TestCosmWasmWallet.fromKeyFile(
+      cosmPrivateKeyPath,
+      cosmwasmPrefix3
     )
 
     // clear the pool before each test
@@ -51,7 +59,9 @@ describe('integration test', () => {
       ['solana', solanaClaimant.publicKey.toString(), 1000],
       ['evm', evmWallet.address().toString(), 2000],
       // ['aptos', '0x7e7544df4fc42107d4a60834685dfd9c1e6ff048f49fe477bc19c1551299d5cb', 3000],
-      ['cosmwasm', cosmWallet.address(), 4000],
+      ['cosmwasm', cosmWallet1.address(), 4000],
+      ['cosmwasm', cosmWallet2.address(), 5000],
+      ['cosmwasm', cosmWallet3.address(), 6000],
     ]
 
     const leaves = sampleData.map((value) => {
@@ -191,7 +201,7 @@ describe('integration test', () => {
     }, 40000)
 
     it('submits a cosmwasm claim', async () => {
-      const queryParams: QueryParams = ['cosmwasm', cosmWallet.address()]
+      const queryParams: QueryParams = ['cosmwasm', cosmWallet1.address()]
       const result = await pool.query(
         'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
         queryParams
@@ -204,7 +214,7 @@ describe('integration test', () => {
         new anchor.BN(result.rows[0].amount)
       )
 
-      const signedMessage = await cosmWallet.signMessage(
+      const signedMessage = await cosmWallet1.signMessage(
         tokenDispenserProvider.generateAuthorizationPayload()
       )
 
@@ -213,7 +223,7 @@ describe('integration test', () => {
           claimInfo,
           proofOfInclusion: proof,
           signedMessage,
-          chainId: cosmWallet.chainId,
+          // chainId: cosmWallet1.chainId,
         },
       ])
 
@@ -228,5 +238,64 @@ describe('integration test', () => {
 
       expect(claimantFund.amount.eq(new anchor.BN(6000))).toBeTruthy()
     }, 40000)
+
+    it('submits multiple claims at once', async () => {
+      const queryParamsArr: {
+        wallet: TestCosmWasmWallet
+        queryParams: QueryParams
+      }[] = [
+        {
+          wallet: cosmWallet2,
+          queryParams: ['cosmwasm', cosmWallet2.address()],
+        },
+        {
+          wallet: cosmWallet3,
+          queryParams: ['cosmwasm', cosmWallet3.address()],
+        },
+      ]
+      const claims = await Promise.all(
+        queryParamsArr.map(async ({ wallet, queryParams }) => {
+          const result = await pool.query(
+            'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
+            queryParams
+          )
+          const proof: Buffer = result.rows[0].proof_of_inclusion
+          const claimInfo = new ClaimInfo(
+            queryParams[0],
+            queryParams[1],
+            new anchor.BN(result.rows[0].amount)
+          )
+          const signedMessage = await wallet.signMessage(
+            tokenDispenserProvider.generateAuthorizationPayload()
+          )
+          return {
+            claimInfo,
+            proofOfInclusion: proof,
+            signedMessage,
+          }
+        })
+      )
+
+      await tokenDispenserProvider.submitClaims(claims)
+
+      expect(
+        await tokenDispenserProvider.isClaimAlreadySubmitted(
+          claims[0].claimInfo
+        )
+      ).toBeTruthy()
+
+      expect(
+        await tokenDispenserProvider.isClaimAlreadySubmitted(
+          claims[1].claimInfo
+        )
+      ).toBeTruthy()
+
+      const claimantFundPubkey =
+        await tokenDispenserProvider.getClaimantFundAddress()
+
+      const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
+
+      expect(claimantFund.amount.eq(new anchor.BN(17000))).toBeTruthy()
+    })
   })
 })

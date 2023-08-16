@@ -1,6 +1,7 @@
 import { secp256k1 } from '@noble/curves/secp256k1'
 import { makeADR36AminoSignDoc, serializeSignDoc } from '@keplr-wallet/cosmos'
 
+const BECH32_SEPARATOR = '1'
 export function getUncompressedPubkey(pubkey: Uint8Array): Uint8Array {
   const point = secp256k1.ProjectivePoint.fromHex(pubkey)
   return point.toRawBytes(false)
@@ -30,4 +31,12 @@ export function extractRecoveryId(
     }
   }
   throw new Error('Could not find recovery id')
+}
+
+export function extractChainId(address: string): string {
+  const words = address.split(BECH32_SEPARATOR)
+  if (words.length < 2) {
+    throw new Error('Invalid bech32 address')
+  }
+  return words[0]
 }

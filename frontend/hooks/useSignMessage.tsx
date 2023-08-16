@@ -5,6 +5,7 @@ import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
 import { removeLeading0x } from 'claim_sdk'
 import {
   cosmosGetFullMessage,
+  extractChainId,
   extractRecoveryId,
   getUncompressedPubkey,
 } from 'claim_sdk/ecosystems/cosmos'
@@ -23,7 +24,9 @@ import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
 import {
   SignedMessage,
   evmBuildSignedMessage,
+  cosmwasmBuildSignedMessage,
 } from 'claim_sdk/ecosystems/signatures'
+import { signature } from '@solana/web3.js/src/layout'
 
 // SignMessageFn signs the message and returns it.
 // It will return undefined:
@@ -94,34 +97,12 @@ export function useCosmosSignMessage(
           address,
           payload
         )
-        const fullMessage = cosmosGetFullMessage(address, payload)
-        const signature = Buffer.from(signatureBase64, 'base64')
-        const publicKey = getUncompressedPubkey(
-          Buffer.from(pub_key.value, 'base64')
+        return cosmwasmBuildSignedMessage(
+          pub_key,
+          address,
+          payload,
+          signatureBase64
         )
-        if (chainName == 'injective') {
-          return {
-            publicKey: uncompressedToEvmPubkey(publicKey),
-            signature,
-            recoveryId: extractRecoveryId(
-              signature,
-              publicKey,
-              Hash.keccak256(fullMessage)
-            ),
-            fullMessage,
-          }
-        } else {
-          return {
-            publicKey,
-            signature,
-            recoveryId: extractRecoveryId(
-              signature,
-              publicKey,
-              Hash.sha256(fullMessage)
-            ),
-            fullMessage,
-          }
-        }
       } catch (e) {
         console.error(e)
       }

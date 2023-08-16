@@ -14,6 +14,7 @@ import * as splToken from '@solana/spl-token'
 import { ClaimInfo, Ecosystem } from './claim'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { SignedMessage } from './ecosystems/signatures'
+import { extractChainId } from './ecosystems/cosmos'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -175,7 +176,6 @@ export class TokenDispenserProvider {
       claimInfo: ClaimInfo
       proofOfInclusion: Buffer
       signedMessage: SignedMessage
-      chainId?: string
     }[]
   ): Promise<void> {
     /// This is only eth & cosmwasm for now
@@ -190,8 +190,7 @@ export class TokenDispenserProvider {
         tx: await this.generateClaimTransaction(
           claim.claimInfo,
           claim.proofOfInclusion,
-          claim.signedMessage,
-          claim.chainId
+          claim.signedMessage
         ),
       })
     }
@@ -203,16 +202,11 @@ export class TokenDispenserProvider {
   public async generateClaimTransaction(
     claimInfo: ClaimInfo,
     proofOfInclusion: Buffer,
-    signedMessage: SignedMessage,
-    chainId?: string
+    signedMessage: SignedMessage
   ): Promise<Transaction> {
     // 1. generate claim certificate
     //    a. create identityProof
-    const identityProof = this.createIdentityProof(
-      claimInfo,
-      signedMessage,
-      chainId
-    )
+    const identityProof = this.createIdentityProof(claimInfo, signedMessage)
 
     //    b. split proof of inclusion into 32 byte chunks
     if (proofOfInclusion.length % 32 !== 0) {
@@ -266,27 +260,23 @@ export class TokenDispenserProvider {
 
   private createIdentityProof(
     claimInfo: ClaimInfo,
-    signedMessage: SignedMessage,
-    chainId?: string
+    signedMessage: SignedMessage
   ): IdlTypes<TokenDispenser>['IdentityCertificate'] {
     switch (claimInfo.ecosystem) {
       case 'evm': {
         return {
           evm: {
-            pubkey: signedMessage.publicKey,
+            pubkey: Array.from(signedMessage.publicKey),
             verificationInstructionIndex: 0,
           },
         }
       }
       case 'cosmwasm': {
-        if (!chainId) {
-          throw new Error('chainId is required for cosmwasm')
-        }
         return {
           cosmwasm: {
-            pubkey: signedMessage.publicKey,
-            chainId,
-            signature: signedMessage.signature,
+            pubkey: Array.from(signedMessage.publicKey),
+            chainId: extractChainId(claimInfo.identity),
+            signature: Array.from(signedMessage.signature),
             recoveryId: signedMessage.recoveryId!,
             message: Buffer.from(signedMessage.fullMessage),
           },
@@ -301,8 +291,7 @@ export class TokenDispenserProvider {
 
   private generateSignatureVerificationInstruction(
     ecosystem: Ecosystem,
-    signedMessage: SignedMessage,
-    chainId?: string
+    signedMessage: SignedMessage
   ): anchor.web3.TransactionInstruction | undefined {
     switch (ecosystem) {
       case 'evm': {

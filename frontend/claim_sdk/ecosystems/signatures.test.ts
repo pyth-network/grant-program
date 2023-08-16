@@ -18,6 +18,7 @@ import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import fs from 'fs'
 import { makeADR36AminoSignDoc } from '@keplr-wallet/cosmos'
 import { Secp256k1HdWallet } from '@cosmjs/amino'
+import { extractChainId } from './cosmos'
 
 interface TestWallet {
   signMessage(payload: string): Promise<SignedMessage>
@@ -47,38 +48,32 @@ export class TestEvmWallet implements TestWallet {
   }
 }
 export class TestCosmWasmWallet implements TestWallet {
-  private addressStr: string | undefined
-  private _chainName: string | undefined
-  constructor(readonly wallet: Secp256k1HdWallet) {}
+  constructor(
+    readonly wallet: Secp256k1HdWallet,
+    readonly addressStr: string
+  ) {}
+  /**
+   * Create a wallet from a keyfile. If no chainId is provided,
+   * defaults to 'cosmos'
+   * @param keyFile
+   * @param chainId optional chainId/prefix for the address string
+   */
   static async fromKeyFile(
     keyFile: string,
-    chainName?: string
+    chainId?: string
   ): Promise<TestCosmWasmWallet> {
     const jsonContent = fs.readFileSync(keyFile, 'utf8')
     const privateKey = JSON.parse(jsonContent).mnemonic
-    const wallet = new TestCosmWasmWallet(
-      await Secp256k1HdWallet.fromMnemonic(
-        privateKey,
-        chainName ? { prefix: chainName } : {}
-      )
+    const secpWallet = await Secp256k1HdWallet.fromMnemonic(
+      privateKey,
+      chainId ? { prefix: chainId } : {}
     )
-    const accountData = (await wallet.wallet.getAccounts())[0]
-    wallet.addressStr = accountData.address
-    wallet._chainName = chainName ?? 'cosmos'
+    const addressStr = (await secpWallet.getAccounts())[0].address
+    const wallet = new TestCosmWasmWallet(secpWallet, addressStr)
     return wallet
   }
 
-  get chainId(): string {
-    if (this._chainName === undefined) {
-      throw new Error('Chain name is not set')
-    }
-    return this._chainName
-  }
-
   public address(): string {
-    if (this.addressStr === undefined) {
-      throw new Error('Address is not set')
-    }
     return this.addressStr
   }
 
@@ -93,9 +88,9 @@ export class TestCosmWasmWallet implements TestWallet {
 
     return cosmwasmBuildSignedMessage(
       pub_key,
-      signed,
-      signatureBase64,
-      this.chainId
+      this.address(),
+      payload,
+      signatureBase64
     )
   }
 }

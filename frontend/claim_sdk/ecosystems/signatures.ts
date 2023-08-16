@@ -9,7 +9,12 @@ import { ethers } from 'ethers'
 import fs from 'fs'
 import { Pubkey as AminoPubkey, StdSignDoc } from '@cosmjs/amino'
 import { serializeSignDoc } from '@keplr-wallet/cosmos'
-import { extractRecoveryId, getUncompressedPubkey } from './cosmos'
+import {
+  cosmosGetFullMessage,
+  extractChainId,
+  extractRecoveryId,
+  getUncompressedPubkey,
+} from './cosmos'
 import { Hash } from '@keplr-wallet/crypto'
 
 export type SignedMessage = {
@@ -36,14 +41,15 @@ export function evmBuildSignedMessage(
 
 export function cosmwasmBuildSignedMessage(
   pub_key: AminoPubkey,
-  signed: StdSignDoc,
-  signatureBase64: string,
-  chainName: string
+  address: string,
+  payload: string,
+  signatureBase64: string
 ): SignedMessage {
-  const fullMessage = serializeSignDoc(signed)
+  const fullMessage = cosmosGetFullMessage(address, payload)
   const signature = Buffer.from(signatureBase64, 'base64')
   const publicKey = getUncompressedPubkey(Buffer.from(pub_key.value, 'base64'))
-  if (chainName == 'injective') {
+  const chainId = extractChainId(address)
+  if (chainId == 'inj') {
     return {
       publicKey: uncompressedToEvmPubkey(publicKey),
       signature,
