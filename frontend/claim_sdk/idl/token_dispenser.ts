@@ -389,6 +389,15 @@ export type TokenDispenser = {
                 type: 'string'
               }
             ]
+          },
+          {
+            name: 'Injective'
+            fields: [
+              {
+                name: 'address'
+                type: 'string'
+              }
+            ]
           }
         ]
       }
@@ -497,6 +506,21 @@ export type TokenDispenser = {
               {
                 name: 'message'
                 type: 'bytes'
+              }
+            ]
+          },
+          {
+            name: 'Injective'
+            fields: [
+              {
+                name: 'pubkey'
+                type: {
+                  array: ['u8', 20]
+                }
+              },
+              {
+                name: 'verification_instruction_index'
+                type: 'u8'
               }
             ]
           }
@@ -951,6 +975,15 @@ export const IDL: TokenDispenser = {
               },
             ],
           },
+          {
+            name: 'Injective',
+            fields: [
+              {
+                name: 'address',
+                type: 'string',
+              },
+            ],
+          },
         ],
       },
     },
@@ -1058,6 +1091,21 @@ export const IDL: TokenDispenser = {
               {
                 name: 'message',
                 type: 'bytes',
+              },
+            ],
+          },
+          {
+            name: 'Injective',
+            fields: [
+              {
+                name: 'pubkey',
+                type: {
+                  array: ['u8', 20],
+                },
+              },
+              {
+                name: 'verification_instruction_index',
+                type: 'u8',
               },
             ],
           },

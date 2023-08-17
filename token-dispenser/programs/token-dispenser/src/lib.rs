@@ -226,6 +226,7 @@ pub enum Identity {
     Sui { address: SuiAddress },
     Aptos { address: AptosAddress },
     Cosmwasm { address: CosmosBech32Address },
+    Injective { address: CosmosBech32Address },
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
@@ -256,6 +257,10 @@ pub enum IdentityCertificate {
         recovery_id: u8,
         pubkey:      UncompressedSecp256k1Pubkey,
         message:     Vec<u8>,
+    },
+    Injective {
+        pubkey:                         EvmPubkey,
+        verification_instruction_index: u8,
     },
 }
 
@@ -466,6 +471,31 @@ impl IdentityCertificate {
                 )?;
                 Ok(Identity::Solana {
                     pubkey: pubkey.clone(),
+                })
+            }
+            IdentityCertificate::Injective {
+                pubkey,
+                verification_instruction_index,
+            } => {
+                let signature_verification_instruction = load_instruction_at_checked(
+                    *verification_instruction_index as usize,
+                    sysvar_instruction,
+                )?;
+                let cosmos_bech32 = CosmosBech32Address::from(*pubkey);
+                check_payload(
+                    CosmosMessage::parse(
+                        &Secp256k1InstructionData::extract_message_and_check_signature(
+                            &signature_verification_instruction,
+                            pubkey,
+                            verification_instruction_index,
+                        )?,
+                        &cosmos_bech32,
+                    )?
+                    .get_payload(),
+                    claimant,
+                )?;
+                Ok(Identity::Injective {
+                    address: cosmos_bech32,
                 })
             }
         }

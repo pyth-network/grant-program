@@ -15,6 +15,7 @@ mod test_discord;
 mod test_ed25519;
 mod test_happy_path;
 mod test_initialize;
+mod test_injective;
 mod test_merkle_tree;
 mod test_secp256k1;
 

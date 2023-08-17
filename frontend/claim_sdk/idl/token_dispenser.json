@@ -389,6 +389,15 @@
                 "type": "string"
               }
             ]
+          },
+          {
+            "name": "Injective",
+            "fields": [
+              {
+                "name": "address",
+                "type": "string"
+              }
+            ]
           }
         ]
       }
@@ -497,6 +506,21 @@
               {
                 "name": "message",
                 "type": "bytes"
+              }
+            ]
+          },
+          {
+            "name": "Injective",
+            "fields": [
+              {
+                "name": "pubkey",
+                "type": {
+                  "array": ["u8", 20]
+                }
+              },
+              {
+                "name": "verification_instruction_index",
+                "type": "u8"
               }
             ]
           }

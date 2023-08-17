@@ -24,6 +24,10 @@ pub const SECP256K1_COMPRESSED_PUBKEY_LENGTH: usize = 33;
 pub struct EvmPubkey([u8; Self::LEN]);
 impl EvmPubkey {
     pub const LEN: usize = 20;
+
+    pub fn as_bytes(&self) -> [u8; Self::LEN] {
+        self.0
+    }
 }
 
 #[cfg(test)]
