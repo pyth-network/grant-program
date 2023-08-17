@@ -104,7 +104,7 @@ function setup_postgres_docker() {
   npm run migrate;
 }
 
-function populate_db() {
+function populate() {
   cd "$DIR";
   npm run populate;
 }
@@ -179,7 +179,7 @@ function main() {
       printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
       start_anchor_localnet &
       sleep 5
-      populate_db;
+      populate;
       # wait for ctrl-c
       ( trap exit SIGINT ; read -r -d '' _ </dev/tty )
   elif [ "$test" -eq 1 ]; then
