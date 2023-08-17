@@ -29,7 +29,10 @@ export default async function handlerAmountAndProof(
         error: `No result found for ${ecosystem} identity ${identity}`,
       })
     } else {
-      res.status(200).json({ amount: result.rows[0].amount, proof: (result.rows[0].proof_of_inclusion as Buffer).toString("hex") })
+      res.status(200).json({
+        amount: result.rows[0].amount,
+        proof: (result.rows[0].proof_of_inclusion as Buffer).toString('hex'),
+      })
     }
   } catch (error) {
     res.status(500).json({
