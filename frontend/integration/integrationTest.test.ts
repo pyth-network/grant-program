@@ -44,7 +44,9 @@ export class NextApiResponseMock {
 export async function mockFetchAmountAndProof(
   ecosystem: Ecosystem,
   identity: string
-): Promise<{ claimInfo: ClaimInfo; merkleProof: Uint8Array[] } | undefined> {
+): Promise<
+  { claimInfo: ClaimInfo; proofOfInclusion: Uint8Array[] } | undefined
+> {
   const req: NextApiRequest = {
     url: getAmountAndProofRoute(ecosystem, identity),
     query: { ecosystem, identity },
@@ -168,7 +170,7 @@ describe('integration test', () => {
     })
 
     it('submits an evm claim', async () => {
-      const { claimInfo, merkleProof } = (await mockFetchAmountAndProof(
+      const { claimInfo, proofOfInclusion } = (await mockFetchAmountAndProof(
         'evm',
         testWallets.evm[0].address()
       ))!
@@ -180,7 +182,7 @@ describe('integration test', () => {
       await tokenDispenserProvider.submitClaims([
         {
           claimInfo,
-          proofOfInclusion: merkleProof,
+          proofOfInclusion,
           signedMessage,
         },
       ])
@@ -198,7 +200,7 @@ describe('integration test', () => {
     }, 40000)
 
     it('submits a cosmwasm claim', async () => {
-      const { claimInfo, merkleProof } = (await mockFetchAmountAndProof(
+      const { claimInfo, proofOfInclusion } = (await mockFetchAmountAndProof(
         'cosmwasm',
         testWallets.cosmwasm[0].address()
       ))!
@@ -210,7 +212,7 @@ describe('integration test', () => {
       await tokenDispenserProvider.submitClaims([
         {
           claimInfo,
-          proofOfInclusion: merkleProof,
+          proofOfInclusion,
           signedMessage,
         },
       ])
@@ -230,12 +232,12 @@ describe('integration test', () => {
     }, 40000)
 
     it('submits multiple claims at once', async () => {
-      const { claimInfo: claimInfo1, merkleProof: merkleProof1 } =
+      const { claimInfo: claimInfo1, proofOfInclusion: merkleProof1 } =
         (await mockFetchAmountAndProof(
           'cosmwasm',
           testWallets.cosmwasm[1].address()
         ))!
-      const { claimInfo: claimInfo2, merkleProof: merkleProof2 } =
+      const { claimInfo: claimInfo2, proofOfInclusion: merkleProof2 } =
         (await mockFetchAmountAndProof(
           'cosmwasm',
           testWallets.cosmwasm[2].address()

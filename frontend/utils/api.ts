@@ -24,12 +24,12 @@ export function handleAmountAndProofResponse(
   identity: string,
   status: number,
   data: any
-): { claimInfo: ClaimInfo; merkleProof: Uint8Array[] } | undefined {
+): { claimInfo: ClaimInfo; proofOfInclusion: Uint8Array[] } | undefined {
   if (status == 404) return undefined
   if (status == 200) {
     return {
       claimInfo: new ClaimInfo(ecosystem, identity, new BN(data.amount)),
-      merkleProof: parseProof(data.proof),
+      proofOfInclusion: parseProof(data.proof),
     }
   }
 }
@@ -37,7 +37,9 @@ export function handleAmountAndProofResponse(
 export async function fetchAmountAndProof(
   ecosystem: Ecosystem,
   identity: string
-): Promise<{ claimInfo: ClaimInfo; merkleProof: Uint8Array[] } | undefined> {
+): Promise<
+  { claimInfo: ClaimInfo; proofOfInclusion: Uint8Array[] } | undefined
+> {
   const response = await fetch(getAmountAndProofRoute(ecosystem, identity))
   return handleAmountAndProofResponse(
     ecosystem,
