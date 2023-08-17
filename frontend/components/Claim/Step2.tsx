@@ -17,7 +17,6 @@ import {
   WalletModal,
 } from '@components/wallets/WalletButton'
 import { truncateAddress } from 'utils/truncateAddress'
-import { fetchAmountAndProof } from 'utils/api'
 
 const Step2 = () => {
   const { publicKey, wallet, disconnect, connecting, connected, connect } =
@@ -63,7 +62,7 @@ const Step2 = () => {
             <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
               <div>
                 <WalletConnectedButton
-                  onClick={async() => console.log(await fetchAmountAndProof('evm', '0xb80Eb09f118ca9Df95b2DF575F68E41aC7B9E2f8' ))}
+                  onClick={disconnect}
                   address={buttonText!}
                   icon={wallet?.adapter.icon}
                 />
