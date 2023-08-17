@@ -104,6 +104,11 @@ function setup_postgres_docker() {
   npm run migrate;
 }
 
+function populate_db() {
+  cd "$DIR";
+  npm run populate;
+}
+
 function run_integration_tests() {
   cd "$DIR";
   npm run test;
@@ -169,8 +174,9 @@ function main() {
   if [ "$dev" -eq 1 ]; then
       if [ "$verbose" -eq 1 ]; then
         echo "dev mode"
-        echo "deploy solana-test-validator using anchor localnet"
+        echo "populate db and deploy solana-test-validator using anchor localnet"
       fi
+      populate_db;
       printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
       start_anchor_localnet;
       # wait for ctrl-c
