@@ -14,7 +14,7 @@ import { Keypair } from '@solana/web3.js'
 
 const KEY_DIR = './integration/keys/'
 
-export async function loadAnchorWallet(): Promise<NodeWallet> {
+export function loadAnchorWallet(): NodeWallet {
   const keypair = Keypair.fromSecretKey(
     new Uint8Array(
       JSON.parse(

@@ -6,12 +6,11 @@ import {
   getDatabasePool,
 } from '../utils/db'
 import { ClaimInfo, Ecosystem } from '../claim_sdk/claim'
-import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { Token } from '@solana/spl-token'
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { Buffer } from 'buffer'
 import { TokenDispenserProvider } from '../claim_sdk/solana'
-import { TestWallet } from '../claim_sdk/testWallets'
+import { TestWallet, loadAnchorWallet } from '../claim_sdk/testWallets'
 import { loadTestWallets } from '../claim_sdk/testWallets'
 import { NextApiRequest, NextApiResponse } from 'next'
 import {
@@ -95,12 +94,11 @@ describe('integration test', () => {
   })
 
   describe('token dispenser e2e', () => {
-    const walletKeypair = anchor.web3.Keypair.generate()
-    const wallet = new NodeWallet(walletKeypair)
+    const wallet = loadAnchorWallet()
     const tokenDispenserProvider = new TokenDispenserProvider(
-      process.env.ENDPOINT!,
+      'http://localhost:8899',
       wallet,
-      new PublicKey(process.env.PROGRAM_ID!),
+      new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'),
       {
         skipPreflight: true,
         preflightCommitment: 'processed',
@@ -118,7 +116,7 @@ describe('integration test', () => {
         tokenDispenserProvider.claimant
       )
       const walletBalance = await tokenDispenserProvider.connection.getBalance(
-        walletKeypair.publicKey
+        wallet.publicKey
       )
       expect(walletBalance).toEqual(LAMPORTS_PER_SOL)
 
