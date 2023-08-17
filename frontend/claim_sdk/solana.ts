@@ -112,8 +112,8 @@ export class TokenDispenserProvider {
       this.programId
     )
   }
-
-  public async isClaimAlreadySubmitted(claimInfo: ClaimInfo) {
+  
+  public async isClaimAlreadySubmitted(claimInfo: ClaimInfo) : Promise<boolean> {
     return (
       (await this.connection.getAccountInfo(
         this.getReceiptPda(claimInfo)[0]
