@@ -1,4 +1,4 @@
-import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { TokenDispenserProvider } from '../claim_sdk/solana'
 import { loadAnchorWallet, loadTestWallets } from '../claim_sdk/testWallets'
 import {
@@ -7,7 +7,6 @@ import {
   getDatabasePool,
 } from '../utils/db'
 import * as anchor from '@coral-xyz/anchor'
-import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 
 const pool = getDatabasePool()
 
@@ -18,9 +17,9 @@ async function main() {
 
   // Intialize the token dispenser
   const tokenDispenserProvider = new TokenDispenserProvider(
-    process.env.ENDPOINT!,
+    'http://localhost:8899',
     await loadAnchorWallet(),
-    new PublicKey(process.env.PROGRAM_ID!),
+    new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'),
     {
       skipPreflight: true,
       preflightCommitment: 'processed',

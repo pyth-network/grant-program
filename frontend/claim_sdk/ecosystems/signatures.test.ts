@@ -32,8 +32,7 @@ test('Evm signature', async () => {
   )
 
   const solanaKeypair = anchor.web3.Keypair.generate()
-  console.log('ENDPOINT', process.env.ENDPOINT!)
-  const connection = new anchor.web3.Connection(process.env.ENDPOINT!)
+  const connection = new anchor.web3.Connection('http://localhost:8899')
   const provider = new anchor.AnchorProvider(
     connection,
     new NodeWallet(solanaKeypair),
