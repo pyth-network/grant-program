@@ -4,7 +4,7 @@ import {
   splitEvmSignature,
   uncompressedToEvmPubkey,
 } from './evm'
-import { Pubkey as AminoPubkey, StdSignDoc } from '@cosmjs/amino'
+import { Pubkey as AminoPubkey } from '@cosmjs/amino'
 import {
   cosmosGetFullMessage,
   extractChainId,
