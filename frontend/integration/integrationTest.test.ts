@@ -7,7 +7,6 @@ import {
 } from '../utils/db'
 import { ClaimInfo, Ecosystem } from '../claim_sdk/claim'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
-import * as splToken from '@solana/spl-token'
 import { Token } from '@solana/spl-token'
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { Buffer } from 'buffer'
@@ -20,10 +19,7 @@ import {
   handleAmountAndProofResponse,
 } from '../utils/api'
 import handlerAmountAndProof from '../pages/api/grant/v1/amount_and_proof'
-//TODO: update this
-const tokenDispenserProgramId = new anchor.web3.PublicKey(
-  'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'
-)
+
 const pool = getDatabasePool()
 
 export class NextApiResponseMock {
@@ -102,9 +98,9 @@ describe('integration test', () => {
     const walletKeypair = anchor.web3.Keypair.generate()
     const wallet = new NodeWallet(walletKeypair)
     const tokenDispenserProvider = new TokenDispenserProvider(
-      'http://localhost:8899',
+      process.env.ENDPOINT!,
       wallet,
-      tokenDispenserProgramId,
+      new PublicKey(process.env.PROGRAM_ID!),
       {
         skipPreflight: true,
         preflightCommitment: 'processed',
@@ -113,42 +109,23 @@ describe('integration test', () => {
     )
 
     const dispenserGuard = anchor.web3.Keypair.generate()
-    const mintAuthority = anchor.web3.Keypair.generate()
 
     let mint: Token
     let treasury: PublicKey
     beforeAll(async () => {
-      const airdropTxn = await tokenDispenserProvider.connection.requestAirdrop(
-        walletKeypair.publicKey,
-        LAMPORTS_PER_SOL
+      await tokenDispenserProvider.airdrop(
+        LAMPORTS_PER_SOL,
+        tokenDispenserProvider.claimant
       )
-      await tokenDispenserProvider.connection.confirmTransaction({
-        signature: airdropTxn,
-        ...(await tokenDispenserProvider.connection.getLatestBlockhash()),
-      })
       const walletBalance = await tokenDispenserProvider.connection.getBalance(
         walletKeypair.publicKey
       )
       expect(walletBalance).toEqual(LAMPORTS_PER_SOL)
 
-      mint = await splToken.Token.createMint(
-        tokenDispenserProvider.connection,
-        walletKeypair,
-        mintAuthority.publicKey,
-        null,
-        6,
-        splToken.TOKEN_PROGRAM_ID
-      )
-
-      treasury = await mint.createAccount(mintAuthority.publicKey)
-      await mint.mintTo(treasury, mintAuthority, [], 1000000000)
-      await mint.approve(
-        treasury,
-        tokenDispenserProvider.getConfigPda()[0],
-        mintAuthority,
-        [],
-        1000000000
-      )
+      const mintAndTreasury =
+        await tokenDispenserProvider.setupMintAndTreasury()
+      mint = mintAndTreasury.mint
+      treasury = mintAndTreasury.treasury
     }, 10000)
 
     it('initializes the token dispenser', async () => {

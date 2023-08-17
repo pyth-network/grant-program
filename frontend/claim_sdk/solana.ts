@@ -5,6 +5,7 @@ import { Idl, IdlAccounts, IdlTypes, Program } from '@coral-xyz/anchor'
 import { Buffer } from 'buffer'
 import { MerkleTree } from './merkleTree'
 import {
+  LAMPORTS_PER_SOL,
   PublicKey,
   Secp256k1Program,
   Transaction,
@@ -12,7 +13,7 @@ import {
 } from '@solana/web3.js'
 import * as splToken from '@solana/spl-token'
 import { ClaimInfo, Ecosystem } from './claim'
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import { SignedMessage } from './ecosystems/signatures'
 import { extractChainId } from './ecosystems/cosmos'
 
@@ -314,5 +315,41 @@ export class TokenDispenserProvider {
         this.claimant
       )
     return associatedTokenAccount
+  }
+
+  public async airdrop(amount: number, pubkey: PublicKey): Promise<void> {
+    const airdropTxn = await this.connection.requestAirdrop(pubkey, amount)
+    await this.connection.confirmTransaction({
+      signature: airdropTxn,
+      ...(await this.connection.getLatestBlockhash()),
+    })
+  }
+
+  public async setupMintAndTreasury(): Promise<{
+    mint: Token
+    treasury: PublicKey
+  }> {
+    const mintAuthority = anchor.web3.Keypair.generate()
+
+    await this.airdrop(LAMPORTS_PER_SOL, mintAuthority.publicKey)
+    const mint = await Token.createMint(
+      this.connection,
+      mintAuthority,
+      mintAuthority.publicKey,
+      null,
+      6,
+      splToken.TOKEN_PROGRAM_ID
+    )
+
+    const treasury = await mint.createAccount(mintAuthority.publicKey)
+    await mint.mintTo(treasury, mintAuthority, [], 1000000000)
+    await mint.approve(
+      treasury,
+      this.getConfigPda()[0],
+      mintAuthority,
+      [],
+      1000000000
+    )
+    return { mint, treasury }
   }
 }
