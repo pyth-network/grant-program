@@ -251,6 +251,18 @@ describe('integration test', () => {
         })
       )
 
+      expect(
+        await tokenDispenserProvider.isClaimAlreadySubmitted(
+          claims[0].claimInfo
+        )
+      ).toBeFalsy()
+
+      expect(
+        await tokenDispenserProvider.isClaimAlreadySubmitted(
+          claims[1].claimInfo
+        )
+      ).toBeFalsy()
+
       await tokenDispenserProvider.submitClaims(claims)
 
       expect(
