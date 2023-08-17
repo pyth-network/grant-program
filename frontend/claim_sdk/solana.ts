@@ -316,5 +316,3 @@ export class TokenDispenserProvider {
     return associatedTokenAccount
   }
 }
-
-export type QueryParams = [Ecosystem, string]
