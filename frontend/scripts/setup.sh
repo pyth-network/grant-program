@@ -176,9 +176,10 @@ function main() {
         echo "dev mode"
         echo "populate db and deploy solana-test-validator using anchor localnet"
       fi
-      populate_db;
       printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
-      start_anchor_localnet;
+      start_anchor_localnet &
+      sleep 5
+      populate_db;
       # wait for ctrl-c
       ( trap exit SIGINT ; read -r -d '' _ </dev/tty )
   elif [ "$test" -eq 1 ]; then
