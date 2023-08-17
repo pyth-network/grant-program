@@ -1,6 +1,6 @@
 import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { TokenDispenserProvider } from '../claim_sdk/solana'
-import { loadTestWallets } from '../claim_sdk/testWallets'
+import { loadAnchorWallet, loadTestWallets } from '../claim_sdk/testWallets'
 import {
   addTestWalletsToDatabase,
   clearDatabase,
@@ -19,7 +19,7 @@ async function main() {
   // Intialize the token dispenser
   const tokenDispenserProvider = new TokenDispenserProvider(
     process.env.ENDPOINT!,
-    new NodeWallet(new Keypair()),
+    await loadAnchorWallet(),
     new PublicKey(process.env.PROGRAM_ID!),
     {
       skipPreflight: true,
@@ -32,7 +32,6 @@ async function main() {
     tokenDispenserProvider.claimant
   )
   const mintAndTreasury = await tokenDispenserProvider.setupMintAndTreasury()
-  console.log('MINT ', mintAndTreasury.mint.publicKey.toString())
   await tokenDispenserProvider.initialize(
     root,
     mintAndTreasury.mint.publicKey,
