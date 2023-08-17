@@ -232,43 +232,37 @@ describe('integration test', () => {
     }, 40000)
 
     it('submits multiple claims at once', async () => {
-      const { claimInfo: claimInfo1, proofOfInclusion: merkleProof1 } =
-        (await mockFetchAmountAndProof(
-          'cosmwasm',
-          testWallets.cosmwasm[1].address()
-        ))!
-      const { claimInfo: claimInfo2, proofOfInclusion: merkleProof2 } =
-        (await mockFetchAmountAndProof(
-          'cosmwasm',
-          testWallets.cosmwasm[2].address()
-        ))!
+      const wallets: TestWallet[] = [
+        testWallets.cosmwasm[1],
+        testWallets.cosmwasm[2],
+      ]
 
-      const signedMessage1 = await testWallets.cosmwasm[1].signMessage(
-        tokenDispenserProvider.generateAuthorizationPayload()
-      )
-      const signedMessage2 = await testWallets.cosmwasm[2].signMessage(
-        tokenDispenserProvider.generateAuthorizationPayload()
+      const claims = await Promise.all(
+        wallets.map(async (wallet) => {
+          const { claimInfo, proofOfInclusion } =
+            (await mockFetchAmountAndProof('cosmwasm', wallet.address()))!
+          return {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage: await wallet.signMessage(
+              tokenDispenserProvider.generateAuthorizationPayload()
+            ),
+          }
+        })
       )
 
-      await tokenDispenserProvider.submitClaims([
-        {
-          claimInfo: claimInfo1,
-          proofOfInclusion: merkleProof1,
-          signedMessage: signedMessage1,
-        },
-        {
-          claimInfo: claimInfo2,
-          proofOfInclusion: merkleProof2,
-          signedMessage: signedMessage2,
-        },
-      ])
+      await tokenDispenserProvider.submitClaims(claims)
 
       expect(
-        await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo1)
+        await tokenDispenserProvider.isClaimAlreadySubmitted(
+          claims[0].claimInfo
+        )
       ).toBeTruthy()
 
       expect(
-        await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo2)
+        await tokenDispenserProvider.isClaimAlreadySubmitted(
+          claims[1].claimInfo
+        )
       ).toBeTruthy()
 
       const claimantFundPubkey =
