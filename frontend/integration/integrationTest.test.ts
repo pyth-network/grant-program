@@ -39,7 +39,7 @@ describe('integration test', () => {
     it('returns the correct amount for a claim', async () => {
       const result = await pool.query(
         'SELECT amount FROM claims WHERE ecosystem = $1 AND identity = $2',
-        ['evm', '0xb80Eb09f118ca9Df95b2DF575F68E41aC7B9E2f8']
+        ['evm', testWallets.evm[0].address()]
       )
 
       expect(result.rows[0].amount).toBe('3000000')
