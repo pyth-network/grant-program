@@ -17,10 +17,10 @@ const wallets = [
   { id: 2, name: 'Solflare', icon: <Solflare /> },
 ]
 
-const Step4 = ({ step, setStep }: { step: number; setStep: Function }) => {
+const Step4 = ({ setStep }: { setStep: Function }) => {
   const [wallet, setWallet] = useState(null)
   const [modal, openModal] = useState(false)
-  const [screen, setScreem] = useState(1)
+  const [screen, setScreen] = useState(1)
   return (
     <>
       {screen == 1 ? (
@@ -52,7 +52,7 @@ const Step4 = ({ step, setStep }: { step: number; setStep: Function }) => {
               </button>
               <button
                 className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-                onClick={() => setScreem(2)}
+                onClick={() => setScreen(2)}
               >
                 <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
                   proceed
@@ -63,45 +63,7 @@ const Step4 = ({ step, setStep }: { step: number; setStep: Function }) => {
           </div>
         </div>
       ) : (
-        <Eligibility setScreem={setScreem} openModal={openModal} />
-      )}
-      {modal && (
-        <Modal openModal={openModal}>
-          <h3 className="mb-16  font-header text-[36px] font-light">
-            Select Your Wallet
-          </h3>
-          <div className="mx-auto max-w-[200px]">
-            <Listbox value={wallet} onChange={() => setStep(5)}>
-              <Listbox.Button className="block w-full border border-light-35 py-3 px-8">
-                <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                  <span>explore options</span>
-                  <Down />
-                </span>
-              </Listbox.Button>
-              <Transition
-                enter="transition duration-100 ease-out"
-                enterFrom="transform scale-95 opacity-0"
-                enterTo="transform scale-100 opacity-100"
-                leave="transition duration-75 ease-out"
-                leaveFrom="transform scale-100 opacity-100"
-                leaveTo="transform scale-95 opacity-0"
-              >
-                <Listbox.Options className="absolute -mt-[1px] w-full divide-y divide-light-35 border border-light-35 bg-darkGray1">
-                  {wallets.map((wallet) => (
-                    <Listbox.Option
-                      key={wallet.id}
-                      value={wallet}
-                      className="flex cursor-pointer items-center justify-center gap-2.5 py-3 px-8 hover:bg-darkGray3"
-                      onClick={() => openModal(false)}
-                    >
-                      {wallet.icon} {wallet.name}
-                    </Listbox.Option>
-                  ))}
-                </Listbox.Options>
-              </Transition>
-            </Listbox>
-          </div>
-        </Modal>
+        <Eligibility onBack={() => setScreen(1)} onProceed={() => setStep(5)} />
       )}
     </>
   )

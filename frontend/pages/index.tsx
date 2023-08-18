@@ -25,7 +25,7 @@ const Claim = () => {
       case 3:
         return <Step3 setStep={setStep} />
       case 4:
-        return <Step4 step={step} setStep={setStep} />
+        return <Step4 setStep={setStep} />
       case 5:
         return <Step5 setStep={setStep} />
       case 6:

@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import Arrow from '../../images/arrow.inline.svg'
 import Modal from './Modal'
-import Eligibility from './Eligibility'
+import Eligibility2 from './Eligibility2'
 
 const Step5 = ({ setStep }: { setStep: Function }) => {
   const [modal, openModal] = useState(false)
-  const [screen, setScreem] = useState(1)
+  const [screen, setScreen] = useState(1)
   return (
     <>
       {screen == 1 ? (
@@ -34,7 +34,7 @@ const Step5 = ({ setStep }: { setStep: Function }) => {
               </button>
               <button
                 className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-                onClick={() => setScreem(2)}
+                onClick={() => setScreen(2)}
               >
                 <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
                   proceed
@@ -45,7 +45,10 @@ const Step5 = ({ setStep }: { setStep: Function }) => {
           </div>
         </div>
       ) : (
-        <Eligibility setScreem={setScreem} openModal={openModal} />
+        <Eligibility2
+          onBack={() => setScreen(1)}
+          onProceed={() => openModal(true)}
+        />
       )}
       {modal && (
         <Modal openModal={openModal}>

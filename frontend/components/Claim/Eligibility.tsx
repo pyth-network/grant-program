@@ -17,11 +17,11 @@ import { signIn, signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
 
 const Eligibility = ({
-  setScreem,
-  openModal,
+  onBack,
+  onProceed,
 }: {
-  setScreem: Function
-  openModal: Function
+  onBack: Function
+  onProceed: Function
 }) => {
   return (
     <div className=" border border-light-35 bg-dark">
@@ -32,7 +32,7 @@ const Eligibility = ({
         <div className="flex gap-4">
           <button
             className="btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light"
-            onClick={() => setScreem(1)}
+            onClick={() => onBack()}
           >
             <span className="relative inline-flex items-center whitespace-nowrap">
               <Arrow className="mr-2.5 origin-center rotate-180" />
@@ -41,7 +41,7 @@ const Eligibility = ({
           </button>
           <button
             className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-            onClick={() => openModal(true)}
+            onClick={() => onProceed()}
           >
             <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
               proceed
