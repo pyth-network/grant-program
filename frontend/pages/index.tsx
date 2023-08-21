@@ -19,15 +19,15 @@ const Claim = () => {
   const renderStep = () => {
     switch (step) {
       case 1:
-        return <Step1 />
+        return <Step1 setStep={setStep} />
       case 2:
-        return <Step2 />
+        return <Step2 setStep={setStep} />
       case 3:
-        return <Step3 />
+        return <Step3 setStep={setStep} />
       case 4:
-        return <Step4 />
+        return <Step4 setStep={setStep} />
       case 5:
-        return <Step5 />
+        return <Step5 setStep={setStep} />
       case 6:
         return <Step6 />
     }
