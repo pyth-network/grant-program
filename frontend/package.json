@@ -23,6 +23,7 @@
     "@emotion/styled": "11.10.6",
     "@headlessui/react": "^1.7.16",
     "@heroicons/react": "^1.0.6",
+    "@injectivelabs/sdk-ts": "^1.11.0",
     "@keplr-wallet/cosmos": "^0.12.20",
     "@keplr-wallet/crypto": "^0.12.20",
     "@mysten/sui.js": "^0.40.0",

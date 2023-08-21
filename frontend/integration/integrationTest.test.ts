@@ -264,5 +264,48 @@ describe('integration test', () => {
         )
       ).toBeTruthy()
     })
+
+    it('submits an injective claim', async () => {
+      const wallet = testWallets.injective[0]
+      const queryParams: QueryParams = ['injective', wallet.address()]
+      const result = await pool.query(
+        'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
+        queryParams
+      )
+
+      const proof: Buffer = result.rows[0].proof_of_inclusion
+      const claimInfo = new ClaimInfo(
+        queryParams[0],
+        queryParams[1],
+        new anchor.BN(result.rows[0].amount)
+      )
+
+      const signedMessage = await wallet.signMessage(
+        tokenDispenserProvider.generateAuthorizationPayload()
+      )
+
+      await tokenDispenserProvider.submitClaims([
+        {
+          claimInfo,
+          proofOfInclusion: proof,
+          signedMessage,
+        },
+      ])
+
+      expect(
+        await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
+      ).toBeTruthy()
+
+      const claimantFundPubkey =
+        await tokenDispenserProvider.getClaimantFundAddress()
+
+      const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
+
+      expect(
+        claimantFund.amount.eq(
+          new anchor.BN(3000000 + 6000000 + 6100000 + 6200000 + 7000000)
+        )
+      ).toBeTruthy()
+    }, 40000)
   })
 })

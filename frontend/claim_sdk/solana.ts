@@ -276,6 +276,14 @@ export class TokenDispenserProvider {
           },
         }
       }
+      case 'injective': {
+        return {
+          injective: {
+            pubkey: Array.from(signedMessage.publicKey), //evm Pubkey
+            verificationInstructionIndex: 0,
+          },
+        }
+      }
       //TODO: implement other ecosystems
       default: {
         throw new Error(`unknown ecosystem type: ${claimInfo.ecosystem}`)
@@ -300,6 +308,14 @@ export class TokenDispenserProvider {
         return undefined
       }
 
+      case 'injective': {
+        return Secp256k1Program.createInstructionWithEthAddress({
+          ethAddress: signedMessage.publicKey,
+          message: signedMessage.fullMessage,
+          signature: signedMessage.signature,
+          recoveryId: signedMessage.recoveryId!,
+        })
+      }
       default: {
         // TODO: support the other ecosystems
         throw new Error(`unknown ecosystem type: ${ecosystem}`)

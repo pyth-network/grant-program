@@ -23,7 +23,7 @@
   "ts-node": {
     "compilerOptions": {
       "isolatedModules": false,
-      "module": "commonjs"
+      "target": "es2015"
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
