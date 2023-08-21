@@ -63,11 +63,6 @@ impl CosmosMessage {
         }
 
         if sign_doc.msgs[0].value.signer != signer.0 {
-            msg!(
-                "sign_doc.msgs[0].value.signer: {:?}, signer.0: {:?}",
-                sign_doc.msgs[0].value.signer,
-                signer.0
-            );
             return err!(ErrorCode::SignatureVerificationWrongPayloadMetadata);
         }
 
