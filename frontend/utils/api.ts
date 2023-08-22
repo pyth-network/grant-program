@@ -60,7 +60,7 @@ export function getDiscordSignedMessageRoute(claimant: PublicKey) {
   return `/api/grant/v1/discord_signed_message?publicKey=${claimant.toBase58()}`
 }
 
-export function handleDiscordSignedMessageRoute(
+export function handleDiscordSignedMessageResponse(
   status: number,
   data: any
 ): SignedMessage | undefined {
@@ -72,4 +72,14 @@ export function handleDiscordSignedMessageRoute(
       recoveryId: undefined,
     }
   }
+}
+
+export async function fetchDiscordSignedMessage(
+  claimant: PublicKey
+): Promise<SignedMessage | undefined> {
+  const response = await fetch(getDiscordSignedMessageRoute(claimant))
+  return handleDiscordSignedMessageResponse(
+    response.status,
+    await response.json()
+  )
 }
