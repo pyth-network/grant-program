@@ -113,7 +113,7 @@ export class TokenDispenserProvider {
     )
   }
 
-  public async isClaimAlreadySubmitted(claimInfo: ClaimInfo) {
+  public async isClaimAlreadySubmitted(claimInfo: ClaimInfo): Promise<boolean> {
     return (
       (await this.connection.getAccountInfo(
         this.getReceiptPda(claimInfo)[0]
@@ -174,7 +174,7 @@ export class TokenDispenserProvider {
   public async submitClaims(
     claims: {
       claimInfo: ClaimInfo
-      proofOfInclusion: Buffer
+      proofOfInclusion: Uint8Array[]
       signedMessage: SignedMessage
     }[]
   ): Promise<void> {
@@ -201,25 +201,17 @@ export class TokenDispenserProvider {
 
   public async generateClaimTransaction(
     claimInfo: ClaimInfo,
-    proofOfInclusion: Buffer,
+    proofOfInclusion: Uint8Array[],
     signedMessage: SignedMessage
   ): Promise<Transaction> {
     // 1. generate claim certificate
     //    a. create identityProof
     const identityProof = this.createIdentityProof(claimInfo, signedMessage)
 
-    //    b. split proof of inclusion into 32 byte chunks
-    if (proofOfInclusion.length % 32 !== 0) {
-      throw new Error('Proof of inclusion must be a multiple of 32 bytes')
-    }
-    const proofOfInclusionArr = []
-    for (let i = 0; i < proofOfInclusion.length; i += 32) {
-      proofOfInclusionArr.push(proofOfInclusion.subarray(i, i + 32))
-    }
     const claimCert: IdlTypes<TokenDispenser>['ClaimCertificate'] = {
       amount: claimInfo.amount,
       proofOfIdentity: identityProof,
-      proofOfInclusion: proofOfInclusionArr,
+      proofOfInclusion,
     }
 
     // 2. generate signature verification instruction if needed
@@ -324,5 +316,3 @@ export class TokenDispenserProvider {
     return associatedTokenAccount
   }
 }
-
-export type QueryParams = [Ecosystem, string]

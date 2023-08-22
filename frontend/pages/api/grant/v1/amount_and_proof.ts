@@ -7,7 +7,7 @@ const pool = new Pool()
 /**
  * This endpoint returns the amount of tokens allocated to a specific identity
  */
-export default async function handler(
+export default async function handlerAmountAndProof(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -21,7 +21,7 @@ export default async function handler(
 
   try {
     const result = await pool.query(
-      'SELECT amount FROM claims WHERE ecosystem = $1 AND identity = $2',
+      'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
       [ecosystem, identity]
     )
     if (result.rows.length == 0) {
@@ -29,7 +29,10 @@ export default async function handler(
         error: `No result found for ${ecosystem} identity ${identity}`,
       })
     } else {
-      res.status(200).json({ amount: result.rows[0] })
+      res.status(200).json({
+        amount: result.rows[0].amount,
+        proof: (result.rows[0].proof_of_inclusion as Buffer).toString('hex'),
+      })
     }
   } catch (error) {
     res.status(500).json({

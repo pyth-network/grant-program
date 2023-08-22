@@ -11,14 +11,56 @@ import * as splToken from '@solana/spl-token'
 import { Token } from '@solana/spl-token'
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { Buffer } from 'buffer'
-import { QueryParams, TokenDispenserProvider } from '../claim_sdk/solana'
+import { TokenDispenserProvider } from '../claim_sdk/solana'
 import { TestWallet } from '../claim_sdk/testWallets'
 import { loadTestWallets } from '../claim_sdk/testWallets'
+import { NextApiRequest, NextApiResponse } from 'next'
+import {
+  getAmountAndProofRoute,
+  handleAmountAndProofResponse,
+} from '../utils/api'
+import handlerAmountAndProof from '../pages/api/grant/v1/amount_and_proof'
 //TODO: update this
 const tokenDispenserProgramId = new anchor.web3.PublicKey(
   'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'
 )
 const pool = getDatabasePool()
+
+export class NextApiResponseMock {
+  public jsonBody: any
+  public statusCode: number = 0
+
+  json(jsonBody: any) {
+    this.jsonBody = jsonBody
+  }
+
+  status(statusCode: number): NextApiResponseMock {
+    this.statusCode = statusCode
+    return this
+  }
+}
+
+/** fetchAmountAndProof but for tests */
+export async function mockFetchAmountAndProof(
+  ecosystem: Ecosystem,
+  identity: string
+): Promise<
+  { claimInfo: ClaimInfo; proofOfInclusion: Uint8Array[] } | undefined
+> {
+  const req: NextApiRequest = {
+    url: getAmountAndProofRoute(ecosystem, identity),
+    query: { ecosystem, identity },
+  } as unknown as NextApiRequest
+  const res = new NextApiResponseMock()
+
+  await handlerAmountAndProof(req, res as unknown as NextApiResponse)
+  return handleAmountAndProofResponse(
+    ecosystem,
+    identity,
+    res.statusCode,
+    res.jsonBody
+  )
+}
 
 describe('integration test', () => {
   let root: Buffer
@@ -36,13 +78,23 @@ describe('integration test', () => {
   })
 
   describe('Api test', () => {
-    it('returns the correct amount for a claim', async () => {
-      const result = await pool.query(
-        'SELECT amount FROM claims WHERE ecosystem = $1 AND identity = $2',
-        ['evm', testWallets.evm[0].address()]
+    it('call the api with a real identity', async () => {
+      const response = await mockFetchAmountAndProof(
+        'evm',
+        testWallets.evm[0].address()
       )
+      expect(response).toBeTruthy()
+      expect(response?.claimInfo).toEqual({
+        ecosystem: 'evm',
+        identity: testWallets.evm[0].address(),
+        amount: new anchor.BN(3000000),
+      })
+    })
 
-      expect(result.rows[0].amount).toBe('3000000')
+    it('call the api with a fake identity', async () => {
+      expect(
+        await mockFetchAmountAndProof('evm', 'this_is_a_fake_address')
+      ).toBeFalsy()
     })
   })
 
@@ -118,18 +170,10 @@ describe('integration test', () => {
     })
 
     it('submits an evm claim', async () => {
-      const queryParams: QueryParams = ['evm', testWallets.evm[0].address()]
-      const result = await pool.query(
-        'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
-        queryParams
-      )
-
-      const proof: Buffer = result.rows[0].proof_of_inclusion
-      const claimInfo = new ClaimInfo(
-        queryParams[0],
-        queryParams[1],
-        new anchor.BN(result.rows[0].amount)
-      )
+      const { claimInfo, proofOfInclusion } = (await mockFetchAmountAndProof(
+        'evm',
+        testWallets.evm[0].address()
+      ))!
 
       const signedMessage = await testWallets.evm[0].signMessage(
         tokenDispenserProvider.generateAuthorizationPayload()
@@ -138,7 +182,7 @@ describe('integration test', () => {
       await tokenDispenserProvider.submitClaims([
         {
           claimInfo,
-          proofOfInclusion: proof,
+          proofOfInclusion,
           signedMessage,
         },
       ])
@@ -156,21 +200,10 @@ describe('integration test', () => {
     }, 40000)
 
     it('submits a cosmwasm claim', async () => {
-      const queryParams: QueryParams = [
+      const { claimInfo, proofOfInclusion } = (await mockFetchAmountAndProof(
         'cosmwasm',
-        testWallets.cosmwasm[0].address(),
-      ]
-      const result = await pool.query(
-        'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
-        queryParams
-      )
-
-      const proof: Buffer = result.rows[0].proof_of_inclusion
-      const claimInfo = new ClaimInfo(
-        queryParams[0],
-        queryParams[1],
-        new anchor.BN(result.rows[0].amount)
-      )
+        testWallets.cosmwasm[0].address()
+      ))!
 
       const signedMessage = await testWallets.cosmwasm[0].signMessage(
         tokenDispenserProvider.generateAuthorizationPayload()
@@ -179,7 +212,7 @@ describe('integration test', () => {
       await tokenDispenserProvider.submitClaims([
         {
           claimInfo,
-          proofOfInclusion: proof,
+          proofOfInclusion,
           signedMessage,
         },
       ])
@@ -199,41 +232,36 @@ describe('integration test', () => {
     }, 40000)
 
     it('submits multiple claims at once', async () => {
-      const queryParamsArr: {
-        wallet: TestWallet
-        queryParams: QueryParams
-      }[] = [
-        {
-          wallet: testWallets.cosmwasm[1],
-          queryParams: ['cosmwasm', testWallets.cosmwasm[1].address()],
-        },
-        {
-          wallet: testWallets.cosmwasm[2],
-          queryParams: ['cosmwasm', testWallets.cosmwasm[2].address()],
-        },
+      const wallets: TestWallet[] = [
+        testWallets.cosmwasm[1],
+        testWallets.cosmwasm[2],
       ]
+
       const claims = await Promise.all(
-        queryParamsArr.map(async ({ wallet, queryParams }) => {
-          const result = await pool.query(
-            'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
-            queryParams
-          )
-          const proof: Buffer = result.rows[0].proof_of_inclusion
-          const claimInfo = new ClaimInfo(
-            queryParams[0],
-            queryParams[1],
-            new anchor.BN(result.rows[0].amount)
-          )
-          const signedMessage = await wallet.signMessage(
-            tokenDispenserProvider.generateAuthorizationPayload()
-          )
+        wallets.map(async (wallet) => {
+          const { claimInfo, proofOfInclusion } =
+            (await mockFetchAmountAndProof('cosmwasm', wallet.address()))!
           return {
             claimInfo,
-            proofOfInclusion: proof,
-            signedMessage,
+            proofOfInclusion,
+            signedMessage: await wallet.signMessage(
+              tokenDispenserProvider.generateAuthorizationPayload()
+            ),
           }
         })
       )
+
+      expect(
+        await tokenDispenserProvider.isClaimAlreadySubmitted(
+          claims[0].claimInfo
+        )
+      ).toBeFalsy()
+
+      expect(
+        await tokenDispenserProvider.isClaimAlreadySubmitted(
+          claims[1].claimInfo
+        )
+      ).toBeFalsy()
 
       await tokenDispenserProvider.submitClaims(claims)
 
