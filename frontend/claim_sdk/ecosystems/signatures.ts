@@ -43,26 +43,29 @@ export function cosmwasmBuildSignedMessage(
 ): SignedMessage {
   const fullMessage = cosmosGetFullMessage(address, payload)
   const signature = Buffer.from(signatureBase64, 'base64')
-  const publicKey = getUncompressedPubkey(Buffer.from(pub_key.value, 'base64'))
+  const uncompressedPublicKey = getUncompressedPubkey(
+    Buffer.from(pub_key.value, 'base64')
+  )
   const chainId = extractChainId(address)
-  if (chainId == 'inj') {
+  const evmPubkey = uncompressedToEvmPubkey(uncompressedPublicKey)
+  if (chainId === 'inj') {
     return {
-      publicKey: uncompressedToEvmPubkey(publicKey),
+      publicKey: evmPubkey,
       signature,
       recoveryId: extractRecoveryId(
         signature,
-        publicKey,
+        uncompressedPublicKey,
         Hash.keccak256(fullMessage)
       ),
       fullMessage,
     }
   } else {
     return {
-      publicKey,
+      publicKey: uncompressedPublicKey,
       signature,
       recoveryId: extractRecoveryId(
         signature,
-        publicKey,
+        uncompressedPublicKey,
         Hash.sha256(fullMessage)
       ),
       fullMessage,

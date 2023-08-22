@@ -1,6 +1,6 @@
 -- Up Migration
 -- TODO: cosmwasm may need to be split out into one ecosystem per chain since the pubkeys are different
-CREATE TYPE ecosystem_type as ENUM ('discord', 'solana', 'evm', 'sui', 'aptos', 'cosmwasm');
+CREATE TYPE ecosystem_type as ENUM ('discord', 'solana', 'evm', 'sui', 'aptos', 'cosmwasm', 'injective');
 
 -- Table for who gets what tokens with the merkle proof of each.
 -- This maps on to ClaimInfo + proof of inclusion in the token_dispenser code.
