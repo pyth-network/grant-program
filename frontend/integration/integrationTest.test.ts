@@ -12,7 +12,6 @@ import { Buffer } from 'buffer'
 import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
 import {
   DiscordTestWallet,
-  TEST_DISCORD_USERNAME,
   TestWallet,
   loadAnchorWallet,
 } from '../claim_sdk/testWallets'
@@ -315,7 +314,7 @@ describe('integration test', () => {
       expect(wallet instanceof DiscordTestWallet).toBeTruthy()
       if (wallet instanceof DiscordTestWallet) {
         const signedMessage = await wallet.signDiscordMessage(
-          TEST_DISCORD_USERNAME,
+          claimInfo.identity,
           tokenDispenserProvider.claimant
         )
 
