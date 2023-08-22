@@ -32,19 +32,6 @@ export function loadAnchorWallet(): NodeWallet {
   return new NodeWallet(keypair)
 }
 
-export function loadDispenserGuard(): Keypair {
-  return Keypair.fromSecretKey(
-    new Uint8Array(
-      JSON.parse(
-        fs.readFileSync(
-          path.resolve(KEY_DIR, 'dispenser_guard_private_key.json'),
-          'utf-8'
-        )
-      )
-    )
-  )
-}
-
 export async function loadTestWallets(): Promise<
   Record<Ecosystem, TestWallet[]>
 > {
