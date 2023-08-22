@@ -72,3 +72,12 @@ export function cosmwasmBuildSignedMessage(
     }
   }
 }
+
+export function aptosBuildSignedMessage(payload: string): SignedMessage {
+  return {
+    publicKey: Buffer.from(''),
+    signature: Buffer.from(''),
+    recoveryId: 0,
+    fullMessage: Buffer.from(payload),
+  }
+}

@@ -63,6 +63,11 @@ export class ClaimInfo {
         }
         break
       }
+      case 'aptos': {
+        identityStruct = {
+          aptos: { address: this.identity },
+        }
+      }
       default: {
         // TODO: support the other ecosystems
         throw new Error(`unknown ecosystem type: ${this.ecosystem}`)

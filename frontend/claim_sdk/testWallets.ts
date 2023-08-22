@@ -4,6 +4,7 @@ import {
   SignedMessage,
   cosmwasmBuildSignedMessage,
   evmBuildSignedMessage,
+  aptosBuildSignedMessage,
 } from './ecosystems/signatures'
 import { ethers } from 'ethers'
 import fs from 'fs'
@@ -182,5 +183,15 @@ export class DiscordTestWallet implements TestWallet {
 
   public address(): string {
     return this.username
+  }
+}
+
+export class TestAptosWallet implements TestWallet {
+  address(): string {
+    return ''
+  }
+
+  async signMessage(payload: string): Promise<SignedMessage> {
+    return aptosBuildSignedMessage(payload)
   }
 }
