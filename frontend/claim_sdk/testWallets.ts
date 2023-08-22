@@ -10,11 +10,13 @@ import fs from 'fs'
 import { AminoSignResponse, Secp256k1HdWallet } from '@cosmjs/amino'
 import { makeADR36AminoSignDoc } from '@keplr-wallet/cosmos'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
-import { Keypair } from '@solana/web3.js'
+import { Keypair, PublicKey } from '@solana/web3.js'
 import { EthSecp256k1Wallet } from '@injectivelabs/sdk-ts/dist/cjs/core/accounts/signers/EthSecp256k1Wallet'
 import { OfflineAminoSigner } from '@injectivelabs/sdk-ts/dist/cjs/core/accounts/signers/types/amino-signer'
+import { hardDriveSignMessage, signDiscordMessage } from './ecosystems/solana'
 
 const KEY_DIR = './integration/keys/'
+export const TEST_DISCORD_USERNAME = 'a_discord_user' // For development add your discord user here
 
 export function loadAnchorWallet(): NodeWallet {
   const keypair = Keypair.fromSecretKey(
@@ -30,6 +32,19 @@ export function loadAnchorWallet(): NodeWallet {
   return new NodeWallet(keypair)
 }
 
+export function loadDispenserGuard(): Keypair {
+  return Keypair.fromSecretKey(
+    new Uint8Array(
+      JSON.parse(
+        fs.readFileSync(
+          path.resolve(KEY_DIR, 'dispenser_guard_private_key.json'),
+          'utf-8'
+        )
+      )
+    )
+  )
+}
+
 export async function loadTestWallets(): Promise<
   Record<Ecosystem, TestWallet[]>
 > {
@@ -37,6 +52,10 @@ export async function loadTestWallets(): Promise<
     path.resolve(KEY_DIR, 'evm_private_key.json')
   )
   const cosmosPrivateKeyPath = path.resolve(KEY_DIR, 'cosmos_private_key.json')
+  const dispenserGuardKeyPath = path.resolve(
+    KEY_DIR,
+    'dispenser_guard_private_key.json'
+  )
 
   const result: Record<Ecosystem, TestWallet[]> = {
     evm: [],
@@ -55,6 +74,9 @@ export async function loadTestWallets(): Promise<
   ]
   result['injective'] = [
     await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath, 'inj'),
+  ]
+  result['discord'] = [
+    DiscordTestWallet.fromKeyfile(TEST_DISCORD_USERNAME, dispenserGuardKeyPath),
   ]
   return result
 }
@@ -142,5 +164,36 @@ export class TestCosmWasmWallet implements TestWallet {
       this.address(),
       makeADR36AminoSignDoc(this.address(), payload)
     )
+  }
+}
+
+export class DiscordTestWallet implements TestWallet {
+  // Hack : The wallet here is the dispenser guard instead of the user's wallet
+  constructor(readonly username: string, readonly wallet: Keypair) {}
+
+  static fromKeyfile(username: string, keyFile: string): DiscordTestWallet {
+    const keypair = Keypair.fromSecretKey(
+      new Uint8Array(JSON.parse(fs.readFileSync(keyFile, 'utf-8')))
+    )
+    return new DiscordTestWallet(username, keypair)
+  }
+
+  async signMessage(payload: string): Promise<SignedMessage> {
+    return hardDriveSignMessage(Buffer.from(payload, 'utf-8'), this.wallet)
+  }
+
+  async signDiscordMessage(
+    username: string,
+    claimant: PublicKey
+  ): Promise<SignedMessage> {
+    return signDiscordMessage(username, claimant, this.wallet)
+  }
+
+  get dispenserGuardPublicKey(): PublicKey {
+    return this.wallet.publicKey
+  }
+
+  public address(): string {
+    return this.username
   }
 }

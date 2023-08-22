@@ -10,7 +10,12 @@ import { Token } from '@solana/spl-token'
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { Buffer } from 'buffer'
 import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
-import { TestWallet, loadAnchorWallet } from '../claim_sdk/testWallets'
+import {
+  DiscordTestWallet,
+  TEST_DISCORD_USERNAME,
+  TestWallet,
+  loadAnchorWallet,
+} from '../claim_sdk/testWallets'
 import { loadTestWallets } from '../claim_sdk/testWallets'
 import { NextApiRequest, NextApiResponse } from 'next'
 import {
@@ -60,11 +65,14 @@ export async function mockFetchAmountAndProof(
 describe('integration test', () => {
   let root: Buffer
   let testWallets: Record<Ecosystem, TestWallet[]>
+  let dispenserGuard: PublicKey
 
   beforeAll(async () => {
     await clearDatabase(pool)
     testWallets = await loadTestWallets()
     root = await addTestWalletsToDatabase(pool, await loadTestWallets())
+    dispenserGuard = (testWallets.discord[0] as unknown as DiscordTestWallet)
+      .dispenserGuardPublicKey
   })
 
   afterAll(async () => {
@@ -106,8 +114,6 @@ describe('integration test', () => {
       }
     )
 
-    const dispenserGuard = anchor.web3.Keypair.generate()
-
     let mint: Token
     let treasury: PublicKey
     beforeAll(async () => {
@@ -133,7 +139,7 @@ describe('integration test', () => {
         root,
         mint.publicKey,
         treasury,
-        dispenserGuard.publicKey
+        dispenserGuard
       )
 
       const configAccount = await tokenDispenserProvider.getConfig()
@@ -142,7 +148,7 @@ describe('integration test', () => {
       expect(configAccount.merkleRoot).toEqual(Array.from(root))
       expect(configAccount.mint).toEqual(mint.publicKey)
       expect(configAccount.treasury).toEqual(treasury)
-      expect(configAccount.dispenserGuard).toEqual(dispenserGuard.publicKey)
+      expect(configAccount.dispenserGuard).toEqual(dispenserGuard)
     })
 
     it('submits an evm claim', async () => {
@@ -297,6 +303,47 @@ describe('integration test', () => {
           new anchor.BN(3000000 + 6000000 + 6100000 + 6200000 + 7000000)
         )
       ).toBeTruthy()
+    }, 40000)
+
+    it('submits a discord claim', async () => {
+      const wallet = testWallets.discord[0]
+      const { claimInfo, proofOfInclusion } = (await mockFetchAmountAndProof(
+        'discord',
+        wallet.address()
+      ))!
+
+      expect(wallet instanceof DiscordTestWallet).toBeTruthy()
+      if (wallet instanceof DiscordTestWallet) {
+        const signedMessage = await wallet.signDiscordMessage(
+          TEST_DISCORD_USERNAME,
+          tokenDispenserProvider.claimant
+        )
+
+        await tokenDispenserProvider.submitClaims([
+          {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage,
+          },
+        ])
+
+        expect(
+          await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
+        ).toBeTruthy()
+
+        const claimantFundPubkey =
+          await tokenDispenserProvider.getClaimantFundAddress()
+
+        const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
+
+        expect(
+          claimantFund.amount.eq(
+            new anchor.BN(
+              3000000 + 6000000 + 6100000 + 6200000 + 7000000 + 1000000
+            )
+          )
+        ).toBeTruthy()
+      }
     }, 40000)
   })
 })

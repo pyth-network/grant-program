@@ -1,15 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../auth/[...nextauth]'
-import IDL from '../../../../claim_sdk/idl/token_dispenser.json'
-import * as anchor from '@coral-xyz/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { hardDriveSignMessage } from '../../../../claim_sdk/ecosystems/solana'
+import { signDiscordMessage } from '../../../../claim_sdk/ecosystems/solana'
 
 const dispenserGuard = Keypair.fromSecretKey(
   Uint8Array.from(JSON.parse(process.env.DISPENSER_GUARD!))
 )
-const coder = new anchor.BorshCoder(IDL as any)
 
 export default async function handler(
   req: NextApiRequest,
@@ -31,17 +28,16 @@ export default async function handler(
     return
   }
 
-  const publicKey = new PublicKey(req.query.publicKey) // The claimant's public key, it will receive the tokens
+  const claimant = new PublicKey(req.query.publicKey) // The claimant's public key, it will receive the tokens
   const session = await getServerSession(req, res, authOptions)
 
-  if (session && session.user) {
-    const signedMessage = hardDriveSignMessage(
-      coder.types.encode('DiscordMessage', {
-        username: session.user.name,
-        claimant: publicKey,
-      }),
+  if (session && session.user && session.user.name) {
+    const signedMessage = signDiscordMessage(
+      session.user.name,
+      claimant,
       dispenserGuard
     )
+
     res.status(200).json({
       signature: Buffer.from(signedMessage.signature).toString('hex'),
       publicKey: Buffer.from(signedMessage.publicKey).toString('hex'), // The dispenser guard's public key
