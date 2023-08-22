@@ -1,13 +1,13 @@
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
 import { loadAnchorWallet, loadTestWallets } from '../claim_sdk/testWallets'
+import { envOrErr } from '../claim_sdk/index'
 import {
   addTestWalletsToDatabase,
   clearDatabase,
   getDatabasePool,
 } from '../utils/db'
 import * as anchor from '@coral-xyz/anchor'
-import { envOrErr } from 'claim_sdk'
 
 const pool = getDatabasePool()
 
