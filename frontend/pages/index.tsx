@@ -1,8 +1,8 @@
 import Image from 'next/image'
 import React, { useState } from 'react'
 import bg from '../images/bg.png'
-import chest from '../images/chest.png'
-import chest2 from '../images/chest2.png'
+import coins1 from '../images/coins-1.png'
+import coins2 from '../images/coins-2.png'
 
 import Link from 'next/link'
 
@@ -130,11 +130,11 @@ const Claim = () => {
           objectFit="cover"
           objectPosition="left bottom"
         />
-        <span className="absolute left-0 bottom-0">
+        <span className="absolute left-[-350px] bottom-[-80px] max-w-[950px]">
           {step == 6 ? (
-            <Image src={chest2} alt="" />
+            <Image src={coins2} alt="" />
           ) : (
-            <Image src={chest} alt="" />
+            <Image src={coins1} alt="" />
           )}
         </span>
       </span>
