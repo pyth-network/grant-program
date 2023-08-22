@@ -14,8 +14,6 @@ jobs:
         PGPASSWORD: ${{ env.PGPASSWORD }}
         PGDATABASE: ${{ env.PGDATABASE }}
         PGHOST: postgres
-        PROGRAM_ID: Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS
-        ENDPOINT: http://localhost:8899
 
     env:
       PGUSER: myuser
