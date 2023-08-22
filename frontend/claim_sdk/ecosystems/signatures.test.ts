@@ -13,6 +13,7 @@ import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { TestCosmWasmWallet, TestEvmWallet } from '../testWallets'
 import path from 'path'
 import { Address as InjectiveAddress } from '@injectivelabs/sdk-ts'
+import { airdrop } from '../solana'
 
 test('Evm signature', async () => {
   const evmTestWallet = new TestEvmWallet(
@@ -41,14 +42,7 @@ test('Evm signature', async () => {
     { preflightCommitment: 'processed', commitment: 'processed' }
   )
 
-  const airdropTxn = await connection.requestAirdrop(
-    solanaKeypair.publicKey,
-    LAMPORTS_PER_SOL
-  )
-  await connection.confirmTransaction({
-    signature: airdropTxn,
-    ...(await connection.getLatestBlockhash()),
-  })
+  await airdrop(connection, LAMPORTS_PER_SOL, solanaKeypair.publicKey)
 
   let ix = Secp256k1Program.createInstructionWithEthAddress({
     ethAddress: signedMessage.publicKey,
@@ -105,14 +99,7 @@ test('Injective signature', async () => {
     { preflightCommitment: 'processed', commitment: 'processed' }
   )
 
-  const airdropTxn = await connection.requestAirdrop(
-    solanaKeypair.publicKey,
-    LAMPORTS_PER_SOL
-  )
-  await connection.confirmTransaction({
-    signature: airdropTxn,
-    ...(await connection.getLatestBlockhash()),
-  })
+  await airdrop(connection, LAMPORTS_PER_SOL, solanaKeypair.publicKey)
 
   let ix = Secp256k1Program.createInstructionWithEthAddress({
     ethAddress: signedMessage.publicKey,

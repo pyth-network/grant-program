@@ -267,19 +267,10 @@ describe('integration test', () => {
 
     it('submits an injective claim', async () => {
       const wallet = testWallets.injective[0]
-      const queryParams: QueryParams = ['injective', wallet.address()]
-      const result = await pool.query(
-        'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
-        queryParams
-      )
-
-      const proof: Buffer = result.rows[0].proof_of_inclusion
-      const claimInfo = new ClaimInfo(
-        queryParams[0],
-        queryParams[1],
-        new anchor.BN(result.rows[0].amount)
-      )
-
+      const { claimInfo, proofOfInclusion } = (await mockFetchAmountAndProof(
+        'injective',
+        wallet.address()
+      ))!
       const signedMessage = await wallet.signMessage(
         tokenDispenserProvider.generateAuthorizationPayload()
       )
@@ -287,7 +278,7 @@ describe('integration test', () => {
       await tokenDispenserProvider.submitClaims([
         {
           claimInfo,
-          proofOfInclusion: proof,
+          proofOfInclusion,
           signedMessage,
         },
       ])
