@@ -31,7 +31,7 @@ export default async function handler(
     return
   }
 
-  const publicKey = new PublicKey(req.query.publicKey)
+  const publicKey = new PublicKey(req.query.publicKey) // The claimant's public key, it will receive the tokens
   const session = await getServerSession(req, res, authOptions)
 
   if (session && session.user) {
@@ -44,7 +44,7 @@ export default async function handler(
     )
     res.status(200).json({
       signature: Buffer.from(signedMessage.signature).toString('hex'),
-      publicKey: Buffer.from(signedMessage.publicKey).toString('hex'),
+      publicKey: Buffer.from(signedMessage.publicKey).toString('hex'), // The dispenser guard's public key
       fullMessage: Buffer.from(signedMessage.fullMessage).toString('hex'),
     })
   } else {
