@@ -1,5 +1,5 @@
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
-import { TokenDispenserProvider } from '../claim_sdk/solana'
+import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
 import { loadAnchorWallet, loadTestWallets } from '../claim_sdk/testWallets'
 import {
   addTestWalletsToDatabase,
@@ -7,8 +7,12 @@ import {
   getDatabasePool,
 } from '../utils/db'
 import * as anchor from '@coral-xyz/anchor'
+import { envOrErr } from 'claim_sdk'
 
 const pool = getDatabasePool()
+
+const ENDPOINT = envOrErr('ENDPOINT')
+const PROGRAM_ID = envOrErr('PROGRAM_ID')
 
 async function main() {
   await clearDatabase(pool)
@@ -17,16 +21,17 @@ async function main() {
 
   // Intialize the token dispenser
   const tokenDispenserProvider = new TokenDispenserProvider(
-    'http://localhost:8899',
-    await loadAnchorWallet(),
-    new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'),
+    ENDPOINT,
+    loadAnchorWallet(),
+    new PublicKey(PROGRAM_ID),
     {
       skipPreflight: true,
       preflightCommitment: 'processed',
       commitment: 'processed',
     }
   )
-  await tokenDispenserProvider.airdrop(
+  await airdrop(
+    tokenDispenserProvider.connection,
     LAMPORTS_PER_SOL,
     tokenDispenserProvider.claimant
   )
