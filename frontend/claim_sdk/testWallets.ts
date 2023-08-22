@@ -9,8 +9,24 @@ import { ethers } from 'ethers'
 import fs from 'fs'
 import { Secp256k1HdWallet } from '@cosmjs/amino'
 import { makeADR36AminoSignDoc } from '@keplr-wallet/cosmos'
+import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
+import { Keypair } from '@solana/web3.js'
 
 const KEY_DIR = './integration/keys/'
+
+export function loadAnchorWallet(): NodeWallet {
+  const keypair = Keypair.fromSecretKey(
+    new Uint8Array(
+      JSON.parse(
+        fs.readFileSync(
+          path.resolve(KEY_DIR, 'solana_private_key.json'),
+          'utf-8'
+        )
+      )
+    )
+  )
+  return new NodeWallet(keypair)
+}
 
 export async function loadTestWallets(): Promise<
   Record<Ecosystem, TestWallet[]>
