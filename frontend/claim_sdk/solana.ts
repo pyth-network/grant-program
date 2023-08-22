@@ -5,6 +5,7 @@ import { Idl, IdlAccounts, IdlTypes, Program } from '@coral-xyz/anchor'
 import { Buffer } from 'buffer'
 import { MerkleTree } from './merkleTree'
 import {
+  Connection,
   LAMPORTS_PER_SOL,
   PublicKey,
   Secp256k1Program,
@@ -317,21 +318,13 @@ export class TokenDispenserProvider {
     return associatedTokenAccount
   }
 
-  public async airdrop(amount: number, pubkey: PublicKey): Promise<void> {
-    const airdropTxn = await this.connection.requestAirdrop(pubkey, amount)
-    await this.connection.confirmTransaction({
-      signature: airdropTxn,
-      ...(await this.connection.getLatestBlockhash()),
-    })
-  }
-
   public async setupMintAndTreasury(): Promise<{
     mint: Token
     treasury: PublicKey
   }> {
     const mintAuthority = anchor.web3.Keypair.generate()
 
-    await this.airdrop(LAMPORTS_PER_SOL, mintAuthority.publicKey)
+    await airdrop(this.connection, LAMPORTS_PER_SOL, mintAuthority.publicKey)
     const mint = await Token.createMint(
       this.connection,
       mintAuthority,
@@ -352,4 +345,16 @@ export class TokenDispenserProvider {
     )
     return { mint, treasury }
   }
+}
+
+export async function airdrop(
+  connection: Connection,
+  amount: number,
+  pubkey: PublicKey
+): Promise<void> {
+  const airdropTxn = await connection.requestAirdrop(pubkey, amount)
+  await connection.confirmTransaction({
+    signature: airdropTxn,
+    ...(await connection.getLatestBlockhash()),
+  })
 }

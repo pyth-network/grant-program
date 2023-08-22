@@ -9,7 +9,7 @@ import { ClaimInfo, Ecosystem } from '../claim_sdk/claim'
 import { Token } from '@solana/spl-token'
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { Buffer } from 'buffer'
-import { TokenDispenserProvider } from '../claim_sdk/solana'
+import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
 import { TestWallet, loadAnchorWallet } from '../claim_sdk/testWallets'
 import { loadTestWallets } from '../claim_sdk/testWallets'
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -111,7 +111,8 @@ describe('integration test', () => {
     let mint: Token
     let treasury: PublicKey
     beforeAll(async () => {
-      await tokenDispenserProvider.airdrop(
+      await airdrop(
+        tokenDispenserProvider.connection,
         LAMPORTS_PER_SOL,
         tokenDispenserProvider.claimant
       )
