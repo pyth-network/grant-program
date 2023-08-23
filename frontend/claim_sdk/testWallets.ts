@@ -16,7 +16,8 @@ import { OfflineAminoSigner } from '@injectivelabs/sdk-ts/dist/cjs/core/accounts
 import { hardDriveSignMessage, signDiscordMessage } from './ecosystems/solana'
 
 const KEY_DIR = './integration/keys/'
-export const TEST_DISCORD_USERNAME = 'a_discord_user' // For development add your discord user here
+export const TEST_DISCORD_USERNAME =
+  process.env.DISCORD_USERNAME ?? 'a_discord_user' // For development add your discord username to .env
 
 export function loadAnchorWallet(): NodeWallet {
   const keypair = Keypair.fromSecretKey(
@@ -43,7 +44,6 @@ export async function loadTestWallets(): Promise<
     KEY_DIR,
     'dispenser_guard_private_key.json'
   )
-
   const result: Record<Ecosystem, TestWallet[]> = {
     evm: [],
     cosmwasm: [],
