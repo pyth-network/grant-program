@@ -159,14 +159,15 @@ function main() {
   cleanup;
   # setup postgres docker
   setup_postgres_docker;
+  # start solana-test-validator
+  start_anchor_localnet &
+  sleep 5
   if [ "$dev" -eq 1 ]; then
       if [ "$verbose" -eq 1 ]; then
         echo "dev mode"
-        echo "populate db and deploy solana-test-validator using anchor localnet"
+        echo "populate db and deploy and initialize program"
       fi
       printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
-      start_anchor_localnet &
-      sleep 5
       populate;
       # wait for ctrl-c
       ( trap exit SIGINT ; read -r -d '' _ </dev/tty )
@@ -175,8 +176,6 @@ function main() {
         echo "test mode"
         echo "running frontend tests"
       fi
-      start_anchor_localnet &
-      sleep 5
       run_integration_tests;
   else
       echo "no mode selected"
