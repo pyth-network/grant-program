@@ -437,18 +437,6 @@ export type TokenDispenser = {
           },
           {
             name: 'Solana'
-            fields: [
-              {
-                name: 'pubkey'
-                type: {
-                  array: ['u8', 32]
-                }
-              },
-              {
-                name: 'verification_instruction_index'
-                type: 'u8'
-              }
-            ]
           },
           {
             name: 'Sui'
@@ -1022,18 +1010,6 @@ export const IDL: TokenDispenser = {
           },
           {
             name: 'Solana',
-            fields: [
-              {
-                name: 'pubkey',
-                type: {
-                  array: ['u8', 32],
-                },
-              },
-              {
-                name: 'verification_instruction_index',
-                type: 'u8',
-              },
-            ],
           },
           {
             name: 'Sui',

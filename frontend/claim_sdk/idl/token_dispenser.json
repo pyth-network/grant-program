@@ -436,19 +436,7 @@
             ]
           },
           {
-            "name": "Solana",
-            "fields": [
-              {
-                "name": "pubkey",
-                "type": {
-                  "array": ["u8", 32]
-                }
-              },
-              {
-                "name": "verification_instruction_index",
-                "type": "u8"
-              }
-            ]
+            "name": "Solana"
           },
           {
             "name": "Sui",
