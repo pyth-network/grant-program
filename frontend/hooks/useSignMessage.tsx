@@ -48,11 +48,7 @@ export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
         )
           return
 
-        return aptosBuildSignedMessage(
-          account.publicKey,
-          signature,
-          fullMessage
-        )
+        return aptosBuildSignedMessage(account.publicKey, signature, payload)
       } catch (e) {
         console.error(e)
       }

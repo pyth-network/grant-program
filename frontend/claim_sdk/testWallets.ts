@@ -208,8 +208,8 @@ export class TestAptosWallet implements TestWallet {
   }
 
   async signMessage(payload: string): Promise<SignedMessage> {
-    const aptosMsg = Buffer.from(aptosGetFullMessage(payload))
-    const signature = this.wallet.signBuffer(aptosMsg)
+    const aptosMsgBuffer = Buffer.from(aptosGetFullMessage(payload))
+    const signature = this.wallet.signBuffer(aptosMsgBuffer)
     return aptosBuildSignedMessage(
       this.wallet.pubKey().hex(),
       signature.hex(),
