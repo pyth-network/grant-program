@@ -6,6 +6,7 @@ import { Buffer } from 'buffer'
 import { MerkleTree } from './merkleTree'
 import {
   Connection,
+  Ed25519Program,
   LAMPORTS_PER_SOL,
   PublicKey,
   Secp256k1Program,
@@ -284,6 +285,14 @@ export class TokenDispenserProvider {
           },
         }
       }
+      case 'discord': {
+        return {
+          discord: {
+            username: claimInfo.identity,
+            verificationInstructionIndex: 0,
+          },
+        }
+      }
       //TODO: implement other ecosystems
       default: {
         throw new Error(`unknown ecosystem type: ${claimInfo.ecosystem}`)
@@ -296,7 +305,8 @@ export class TokenDispenserProvider {
     signedMessage: SignedMessage
   ): anchor.web3.TransactionInstruction | undefined {
     switch (ecosystem) {
-      case 'evm': {
+      case 'evm':
+      case 'injective': {
         return Secp256k1Program.createInstructionWithEthAddress({
           ethAddress: signedMessage.publicKey,
           message: signedMessage.fullMessage,
@@ -307,13 +317,12 @@ export class TokenDispenserProvider {
       case 'cosmwasm': {
         return undefined
       }
-
-      case 'injective': {
-        return Secp256k1Program.createInstructionWithEthAddress({
-          ethAddress: signedMessage.publicKey,
+      case 'discord': {
+        return Ed25519Program.createInstructionWithPublicKey({
+          publicKey: signedMessage.publicKey,
           message: signedMessage.fullMessage,
           signature: signedMessage.signature,
-          recoveryId: signedMessage.recoveryId!,
+          instructionIndex: 0,
         })
       }
       default: {

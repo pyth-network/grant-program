@@ -1,6 +1,8 @@
 import BN from 'bn.js'
 import { ClaimInfo, Ecosystem } from '../claim_sdk/claim'
 import { HASH_SIZE } from '../claim_sdk/merkleTree'
+import { PublicKey } from '@solana/web3.js'
+import { SignedMessage } from '../claim_sdk/ecosystems/signatures'
 
 function parseProof(proof: string) {
   const buffer = Buffer.from(proof, 'hex')
@@ -49,6 +51,34 @@ export async function fetchAmountAndProof(
   return handleAmountAndProofResponse(
     ecosystem,
     identity,
+    response.status,
+    await response.json()
+  )
+}
+
+export function getDiscordSignedMessageRoute(claimant: PublicKey) {
+  return `/api/grant/v1/discord_signed_message?publicKey=${claimant.toBase58()}`
+}
+
+export function handleDiscordSignedMessageResponse(
+  status: number,
+  data: any
+): SignedMessage | undefined {
+  if (status == 200) {
+    return {
+      signature: Buffer.from(data.signature, 'hex'),
+      publicKey: Buffer.from(data.publicKey, 'hex'),
+      fullMessage: Buffer.from(data.fullMessage, 'hex'),
+      recoveryId: undefined,
+    }
+  }
+}
+
+export async function fetchDiscordSignedMessage(
+  claimant: PublicKey
+): Promise<SignedMessage | undefined> {
+  const response = await fetch(getDiscordSignedMessageRoute(claimant))
+  return handleDiscordSignedMessageResponse(
     response.status,
     await response.json()
   )

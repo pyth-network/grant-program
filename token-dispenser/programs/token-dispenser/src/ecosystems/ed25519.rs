@@ -85,10 +85,9 @@ impl Ed25519InstructionHeader {
         Ed25519InstructionHeader {
             num_signatures:               1,
             padding:                      0,
-            signature_offset:             Ed25519InstructionHeader::LEN,
+            signature_offset:             Ed25519InstructionHeader::LEN + Ed25519Pubkey::LEN as u16,
             signature_instruction_index:  instruction_index as u16,
-            public_key_offset:            Ed25519InstructionHeader::LEN
-                + Ed25519Signature::LEN as u16,
+            public_key_offset:            Ed25519InstructionHeader::LEN,
             public_key_instruction_index: instruction_index as u16,
             message_data_offset:          Ed25519InstructionHeader::LEN
                 + Ed25519Signature::LEN as u16
@@ -134,8 +133,8 @@ impl Ed25519InstructionData {
 impl AnchorDeserialize for Ed25519InstructionData {
     fn deserialize(buf: &mut &[u8]) -> std::result::Result<Ed25519InstructionData, std::io::Error> {
         let header = Ed25519InstructionHeader::deserialize(buf)?;
-        let signature = Ed25519Signature::deserialize(buf)?;
         let pubkey = Ed25519Pubkey::deserialize(buf)?;
+        let signature = Ed25519Signature::deserialize(buf)?;
 
         let mut message: Vec<u8> = vec![];
         if buf.len() < header.message_data_size as usize {
@@ -159,8 +158,8 @@ impl AnchorSerialize for Ed25519InstructionData {
         writer: &mut W,
     ) -> std::result::Result<(), std::io::Error> {
         self.header.serialize(writer)?;
-        self.signature.serialize(writer)?;
         self.pubkey.serialize(writer)?;
+        self.signature.serialize(writer)?;
 
         writer.write_all(&self.message)?;
         Ok(())
