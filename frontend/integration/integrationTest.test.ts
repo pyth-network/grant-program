@@ -385,8 +385,8 @@ describe('integration test', () => {
             )
           )
         ).toBeTruthy()
-            }
-          });
+      }
+    })
 
     it('submits a solana claim', async () => {
       const { claimInfo, proofOfInclusion } = (await mockFetchAmountAndProof(
