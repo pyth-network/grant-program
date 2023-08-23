@@ -154,8 +154,6 @@ function cleanup() {
       echo "shutting down solana-test-validator if running"
   fi
   stop_anchor_localnet;
-  stop_test_validator;
-
 }
 
 function main() {
