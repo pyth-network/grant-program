@@ -173,23 +173,23 @@ export class DiscordTestWallet implements TestWallet {
       new Uint8Array(JSON.parse(fs.readFileSync(keyFile, 'utf-8')))
     )
     return new DiscordTestWallet(username, keypair)
-    }
+  }
   async signMessage(payload: string): Promise<SignedMessage> {
-      return hardDriveSignMessage(Buffer.from(payload, 'utf-8'), this.wallet)
-    }
-    async signDiscordMessage(
-      username: string,
-      claimant: PublicKey
-    ): Promise<SignedMessage> {
-      return signDiscordMessage(username, claimant, this.wallet)
-    }
+    return hardDriveSignMessage(Buffer.from(payload, 'utf-8'), this.wallet)
+  }
+  async signDiscordMessage(
+    username: string,
+    claimant: PublicKey
+  ): Promise<SignedMessage> {
+    return signDiscordMessage(username, claimant, this.wallet)
+  }
 
-    get dispenserGuardPublicKey(): PublicKey {
-      return this.wallet.publicKey
-    }
-  
+  get dispenserGuardPublicKey(): PublicKey {
+    return this.wallet.publicKey
+  }
+
   public address(): string {
-      return this.username
+    return this.username
   }
 }
 
