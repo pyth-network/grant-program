@@ -257,7 +257,7 @@ export class TokenDispenserProvider {
     claimInfo: ClaimInfo,
     signedMessage: SignedMessage | undefined
   ): IdlTypes<TokenDispenser>['IdentityCertificate'] {
-    if (claimInfo.ecosystem == 'solana') {
+    if (claimInfo.ecosystem === 'solana') {
       return {
         solana: {},
       }
@@ -324,14 +324,14 @@ export class TokenDispenserProvider {
     ecosystem: Ecosystem,
     signedMessage: SignedMessage | undefined
   ): anchor.web3.TransactionInstruction | undefined {
-    if (ecosystem == 'solana') {
+    if (ecosystem === 'solana') {
       return undefined
     }
 
     if (signedMessage) {
       switch (ecosystem) {
-        case 'evm': 
-        case 'injective':{
+        case 'evm':
+        case 'injective': {
           return Secp256k1Program.createInstructionWithEthAddress({
             ethAddress: signedMessage.publicKey,
             message: signedMessage.fullMessage,
