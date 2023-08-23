@@ -447,7 +447,7 @@ impl IdentityCertificate {
                 })
             }
             IdentityCertificate::Solana => Ok(Identity::Solana {
-                pubkey: Ed25519Pubkey::from(*claimant),
+                pubkey: Ed25519Pubkey::from(*claimant), // Solana verification relies on claimant signing the Solana transaction
             }),
             IdentityCertificate::Injective {
                 pubkey,
