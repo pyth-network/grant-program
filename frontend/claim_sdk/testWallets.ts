@@ -4,6 +4,7 @@ import {
   SignedMessage,
   cosmwasmBuildSignedMessage,
   evmBuildSignedMessage,
+  aptosBuildSignedMessage,
 } from './ecosystems/signatures'
 import { ethers } from 'ethers'
 import fs from 'fs'
@@ -14,6 +15,8 @@ import { Keypair, PublicKey } from '@solana/web3.js'
 import { EthSecp256k1Wallet } from '@injectivelabs/sdk-ts/dist/cjs/core/accounts/signers/EthSecp256k1Wallet'
 import { OfflineAminoSigner } from '@injectivelabs/sdk-ts/dist/cjs/core/accounts/signers/types/amino-signer'
 import { hardDriveSignMessage, signDiscordMessage } from './ecosystems/solana'
+import { AptosAccount, HexString } from 'aptos'
+import { aptosGetFullMessage } from './ecosystems/aptos'
 
 const KEY_DIR = './integration/keys/'
 export const TEST_DISCORD_USERNAME =
@@ -40,6 +43,7 @@ export async function loadTestWallets(): Promise<
     path.resolve(KEY_DIR, 'evm_private_key.json')
   )
   const cosmosPrivateKeyPath = path.resolve(KEY_DIR, 'cosmos_private_key.json')
+  const aptosPrivateKeyPath = path.resolve(KEY_DIR, 'aptos_private_key.json')
   const dispenserGuardKeyPath = path.resolve(
     KEY_DIR,
     'dispenser_guard_private_key.json'
@@ -54,14 +58,17 @@ export async function loadTestWallets(): Promise<
     injective: [],
   }
   result['evm'] = [evmWallet]
+
   result['cosmwasm'] = [
     await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath),
     await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath, 'osmo'),
     await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath, 'neutron'),
   ]
+  result['aptos'] = [TestAptosWallet.fromKeyfile(aptosPrivateKeyPath)]
   result['injective'] = [
     await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath, 'inj'),
   ]
+
   result['discord'] = [
     DiscordTestWallet.fromKeyfile(TEST_DISCORD_USERNAME, dispenserGuardKeyPath),
   ]
@@ -182,5 +189,31 @@ export class DiscordTestWallet implements TestWallet {
 
   public address(): string {
     return this.username
+  }
+}
+
+export class TestAptosWallet implements TestWallet {
+  constructor(readonly wallet: AptosAccount, readonly addressStr: string) {}
+  static fromKeyfile(keyFile: string): TestAptosWallet {
+    const jsonContent = fs.readFileSync(keyFile, 'utf8')
+    const mnemonic = JSON.parse(jsonContent).mnemonic
+    const aptosAccount = AptosAccount.fromDerivePath(
+      "m/44'/637'/0'/0'/0'",
+      mnemonic
+    )
+    return new TestAptosWallet(aptosAccount, aptosAccount.authKey().hex())
+  }
+  address(): string {
+    return this.addressStr
+  }
+
+  async signMessage(payload: string): Promise<SignedMessage> {
+    const aptosMsg = Buffer.from(aptosGetFullMessage(payload))
+    const signature = this.wallet.signBuffer(aptosMsg)
+    return aptosBuildSignedMessage(
+      this.wallet.pubKey().hex(),
+      signature.hex(),
+      payload
+    )
   }
 }

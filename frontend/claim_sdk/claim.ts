@@ -2,6 +2,8 @@ import * as anchor from '@coral-xyz/anchor'
 import { PublicKey } from '@solana/web3.js'
 import tokenDispenser from './idl/token_dispenser.json'
 import { ethers } from 'ethers'
+import { removeLeading0x } from './index'
+import { HexString } from 'aptos'
 
 // Must be kept in line with the database types and the on-chain program
 export type Ecosystem =
@@ -60,6 +62,14 @@ export class ClaimInfo {
       case 'injective': {
         identityStruct = {
           injective: { address: this.identity },
+        }
+        break
+      }
+      case 'aptos': {
+        identityStruct = {
+          aptos: {
+            address: Buffer.from(removeLeading0x(this.identity), 'hex'),
+          },
         }
         break
       }

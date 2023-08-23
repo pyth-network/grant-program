@@ -8,16 +8,15 @@ use {
     crate::ErrorCode,
     anchor_lang::{
         prelude::*,
-        solana_program::hash,
         AnchorDeserialize,
         AnchorSerialize,
     },
+    sha3::Digest,
 };
 
 pub const APTOS_PREFIX: &[u8] = b"APTOS\nmessage: ";
 pub const APTOS_SUFFIX: &[u8] = b"\nnonce: nonce";
 pub const APTOS_SIGNATURE_SCHEME_ID: u8 = 0;
-
 
 /**
 * An arbitrary signed message used in Aptos.
@@ -66,7 +65,11 @@ impl AptosAddress {
 
 impl From<Ed25519Pubkey> for AptosAddress {
     fn from(val: Ed25519Pubkey) -> Self {
-        AptosAddress(hash::hashv(&[&val.to_bytes(), &[APTOS_SIGNATURE_SCHEME_ID]]).to_bytes())
+        let mut hasher = sha3::Sha3_256::new();
+        hasher.update(val.to_bytes());
+        hasher.update([APTOS_SIGNATURE_SCHEME_ID]);
+        let aptos_addr: [u8; 32] = hasher.finalize().try_into().unwrap();
+        AptosAddress(aptos_addr)
     }
 }
 

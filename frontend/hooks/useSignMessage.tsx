@@ -2,7 +2,6 @@ import { useWallet as useAptosWallet } from '@aptos-labs/wallet-adapter-react'
 import { useChainWallet } from '@cosmos-kit/react-lite'
 import { useWalletKit } from '@mysten/wallet-kit'
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
-import { removeLeading0x } from 'claim_sdk'
 import {
   suiGetFullMessage,
   splitSignatureAndPubkey,
@@ -13,6 +12,7 @@ import {
   SignedMessage,
   evmBuildSignedMessage,
   cosmwasmBuildSignedMessage,
+  aptosBuildSignedMessage,
 } from 'claim_sdk/ecosystems/signatures'
 
 // SignMessageFn signs the message and returns it.
@@ -47,12 +47,12 @@ export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
           !fullMessage
         )
           return
-        return {
-          publicKey: Buffer.from(removeLeading0x(account.publicKey), 'hex'),
-          signature: Buffer.from(signature, 'hex'),
-          recoveryId: undefined,
-          fullMessage: Buffer.from(fullMessage, 'utf-8'),
-        }
+
+        return aptosBuildSignedMessage(
+          account.publicKey,
+          signature,
+          fullMessage
+        )
       } catch (e) {
         console.error(e)
       }
