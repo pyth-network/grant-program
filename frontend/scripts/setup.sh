@@ -14,8 +14,6 @@ TOKEN_DISPENSER_DIR="$DIR/../../token-dispenser";
 TOKEN_DISPENSER_PID=Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS
 TOKEN_DISPENSER_SO="$TOKEN_DISPENSER_DIR/target/deploy/token_dispenser.so"
 
-VALIDATOR_PID=
-
 usage() {
   cat <<EOF
   Usage: $0 -d[--dev]|-t[--test] -v[--verbose] --no-postgres -h[--help]
@@ -120,15 +118,6 @@ function start_anchor_localnet() {
   anchor localnet;
 }
 
-
-function stop_test_validator() {
-  set +e
-  [ -z $VALIDATOR_PID ] || (
-      kill $VALIDATOR_PID
-  )
-  return 0
-}
-
 function stop_anchor_localnet() {
   solana_pid=$(pgrep -f '[s]olana-test-validator' || true)
   if [ -n "$solana_pid" ]; then
@@ -150,8 +139,6 @@ function cleanup() {
       echo "shutting down solana-test-validator if running"
   fi
   stop_anchor_localnet;
-  stop_test_validator;
-
 }
 
 function main() {
@@ -165,7 +152,7 @@ function main() {
   if [ "$dev" -eq 1 ]; then
       if [ "$verbose" -eq 1 ]; then
         echo "dev mode"
-        echo "populate db and deploy and initialize program"
+        echo "populate db and initialize program"
       fi
       printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
       populate;
