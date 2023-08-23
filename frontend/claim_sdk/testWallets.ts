@@ -201,7 +201,7 @@ export class TestAptosWallet implements TestWallet {
       "m/44'/637'/0'/0'/0'",
       mnemonic
     )
-    return new TestAptosWallet(aptosAccount, aptosAccount.authKey().noPrefix())
+    return new TestAptosWallet(aptosAccount, aptosAccount.authKey().hex())
   }
   address(): string {
     return this.addressStr
@@ -211,7 +211,7 @@ export class TestAptosWallet implements TestWallet {
     const aptosMsg = Buffer.from(aptosGetFullMessage(payload))
     const signature = this.wallet.signBuffer(aptosMsg)
     return aptosBuildSignedMessage(
-      this.wallet.pubKey().noPrefix(),
+      this.wallet.pubKey().hex(),
       signature.hex(),
       payload
     )

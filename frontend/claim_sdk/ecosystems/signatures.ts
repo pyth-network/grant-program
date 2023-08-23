@@ -82,8 +82,7 @@ export function aptosBuildSignedMessage(
 ): SignedMessage {
   return {
     publicKey: Buffer.from(removeLeading0x(pubkey), 'hex'),
-    // Note: Buffer.from(signature, 'hex') wasn't working for some reason
-    signature: new HexString(signature).toUint8Array(),
+    signature: Buffer.from(removeLeading0x(signature), 'hex'),
     recoveryId: undefined,
     fullMessage: Buffer.from(aptosGetFullMessage(payload), 'utf-8'),
   }
