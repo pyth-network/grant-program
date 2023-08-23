@@ -109,8 +109,9 @@ function populate() {
   npm run populate;
 }
 
-function export_idl() {
+function build_program() {
   cd "$TOKEN_DISPENSER_DIR";
+  anchor build;
   anchor run export;
 }
 
@@ -162,7 +163,7 @@ function main() {
   # setup postgres docker
   setup_postgres_docker;
   # start solana-test-validator
-  export_idl;
+  build_program;
   start_anchor_localnet &
   sleep 5
   if [ "$dev" -eq 1 ]; then
