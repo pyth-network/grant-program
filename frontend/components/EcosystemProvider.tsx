@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react'
+import { Eligibility } from 'utils/api'
 
 export enum ECOSYSTEM {
   SOLANA = 'Solana',
@@ -24,29 +25,29 @@ export type EcosystemMap = Record<
   {
     // True, if the user is active in this ecosystem.
     isActive: boolean
-    // True, if the user's account in this ecosystem is eligible for tokens.
-    isEligible: boolean
-    // Number of pyth tokens the user's account is eligible for.
-    eligibleAmount?: number
     // Once the user has signed a message, we will globally store it here.
     signedMessage?: SignedMessage
+    // Undefined, if the ecosystem is not eligibile or value is not set
+    eligibility: Eligibility
   }
 >
 
-export type ContextType = {
+export type EcosystemContextType = {
   // The state of all the ecosystems
   map: EcosystemMap
   // Set the isActive property of the given ecosystem
   setActive: (ecosystem: ECOSYSTEM, isActive: boolean) => void
-  // TODO: add other methods - setEligibility, setSignedMessage
+  // Set the eligibility fetch using the API
+  setEligibility: (ecosystem: ECOSYSTEM, eligibility: Eligibility) => void
+  // TODO: add other methods setSignedMessage
 }
-export const EcosystemContext = createContext<ContextType | undefined>(
+export const EcosystemContext = createContext<EcosystemContextType | undefined>(
   undefined
 )
 
 // The default value for ecosystem
 const ecosystemMap = Object.values(ECOSYSTEM).reduce((map, currentValue) => {
-  map[currentValue] = { isActive: false, isEligible: false }
+  map[currentValue] = { isActive: false, eligibility: undefined }
   return map
 }, {} as EcosystemMap)
 
@@ -60,7 +61,21 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  const contextValue = useMemo(() => ({ map, setActive }), [map, setActive])
+  const setEligibility = useCallback(
+    (ecosytem: ECOSYSTEM, eligibility: Eligibility) => {
+      setMap((prevMap) => {
+        const newMap = { ...prevMap }
+        newMap[ecosytem].eligibility = eligibility
+        return newMap
+      })
+    },
+    []
+  )
+
+  const contextValue = useMemo(
+    () => ({ map, setActive, setEligibility }),
+    [map, setActive, setEligibility]
+  )
 
   return (
     <EcosystemContext.Provider value={contextValue}>

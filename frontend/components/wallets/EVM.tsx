@@ -1,4 +1,4 @@
-import { ReactElement, ReactNode, useCallback } from 'react'
+import { ReactElement, ReactNode, useCallback, useEffect } from 'react'
 import {
   Connector,
   WagmiConfig,
@@ -17,6 +17,8 @@ import { publicProvider } from 'wagmi/providers/public'
 import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
+import { fetchAmountAndProof } from 'utils/api'
+import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
 
 // Configure chains & providers with the Alchemy provider.
 // Two popular providers are Alchemy (alchemy.com) and Infura (infura.io)
@@ -81,6 +83,20 @@ export function EVMWalletButton() {
     },
     [connect]
   )
+
+  const { setEligibility } = useEcosystem()
+
+  // fetch the eligibility and store it
+  useEffect(() => {
+    ;(async () => {
+      if (isConnected === true && address !== undefined) {
+        const eligibility = await fetchAmountAndProof('evm', address)
+        setEligibility(ECOSYSTEM.EVM, eligibility)
+      } else {
+        setEligibility(ECOSYSTEM.EVM, undefined)
+      }
+    })()
+  }, [isConnected, address, setEligibility])
 
   return (
     <WalletButton
