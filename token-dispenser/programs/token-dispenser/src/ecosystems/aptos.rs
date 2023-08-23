@@ -17,10 +17,6 @@ use {
 pub const APTOS_PREFIX: &[u8] = b"APTOS\nmessage: ";
 pub const APTOS_SUFFIX: &[u8] = b"\nnonce: nonce";
 pub const APTOS_SIGNATURE_SCHEME_ID: u8 = 0;
-// pub const T: &[u8] = b'\x00';
-
-// pub const APTOS_SIGNATURE_SCHEME_ID: char = '\u{00}';
-
 
 /**
 * An arbitrary signed message used in Aptos.

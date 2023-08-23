@@ -70,8 +70,6 @@ export class ClaimInfo {
           aptos: {
             address: Buffer.from(removeLeading0x(this.identity), 'hex'),
           },
-          // aptos: { address: Buffer.from(this.identity, 'hex') },
-          // aptos: { address: new HexString(this.identity).toUint8Array() }
         }
         break
       }
