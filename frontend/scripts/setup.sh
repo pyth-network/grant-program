@@ -114,18 +114,6 @@ function run_integration_tests() {
   npm run test;
 }
 
-
-function start_test_validator() {
-  cd "$TOKEN_DISPENSER_DIR";
-  anchor run export;
-  solana-test-validator -r \
-    --bpf-program "$TOKEN_DISPENSER_PID" "$TOKEN_DISPENSER_SO" \
-    --quiet \
-    &
-  VALIDATOR_PID=$!
-  sleep 5
-}
-
 function start_anchor_localnet() {
   cd "$TOKEN_DISPENSER_DIR";
   anchor run export;
@@ -187,7 +175,7 @@ function main() {
         echo "test mode"
         echo "running frontend tests"
       fi
-      start_test_validator
+      start_anchor_localnet &
       sleep 5
       run_integration_tests;
   else
