@@ -46,7 +46,6 @@ use {
             Secp256k1InstructionData,
             Secp256k1Signature,
         },
-        solana::SolanaMessage,
         sui::{
             SuiAddress,
             SuiMessage,
@@ -239,10 +238,7 @@ pub enum IdentityCertificate {
         pubkey:                         EvmPubkey,
         verification_instruction_index: u8,
     },
-    Solana {
-        pubkey:                         Ed25519Pubkey,
-        verification_instruction_index: u8,
-    },
+    Solana,
     Sui {
         pubkey:                         Ed25519Pubkey,
         verification_instruction_index: u8,
@@ -450,29 +446,9 @@ impl IdentityCertificate {
                     address: Into::<SuiAddress>::into(pubkey.clone()),
                 })
             }
-            IdentityCertificate::Solana {
-                pubkey,
-                verification_instruction_index,
-            } => {
-                let signature_verification_instruction = load_instruction_at_checked(
-                    *verification_instruction_index as usize,
-                    sysvar_instruction,
-                )?;
-                check_payload(
-                    SolanaMessage::parse(
-                        &Ed25519InstructionData::extract_message_and_check_signature(
-                            &signature_verification_instruction,
-                            pubkey,
-                            verification_instruction_index,
-                        )?,
-                    )?
-                    .get_payload(),
-                    claimant,
-                )?;
-                Ok(Identity::Solana {
-                    pubkey: pubkey.clone(),
-                })
-            }
+            IdentityCertificate::Solana => Ok(Identity::Solana {
+                pubkey: Ed25519Pubkey::from(*claimant), // Solana verification relies on claimant signing the Solana transaction
+            }),
             IdentityCertificate::Injective {
                 pubkey,
                 verification_instruction_index,

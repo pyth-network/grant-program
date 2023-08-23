@@ -48,6 +48,8 @@ export async function loadTestWallets(): Promise<
     KEY_DIR,
     'dispenser_guard_private_key.json'
   )
+  const solanaPrivateKeyPath = path.resolve(KEY_DIR, 'solana_private_key.json')
+
   const result: Record<Ecosystem, TestWallet[]> = {
     evm: [],
     cosmwasm: [],
@@ -72,6 +74,7 @@ export async function loadTestWallets(): Promise<
   result['discord'] = [
     DiscordTestWallet.fromKeyfile(TEST_DISCORD_USERNAME, dispenserGuardKeyPath),
   ]
+  result['solana'] = [TestSolanaWallet.fromKeyfile(solanaPrivateKeyPath)]
   return result
 }
 
@@ -171,11 +174,9 @@ export class DiscordTestWallet implements TestWallet {
     )
     return new DiscordTestWallet(username, keypair)
   }
-
   async signMessage(payload: string): Promise<SignedMessage> {
     return hardDriveSignMessage(Buffer.from(payload, 'utf-8'), this.wallet)
   }
-
   async signDiscordMessage(
     username: string,
     claimant: PublicKey
@@ -189,6 +190,24 @@ export class DiscordTestWallet implements TestWallet {
 
   public address(): string {
     return this.username
+  }
+}
+
+export class TestSolanaWallet implements TestWallet {
+  constructor(readonly wallet: Keypair) {}
+  static fromKeyfile(keyFile: string): TestSolanaWallet {
+    const keypair = Keypair.fromSecretKey(
+      new Uint8Array(JSON.parse(fs.readFileSync(keyFile, 'utf-8')))
+    )
+    return new TestSolanaWallet(keypair)
+  }
+
+  async signMessage(payload: string): Promise<SignedMessage> {
+    return hardDriveSignMessage(Buffer.from(payload, 'utf-8'), this.wallet)
+  }
+
+  public address(): string {
+    return this.wallet.publicKey.toBase58()
   }
 }
 

@@ -12,7 +12,6 @@ pub mod discord;
 pub mod ed25519;
 pub mod evm;
 pub mod secp256k1;
-pub mod solana;
 pub mod sui;
 
 /**

@@ -4,6 +4,7 @@ use {
         test_cosmos::Sha256,
         test_ed25519::Ed25519TestIdentityCertificate,
         test_secp256k1::Secp256k1TestIdentityCertificate,
+        test_solana::SolanaTestIdentityCertificate,
     },
     crate::{
         ecosystems::{
@@ -11,7 +12,6 @@ use {
             cosmos::CosmosMessage,
             discord::DiscordMessage,
             evm::EvmPrefixedMessage,
-            solana::SolanaMessage,
             sui::SuiMessage,
         },
         get_config_pda,
@@ -129,7 +129,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Solana(
-                Ed25519TestIdentityCertificate::<SolanaMessage>::random(claimant),
+                SolanaTestIdentityCertificate::new(claimant),
             ),
         }
     }
@@ -165,7 +165,7 @@ impl TestClaimCertificate {
             TestIdentityCertificate::Cosmos(_) => None,
             TestIdentityCertificate::Aptos(aptos) => Some(aptos.as_instruction(index, true)),
             TestIdentityCertificate::Sui(sui) => Some(sui.as_instruction(index, true)),
-            TestIdentityCertificate::Solana(solana) => Some(solana.as_instruction(index, true)),
+            TestIdentityCertificate::Solana(_) => None,
             TestIdentityCertificate::Injective(injective) => {
                 Some(injective.as_instruction(index, true))
             }
@@ -229,7 +229,7 @@ pub enum TestIdentityCertificate {
     Cosmos(Secp256k1TestIdentityCertificate<CosmosMessage, Sha256>),
     Aptos(Ed25519TestIdentityCertificate<AptosMessage>),
     Sui(Ed25519TestIdentityCertificate<SuiMessage>),
-    Solana(Ed25519TestIdentityCertificate<SolanaMessage>),
+    Solana(SolanaTestIdentityCertificate),
     Injective(Secp256k1TestIdentityCertificate<CosmosMessage, Keccak256>),
 }
 

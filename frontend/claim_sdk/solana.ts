@@ -178,7 +178,7 @@ export class TokenDispenserProvider {
     claims: {
       claimInfo: ClaimInfo
       proofOfInclusion: Uint8Array[]
-      signedMessage: SignedMessage
+      signedMessage: SignedMessage | undefined
     }[]
   ): Promise<void> {
     /// This is only eth & cosmwasm for now
@@ -205,7 +205,7 @@ export class TokenDispenserProvider {
   public async generateClaimTransaction(
     claimInfo: ClaimInfo,
     proofOfInclusion: Uint8Array[],
-    signedMessage: SignedMessage
+    signedMessage: SignedMessage | undefined
   ): Promise<Transaction> {
     // 1. generate claim certificate
     //    a. create identityProof
@@ -255,96 +255,111 @@ export class TokenDispenserProvider {
 
   private createIdentityProof(
     claimInfo: ClaimInfo,
-    signedMessage: SignedMessage
+    signedMessage: SignedMessage | undefined
   ): IdlTypes<TokenDispenser>['IdentityCertificate'] {
-    switch (claimInfo.ecosystem) {
-      case 'evm': {
-        return {
-          evm: {
-            pubkey: Array.from(signedMessage.publicKey),
-            verificationInstructionIndex: 0,
-          },
+    if (claimInfo.ecosystem === 'solana') {
+      return {
+        solana: {},
+      }
+    }
+
+    if (signedMessage) {
+      switch (claimInfo.ecosystem) {
+        case 'evm': {
+          return {
+            evm: {
+              pubkey: Array.from(signedMessage.publicKey),
+              verificationInstructionIndex: 0,
+            },
+          }
+        }
+        case 'cosmwasm': {
+          return {
+            cosmwasm: {
+              pubkey: Array.from(signedMessage.publicKey),
+              chainId: extractChainId(claimInfo.identity),
+              signature: Array.from(signedMessage.signature),
+              recoveryId: signedMessage.recoveryId!,
+              message: Buffer.from(signedMessage.fullMessage),
+            },
+          }
+        }
+        case 'injective': {
+          return {
+            injective: {
+              pubkey: Array.from(signedMessage.publicKey), //evm Pubkey
+              verificationInstructionIndex: 0,
+            },
+          }
+        }
+        case 'discord': {
+          return {
+            discord: {
+              username: claimInfo.identity,
+              verificationInstructionIndex: 0,
+            },
+          }
+        }
+        case 'aptos': {
+          return {
+            aptos: {
+              pubkey: Array.from(signedMessage.publicKey), //ed25519 pubkey
+              verificationInstructionIndex: 0,
+            },
+          }
+        }
+        //TODO: implement other ecosystems
+        default: {
+          throw new Error(`unknown ecosystem type: ${claimInfo.ecosystem}`)
         }
       }
-      case 'cosmwasm': {
-        return {
-          cosmwasm: {
-            pubkey: Array.from(signedMessage.publicKey),
-            chainId: extractChainId(claimInfo.identity),
-            signature: Array.from(signedMessage.signature),
-            recoveryId: signedMessage.recoveryId!,
-            message: Buffer.from(signedMessage.fullMessage),
-          },
-        }
-      }
-      case 'injective': {
-        return {
-          injective: {
-            pubkey: Array.from(signedMessage.publicKey), //evm Pubkey
-            verificationInstructionIndex: 0,
-          },
-        }
-      }
-      case 'aptos': {
-        return {
-          aptos: {
-            pubkey: Array.from(signedMessage.publicKey), //ed25519 pubkey
-            verificationInstructionIndex: 0,
-          },
-        }
-      }
-      case 'discord': {
-        return {
-          discord: {
-            username: claimInfo.identity,
-            verificationInstructionIndex: 0,
-          },
-        }
-      }
-      //TODO: implement other ecosystems
-      default: {
-        throw new Error(`unknown ecosystem type: ${claimInfo.ecosystem}`)
-      }
+    } else {
+      throw new Error(
+        'signedMessage must be provided for non-solana ecosystems'
+      )
     }
   }
 
   private generateSignatureVerificationInstruction(
     ecosystem: Ecosystem,
-    signedMessage: SignedMessage
+    signedMessage: SignedMessage | undefined
   ): anchor.web3.TransactionInstruction | undefined {
-    switch (ecosystem) {
-      case 'evm':
-      case 'injective': {
-        return Secp256k1Program.createInstructionWithEthAddress({
-          ethAddress: signedMessage.publicKey,
-          message: signedMessage.fullMessage,
-          signature: signedMessage.signature,
-          recoveryId: signedMessage.recoveryId!,
-        })
+    if (ecosystem === 'solana') {
+      return undefined
+    }
+
+    if (signedMessage) {
+      switch (ecosystem) {
+        case 'evm':
+        case 'injective': {
+          return Secp256k1Program.createInstructionWithEthAddress({
+            ethAddress: signedMessage.publicKey,
+            message: signedMessage.fullMessage,
+            signature: signedMessage.signature,
+            recoveryId: signedMessage.recoveryId!,
+          })
+        }
+        case 'cosmwasm': {
+          return undefined
+        }
+        case 'discord':
+        case 'aptos': {
+          return Ed25519Program.createInstructionWithPublicKey({
+            publicKey: signedMessage.publicKey,
+            message: signedMessage.fullMessage,
+            signature: signedMessage.signature,
+            instructionIndex: 0,
+          })
+        }
+        default: {
+          // TODO: support the other ecosystems
+          throw new Error(`unknown ecosystem type: ${ecosystem}`)
+        }
       }
-      case 'cosmwasm': {
-        return undefined
-      }
-      case 'discord': {
-        return Ed25519Program.createInstructionWithPublicKey({
-          publicKey: signedMessage.publicKey,
-          message: signedMessage.fullMessage,
-          signature: signedMessage.signature,
-          instructionIndex: 0,
-        })
-      }
-      case 'aptos': {
-        return Ed25519Program.createInstructionWithPublicKey({
-          publicKey: signedMessage.publicKey,
-          message: signedMessage.fullMessage,
-          signature: signedMessage.signature,
-          instructionIndex: 0,
-        })
-      }
-      default: {
-        // TODO: support the other ecosystems
-        throw new Error(`unknown ecosystem type: ${ecosystem}`)
-      }
+    } else {
+      throw new Error(
+        'signedMessage must be provided for non-solana ecosystems'
+      )
     }
   }
   public async getClaimantFundAddress(): Promise<PublicKey> {
