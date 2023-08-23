@@ -379,12 +379,47 @@ describe('integration test', () => {
                 6100000 +
                 6200000 +
                 7000000 +
-                1000000 +
-                5000000
+                5000000 +
+                1000000 
+                
             )
           )
         ).toBeTruthy()
-      }
+            }
+          });
+
+    it('submits a solana claim', async () => {
+      const { claimInfo, proofOfInclusion } = (await mockFetchAmountAndProof(
+        'solana',
+        tokenDispenserProvider.claimant.toBase58()
+      ))!
+
+      // No signing since claimant will sign the transaction
+
+      await tokenDispenserProvider.submitClaims([
+        {
+          claimInfo,
+          proofOfInclusion,
+          signedMessage: undefined,
+        },
+      ])
+
+      expect(
+        await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
+      ).toBeTruthy()
+
+      const claimantFundPubkey =
+        await tokenDispenserProvider.getClaimantFundAddress()
+
+      const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
+
+      expect(
+        claimantFund.amount.eq(
+          new anchor.BN(
+            3000000 + 6000000 + 6100000 + 6200000 + 7000000 + 5000000 + 1000000 + 2000000 
+          )
+        )
+      ).toBeTruthy()
     }, 40000)
   })
 })
