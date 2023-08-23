@@ -109,6 +109,11 @@ function populate() {
   npm run populate;
 }
 
+function export_idl() {
+  cd "$TOKEN_DISPENSER_DIR";
+  anchor run export;
+}
+
 function run_integration_tests() {
   cd "$DIR";
   npm run test;
@@ -116,7 +121,6 @@ function run_integration_tests() {
 
 function start_anchor_localnet() {
   cd "$TOKEN_DISPENSER_DIR";
-  anchor run export;
   anchor localnet;
 }
 
@@ -160,6 +164,7 @@ function main() {
   # setup postgres docker
   setup_postgres_docker;
   # start solana-test-validator
+  export_idl;
   start_anchor_localnet &
   sleep 5
   if [ "$dev" -eq 1 ]; then
