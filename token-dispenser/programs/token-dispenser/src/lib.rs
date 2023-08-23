@@ -446,15 +446,9 @@ impl IdentityCertificate {
                     address: Into::<SuiAddress>::into(pubkey.clone()),
                 })
             }
-            IdentityCertificate::Solana => {
-                msg!(
-                    "Solana identity certificate {:?}",
-                    Ed25519Pubkey::from(*claimant)
-                );
-                Ok(Identity::Solana {
-                    pubkey: Ed25519Pubkey::from(*claimant),
-                })
-            }
+            IdentityCertificate::Solana => Ok(Identity::Solana {
+                pubkey: Ed25519Pubkey::from(*claimant),
+            }),
             IdentityCertificate::Injective {
                 pubkey,
                 verification_instruction_index,
