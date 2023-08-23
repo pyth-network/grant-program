@@ -21,7 +21,7 @@ First, install both the [Solana CLI tools](https://docs.solana.com/cli/install-s
 
 Install [Docker](https://docs.docker.com/engine/install/).
 
-Install jq and gsed
+Install jq and gsed.
 
 ```bash
 brew install gnu-sed
