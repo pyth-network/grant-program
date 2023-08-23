@@ -81,9 +81,10 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
   )
 }
 
-function chainNametoECOSYSTEM(chainName: string): ECOSYSTEM {
+function chainNametoECOSYSTEM(
+  chainName: 'injective' | 'osmosis' | 'neutron'
+): ECOSYSTEM {
   if (chainName === 'injective') return ECOSYSTEM.INJECTIVE
   else if (chainName === 'osmosis') return ECOSYSTEM.OSMOSIS
-  else if (chainName === 'neutron') return ECOSYSTEM.NEUTRON
-  else throw new Error('unknown chain name')
+  else return ECOSYSTEM.NEUTRON
 }
