@@ -285,6 +285,14 @@ export class TokenDispenserProvider {
           },
         }
       }
+      case 'aptos': {
+        return {
+          aptos: {
+            pubkey: Array.from(signedMessage.publicKey), //ed25519 pubkey
+            verificationInstructionIndex: 0,
+          },
+        }
+      }
       case 'discord': {
         return {
           discord: {
@@ -318,6 +326,14 @@ export class TokenDispenserProvider {
         return undefined
       }
       case 'discord': {
+        return Ed25519Program.createInstructionWithPublicKey({
+          publicKey: signedMessage.publicKey,
+          message: signedMessage.fullMessage,
+          signature: signedMessage.signature,
+          instructionIndex: 0,
+        })
+      }
+      case 'aptos': {
         return Ed25519Program.createInstructionWithPublicKey({
           publicKey: signedMessage.publicKey,
           message: signedMessage.fullMessage,

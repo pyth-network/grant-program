@@ -26,6 +26,7 @@ pythnet-sdk = { git = "https://github.com/pyth-network/pyth-crosschain.git"}
 ripemd = "0.1.3"
 serde = "1.0.166"
 serde_json = "1.0.99"
+sha3 = "0.10.8"
 
 [dev-dependencies]
 hex = "0.4.3"

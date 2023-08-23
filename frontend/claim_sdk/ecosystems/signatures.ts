@@ -12,6 +12,8 @@ import {
   getUncompressedPubkey,
 } from './cosmos'
 import { Hash } from '@keplr-wallet/crypto'
+import { HexString } from 'aptos'
+import { aptosGetFullMessage } from './aptos'
 
 export type SignedMessage = {
   publicKey: Uint8Array
@@ -73,11 +75,16 @@ export function cosmwasmBuildSignedMessage(
   }
 }
 
-export function aptosBuildSignedMessage(payload: string): SignedMessage {
+export function aptosBuildSignedMessage(
+  pubkey: string,
+  signature: string,
+  payload: string
+): SignedMessage {
   return {
-    publicKey: Buffer.from(''),
-    signature: Buffer.from(''),
-    recoveryId: 0,
-    fullMessage: Buffer.from(payload),
+    publicKey: Buffer.from(removeLeading0x(pubkey), 'hex'),
+    // Note: Buffer.from(signature, 'hex') wasn't working for some reason
+    signature: new HexString(signature).toUint8Array(),
+    recoveryId: undefined,
+    fullMessage: Buffer.from(aptosGetFullMessage(payload), 'utf-8'),
   }
 }

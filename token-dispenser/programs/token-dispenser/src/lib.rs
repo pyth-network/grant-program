@@ -122,7 +122,6 @@ pub mod token_dispenser {
             )?;
             // Each leaf of the tree is a hash of the serialized claim info
             let leaf_vector = claim_info.try_to_vec()?;
-
             if !config
                 .merkle_root
                 .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)

@@ -69,7 +69,7 @@ describe('integration test', () => {
   beforeAll(async () => {
     await clearDatabase(pool)
     testWallets = await loadTestWallets()
-    root = await addTestWalletsToDatabase(pool, await loadTestWallets())
+    root = await addTestWalletsToDatabase(pool, testWallets)
     dispenserGuard = (testWallets.discord[0] as unknown as DiscordTestWallet)
       .dispenserGuardPublicKey
   })
@@ -303,6 +303,42 @@ describe('integration test', () => {
         )
       ).toBeTruthy()
     }, 40000)
+
+    it('submits an aptos claim', async () => {
+      const wallet = testWallets.aptos[0]
+      const { claimInfo, proofOfInclusion } = (await mockFetchAmountAndProof(
+        'aptos',
+        wallet.address()
+      ))!
+      const signedMessage = await wallet.signMessage(
+        tokenDispenserProvider.generateAuthorizationPayload()
+      )
+
+      await tokenDispenserProvider.submitClaims([
+        {
+          claimInfo,
+          proofOfInclusion,
+          signedMessage,
+        },
+      ])
+
+      expect(
+        await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
+      ).toBeTruthy()
+
+      const claimantFundPubkey =
+        await tokenDispenserProvider.getClaimantFundAddress()
+
+      const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
+
+      expect(
+        claimantFund.amount.eq(
+          new anchor.BN(
+            3000000 + 6000000 + 6100000 + 6200000 + 7000000 + 5000000
+          )
+        )
+      ).toBeTruthy()
+    })
 
     it('submits a discord claim', async () => {
       const wallet = testWallets.discord[0]

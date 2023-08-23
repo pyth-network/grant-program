@@ -3,7 +3,7 @@ import dotenv from 'dotenv'
 import { TestWallet } from '../claim_sdk/testWallets'
 import { ClaimInfo, Ecosystem, Ecosystems } from '../claim_sdk/claim'
 import * as anchor from '@coral-xyz/anchor'
-import { MerkleTree } from '../claim_sdk/merkleTree'
+import { HASH_SIZE, MerkleTree } from '../claim_sdk/merkleTree'
 dotenv.config() // Load environment variables from .env file
 
 /** Get the database pool with the default configuration. */
@@ -52,4 +52,19 @@ export async function addTestWalletsToDatabase(
     )
   }
   return merkleTree.root
+}
+
+function parseProof(proof: string) {
+  const buffer = Buffer.from(proof, 'hex')
+  const chunks = []
+
+  if (buffer.length % HASH_SIZE !== 0) {
+    throw new Error('Proof of inclusion must be a multiple of 32 bytes')
+  }
+
+  for (let i = 0; i < buffer.length; i += HASH_SIZE) {
+    const chunk = Uint8Array.prototype.slice.call(buffer, i, i + HASH_SIZE)
+    chunks.push(chunk)
+  }
+  return chunks
 }

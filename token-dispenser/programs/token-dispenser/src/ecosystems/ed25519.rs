@@ -105,11 +105,11 @@ impl Ed25519InstructionData {
         verification_instruction_index: &u8,
     ) -> Result<Vec<u8>> {
         if instruction.program_id != ED25519_ID {
-            return Err(ErrorCode::SignatureVerificationWrongProgram.into());
+            return err!(ErrorCode::SignatureVerificationWrongProgram);
         }
 
         if !instruction.accounts.is_empty() {
-            return Err(ErrorCode::SignatureVerificationWrongAccounts.into());
+            return err!(ErrorCode::SignatureVerificationWrongAccounts);
         }
 
         let result = Self::try_from_slice(&instruction.data)?;
@@ -119,11 +119,11 @@ impl Ed25519InstructionData {
                 *verification_instruction_index,
             )
         {
-            return Err(ErrorCode::SignatureVerificationWrongHeader.into());
+            return err!(ErrorCode::SignatureVerificationWrongHeader);
         }
 
         if result.pubkey != *pubkey {
-            return Err(ErrorCode::SignatureVerificationWrongSigner.into());
+            return err!(ErrorCode::SignatureVerificationWrongSigner);
         }
 
         Ok(result.message)
