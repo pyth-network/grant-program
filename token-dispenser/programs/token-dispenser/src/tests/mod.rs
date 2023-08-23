@@ -18,6 +18,7 @@ mod test_initialize;
 mod test_injective;
 mod test_merkle_tree;
 mod test_secp256k1;
+mod test_solana;
 
 /// Merkleizes a vector of `ClaimInfo`s and returns the `MerkleTree` and the serialized `ClaimInfo`s.
 pub fn merkleize(merkle_items: Vec<ClaimInfo>) -> (MerkleTree<SolanaHasher>, Vec<Vec<u8>>) {
