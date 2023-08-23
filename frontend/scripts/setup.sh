@@ -148,7 +148,7 @@ function main() {
   setup_postgres_docker;
   # start solana-test-validator
   start_anchor_localnet &
-  sleep 5
+  sleep 10
   if [ "$dev" -eq 1 ]; then
       if [ "$verbose" -eq 1 ]; then
         echo "dev mode"
