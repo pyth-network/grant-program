@@ -374,7 +374,13 @@ describe('integration test', () => {
         expect(
           claimantFund.amount.eq(
             new anchor.BN(
-              3000000 + 6000000 + 6100000 + 6200000 + 7000000 + 1000000
+              3000000 +
+                6000000 +
+                6100000 +
+                6200000 +
+                7000000 +
+                1000000 +
+                5000000
             )
           )
         ).toBeTruthy()
