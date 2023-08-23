@@ -14,8 +14,6 @@ TOKEN_DISPENSER_DIR="$DIR/../../token-dispenser";
 TOKEN_DISPENSER_PID=Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS
 TOKEN_DISPENSER_SO="$TOKEN_DISPENSER_DIR/target/deploy/token_dispenser.so"
 
-VALIDATOR_PID=
-
 usage() {
   cat <<EOF
   Usage: $0 -d[--dev]|-t[--test] -v[--verbose] --no-postgres -h[--help]
@@ -111,7 +109,6 @@ function populate() {
 
 function build_program() {
   cd "$TOKEN_DISPENSER_DIR";
-  anchor build;
   anchor run export;
 }
 
@@ -123,15 +120,6 @@ function run_integration_tests() {
 function start_anchor_localnet() {
   cd "$TOKEN_DISPENSER_DIR";
   anchor localnet;
-}
-
-
-function stop_test_validator() {
-  set +e
-  [ -z $VALIDATOR_PID ] || (
-      kill $VALIDATOR_PID
-  )
-  return 0
 }
 
 function stop_anchor_localnet() {
