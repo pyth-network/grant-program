@@ -352,6 +352,7 @@ export class TokenDispenserProvider {
           return undefined
         }
         case 'discord':
+        case 'sui':
         case 'aptos': {
           return Ed25519Program.createInstructionWithPublicKey({
             publicKey: signedMessage.publicKey,
@@ -360,15 +361,6 @@ export class TokenDispenserProvider {
             instructionIndex: 0,
           })
         }
-        case 'sui': {
-          return Ed25519Program.createInstructionWithPublicKey({
-            publicKey: signedMessage.publicKey,
-            message: blake2b(signedMessage.fullMessage, { dkLen: 32 }),
-            signature: signedMessage.signature,
-            instructionIndex: 0,
-          })
-        }
-
         default: {
           // TODO: support the other ecosystems
           throw new Error(`unknown ecosystem type: ${ecosystem}`)

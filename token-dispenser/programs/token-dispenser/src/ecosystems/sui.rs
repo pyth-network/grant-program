@@ -33,10 +33,8 @@ impl SuiMessage {
     pub fn get_expected_hash(payload: &str) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::<u8>::new();
         result.extend(SUI_PREFIX);
-        let payload_bytes = payload.as_bytes();
-        let len = payload_bytes.len();
-        result.write_uleb128_u32(len as u32).unwrap();
-        result.extend_from_slice(payload_bytes);
+        result.write_uleb128_u64(payload.len() as u64).unwrap();
+        result.extend_from_slice(payload.as_bytes());
         blake2_rfc::blake2b::blake2b(32, &[], &result)
             .as_bytes()
             .to_vec()
@@ -66,8 +64,7 @@ impl Ed25519TestMessage for SuiMessage {
     fn get_message_with_metadata(&self) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::<u8>::new();
         result.extend(SUI_PREFIX);
-        let len = self.0.len();
-        result.write_uleb128_u32(len as u32).unwrap();
+        result.write_uleb128_u64(self.0.len() as u64).unwrap();
         result.extend_from_slice(&self.0);
         blake2_rfc::blake2b::blake2b(32, &[], &result)
             .as_bytes()

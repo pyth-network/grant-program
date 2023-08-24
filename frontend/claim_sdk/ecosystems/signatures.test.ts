@@ -156,13 +156,13 @@ describe('signature tests', () => {
     const pubkey = new Ed25519PublicKey(signedMessage.publicKey)
 
     const verified = await pubkey.verify(
-      blake2b(signedMessage.fullMessage, { dkLen: 32 }),
+      signedMessage.fullMessage,
       signedMessage.signature
     )
     expect(verified).toBeTruthy()
     let ix = Ed25519Program.createInstructionWithPublicKey({
       publicKey: signedMessage.publicKey,
-      message: blake2b(signedMessage.fullMessage, { dkLen: 32 }),
+      message: signedMessage.fullMessage,
       signature: signedMessage.signature,
     })
 

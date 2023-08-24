@@ -22,8 +22,6 @@ import {
   handleAmountAndProofResponse,
 } from '../utils/api'
 import handlerAmountAndProof from '../pages/api/grant/v1/amount_and_proof'
-import { blake2b } from '@noble/hashes/blake2b'
-import { bcs } from '@mysten/sui.js/bcs'
 
 const pool = getDatabasePool()
 

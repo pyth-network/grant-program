@@ -12,7 +12,6 @@ import {
   getUncompressedPubkey,
 } from './cosmos'
 import { Hash } from '@keplr-wallet/crypto'
-import { HexString } from 'aptos'
 import { aptosGetFullMessage } from './aptos'
 import { splitSignatureAndPubkey, suiGetFullMessage } from './sui'
 import { blake2b } from '@noble/hashes/blake2b'
@@ -101,6 +100,6 @@ export function suiBuildSignedMessage(
     publicKey,
     signature,
     recoveryId: undefined,
-    fullMessage: suiGetFullMessage(payload),
+    fullMessage: blake2b(suiGetFullMessage(payload), { dkLen: 32 }),
   }
 }
