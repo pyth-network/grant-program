@@ -2649,6 +2649,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "quick-error"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a993555f31e5a609f617c12db6250dedcac1b0a85076912c436e6fc9b2c8e6a3"
+
+[[package]]
 name = "quinn"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2930,6 +2936,15 @@ dependencies = [
  "web-sys",
  "webpki-roots",
  "winreg",
+]
+
+[[package]]
+name = "residua-uleb128"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "deac28578d64418efde7e015bf8e53635f006e0d1d56e50044d35d2014e2f6b4"
+dependencies = [
+ "quick-error",
 ]
 
 [[package]]
@@ -4560,6 +4575,7 @@ dependencies = [
  "pythnet-sdk",
  "rand 0.7.3",
  "rand 0.8.5",
+ "residua-uleb128",
  "ripemd",
  "serde",
  "serde_json",

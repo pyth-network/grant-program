@@ -15,11 +15,14 @@ import {
   TestAptosWallet,
   TestCosmWasmWallet,
   TestEvmWallet,
+  TestSuiWallet,
 } from '../testWallets'
 import path from 'path'
 import { Address as InjectiveAddress } from '@injectivelabs/sdk-ts'
 import { airdrop } from '../solana'
 import { ed25519 } from '@noble/curves/ed25519'
+import { Ed25519PublicKey } from '@mysten/sui.js/keypairs/ed25519'
+import { blake2b } from '@noble/hashes/blake2b'
 
 describe('signature tests', () => {
   const solanaKeypair = anchor.web3.Keypair.generate()
@@ -116,7 +119,7 @@ describe('signature tests', () => {
 
   test('Aptos signature', async () => {
     const aptosPrivateKeyPath = path.resolve(
-      await __dirname,
+      __dirname,
       '../../integration/keys/aptos_private_key.json'
     )
 
@@ -141,4 +144,31 @@ describe('signature tests', () => {
 
     await provider.sendAndConfirm(txn, [solanaKeypair])
   }, 40000)
+
+  test('Sui signature', async () => {
+    const suiPrivateKeyPath = path.resolve(
+      __dirname,
+      '../../integration/keys/sui_private_key.json'
+    )
+    const testWallet = TestSuiWallet.fromKeyfile(suiPrivateKeyPath)
+    const payload = 'Test payload'
+    const signedMessage = await testWallet.signMessage(payload)
+    const pubkey = new Ed25519PublicKey(signedMessage.publicKey)
+
+    const verified = await pubkey.verify(
+      blake2b(signedMessage.fullMessage, { dkLen: 32 }),
+      signedMessage.signature
+    )
+    expect(verified).toBeTruthy()
+    let ix = Ed25519Program.createInstructionWithPublicKey({
+      publicKey: signedMessage.publicKey,
+      message: blake2b(signedMessage.fullMessage, { dkLen: 32 }),
+      signature: signedMessage.signature,
+    })
+
+    const txn = new Transaction()
+    txn.add(ix)
+
+    await provider.sendAndConfirm(txn, [solanaKeypair])
+  })
 })

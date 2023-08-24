@@ -18,6 +18,7 @@ import { ClaimInfo, Ecosystem } from './claim'
 import { TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import { SignedMessage } from './ecosystems/signatures'
 import { extractChainId } from './ecosystems/cosmos'
+import { blake2b } from '@noble/hashes/blake2b'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -308,6 +309,14 @@ export class TokenDispenserProvider {
             },
           }
         }
+        case 'sui': {
+          return {
+            sui: {
+              pubkey: Array.from(signedMessage.publicKey), //ed25519 pubkey
+              verificationInstructionIndex: 0,
+            },
+          }
+        }
         //TODO: implement other ecosystems
         default: {
           throw new Error(`unknown ecosystem type: ${claimInfo.ecosystem}`)
@@ -351,6 +360,15 @@ export class TokenDispenserProvider {
             instructionIndex: 0,
           })
         }
+        case 'sui': {
+          return Ed25519Program.createInstructionWithPublicKey({
+            publicKey: signedMessage.publicKey,
+            message: blake2b(signedMessage.fullMessage, { dkLen: 32 }),
+            signature: signedMessage.signature,
+            instructionIndex: 0,
+          })
+        }
+
         default: {
           // TODO: support the other ecosystems
           throw new Error(`unknown ecosystem type: ${ecosystem}`)

@@ -5,6 +5,7 @@ import {
   cosmwasmBuildSignedMessage,
   evmBuildSignedMessage,
   aptosBuildSignedMessage,
+  suiBuildSignedMessage,
 } from './ecosystems/signatures'
 import { ethers } from 'ethers'
 import fs from 'fs'
@@ -15,8 +16,9 @@ import { Keypair, PublicKey } from '@solana/web3.js'
 import { EthSecp256k1Wallet } from '@injectivelabs/sdk-ts/dist/cjs/core/accounts/signers/EthSecp256k1Wallet'
 import { OfflineAminoSigner } from '@injectivelabs/sdk-ts/dist/cjs/core/accounts/signers/types/amino-signer'
 import { hardDriveSignMessage, signDiscordMessage } from './ecosystems/solana'
-import { AptosAccount, HexString } from 'aptos'
+import { AptosAccount } from 'aptos'
 import { aptosGetFullMessage } from './ecosystems/aptos'
+import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519'
 
 const KEY_DIR = './integration/keys/'
 export const TEST_DISCORD_USERNAME =
@@ -39,11 +41,11 @@ export function loadAnchorWallet(): NodeWallet {
 export async function loadTestWallets(): Promise<
   Record<Ecosystem, TestWallet[]>
 > {
-  const evmWallet = TestEvmWallet.fromKeyfile(
-    path.resolve(KEY_DIR, 'evm_private_key.json')
-  )
+  const evmPrivateKeyPath = path.resolve(KEY_DIR, 'evm_private_key.json')
   const cosmosPrivateKeyPath = path.resolve(KEY_DIR, 'cosmos_private_key.json')
   const aptosPrivateKeyPath = path.resolve(KEY_DIR, 'aptos_private_key.json')
+  const suiPrivateKeyPath = path.resolve(KEY_DIR, 'sui_private_key.json')
+
   const dispenserGuardKeyPath = path.resolve(
     KEY_DIR,
     'dispenser_guard_private_key.json'
@@ -51,30 +53,30 @@ export async function loadTestWallets(): Promise<
   const solanaPrivateKeyPath = path.resolve(KEY_DIR, 'solana_private_key.json')
 
   const result: Record<Ecosystem, TestWallet[]> = {
-    evm: [],
-    cosmwasm: [],
-    solana: [],
-    aptos: [],
-    sui: [],
     discord: [],
+    solana: [],
+    evm: [],
+    sui: [],
+    aptos: [],
+    cosmwasm: [],
     injective: [],
   }
-  result['evm'] = [evmWallet]
-
+  result['discord'] = [
+    DiscordTestWallet.fromKeyfile(TEST_DISCORD_USERNAME, dispenserGuardKeyPath),
+  ]
+  result['solana'] = [TestSolanaWallet.fromKeyfile(solanaPrivateKeyPath)]
+  result['evm'] = [TestEvmWallet.fromKeyfile(evmPrivateKeyPath)]
+  result['sui'] = [TestSuiWallet.fromKeyfile(suiPrivateKeyPath)]
+  result['aptos'] = [TestAptosWallet.fromKeyfile(aptosPrivateKeyPath)]
   result['cosmwasm'] = [
     await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath),
     await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath, 'osmo'),
     await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath, 'neutron'),
   ]
-  result['aptos'] = [TestAptosWallet.fromKeyfile(aptosPrivateKeyPath)]
   result['injective'] = [
     await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath, 'inj'),
   ]
 
-  result['discord'] = [
-    DiscordTestWallet.fromKeyfile(TEST_DISCORD_USERNAME, dispenserGuardKeyPath),
-  ]
-  result['solana'] = [TestSolanaWallet.fromKeyfile(solanaPrivateKeyPath)]
   return result
 }
 
@@ -212,7 +214,7 @@ export class TestSolanaWallet implements TestWallet {
 }
 
 export class TestAptosWallet implements TestWallet {
-  constructor(readonly wallet: AptosAccount, readonly addressStr: string) {}
+  constructor(readonly wallet: AptosAccount) {}
   static fromKeyfile(keyFile: string): TestAptosWallet {
     const jsonContent = fs.readFileSync(keyFile, 'utf8')
     const mnemonic = JSON.parse(jsonContent).mnemonic
@@ -220,10 +222,10 @@ export class TestAptosWallet implements TestWallet {
       "m/44'/637'/0'/0'/0'",
       mnemonic
     )
-    return new TestAptosWallet(aptosAccount, aptosAccount.authKey().hex())
+    return new TestAptosWallet(aptosAccount)
   }
   address(): string {
-    return this.addressStr
+    return this.wallet.authKey().hex()
   }
 
   async signMessage(payload: string): Promise<SignedMessage> {
@@ -234,5 +236,26 @@ export class TestAptosWallet implements TestWallet {
       signature.hex(),
       payload
     )
+  }
+}
+
+export class TestSuiWallet implements TestWallet {
+  constructor(readonly wallet: Ed25519Keypair) {}
+
+  static fromKeyfile(keyFile: string): TestSuiWallet {
+    const jsonContent = fs.readFileSync(keyFile, 'utf8')
+    const mnemonic = JSON.parse(jsonContent).mnemonic
+    return new TestSuiWallet(Ed25519Keypair.deriveKeypair(mnemonic))
+  }
+
+  address(): string {
+    return this.wallet.toSuiAddress()
+  }
+  async signMessage(payload: string): Promise<SignedMessage> {
+    const response = (
+      await this.wallet.signPersonalMessage(Buffer.from(payload))
+    ).signature
+
+    return suiBuildSignedMessage(response, payload)
   }
 }

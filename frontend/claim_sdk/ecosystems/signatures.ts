@@ -14,6 +14,8 @@ import {
 import { Hash } from '@keplr-wallet/crypto'
 import { HexString } from 'aptos'
 import { aptosGetFullMessage } from './aptos'
+import { splitSignatureAndPubkey, suiGetFullMessage } from './sui'
+import { blake2b } from '@noble/hashes/blake2b'
 
 export type SignedMessage = {
   publicKey: Uint8Array
@@ -85,5 +87,25 @@ export function aptosBuildSignedMessage(
     signature: Buffer.from(removeLeading0x(signature), 'hex'),
     recoveryId: undefined,
     fullMessage: Buffer.from(aptosGetFullMessage(payload), 'utf-8'),
+  }
+}
+
+export function suiBuildSignedMessage(
+  response: string,
+  payload: string
+): SignedMessage {
+  const [signature, publicKey] = splitSignatureAndPubkey(
+    Buffer.from(response, 'base64')
+  )
+
+  // const [signature, recoveryId] = splitEvmSignature(response)
+  return {
+    publicKey,
+    signature,
+    // signature: Buffer.from(response, 'base64'),
+    recoveryId: undefined,
+    fullMessage: suiGetFullMessage(payload), // uint8array of messageWithIntent
+
+    // fullMessage: blake2b(suiGetFullMessage(payload), { dkLen: 32 }),
   }
 }
