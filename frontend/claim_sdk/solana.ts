@@ -266,9 +266,12 @@ export class TokenDispenserProvider {
 
     if (signedMessage) {
       switch (claimInfo.ecosystem) {
-        case 'evm': {
+        case 'evm':
+        case 'aptos':
+        case 'sui':
+        case 'injective': {
           return {
-            evm: {
+            [claimInfo.ecosystem]: {
               pubkey: Array.from(signedMessage.publicKey),
               verificationInstructionIndex: 0,
             },
@@ -285,34 +288,10 @@ export class TokenDispenserProvider {
             },
           }
         }
-        case 'injective': {
-          return {
-            injective: {
-              pubkey: Array.from(signedMessage.publicKey), //evm Pubkey
-              verificationInstructionIndex: 0,
-            },
-          }
-        }
         case 'discord': {
           return {
             discord: {
               username: claimInfo.identity,
-              verificationInstructionIndex: 0,
-            },
-          }
-        }
-        case 'aptos': {
-          return {
-            aptos: {
-              pubkey: Array.from(signedMessage.publicKey), //ed25519 pubkey
-              verificationInstructionIndex: 0,
-            },
-          }
-        }
-        case 'sui': {
-          return {
-            sui: {
-              pubkey: Array.from(signedMessage.publicKey), //ed25519 pubkey
               verificationInstructionIndex: 0,
             },
           }
