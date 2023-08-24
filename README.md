@@ -21,6 +21,13 @@ First, install both the [Solana CLI tools](https://docs.solana.com/cli/install-s
 
 Install [Docker](https://docs.docker.com/engine/install/).
 
+Install jq and gsed.
+
+```bash
+brew install gnu-sed
+brew install jq
+```
+
 ### Web Frontend
 
 The frontend depends on a postgres database for storing claims and on an instance of Solana to send on-chain transactions.

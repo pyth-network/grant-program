@@ -24,11 +24,7 @@ generate_declaration_file() {
 
     prog="$(basename $PROGRAM_SO .json)"
     OUT_PATH="$OUT_DIR/$prog.ts"
-    if [ ! $(which gsed) ]; then
-        PREFIX=$(echo $prog | sed -E 's/(^|_)([a-z])/\U\2/g')
-    else
-        PREFIX=$(echo $prog | gsed -E 's/(^|_)([a-z])/\U\2/g')
-    fi
+    PREFIX=$(echo $prog | gsed -E 's/(^|_)([a-z])/\U\2/g')
     typename="${PREFIX}"
 
     # types

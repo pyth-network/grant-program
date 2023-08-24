@@ -14,8 +14,6 @@ TOKEN_DISPENSER_DIR="$DIR/../../token-dispenser";
 TOKEN_DISPENSER_PID=Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS
 TOKEN_DISPENSER_SO="$TOKEN_DISPENSER_DIR/target/deploy/token_dispenser.so"
 
-VALIDATOR_PID=
-
 usage() {
   cat <<EOF
   Usage: $0 -d[--dev]|-t[--test] -v[--verbose] --no-postgres -h[--help]
@@ -109,36 +107,19 @@ function populate() {
   npm run populate;
 }
 
+function build_program() {
+  cd "$TOKEN_DISPENSER_DIR";
+  anchor run export;
+}
+
 function run_integration_tests() {
   cd "$DIR";
   npm run test;
 }
 
-
-function start_test_validator() {
-  cd "$TOKEN_DISPENSER_DIR";
-  anchor run export;
-  solana-test-validator -r \
-    --bpf-program "$TOKEN_DISPENSER_PID" "$TOKEN_DISPENSER_SO" \
-    --quiet \
-    &
-  VALIDATOR_PID=$!
-  sleep 5
-}
-
 function start_anchor_localnet() {
   cd "$TOKEN_DISPENSER_DIR";
-  anchor run export;
   anchor localnet;
-}
-
-
-function stop_test_validator() {
-  set +e
-  [ -z $VALIDATOR_PID ] || (
-      kill $VALIDATOR_PID
-  )
-  return 0
 }
 
 function stop_anchor_localnet() {
@@ -162,8 +143,6 @@ function cleanup() {
       echo "shutting down solana-test-validator if running"
   fi
   stop_anchor_localnet;
-  stop_test_validator;
-
 }
 
 function main() {
@@ -171,14 +150,16 @@ function main() {
   cleanup;
   # setup postgres docker
   setup_postgres_docker;
+  # start solana-test-validator
+  build_program;
+  start_anchor_localnet &
+  sleep 5
   if [ "$dev" -eq 1 ]; then
       if [ "$verbose" -eq 1 ]; then
         echo "dev mode"
-        echo "populate db and deploy solana-test-validator using anchor localnet"
+        echo "populate db and deploy and initialize program"
       fi
       printf "\n\n**Running solana-test-validator until CTRL+C detected**\n\n"
-      start_anchor_localnet &
-      sleep 5
       populate;
       # wait for ctrl-c
       ( trap exit SIGINT ; read -r -d '' _ </dev/tty )
@@ -187,8 +168,6 @@ function main() {
         echo "test mode"
         echo "running frontend tests"
       fi
-      start_test_validator
-      sleep 5
       run_integration_tests;
   else
       echo "no mode selected"

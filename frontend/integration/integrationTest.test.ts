@@ -116,16 +116,6 @@ describe('integration test', () => {
     let mint: Token
     let treasury: PublicKey
     beforeAll(async () => {
-      await airdrop(
-        tokenDispenserProvider.connection,
-        LAMPORTS_PER_SOL,
-        tokenDispenserProvider.claimant
-      )
-      const walletBalance = await tokenDispenserProvider.connection.getBalance(
-        wallet.publicKey
-      )
-      expect(walletBalance).toEqual(LAMPORTS_PER_SOL)
-
       const mintAndTreasury =
         await tokenDispenserProvider.setupMintAndTreasury()
       mint = mintAndTreasury.mint
