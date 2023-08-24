@@ -12,6 +12,7 @@ use {
         AnchorSerialize,
     },
     blake2_rfc::blake2b::Blake2b,
+    uleb128::WriteULeb128Ext,
 };
 
 
@@ -32,11 +33,13 @@ impl SuiMessage {
     pub fn get_expected_hash(payload: &str) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::<u8>::new();
         result.extend(SUI_PREFIX);
+        result.write_uleb128_u64(payload.len() as u64).unwrap();
         result.extend_from_slice(payload.as_bytes());
         blake2_rfc::blake2b::blake2b(32, &[], &result)
             .as_bytes()
             .to_vec()
     }
+
 
     /**
      * Sui hashes the prefixed payload with Blake2b before signing therefore we can't use the same flow
@@ -45,7 +48,7 @@ impl SuiMessage {
      */
     pub fn check_hashed_payload(payload: &[u8], claimant: &Pubkey) -> Result<()> {
         if payload != SuiMessage::get_expected_hash(&get_expected_payload(claimant)) {
-            return Err(ErrorCode::SignatureVerificationWrongPayload.into());
+            return err!(ErrorCode::SignatureVerificationWrongPayload);
         }
         Ok(())
     }
@@ -61,6 +64,7 @@ impl Ed25519TestMessage for SuiMessage {
     fn get_message_with_metadata(&self) -> Vec<u8> {
         let mut result: Vec<u8> = Vec::<u8>::new();
         result.extend(SUI_PREFIX);
+        result.write_uleb128_u64(self.0.len() as u64).unwrap();
         result.extend_from_slice(&self.0);
         blake2_rfc::blake2b::blake2b(32, &[], &result)
             .as_bytes()

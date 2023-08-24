@@ -13,6 +13,7 @@ import {
   evmBuildSignedMessage,
   cosmwasmBuildSignedMessage,
   aptosBuildSignedMessage,
+  suiBuildSignedMessage,
 } from 'claim_sdk/ecosystems/signatures'
 
 // SignMessageFn signs the message and returns it.
@@ -161,15 +162,7 @@ export function useSuiSignMessage(): SignMessageFn {
             message: Buffer.from(payload),
           })
         ).signature
-        const [signature, publicKey] = splitSignatureAndPubkey(
-          Buffer.from(response, 'base64')
-        )
-        return {
-          publicKey,
-          signature,
-          recoveryId: undefined,
-          fullMessage: suiGetFullMessage(payload),
-        }
+        return suiBuildSignedMessage(response, payload)
       } catch (e) {
         console.error(e)
       }

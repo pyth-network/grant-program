@@ -73,6 +73,14 @@ export class ClaimInfo {
         }
         break
       }
+      case 'sui': {
+        identityStruct = {
+          sui: {
+            address: Buffer.from(removeLeading0x(this.identity), 'hex'),
+          },
+        }
+        break
+      }
       default: {
         // TODO: support the other ecosystems
         throw new Error(`unknown ecosystem type: ${this.ecosystem}`)

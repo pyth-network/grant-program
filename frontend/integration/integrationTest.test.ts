@@ -417,5 +417,49 @@ describe('integration test', () => {
         )
       ).toBeTruthy()
     }, 40000)
+
+    it('submits a sui claim', async () => {
+      const wallet = testWallets.sui[0]
+      const { claimInfo, proofOfInclusion } = (await mockFetchAmountAndProof(
+        'sui',
+        wallet.address()
+      ))!
+      const signedMessage = await wallet.signMessage(
+        tokenDispenserProvider.generateAuthorizationPayload()
+      )
+
+      await tokenDispenserProvider.submitClaims([
+        {
+          claimInfo,
+          proofOfInclusion,
+          signedMessage,
+        },
+      ])
+
+      expect(
+        await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
+      ).toBeTruthy()
+
+      const claimantFundPubkey =
+        await tokenDispenserProvider.getClaimantFundAddress()
+
+      const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
+
+      expect(
+        claimantFund.amount.eq(
+          new anchor.BN(
+            3000000 +
+              6000000 +
+              6100000 +
+              6200000 +
+              7000000 +
+              5000000 +
+              1000000 +
+              2000000 +
+              4000000
+          )
+        )
+      ).toBeTruthy()
+    }, 40000)
   })
 })

@@ -18,6 +18,7 @@ import { ClaimInfo, Ecosystem } from './claim'
 import { TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import { SignedMessage } from './ecosystems/signatures'
 import { extractChainId } from './ecosystems/cosmos'
+import { blake2b } from '@noble/hashes/blake2b'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -265,9 +266,12 @@ export class TokenDispenserProvider {
 
     if (signedMessage) {
       switch (claimInfo.ecosystem) {
-        case 'evm': {
+        case 'evm':
+        case 'aptos':
+        case 'sui':
+        case 'injective': {
           return {
-            evm: {
+            [claimInfo.ecosystem]: {
               pubkey: Array.from(signedMessage.publicKey),
               verificationInstructionIndex: 0,
             },
@@ -284,26 +288,10 @@ export class TokenDispenserProvider {
             },
           }
         }
-        case 'injective': {
-          return {
-            injective: {
-              pubkey: Array.from(signedMessage.publicKey), //evm Pubkey
-              verificationInstructionIndex: 0,
-            },
-          }
-        }
         case 'discord': {
           return {
             discord: {
               username: claimInfo.identity,
-              verificationInstructionIndex: 0,
-            },
-          }
-        }
-        case 'aptos': {
-          return {
-            aptos: {
-              pubkey: Array.from(signedMessage.publicKey), //ed25519 pubkey
               verificationInstructionIndex: 0,
             },
           }
@@ -343,6 +331,7 @@ export class TokenDispenserProvider {
           return undefined
         }
         case 'discord':
+        case 'sui':
         case 'aptos': {
           return Ed25519Program.createInstructionWithPublicKey({
             publicKey: signedMessage.publicKey,
