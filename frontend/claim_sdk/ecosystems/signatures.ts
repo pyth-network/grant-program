@@ -97,15 +97,10 @@ export function suiBuildSignedMessage(
   const [signature, publicKey] = splitSignatureAndPubkey(
     Buffer.from(response, 'base64')
   )
-
-  // const [signature, recoveryId] = splitEvmSignature(response)
   return {
     publicKey,
     signature,
-    // signature: Buffer.from(response, 'base64'),
     recoveryId: undefined,
-    fullMessage: suiGetFullMessage(payload), // uint8array of messageWithIntent
-
-    // fullMessage: blake2b(suiGetFullMessage(payload), { dkLen: 32 }),
+    fullMessage: suiGetFullMessage(payload),
   }
 }
