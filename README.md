@@ -19,6 +19,8 @@ Copy `frontend/.env.sample` to `frontend/.env` and edit the configuration variab
 
 First, install both the [Solana CLI tools](https://docs.solana.com/cli/install-solana-cli-tools) and [Anchor](https://www.anchor-lang.com/docs/installation). We recommend `v1.14.20` for Solana and `v0.27.0` for Anchor.
 
+Node : We recommend using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating). Node version needs to be `< v17.0.0`.
+
 Install [Docker](https://docs.docker.com/engine/install/).
 
 Install jq and gsed.
