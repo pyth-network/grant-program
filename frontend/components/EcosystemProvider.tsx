@@ -27,7 +27,7 @@ export type EcosystemMap = Record<
     isActive: boolean
     // Once the user has signed a message, we will globally store it here.
     signedMessage?: SignedMessage
-    // Undefined, if the ecosystem is not eligibile or value is not set
+    // Undefined, if the ecosystem is not eligible or value is not set
     eligibility: Eligibility
   }
 >
