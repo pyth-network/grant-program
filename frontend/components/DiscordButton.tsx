@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react'
 
-import Discord from '../../images/discord.inline.svg'
+import Discord from '../images/discord.inline.svg'
 
 import { signIn, signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
