@@ -4,6 +4,8 @@ import { assets, chains } from 'chain-registry'
 import { wallets } from '@cosmos-kit/keplr-extension'
 import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
+import { fetchAmountAndProof } from 'utils/api'
+import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
 
 const walletName = 'keplr-extension'
 
@@ -49,6 +51,23 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
     if (isWalletNotExist) window.open('https://www.keplr.app/download')
   }, [isWalletNotExist])
 
+  const { setEligibility } = useEcosystem()
+
+  // fetch the eligibility and store it
+  useEffect(() => {
+    ;(async () => {
+      if (isWalletConnected === true && address !== undefined) {
+        const eligibility = await fetchAmountAndProof(
+          chainName === 'injective' ? 'injective' : 'cosmwasm',
+          address
+        )
+        setEligibility(chainNametoECOSYSTEM(chainName), eligibility)
+      } else {
+        setEligibility(chainNametoECOSYSTEM(chainName), undefined)
+      }
+    })()
+  }, [isWalletConnected, address, setEligibility, chainName])
+
   return (
     <WalletButton
       address={address}
@@ -60,4 +79,12 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
       )}
     />
   )
+}
+
+function chainNametoECOSYSTEM(
+  chainName: 'injective' | 'osmosis' | 'neutron'
+): ECOSYSTEM {
+  if (chainName === 'injective') return ECOSYSTEM.INJECTIVE
+  else if (chainName === 'osmosis') return ECOSYSTEM.OSMOSIS
+  else return ECOSYSTEM.NEUTRON
 }

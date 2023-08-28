@@ -1,6 +1,8 @@
 import { useWalletKit } from '@mysten/wallet-kit'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
-import { useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
+import { useEcosystem, ECOSYSTEM } from '@components/EcosystemProvider'
+import { fetchAmountAndProof } from 'utils/api'
 
 export function SuiWalletButton() {
   const {
@@ -45,6 +47,23 @@ export function SuiWalletButton() {
         },
       ]
   }, [connect, detectedWallets])
+
+  const { setEligibility } = useEcosystem()
+
+  // fetch the eligibility and store it
+  useEffect(() => {
+    ;(async () => {
+      if (isConnected === true && currentAccount?.address !== undefined) {
+        const eligibility = await fetchAmountAndProof(
+          'sui',
+          currentAccount?.address
+        )
+        setEligibility(ECOSYSTEM.SUI, eligibility)
+      } else {
+        setEligibility(ECOSYSTEM.SUI, undefined)
+      }
+    })()
+  }, [isConnected, currentAccount?.address, setEligibility])
 
   return (
     <WalletButton

@@ -41,12 +41,15 @@ export function handleAmountAndProofResponse(
   }
 }
 
+// If the given identity is not eligible the value will be undefined
+// Else the value contains the eligibility information
+export type Eligibility =
+  | { claimInfo: ClaimInfo; proofOfInclusion: Uint8Array[] }
+  | undefined
 export async function fetchAmountAndProof(
   ecosystem: Ecosystem,
   identity: string
-): Promise<
-  { claimInfo: ClaimInfo; proofOfInclusion: Uint8Array[] } | undefined
-> {
+): Promise<Eligibility> {
   const response = await fetch(getAmountAndProofRoute(ecosystem, identity))
   return handleAmountAndProofResponse(
     ecosystem,

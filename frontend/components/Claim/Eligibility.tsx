@@ -16,6 +16,7 @@ import { SolanaWalletButton } from '@components/wallets/Solana'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
 
+// TODO: Add loading support for sub components to disable proceed back buttons.
 const Eligibility = ({
   onBack,
   onProceed,

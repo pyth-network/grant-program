@@ -15,10 +15,12 @@ import {
   useWallet,
 } from '@solana/wallet-adapter-react'
 
-import { useMemo, ReactElement, ReactNode, useCallback } from 'react'
+import { useMemo, ReactElement, ReactNode, useCallback, useEffect } from 'react'
 import { clusterApiUrl } from '@solana/web3.js'
 import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import { Wallet, WalletButton, WalletConnectedButton } from './WalletButton'
+import { useEcosystem, ECOSYSTEM } from '@components/EcosystemProvider'
+import { fetchAmountAndProof } from 'utils/api'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
 export const BACKPACK_WALLET_ADAPTER = new BackpackWalletAdapter()
@@ -111,6 +113,20 @@ export function SolanaWalletButton() {
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey])
 
   const wallets = useWallets()
+
+  const { setEligibility } = useEcosystem()
+
+  // fetch the eligibility and store it
+  useEffect(() => {
+    ;(async () => {
+      if (connected === true && base58 !== undefined) {
+        const eligibility = await fetchAmountAndProof('solana', base58)
+        setEligibility(ECOSYSTEM.SOLANA, eligibility)
+      } else {
+        setEligibility(ECOSYSTEM.SOLANA, undefined)
+      }
+    })()
+  }, [connected, base58, setEligibility])
 
   return (
     <WalletButton
