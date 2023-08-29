@@ -44,7 +44,7 @@
         {
           "name": "merkleRoot",
           "type": {
-            "array": ["u8", 32]
+            "array": ["u8", 20]
           }
         },
         {
@@ -127,7 +127,7 @@
           {
             "name": "merkleRoot",
             "type": {
-              "array": ["u8", 32]
+              "array": ["u8", 20]
             }
           },
           {
@@ -313,7 +313,7 @@
             "name": "proofOfInclusion",
             "type": {
               "vec": {
-                "array": ["u8", 32]
+                "array": ["u8", 20]
               }
             }
           }

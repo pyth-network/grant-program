@@ -4,21 +4,28 @@ const LEAF_PREFIX = Buffer.from('00', 'hex')
 const NODE_PREFIX = Buffer.from('01', 'hex')
 const NULL_PREFIX = Buffer.from('02', 'hex')
 
-export const HASH_SIZE = 32
+export const HASH_SIZE = 20
 
 export class MerkleTree {
   public nodes: Buffer[]
 
+  static hash(buffer: Buffer) {
+    const bytes = keccak256(buffer)
+    return bytes.subarray(0, HASH_SIZE)
+  }
   static hashNode(l: Buffer, r: Buffer) {
     if (l.compare(r) < 0) {
-      return keccak256(Buffer.concat([NODE_PREFIX, l, r]))
+      // return keccak256(Buffer.concat([NODE_PREFIX, l, r]))
+      return MerkleTree.hash(Buffer.concat([NODE_PREFIX, l, r]))
     } else {
-      return keccak256(Buffer.concat([NODE_PREFIX, r, l]))
+      // return keccak256(Buffer.concat([NODE_PREFIX, r, l]))
+      return MerkleTree.hash(Buffer.concat([NODE_PREFIX, r, l]))
     }
   }
 
   static hashLeaf(leaf: Buffer) {
-    return keccak256(Buffer.concat([LEAF_PREFIX, leaf]))
+    // return keccak256(Buffer.concat([LEAF_PREFIX, leaf]))
+    return MerkleTree.hash(Buffer.concat([LEAF_PREFIX, leaf]))
   }
 
   constructor(leaves: Buffer[]) {
@@ -29,7 +36,8 @@ export class MerkleTree {
       if (i < leaves.length) {
         this.nodes[(1 << depth) + i] = MerkleTree.hashLeaf(leaves[i])
       } else {
-        this.nodes[(1 << depth) + i] = keccak256(NULL_PREFIX)
+        // this.nodes[(1 << depth) + i] = keccak256(NULL_PREFIX)
+        this.nodes[(1 << depth) + i] = MerkleTree.hash(NULL_PREFIX)
       }
     }
 

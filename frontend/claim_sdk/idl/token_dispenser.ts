@@ -44,7 +44,7 @@ export type TokenDispenser = {
         {
           name: 'merkleRoot'
           type: {
-            array: ['u8', 32]
+            array: ['u8', 20]
           }
         },
         {
@@ -127,7 +127,7 @@ export type TokenDispenser = {
           {
             name: 'merkleRoot'
             type: {
-              array: ['u8', 32]
+              array: ['u8', 20]
             }
           },
           {
@@ -313,7 +313,7 @@ export type TokenDispenser = {
             name: 'proofOfInclusion'
             type: {
               vec: {
-                array: ['u8', 32]
+                array: ['u8', 20]
               }
             }
           }
@@ -617,7 +617,7 @@ export const IDL: TokenDispenser = {
         {
           name: 'merkleRoot',
           type: {
-            array: ['u8', 32],
+            array: ['u8', 20],
           },
         },
         {
@@ -700,7 +700,7 @@ export const IDL: TokenDispenser = {
           {
             name: 'merkleRoot',
             type: {
-              array: ['u8', 32],
+              array: ['u8', 20],
             },
           },
           {
@@ -886,7 +886,7 @@ export const IDL: TokenDispenser = {
             name: 'proofOfInclusion',
             type: {
               vec: {
-                array: ['u8', 32],
+                array: ['u8', 20],
               },
             },
           },
