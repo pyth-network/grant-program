@@ -64,7 +64,6 @@ export async function loadTestWallets(): Promise<
     cosmwasm: [],
     injective: [],
   }
-  console.log("TEST_DISCORD_USERNAME", TEST_DISCORD_USERNAME);
   result['discord'] = [
     DiscordTestWallet.fromKeyfile(TEST_DISCORD_USERNAME, dispenserGuardKeyPath),
   ]
