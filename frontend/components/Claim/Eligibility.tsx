@@ -61,43 +61,43 @@ const Eligibility = ({
             label={'Solana Activity'}
             actionButton={<SolanaWalletButton />}
             coins={ecosystemMap.Solana.eligibility?.claimInfo.amount.toString()}
-            disabled={!ecosystemMap.Solana.isActive}
+            isActive={ecosystemMap.Solana.isActive}
           />
           <TableRow
             label={'EVM Activity'}
             actionButton={<EVMWalletButton />}
             coins={ecosystemMap.Evm.eligibility?.claimInfo.amount.toString()}
-            disabled={!ecosystemMap.Evm.isActive}
+            isActive={ecosystemMap.Evm.isActive}
           />
           <TableRow
             label={'Aptos Activity'}
             actionButton={<AptosWalletButton />}
             coins={ecosystemMap.Aptos.eligibility?.claimInfo.amount.toString()}
-            disabled={!ecosystemMap.Aptos.isActive}
+            isActive={ecosystemMap.Aptos.isActive}
           />
           <TableRow
             label={'Sui Activity'}
             actionButton={<SuiWalletButton />}
             coins={ecosystemMap.Sui.eligibility?.claimInfo.amount.toString()}
-            disabled={!ecosystemMap.Sui.isActive}
+            isActive={ecosystemMap.Sui.isActive}
           />
           <TableRow
             label={'Injective Activity'}
             actionButton={<CosmosWalletButton chainName="injective" />}
             coins={ecosystemMap.Injective.eligibility?.claimInfo.amount.toString()}
-            disabled={!ecosystemMap.Injective.isActive}
+            isActive={ecosystemMap.Injective.isActive}
           />
           <TableRow
             label={'Osmosis Activity'}
             actionButton={<CosmosWalletButton chainName="osmosis" />}
             coins={ecosystemMap.Osmosis.eligibility?.claimInfo.amount.toString()}
-            disabled={!ecosystemMap.Osmosis.isActive}
+            isActive={ecosystemMap.Osmosis.isActive}
           />
           <TableRow
             label={'Neutron Activity'}
             actionButton={<CosmosWalletButton chainName="neutron" />}
             coins={ecosystemMap.Neutron.eligibility?.claimInfo.amount.toString()}
-            disabled={!ecosystemMap.Neutron.isActive}
+            isActive={ecosystemMap.Neutron.isActive}
           />
           <TableRow
             label={'Discord Activity'}
@@ -105,7 +105,7 @@ const Eligibility = ({
             coins={ecosystemMap[
               ECOSYSTEM.DISCORD
             ].eligibility?.claimInfo.amount.toString()}
-            disabled={!ecosystemMap[ECOSYSTEM.DISCORD].isActive}
+            isActive={ecosystemMap[ECOSYSTEM.DISCORD].isActive}
           />
 
           <tr className="border-b border-light-35 ">
@@ -132,14 +132,14 @@ type TableRowProps = {
   label: string
   actionButton: ReactElement
   coins: string | undefined
-  disabled: boolean
+  isActive: boolean
 }
-function TableRow({ label, actionButton, coins, disabled }: TableRowProps) {
+function TableRow({ label, actionButton, coins, isActive }: TableRowProps) {
   return (
     <tr
       className={classNames(
         'border-b border-light-35 ',
-        disabled ? 'disabled' : ''
+        isActive ? '' : 'disabled'
       )}
     >
       <td className="w-full py-2 pl-10 pr-4">
@@ -156,7 +156,7 @@ function TableRow({ label, actionButton, coins, disabled }: TableRowProps) {
       </td>
       <td className="min-w-[130px] border-l border-light-35 bg-dark-25">
         <span className="flex items-center justify-center  gap-1 text-[20px]">
-          {disabled ? 'N/A' : coins ?? '0'} <Coin />
+          {isActive ? coins ?? '0' : 'N/A'} <Coin />
         </span>
       </td>
     </tr>
