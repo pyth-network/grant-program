@@ -64,7 +64,7 @@ export function SuiWalletButton() {
       } else {
         setEligibility(ECOSYSTEM.SUI, undefined)
       }
-      // if the effect has been triggered again, it will only because of connected or account?.address
+      // if the effect has been triggered again, it will only because of isConnected or currentAccount?.address
       // i.e., the connected account has changed and hence set signedMessage to undefined
       setSignedMessage(ECOSYSTEM.SUI, undefined)
     })()

@@ -69,7 +69,7 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
       } else {
         setEligibility(chainNametoECOSYSTEM(chainName), undefined)
       }
-      // if the effect has been triggered again, it will only because of connected or account?.address
+      // if the effect has been triggered again, it will only because of isWalletConnected or address
       // i.e., the connected account has changed and hence set signedMessage to undefined
       setSignedMessage(chainNametoECOSYSTEM(chainName), undefined)
     })()

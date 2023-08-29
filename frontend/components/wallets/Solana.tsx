@@ -128,7 +128,7 @@ export function SolanaWalletButton() {
       } else {
         setEligibility(ECOSYSTEM.SOLANA, undefined)
       }
-      // if the effect has been triggered again, it will only because of connected or account?.address
+      // if the effect has been triggered again, it will only because of connected or  base58
       // i.e., the connected account has changed and hence set signedMessage to undefined
       setSignedMessage(ECOSYSTEM.SOLANA, undefined)
     })()

@@ -97,7 +97,7 @@ export function EVMWalletButton() {
       } else {
         setEligibility(ECOSYSTEM.EVM, undefined)
       }
-      // if the effect has been triggered again, it will only because of connected or account?.address
+      // if the effect has been triggered again, it will only because of isConnected or address
       // i.e., the connected account has changed and hence set signedMessage to undefined
       setSignedMessage(ECOSYSTEM.EVM, undefined)
     })()

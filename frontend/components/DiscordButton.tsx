@@ -46,7 +46,7 @@ export function DiscordButton() {
       } else {
         setEligibility(ECOSYSTEM.DISCORD, undefined)
       }
-      // if the effect has been triggered again, it will only because of connected or account?.address
+      // if the effect has been triggered again, it will only because the user has changed somehow
       // i.e., the connected account has changed and hence set signedMessage to undefined
       setSignedMessage(ECOSYSTEM.DISCORD, undefined)
     })()
