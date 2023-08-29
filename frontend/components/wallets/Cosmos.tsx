@@ -6,8 +6,12 @@ import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 import { fetchAmountAndProof } from 'utils/api'
 import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
+import { useCosmosSignMessage } from 'hooks/useSignMessage'
+import { SignButton } from './SignButton'
 
 const walletName = 'keplr-extension'
+
+type ChainName = 'injective' | 'osmosis' | 'neutron'
 
 type CosmosWalletProviderProps = {
   children: ReactNode
@@ -81,10 +85,20 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
   )
 }
 
-function chainNametoECOSYSTEM(
-  chainName: 'injective' | 'osmosis' | 'neutron'
-): ECOSYSTEM {
+function chainNametoECOSYSTEM(chainName: ChainName): ECOSYSTEM {
   if (chainName === 'injective') return ECOSYSTEM.INJECTIVE
   else if (chainName === 'osmosis') return ECOSYSTEM.OSMOSIS
   else return ECOSYSTEM.NEUTRON
+}
+
+export function CosmosSignButton({ chainName }: { chainName: ChainName }) {
+  const signMessageFn = useCosmosSignMessage(chainName)
+  // TODO: update this message
+  return (
+    <SignButton
+      signMessageFn={signMessageFn}
+      ecosystem={chainNametoECOSYSTEM(chainName)}
+      message={'solana message'}
+    />
+  )
 }

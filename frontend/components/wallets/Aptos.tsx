@@ -8,6 +8,8 @@ import { ReactElement, ReactNode, useCallback, useEffect, useMemo } from 'react'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
+import { useAptosSignMessage } from 'hooks/useSignMessage'
+import { SignButton } from './SignButton'
 
 type AptosWalletProviderProps = {
   children: ReactNode
@@ -79,6 +81,18 @@ export function AptosWalletButton() {
           icon={wallet?.icon}
         />
       )}
+    />
+  )
+}
+
+export function AptosSignButton() {
+  const signMessageFn = useAptosSignMessage()
+  // TODO: update this message
+  return (
+    <SignButton
+      signMessageFn={signMessageFn}
+      ecosystem={ECOSYSTEM.APTOS}
+      message={'solana message'}
     />
   )
 }

@@ -3,6 +3,8 @@ import { WalletButton, WalletConnectedButton } from './WalletButton'
 import { useCallback, useEffect, useMemo } from 'react'
 import { useEcosystem, ECOSYSTEM } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
+import { useSuiSignMessage } from 'hooks/useSignMessage'
+import { SignButton } from './SignButton'
 
 export function SuiWalletButton() {
   const {
@@ -78,6 +80,18 @@ export function SuiWalletButton() {
           icon={currentWallet?.icon}
         />
       )}
+    />
+  )
+}
+
+export function SuiSignButton() {
+  const signMessageFn = useSuiSignMessage()
+  // TODO: update this message
+  return (
+    <SignButton
+      signMessageFn={signMessageFn}
+      ecosystem={ECOSYSTEM.SUI}
+      message={'solana message'}
     />
   )
 }

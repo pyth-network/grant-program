@@ -19,6 +19,8 @@ import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
 import { fetchAmountAndProof } from 'utils/api'
 import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
+import { SignButton } from './SignButton'
+import { useEVMSignMessage } from 'hooks/useSignMessage'
 
 // Configure chains & providers with the Alchemy provider.
 // Two popular providers are Alchemy (alchemy.com) and Infura (infura.io)
@@ -110,6 +112,18 @@ export function EVMWalletButton() {
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton onClick={disconnect} address={address} />
       )}
+    />
+  )
+}
+
+export function EVMSignButton() {
+  const signMessageFn = useEVMSignMessage()
+  // TODO: update this message
+  return (
+    <SignButton
+      signMessageFn={signMessageFn}
+      ecosystem={ECOSYSTEM.EVM}
+      message={'solana message'}
     />
   )
 }

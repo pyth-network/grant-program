@@ -21,6 +21,9 @@ import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import { Wallet, WalletButton, WalletConnectedButton } from './WalletButton'
 import { useEcosystem, ECOSYSTEM } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
+import { SignButton } from './SignButton'
+import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
+import { useSolanaSignMessage } from 'hooks/useSignMessage'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
 export const BACKPACK_WALLET_ADAPTER = new BackpackWalletAdapter()
@@ -144,6 +147,18 @@ export function SolanaWalletButton() {
           />
         )
       }}
+    />
+  )
+}
+
+export function SolanaSignButton() {
+  const signMessageFn = useSolanaSignMessage()
+  // TODO: update this message
+  return (
+    <SignButton
+      signMessageFn={signMessageFn}
+      ecosystem={ECOSYSTEM.SOLANA}
+      message={'solana message'}
     />
   )
 }

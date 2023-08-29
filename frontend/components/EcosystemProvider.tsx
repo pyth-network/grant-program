@@ -39,7 +39,11 @@ export type EcosystemContextType = {
   setActive: (ecosystem: ECOSYSTEM, isActive: boolean) => void
   // Set the eligibility fetch using the API
   setEligibility: (ecosystem: ECOSYSTEM, eligibility: Eligibility) => void
-  // TODO: add other methods setSignedMessage
+  // set the signed message for the ecosystem
+  setSignedMessage: (
+    ecosystem: ECOSYSTEM,
+    signedMessage: SignedMessage | undefined
+  ) => void
 }
 export const EcosystemContext = createContext<EcosystemContextType | undefined>(
   undefined
@@ -72,9 +76,20 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
     []
   )
 
+  const setSignedMessage = useCallback(
+    (ecosytem: ECOSYSTEM, signedMessage: SignedMessage | undefined) => {
+      setMap((prevMap) => {
+        const newMap = { ...prevMap }
+        newMap[ecosytem].signedMessage = signedMessage
+        return newMap
+      })
+    },
+    []
+  )
+
   const contextValue = useMemo(
-    () => ({ map, setActive, setEligibility }),
-    [map, setActive, setEligibility]
+    () => ({ map, setActive, setEligibility, setSignedMessage }),
+    [map, setActive, setEligibility, setSignedMessage]
   )
 
   return (
