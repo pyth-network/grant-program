@@ -1,9 +1,12 @@
+import { BN } from 'bn.js'
+import { ClaimInfo } from 'claim_sdk/claim'
 import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
 import {
   ReactNode,
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react'
@@ -20,6 +23,8 @@ export enum Ecosystem {
   DISCORD = 'Pyth Discord',
 }
 
+const ECOSYSTEM_MAP_STORAGE_KEY = 'ecosystem-map-local-storage-key'
+
 export type EcosystemMap = Record<
   Ecosystem,
   {
@@ -34,6 +39,7 @@ export type EcosystemMap = Record<
 
 export type EcosystemContextType = {
   // The state of all the ecosystems
+  // Storing this map locally
   map: EcosystemMap
   // Set the isActive property of the given ecosystem
   setActive: (ecosystem: Ecosystem, isActive: boolean) => void
@@ -55,8 +61,38 @@ const ecosystemMap = Object.values(Ecosystem).reduce((map, currentValue) => {
   return map
 }, {} as EcosystemMap)
 
+function getStoredEcosystemMap(): EcosystemMap | null {
+  if (typeof window === 'undefined') return null
+
+  const mapStr = localStorage.getItem(ECOSYSTEM_MAP_STORAGE_KEY)
+  if (mapStr === null) return null
+
+  const obj = JSON.parse(mapStr)
+
+  // Every other key value pair is fine, except for ClainInfo.
+  // We need to do some customized parsing as it is a class.
+  Object.keys(obj).forEach((key) => {
+    if (obj[key].eligibility === undefined) return
+    obj[key].eligibility.claimInfo.amount = new BN(
+      obj[key].eligibility.claimInfo.amount,
+      'hex'
+    )
+    obj[key].eligibility.claimInfo = Object.setPrototypeOf(
+      obj[key].eligibility.claimInfo,
+      ClaimInfo
+    )
+  })
+
+  return obj as EcosystemMap
+}
+
 export function EcosystemProvider({ children }: { children: ReactNode }) {
-  const [map, setMap] = useState(ecosystemMap)
+  const [map, setMap] = useState(getStoredEcosystemMap() ?? ecosystemMap)
+  console.log(map)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    localStorage.setItem(ECOSYSTEM_MAP_STORAGE_KEY, JSON.stringify(map))
+  }, [map])
   const setActive = useCallback((ecosytem: Ecosystem, isActive: boolean) => {
     setMap((prevMap) => {
       const newMap = { ...prevMap }
