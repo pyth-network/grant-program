@@ -32,7 +32,7 @@ export function DiscordButton() {
     }
   }, [status, data?.user])
 
-  const { setEligibility } = useEcosystem()
+  const { setEligibility, setSignedMessage } = useEcosystem()
 
   // fetch the eligibility and store it
   useEffect(() => {
@@ -46,8 +46,11 @@ export function DiscordButton() {
       } else {
         setEligibility(ECOSYSTEM.DISCORD, undefined)
       }
+      // if the effect has been triggered again, it will only because of connected or account?.address
+      // i.e., the connected account has changed and hence set signedMessage to undefined
+      setSignedMessage(ECOSYSTEM.DISCORD, undefined)
     })()
-  }, [status, setEligibility, data?.user?.name])
+  }, [status, setEligibility, data?.user?.name, setSignedMessage])
 
   return (
     <button
