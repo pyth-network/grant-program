@@ -22,7 +22,9 @@
           "name": "mint",
           "isMut": false,
           "isSigner": false,
-          "docs": ["Mint of the treasury"]
+          "docs": [
+            "Mint of the treasury"
+          ]
         },
         {
           "name": "treasury",
@@ -44,7 +46,14 @@
         {
           "name": "merkleRoot",
           "type": {
+<<<<<<< Updated upstream
             "array": ["u8", 20]
+=======
+            "array": [
+              "u8",
+              32
+            ]
+>>>>>>> Stashed changes
           }
         },
         {
@@ -127,7 +136,14 @@
           {
             "name": "merkleRoot",
             "type": {
+<<<<<<< Updated upstream
               "array": ["u8", 20]
+=======
+              "array": [
+                "u8",
+                32
+              ]
+>>>>>>> Stashed changes
             }
           },
           {
@@ -313,7 +329,14 @@
             "name": "proofOfInclusion",
             "type": {
               "vec": {
+<<<<<<< Updated upstream
                 "array": ["u8", 20]
+=======
+                "array": [
+                  "u8",
+                  32
+                ]
+>>>>>>> Stashed changes
               }
             }
           }
@@ -343,7 +366,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 32]
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               }
             ]
@@ -354,7 +380,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 20]
+                  "array": [
+                    "u8",
+                    20
+                  ]
                 }
               }
             ]
@@ -365,7 +394,10 @@
               {
                 "name": "address",
                 "type": {
-                  "array": ["u8", 32]
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               }
             ]
@@ -376,7 +408,10 @@
               {
                 "name": "address",
                 "type": {
-                  "array": ["u8", 32]
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               }
             ]
@@ -426,7 +461,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 20]
+                  "array": [
+                    "u8",
+                    20
+                  ]
                 }
               },
               {
@@ -444,7 +482,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 32]
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               },
               {
@@ -459,7 +500,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 32]
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               },
               {
@@ -478,7 +522,10 @@
               {
                 "name": "signature",
                 "type": {
-                  "array": ["u8", 64]
+                  "array": [
+                    "u8",
+                    64
+                  ]
                 }
               },
               {
@@ -488,7 +535,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 65]
+                  "array": [
+                    "u8",
+                    65
+                  ]
                 }
               },
               {
@@ -503,7 +553,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 20]
+                  "array": [
+                    "u8",
+                    20
+                  ]
                 }
               },
               {

@@ -1,319 +1,350 @@
-export type TokenDispenser = {
-  version: '0.1.0'
-  name: 'token_dispenser'
-  instructions: [
+export type TokenDispenser =
+{
+  "version": "0.1.0",
+  "name": "token_dispenser",
+  "instructions": [
     {
-      name: 'initialize'
-      docs: [
-        'This can only be called once and should be called right after the program is deployed.'
-      ]
-      accounts: [
+      "name": "initialize",
+      "docs": [
+        "This can only be called once and should be called right after the program is deployed."
+      ],
+      "accounts": [
         {
-          name: 'payer'
-          isMut: true
-          isSigner: true
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          name: 'config'
-          isMut: true
-          isSigner: false
+          "name": "config",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          name: 'mint'
-          isMut: false
-          isSigner: false
-          docs: ['Mint of the treasury']
-        },
-        {
-          name: 'treasury'
-          isMut: false
-          isSigner: false
-          docs: [
-            'Treasury token account. This is an externally owned token account and',
-            'the owner of this account will approve the config as a delegate using the',
-            'solana CLI command `spl-token approve <treasury_account_address> <approve_amount> <config_address>`'
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Mint of the treasury"
           ]
         },
         {
-          name: 'systemProgram'
-          isMut: false
-          isSigner: false
-        }
-      ]
-      args: [
+          "name": "treasury",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Treasury token account. This is an externally owned token account and",
+            "the owner of this account will approve the config as a delegate using the",
+            "solana CLI command `spl-token approve <treasury_account_address> <approve_amount> <config_address>`"
+          ]
+        },
         {
+<<<<<<< Updated upstream
           name: 'merkleRoot'
           type: {
             array: ['u8', 20]
+=======
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "merkleRoot",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+>>>>>>> Stashed changes
           }
         },
         {
-          name: 'dispenserGuard'
-          type: 'publicKey'
+          "name": "dispenserGuard",
+          "type": "publicKey"
         }
       ]
     },
     {
-      name: 'claim'
-      docs: [
+      "name": "claim",
+      "docs": [
         "* Claim a claimant's tokens. This instructions needs to enforce :\n     * - The dispenser guard has signed the transaction - DONE\n     * - The claimant is claiming no more than once per ecosystem - DONE\n     * - The claimant has provided a valid proof of identity (is the owner of the wallet\n     *   entitled to the tokens)\n     * - The claimant has provided a valid proof of inclusion (this confirm that the claimant --\n     *   DONE\n     * - The claimant has not already claimed tokens -- DONE"
-      ]
-      accounts: [
+      ],
+      "accounts": [
         {
-          name: 'claimant'
-          isMut: true
-          isSigner: true
+          "name": "claimant",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          name: 'claimantFund'
-          isMut: true
-          isSigner: false
-          docs: [
+          "name": "claimantFund",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
             "Claimant's associated token account to receive the tokens",
-            'Should be initialized outside of this program.'
+            "Should be initialized outside of this program."
           ]
         },
         {
-          name: 'config'
-          isMut: false
-          isSigner: false
+          "name": "config",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          name: 'treasury'
-          isMut: true
-          isSigner: false
+          "name": "treasury",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          name: 'tokenProgram'
-          isMut: false
-          isSigner: false
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          name: 'systemProgram'
-          isMut: false
-          isSigner: false
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          name: 'sysvarInstruction'
-          isMut: false
-          isSigner: false
-          docs: [
+          "name": "sysvarInstruction",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
             "CHECK : Anchor wants me to write this comment because I'm using AccountInfo which doesn't check for ownership and doesn't deserialize the account automatically. But it's fine because I check the address and I load it using load_instruction_at_checked."
           ]
         }
-      ]
-      args: [
+      ],
+      "args": [
         {
-          name: 'claimCertificates'
-          type: {
-            vec: {
-              defined: 'ClaimCertificate'
+          "name": "claimCertificates",
+          "type": {
+            "vec": {
+              "defined": "ClaimCertificate"
             }
           }
         }
       ]
     }
-  ]
-  accounts: [
+  ],
+  "accounts": [
     {
-      name: 'Config'
-      type: {
-        kind: 'struct'
-        fields: [
+      "name": "Config",
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'bump'
-            type: 'u8'
+            "name": "bump",
+            "type": "u8"
           },
           {
+<<<<<<< Updated upstream
             name: 'merkleRoot'
             type: {
               array: ['u8', 20]
+=======
+            "name": "merkleRoot",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+>>>>>>> Stashed changes
             }
           },
           {
-            name: 'dispenserGuard'
-            type: 'publicKey'
+            "name": "dispenserGuard",
+            "type": "publicKey"
           },
           {
-            name: 'mint'
-            type: 'publicKey'
+            "name": "mint",
+            "type": "publicKey"
           },
           {
-            name: 'treasury'
-            type: 'publicKey'
+            "name": "treasury",
+            "type": "publicKey"
           }
         ]
       }
     },
     {
-      name: 'Receipt'
-      type: {
-        kind: 'struct'
-        fields: []
+      "name": "Receipt",
+      "type": {
+        "kind": "struct",
+        "fields": []
       }
     }
-  ]
-  types: [
+  ],
+  "types": [
     {
-      name: 'CosmosMessage'
-      docs: [
-        '* An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.\n* Only the message payload is stored in this struct.\n* The message signed for Cosmos is a JSON serialized CosmosStdSignDoc containing the payload and ADR036 compliant parameters.\n* The message also contains the bech32 address of the signer. We check that the signer corresponds to the public key.'
-      ]
-      type: {
-        kind: 'struct'
-        fields: [
+      "name": "CosmosMessage",
+      "docs": [
+        "* An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.\n* Only the message payload is stored in this struct.\n* The message signed for Cosmos is a JSON serialized CosmosStdSignDoc containing the payload and ADR036 compliant parameters.\n* The message also contains the bech32 address of the signer. We check that the signer corresponds to the public key."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'payload'
-            type: 'bytes'
+            "name": "payload",
+            "type": "bytes"
           },
           {
-            name: 'signer'
-            type: 'string'
+            "name": "signer",
+            "type": "string"
           }
         ]
       }
     },
     {
-      name: 'DiscordMessage'
-      docs: [
+      "name": "DiscordMessage",
+      "docs": [
         "* This message (borsh-serialized) needs to be signed by the dispenser guard after\n * verifying the claimant's pubkey controls the discord account.\n * The dispenser guard key should not be used for anything else."
-      ]
-      type: {
-        kind: 'struct'
-        fields: [
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'username'
-            type: 'string'
+            "name": "username",
+            "type": "string"
           },
           {
-            name: 'claimant'
-            type: 'publicKey'
+            "name": "claimant",
+            "type": "publicKey"
           }
         ]
       }
     },
     {
-      name: 'Ed25519InstructionHeader'
-      type: {
-        kind: 'struct'
-        fields: [
+      "name": "Ed25519InstructionHeader",
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'numSignatures'
-            type: 'u8'
+            "name": "numSignatures",
+            "type": "u8"
           },
           {
-            name: 'padding'
-            type: 'u8'
+            "name": "padding",
+            "type": "u8"
           },
           {
-            name: 'signatureOffset'
-            type: 'u16'
+            "name": "signatureOffset",
+            "type": "u16"
           },
           {
-            name: 'signatureInstructionIndex'
-            type: 'u16'
+            "name": "signatureInstructionIndex",
+            "type": "u16"
           },
           {
-            name: 'publicKeyOffset'
-            type: 'u16'
+            "name": "publicKeyOffset",
+            "type": "u16"
           },
           {
-            name: 'publicKeyInstructionIndex'
-            type: 'u16'
+            "name": "publicKeyInstructionIndex",
+            "type": "u16"
           },
           {
-            name: 'messageDataOffset'
-            type: 'u16'
+            "name": "messageDataOffset",
+            "type": "u16"
           },
           {
-            name: 'messageDataSize'
-            type: 'u16'
+            "name": "messageDataSize",
+            "type": "u16"
           },
           {
-            name: 'messageInstructionIndex'
-            type: 'u16'
+            "name": "messageInstructionIndex",
+            "type": "u16"
           }
         ]
       }
     },
     {
-      name: 'Secp256k1InstructionHeader'
-      type: {
-        kind: 'struct'
-        fields: [
+      "name": "Secp256k1InstructionHeader",
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'numSignatures'
-            type: 'u8'
+            "name": "numSignatures",
+            "type": "u8"
           },
           {
-            name: 'signatureOffset'
-            type: 'u16'
+            "name": "signatureOffset",
+            "type": "u16"
           },
           {
-            name: 'signatureInstructionIndex'
-            type: 'u8'
+            "name": "signatureInstructionIndex",
+            "type": "u8"
           },
           {
-            name: 'ethAddressOffset'
-            type: 'u16'
+            "name": "ethAddressOffset",
+            "type": "u16"
           },
           {
-            name: 'ethAddressInstructionIndex'
-            type: 'u8'
+            "name": "ethAddressInstructionIndex",
+            "type": "u8"
           },
           {
-            name: 'messageDataOffset'
-            type: 'u16'
+            "name": "messageDataOffset",
+            "type": "u16"
           },
           {
-            name: 'messageDataSize'
-            type: 'u16'
+            "name": "messageDataSize",
+            "type": "u16"
           },
           {
-            name: 'messageInstructionIndex'
-            type: 'u8'
+            "name": "messageInstructionIndex",
+            "type": "u8"
           }
         ]
       }
     },
     {
-      name: 'ClaimInfo'
-      type: {
-        kind: 'struct'
-        fields: [
+      "name": "ClaimInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'identity'
-            type: {
-              defined: 'Identity'
+            "name": "identity",
+            "type": {
+              "defined": "Identity"
             }
           },
           {
-            name: 'amount'
-            type: 'u64'
+            "name": "amount",
+            "type": "u64"
           }
         ]
       }
     },
     {
-      name: 'ClaimCertificate'
-      type: {
-        kind: 'struct'
-        fields: [
+      "name": "ClaimCertificate",
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'amount'
-            type: 'u64'
+            "name": "amount",
+            "type": "u64"
           },
           {
-            name: 'proofOfIdentity'
-            type: {
-              defined: 'IdentityCertificate'
+            "name": "proofOfIdentity",
+            "type": {
+              "defined": "IdentityCertificate"
             }
           },
           {
+<<<<<<< Updated upstream
             name: 'proofOfInclusion'
             type: {
               vec: {
                 array: ['u8', 20]
+=======
+            "name": "proofOfInclusion",
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  32
+                ]
+>>>>>>> Stashed changes
               }
             }
           }
@@ -321,81 +352,93 @@ export type TokenDispenser = {
       }
     },
     {
-      name: 'Identity'
-      docs: [
+      "name": "Identity",
+      "docs": [
         "* This is the identity that the claimant will use to claim tokens.\n * A claimant can claim tokens for 1 identity on each ecosystem.\n * Typically for a blockchain it is a public key in the blockchain's address space."
-      ]
-      type: {
-        kind: 'enum'
-        variants: [
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
           {
-            name: 'Discord'
-            fields: [
+            "name": "Discord",
+            "fields": [
               {
-                name: 'username'
-                type: 'string'
+                "name": "username",
+                "type": "string"
               }
             ]
           },
           {
-            name: 'Solana'
-            fields: [
+            "name": "Solana",
+            "fields": [
               {
-                name: 'pubkey'
-                type: {
-                  array: ['u8', 32]
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               }
             ]
           },
           {
-            name: 'Evm'
-            fields: [
+            "name": "Evm",
+            "fields": [
               {
-                name: 'pubkey'
-                type: {
-                  array: ['u8', 20]
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    20
+                  ]
                 }
               }
             ]
           },
           {
-            name: 'Sui'
-            fields: [
+            "name": "Sui",
+            "fields": [
               {
-                name: 'address'
-                type: {
-                  array: ['u8', 32]
+                "name": "address",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               }
             ]
           },
           {
-            name: 'Aptos'
-            fields: [
+            "name": "Aptos",
+            "fields": [
               {
-                name: 'address'
-                type: {
-                  array: ['u8', 32]
+                "name": "address",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               }
             ]
           },
           {
-            name: 'Cosmwasm'
-            fields: [
+            "name": "Cosmwasm",
+            "fields": [
               {
-                name: 'address'
-                type: 'string'
+                "name": "address",
+                "type": "string"
               }
             ]
           },
           {
-            name: 'Injective'
-            fields: [
+            "name": "Injective",
+            "fields": [
               {
-                name: 'address'
-                type: 'string'
+                "name": "address",
+                "type": "string"
               }
             ]
           }
@@ -403,190 +446,267 @@ export type TokenDispenser = {
       }
     },
     {
-      name: 'IdentityCertificate'
-      type: {
-        kind: 'enum'
-        variants: [
+      "name": "IdentityCertificate",
+      "type": {
+        "kind": "enum",
+        "variants": [
           {
-            name: 'Discord'
-            fields: [
+            "name": "Discord",
+            "fields": [
               {
-                name: 'username'
-                type: 'string'
+                "name": "username",
+                "type": "string"
               },
               {
-                name: 'verification_instruction_index'
-                type: 'u8'
+                "name": "verification_instruction_index",
+                "type": "u8"
               }
             ]
           },
           {
-            name: 'Evm'
-            fields: [
+            "name": "Evm",
+            "fields": [
               {
-                name: 'pubkey'
-                type: {
-                  array: ['u8', 20]
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    20
+                  ]
                 }
               },
               {
-                name: 'verification_instruction_index'
-                type: 'u8'
+                "name": "verification_instruction_index",
+                "type": "u8"
               }
             ]
           },
           {
-            name: 'Solana'
+            "name": "Solana"
           },
           {
-            name: 'Sui'
-            fields: [
+            "name": "Sui",
+            "fields": [
               {
-                name: 'pubkey'
-                type: {
-                  array: ['u8', 32]
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               },
               {
-                name: 'verification_instruction_index'
-                type: 'u8'
+                "name": "verification_instruction_index",
+                "type": "u8"
               }
             ]
           },
           {
-            name: 'Aptos'
-            fields: [
+            "name": "Aptos",
+            "fields": [
               {
-                name: 'pubkey'
-                type: {
-                  array: ['u8', 32]
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               },
               {
-                name: 'verification_instruction_index'
-                type: 'u8'
+                "name": "verification_instruction_index",
+                "type": "u8"
               }
             ]
           },
           {
-            name: 'Cosmwasm'
-            fields: [
+            "name": "Cosmwasm",
+            "fields": [
               {
-                name: 'chain_id'
-                type: 'string'
+                "name": "chain_id",
+                "type": "string"
               },
               {
-                name: 'signature'
-                type: {
-                  array: ['u8', 64]
+                "name": "signature",
+                "type": {
+                  "array": [
+                    "u8",
+                    64
+                  ]
                 }
               },
               {
-                name: 'recovery_id'
-                type: 'u8'
+                "name": "recovery_id",
+                "type": "u8"
               },
               {
-                name: 'pubkey'
-                type: {
-                  array: ['u8', 65]
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    65
+                  ]
                 }
               },
               {
-                name: 'message'
-                type: 'bytes'
+                "name": "message",
+                "type": "bytes"
               }
             ]
           },
           {
-            name: 'Injective'
-            fields: [
+            "name": "Injective",
+            "fields": [
               {
-                name: 'pubkey'
-                type: {
-                  array: ['u8', 20]
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    20
+                  ]
                 }
               },
               {
-                name: 'verification_instruction_index'
-                type: 'u8'
+                "name": "verification_instruction_index",
+                "type": "u8"
               }
             ]
           }
         ]
       }
     }
-  ]
-  errors: [
+  ],
+  "errors": [
     {
-      code: 6000
-      name: 'ArithmeticOverflow'
+      "code": 6000,
+      "name": "ArithmeticOverflow"
     },
     {
-      code: 6001
-      name: 'MoreThanOneIdentityPerEcosystem'
+      "code": 6001,
+      "name": "MoreThanOneIdentityPerEcosystem"
     },
     {
-      code: 6002
-      name: 'AlreadyClaimed'
+      "code": 6002,
+      "name": "AlreadyClaimed"
     },
     {
-      code: 6003
-      name: 'InvalidInclusionProof'
+      "code": 6003,
+      "name": "InvalidInclusionProof"
     },
     {
-      code: 6004
-      name: 'WrongPda'
+      "code": 6004,
+      "name": "WrongPda"
     },
     {
-      code: 6005
-      name: 'NotImplemented'
+      "code": 6005,
+      "name": "NotImplemented"
     },
     {
-      code: 6006
-      name: 'SignatureVerificationWrongProgram'
+      "code": 6006,
+      "name": "SignatureVerificationWrongProgram"
     },
     {
-      code: 6007
-      name: 'SignatureVerificationWrongAccounts'
+      "code": 6007,
+      "name": "SignatureVerificationWrongAccounts"
     },
     {
-      code: 6008
-      name: 'SignatureVerificationWrongHeader'
+      "code": 6008,
+      "name": "SignatureVerificationWrongHeader"
     },
     {
-      code: 6009
-      name: 'SignatureVerificationWrongPayload'
+      "code": 6009,
+      "name": "SignatureVerificationWrongPayload"
     },
     {
-      code: 6010
-      name: 'SignatureVerificationWrongPayloadMetadata'
+      "code": 6010,
+      "name": "SignatureVerificationWrongPayloadMetadata"
     },
     {
-      code: 6011
-      name: 'SignatureVerificationWrongSigner'
+      "code": 6011,
+      "name": "SignatureVerificationWrongSigner"
     },
     {
-      code: 6012
-      name: 'SignatureVerificationWrongClaimant'
+      "code": 6012,
+      "name": "SignatureVerificationWrongClaimant"
     }
   ]
 }
-export const IDL: TokenDispenser = {
-  version: '0.1.0',
-  name: 'token_dispenser',
-  instructions: [
+;
+export const IDL: TokenDispenser =
+{
+  "version": "0.1.0",
+  "name": "token_dispenser",
+  "instructions": [
     {
-      name: 'initialize',
-      docs: [
-        'This can only be called once and should be called right after the program is deployed.',
+      "name": "initialize",
+      "docs": [
+        "This can only be called once and should be called right after the program is deployed."
       ],
-      accounts: [
+      "accounts": [
         {
-          name: 'payer',
-          isMut: true,
-          isSigner: true,
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
         },
         {
+          "name": "config",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Mint of the treasury"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Treasury token account. This is an externally owned token account and",
+            "the owner of this account will approve the config as a delegate using the",
+            "solana CLI command `spl-token approve <treasury_account_address> <approve_amount> <config_address>`"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "merkleRoot",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dispenserGuard",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "claim",
+      "docs": [
+        "* Claim a claimant's tokens. This instructions needs to enforce :\n     * - The dispenser guard has signed the transaction - DONE\n     * - The claimant is claiming no more than once per ecosystem - DONE\n     * - The claimant has provided a valid proof of identity (is the owner of the wallet\n     *   entitled to the tokens)\n     * - The claimant has provided a valid proof of inclusion (this confirm that the claimant --\n     *   DONE\n     * - The claimant has not already claimed tokens -- DONE"
+      ],
+      "accounts": [
+        {
+          "name": "claimant",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+<<<<<<< Updated upstream
           name: 'config',
           isMut: true,
           isSigner: false,
@@ -642,247 +762,264 @@ export const IDL: TokenDispenser = {
           isMut: true,
           isSigner: false,
           docs: [
+=======
+          "name": "claimantFund",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+>>>>>>> Stashed changes
             "Claimant's associated token account to receive the tokens",
-            'Should be initialized outside of this program.',
-          ],
+            "Should be initialized outside of this program."
+          ]
         },
         {
-          name: 'config',
-          isMut: false,
-          isSigner: false,
+          "name": "config",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          name: 'treasury',
-          isMut: true,
-          isSigner: false,
+          "name": "treasury",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          name: 'tokenProgram',
-          isMut: false,
-          isSigner: false,
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          name: 'systemProgram',
-          isMut: false,
-          isSigner: false,
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          name: 'sysvarInstruction',
-          isMut: false,
-          isSigner: false,
-          docs: [
-            "CHECK : Anchor wants me to write this comment because I'm using AccountInfo which doesn't check for ownership and doesn't deserialize the account automatically. But it's fine because I check the address and I load it using load_instruction_at_checked.",
-          ],
-        },
+          "name": "sysvarInstruction",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "CHECK : Anchor wants me to write this comment because I'm using AccountInfo which doesn't check for ownership and doesn't deserialize the account automatically. But it's fine because I check the address and I load it using load_instruction_at_checked."
+          ]
+        }
       ],
-      args: [
+      "args": [
         {
-          name: 'claimCertificates',
-          type: {
-            vec: {
-              defined: 'ClaimCertificate',
-            },
-          },
-        },
-      ],
-    },
+          "name": "claimCertificates",
+          "type": {
+            "vec": {
+              "defined": "ClaimCertificate"
+            }
+          }
+        }
+      ]
+    }
   ],
-  accounts: [
+  "accounts": [
     {
-      name: 'Config',
-      type: {
-        kind: 'struct',
-        fields: [
+      "name": "Config",
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'bump',
-            type: 'u8',
+            "name": "bump",
+            "type": "u8"
           },
           {
+<<<<<<< Updated upstream
             name: 'merkleRoot',
             type: {
               array: ['u8', 20],
             },
+=======
+            "name": "merkleRoot",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+>>>>>>> Stashed changes
           },
           {
-            name: 'dispenserGuard',
-            type: 'publicKey',
+            "name": "dispenserGuard",
+            "type": "publicKey"
           },
           {
-            name: 'mint',
-            type: 'publicKey',
+            "name": "mint",
+            "type": "publicKey"
           },
           {
-            name: 'treasury',
-            type: 'publicKey',
-          },
-        ],
-      },
+            "name": "treasury",
+            "type": "publicKey"
+          }
+        ]
+      }
     },
     {
-      name: 'Receipt',
-      type: {
-        kind: 'struct',
-        fields: [],
-      },
-    },
+      "name": "Receipt",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    }
   ],
-  types: [
+  "types": [
     {
-      name: 'CosmosMessage',
-      docs: [
-        '* An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.\n* Only the message payload is stored in this struct.\n* The message signed for Cosmos is a JSON serialized CosmosStdSignDoc containing the payload and ADR036 compliant parameters.\n* The message also contains the bech32 address of the signer. We check that the signer corresponds to the public key.',
+      "name": "CosmosMessage",
+      "docs": [
+        "* An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.\n* Only the message payload is stored in this struct.\n* The message signed for Cosmos is a JSON serialized CosmosStdSignDoc containing the payload and ADR036 compliant parameters.\n* The message also contains the bech32 address of the signer. We check that the signer corresponds to the public key."
       ],
-      type: {
-        kind: 'struct',
-        fields: [
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'payload',
-            type: 'bytes',
+            "name": "payload",
+            "type": "bytes"
           },
           {
-            name: 'signer',
-            type: 'string',
-          },
-        ],
-      },
+            "name": "signer",
+            "type": "string"
+          }
+        ]
+      }
     },
     {
-      name: 'DiscordMessage',
-      docs: [
-        "* This message (borsh-serialized) needs to be signed by the dispenser guard after\n * verifying the claimant's pubkey controls the discord account.\n * The dispenser guard key should not be used for anything else.",
+      "name": "DiscordMessage",
+      "docs": [
+        "* This message (borsh-serialized) needs to be signed by the dispenser guard after\n * verifying the claimant's pubkey controls the discord account.\n * The dispenser guard key should not be used for anything else."
       ],
-      type: {
-        kind: 'struct',
-        fields: [
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'username',
-            type: 'string',
+            "name": "username",
+            "type": "string"
           },
           {
-            name: 'claimant',
-            type: 'publicKey',
-          },
-        ],
-      },
+            "name": "claimant",
+            "type": "publicKey"
+          }
+        ]
+      }
     },
     {
-      name: 'Ed25519InstructionHeader',
-      type: {
-        kind: 'struct',
-        fields: [
+      "name": "Ed25519InstructionHeader",
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'numSignatures',
-            type: 'u8',
+            "name": "numSignatures",
+            "type": "u8"
           },
           {
-            name: 'padding',
-            type: 'u8',
+            "name": "padding",
+            "type": "u8"
           },
           {
-            name: 'signatureOffset',
-            type: 'u16',
+            "name": "signatureOffset",
+            "type": "u16"
           },
           {
-            name: 'signatureInstructionIndex',
-            type: 'u16',
+            "name": "signatureInstructionIndex",
+            "type": "u16"
           },
           {
-            name: 'publicKeyOffset',
-            type: 'u16',
+            "name": "publicKeyOffset",
+            "type": "u16"
           },
           {
-            name: 'publicKeyInstructionIndex',
-            type: 'u16',
+            "name": "publicKeyInstructionIndex",
+            "type": "u16"
           },
           {
-            name: 'messageDataOffset',
-            type: 'u16',
+            "name": "messageDataOffset",
+            "type": "u16"
           },
           {
-            name: 'messageDataSize',
-            type: 'u16',
+            "name": "messageDataSize",
+            "type": "u16"
           },
           {
-            name: 'messageInstructionIndex',
-            type: 'u16',
-          },
-        ],
-      },
+            "name": "messageInstructionIndex",
+            "type": "u16"
+          }
+        ]
+      }
     },
     {
-      name: 'Secp256k1InstructionHeader',
-      type: {
-        kind: 'struct',
-        fields: [
+      "name": "Secp256k1InstructionHeader",
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'numSignatures',
-            type: 'u8',
+            "name": "numSignatures",
+            "type": "u8"
           },
           {
-            name: 'signatureOffset',
-            type: 'u16',
+            "name": "signatureOffset",
+            "type": "u16"
           },
           {
-            name: 'signatureInstructionIndex',
-            type: 'u8',
+            "name": "signatureInstructionIndex",
+            "type": "u8"
           },
           {
-            name: 'ethAddressOffset',
-            type: 'u16',
+            "name": "ethAddressOffset",
+            "type": "u16"
           },
           {
-            name: 'ethAddressInstructionIndex',
-            type: 'u8',
+            "name": "ethAddressInstructionIndex",
+            "type": "u8"
           },
           {
-            name: 'messageDataOffset',
-            type: 'u16',
+            "name": "messageDataOffset",
+            "type": "u16"
           },
           {
-            name: 'messageDataSize',
-            type: 'u16',
+            "name": "messageDataSize",
+            "type": "u16"
           },
           {
-            name: 'messageInstructionIndex',
-            type: 'u8',
-          },
-        ],
-      },
+            "name": "messageInstructionIndex",
+            "type": "u8"
+          }
+        ]
+      }
     },
     {
-      name: 'ClaimInfo',
-      type: {
-        kind: 'struct',
-        fields: [
+      "name": "ClaimInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'identity',
-            type: {
-              defined: 'Identity',
-            },
+            "name": "identity",
+            "type": {
+              "defined": "Identity"
+            }
           },
           {
-            name: 'amount',
-            type: 'u64',
-          },
-        ],
-      },
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
     },
     {
-      name: 'ClaimCertificate',
-      type: {
-        kind: 'struct',
-        fields: [
+      "name": "ClaimCertificate",
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
-            name: 'amount',
-            type: 'u64',
+            "name": "amount",
+            "type": "u64"
           },
           {
-            name: 'proofOfIdentity',
-            type: {
-              defined: 'IdentityCertificate',
-            },
+            "name": "proofOfIdentity",
+            "type": {
+              "defined": "IdentityCertificate"
+            }
           },
           {
+<<<<<<< Updated upstream
             name: 'proofOfInclusion',
             type: {
               vec: {
@@ -892,255 +1029,300 @@ export const IDL: TokenDispenser = {
           },
         ],
       },
+=======
+            "name": "proofOfInclusion",
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          }
+        ]
+      }
+>>>>>>> Stashed changes
     },
     {
-      name: 'Identity',
-      docs: [
-        "* This is the identity that the claimant will use to claim tokens.\n * A claimant can claim tokens for 1 identity on each ecosystem.\n * Typically for a blockchain it is a public key in the blockchain's address space.",
+      "name": "Identity",
+      "docs": [
+        "* This is the identity that the claimant will use to claim tokens.\n * A claimant can claim tokens for 1 identity on each ecosystem.\n * Typically for a blockchain it is a public key in the blockchain's address space."
       ],
-      type: {
-        kind: 'enum',
-        variants: [
+      "type": {
+        "kind": "enum",
+        "variants": [
           {
-            name: 'Discord',
-            fields: [
+            "name": "Discord",
+            "fields": [
               {
-                name: 'username',
-                type: 'string',
-              },
-            ],
+                "name": "username",
+                "type": "string"
+              }
+            ]
           },
           {
-            name: 'Solana',
-            fields: [
+            "name": "Solana",
+            "fields": [
               {
-                name: 'pubkey',
-                type: {
-                  array: ['u8', 32],
-                },
-              },
-            ],
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                }
+              }
+            ]
           },
           {
-            name: 'Evm',
-            fields: [
+            "name": "Evm",
+            "fields": [
               {
-                name: 'pubkey',
-                type: {
-                  array: ['u8', 20],
-                },
-              },
-            ],
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    20
+                  ]
+                }
+              }
+            ]
           },
           {
-            name: 'Sui',
-            fields: [
+            "name": "Sui",
+            "fields": [
               {
-                name: 'address',
-                type: {
-                  array: ['u8', 32],
-                },
-              },
-            ],
+                "name": "address",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                }
+              }
+            ]
           },
           {
-            name: 'Aptos',
-            fields: [
+            "name": "Aptos",
+            "fields": [
               {
-                name: 'address',
-                type: {
-                  array: ['u8', 32],
-                },
-              },
-            ],
+                "name": "address",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                }
+              }
+            ]
           },
           {
-            name: 'Cosmwasm',
-            fields: [
+            "name": "Cosmwasm",
+            "fields": [
               {
-                name: 'address',
-                type: 'string',
-              },
-            ],
+                "name": "address",
+                "type": "string"
+              }
+            ]
           },
           {
-            name: 'Injective',
-            fields: [
+            "name": "Injective",
+            "fields": [
               {
-                name: 'address',
-                type: 'string',
-              },
-            ],
-          },
-        ],
-      },
+                "name": "address",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      }
     },
     {
-      name: 'IdentityCertificate',
-      type: {
-        kind: 'enum',
-        variants: [
+      "name": "IdentityCertificate",
+      "type": {
+        "kind": "enum",
+        "variants": [
           {
-            name: 'Discord',
-            fields: [
+            "name": "Discord",
+            "fields": [
               {
-                name: 'username',
-                type: 'string',
+                "name": "username",
+                "type": "string"
               },
               {
-                name: 'verification_instruction_index',
-                type: 'u8',
-              },
-            ],
+                "name": "verification_instruction_index",
+                "type": "u8"
+              }
+            ]
           },
           {
-            name: 'Evm',
-            fields: [
+            "name": "Evm",
+            "fields": [
               {
-                name: 'pubkey',
-                type: {
-                  array: ['u8', 20],
-                },
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    20
+                  ]
+                }
               },
               {
-                name: 'verification_instruction_index',
-                type: 'u8',
-              },
-            ],
+                "name": "verification_instruction_index",
+                "type": "u8"
+              }
+            ]
           },
           {
-            name: 'Solana',
+            "name": "Solana"
           },
           {
-            name: 'Sui',
-            fields: [
+            "name": "Sui",
+            "fields": [
               {
-                name: 'pubkey',
-                type: {
-                  array: ['u8', 32],
-                },
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                }
               },
               {
-                name: 'verification_instruction_index',
-                type: 'u8',
-              },
-            ],
+                "name": "verification_instruction_index",
+                "type": "u8"
+              }
+            ]
           },
           {
-            name: 'Aptos',
-            fields: [
+            "name": "Aptos",
+            "fields": [
               {
-                name: 'pubkey',
-                type: {
-                  array: ['u8', 32],
-                },
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                }
               },
               {
-                name: 'verification_instruction_index',
-                type: 'u8',
-              },
-            ],
+                "name": "verification_instruction_index",
+                "type": "u8"
+              }
+            ]
           },
           {
-            name: 'Cosmwasm',
-            fields: [
+            "name": "Cosmwasm",
+            "fields": [
               {
-                name: 'chain_id',
-                type: 'string',
+                "name": "chain_id",
+                "type": "string"
               },
               {
-                name: 'signature',
-                type: {
-                  array: ['u8', 64],
-                },
+                "name": "signature",
+                "type": {
+                  "array": [
+                    "u8",
+                    64
+                  ]
+                }
               },
               {
-                name: 'recovery_id',
-                type: 'u8',
+                "name": "recovery_id",
+                "type": "u8"
               },
               {
-                name: 'pubkey',
-                type: {
-                  array: ['u8', 65],
-                },
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    65
+                  ]
+                }
               },
               {
-                name: 'message',
-                type: 'bytes',
-              },
-            ],
+                "name": "message",
+                "type": "bytes"
+              }
+            ]
           },
           {
-            name: 'Injective',
-            fields: [
+            "name": "Injective",
+            "fields": [
               {
-                name: 'pubkey',
-                type: {
-                  array: ['u8', 20],
-                },
+                "name": "pubkey",
+                "type": {
+                  "array": [
+                    "u8",
+                    20
+                  ]
+                }
               },
               {
-                name: 'verification_instruction_index',
-                type: 'u8',
-              },
-            ],
-          },
-        ],
-      },
-    },
+                "name": "verification_instruction_index",
+                "type": "u8"
+              }
+            ]
+          }
+        ]
+      }
+    }
   ],
-  errors: [
+  "errors": [
     {
-      code: 6000,
-      name: 'ArithmeticOverflow',
+      "code": 6000,
+      "name": "ArithmeticOverflow"
     },
     {
-      code: 6001,
-      name: 'MoreThanOneIdentityPerEcosystem',
+      "code": 6001,
+      "name": "MoreThanOneIdentityPerEcosystem"
     },
     {
-      code: 6002,
-      name: 'AlreadyClaimed',
+      "code": 6002,
+      "name": "AlreadyClaimed"
     },
     {
-      code: 6003,
-      name: 'InvalidInclusionProof',
+      "code": 6003,
+      "name": "InvalidInclusionProof"
     },
     {
-      code: 6004,
-      name: 'WrongPda',
+      "code": 6004,
+      "name": "WrongPda"
     },
     {
-      code: 6005,
-      name: 'NotImplemented',
+      "code": 6005,
+      "name": "NotImplemented"
     },
     {
-      code: 6006,
-      name: 'SignatureVerificationWrongProgram',
+      "code": 6006,
+      "name": "SignatureVerificationWrongProgram"
     },
     {
-      code: 6007,
-      name: 'SignatureVerificationWrongAccounts',
+      "code": 6007,
+      "name": "SignatureVerificationWrongAccounts"
     },
     {
-      code: 6008,
-      name: 'SignatureVerificationWrongHeader',
+      "code": 6008,
+      "name": "SignatureVerificationWrongHeader"
     },
     {
-      code: 6009,
-      name: 'SignatureVerificationWrongPayload',
+      "code": 6009,
+      "name": "SignatureVerificationWrongPayload"
     },
     {
-      code: 6010,
-      name: 'SignatureVerificationWrongPayloadMetadata',
+      "code": 6010,
+      "name": "SignatureVerificationWrongPayloadMetadata"
     },
     {
-      code: 6011,
-      name: 'SignatureVerificationWrongSigner',
+      "code": 6011,
+      "name": "SignatureVerificationWrongSigner"
     },
     {
-      code: 6012,
-      name: 'SignatureVerificationWrongClaimant',
-    },
-  ],
+      "code": 6012,
+      "name": "SignatureVerificationWrongClaimant"
+    }
+  ]
 }
+;
