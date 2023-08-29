@@ -7,6 +7,8 @@ import Image from 'next/image'
 import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
 
+// TODO: when signing in to discord the page reloads which results into loss of all the
+// local state. Resolve that
 export function DiscordButton() {
   const { data, status } = useSession()
 
