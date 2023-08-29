@@ -34,7 +34,6 @@ solana-address-lookup-table-program = "1.14.16"
 hex = "0.4.3"
 solana-program-test = "1.14.16"
 solana-sdk = "1.14.16"
-
 libsecp256k1 = "0.7.1"
 rand = "0.8.5"
 rand_compatible = { version = "0.7.0", package = "rand" }
