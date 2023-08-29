@@ -43,9 +43,6 @@ export type TokenDispenser = {
           name: 'addressLookupTable'
           isMut: false
           isSigner: false
-          docs: [
-            'so adding this check to make sure at least the PDA owner is correct'
-          ]
         }
       ]
       args: [
@@ -628,9 +625,6 @@ export const IDL: TokenDispenser = {
           name: 'addressLookupTable',
           isMut: false,
           isSigner: false,
-          docs: [
-            'so adding this check to make sure at least the PDA owner is correct',
-          ],
         },
       ],
       args: [

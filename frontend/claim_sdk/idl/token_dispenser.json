@@ -42,10 +42,7 @@
         {
           "name": "addressLookupTable",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "so adding this check to make sure at least the PDA owner is correct"
-          ]
+          "isSigner": false
         }
       ],
       "args": [

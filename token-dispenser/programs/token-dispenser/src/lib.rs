@@ -176,8 +176,7 @@ pub struct Initialize<'info> {
     #[account( token::mint = mint )]
     pub treasury:             Account<'info, TokenAccount>,
     pub system_program:       Program<'info, System>,
-    /// CHECK: Anchor doesn't have built-in support for address lookup tables
-    /// so adding this check to make sure at least the PDA owner is correct
+    /// CHECK: Anchor doesn't have built-in support for address lookup table so adding this check to make sure at least the PDA owner is correct
     #[account(owner = solana_address_lookup_table_program::id())]
     pub address_lookup_table: UncheckedAccount<'info>,
 }
