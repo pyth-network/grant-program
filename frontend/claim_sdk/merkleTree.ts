@@ -15,16 +15,13 @@ export class MerkleTree {
   }
   static hashNode(l: Buffer, r: Buffer) {
     if (l.compare(r) < 0) {
-      // return keccak256(Buffer.concat([NODE_PREFIX, l, r]))
       return MerkleTree.hash(Buffer.concat([NODE_PREFIX, l, r]))
     } else {
-      // return keccak256(Buffer.concat([NODE_PREFIX, r, l]))
       return MerkleTree.hash(Buffer.concat([NODE_PREFIX, r, l]))
     }
   }
 
   static hashLeaf(leaf: Buffer) {
-    // return keccak256(Buffer.concat([LEAF_PREFIX, leaf]))
     return MerkleTree.hash(Buffer.concat([LEAF_PREFIX, leaf]))
   }
 
@@ -36,7 +33,6 @@ export class MerkleTree {
       if (i < leaves.length) {
         this.nodes[(1 << depth) + i] = MerkleTree.hashLeaf(leaves[i])
       } else {
-        // this.nodes[(1 << depth) + i] = keccak256(NULL_PREFIX)
         this.nodes[(1 << depth) + i] = MerkleTree.hash(NULL_PREFIX)
       }
     }
