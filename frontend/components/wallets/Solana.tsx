@@ -109,7 +109,12 @@ export function useWallets(): Wallet[] {
   }, [onSelect, wallets])
 }
 
-export function SolanaWalletButton() {
+type SolanaWalletButtonProps = {
+  disableOnConnect?: boolean
+}
+export function SolanaWalletButton({
+  disableOnConnect,
+}: SolanaWalletButtonProps) {
   const { publicKey, disconnect, connecting, connected, wallet } = useWallet()
 
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey])
@@ -146,6 +151,7 @@ export function SolanaWalletButton() {
             onClick={disconnect}
             address={address}
             icon={wallet?.adapter.icon}
+            disabled={disableOnConnect}
           />
         )
       }}
