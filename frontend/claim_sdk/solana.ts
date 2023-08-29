@@ -209,12 +209,12 @@ export class TokenDispenserProvider {
     signedMessage: SignedMessage | undefined
   ): Promise<Transaction> {
     // 1. generate claim certificate
-    //    a. create identityProof
-    const identityProof = this.createIdentityProof(claimInfo, signedMessage)
+    //    a. create proofOfIdentity
+    const proofOfIdentity = this.createProofOfIdentity(claimInfo, signedMessage)
 
     const claimCert: IdlTypes<TokenDispenser>['ClaimCertificate'] = {
       amount: claimInfo.amount,
-      proofOfIdentity: identityProof,
+      proofOfIdentity,
       proofOfInclusion,
     }
 
@@ -254,7 +254,7 @@ export class TokenDispenserProvider {
       .transaction()
   }
 
-  private createIdentityProof(
+  private createProofOfIdentity(
     claimInfo: ClaimInfo,
     signedMessage: SignedMessage | undefined
   ): IdlTypes<TokenDispenser>['IdentityCertificate'] {

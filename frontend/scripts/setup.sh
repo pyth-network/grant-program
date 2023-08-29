@@ -11,8 +11,6 @@ postgres=1;
 DIR=$(cd "$(dirname "$0")" && pwd)
 TOKEN_DISPENSER_DIR="$DIR/../../token-dispenser";
 
-TOKEN_DISPENSER_PID=Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS
-TOKEN_DISPENSER_SO="$TOKEN_DISPENSER_DIR/target/deploy/token_dispenser.so"
 
 usage() {
   cat <<EOF

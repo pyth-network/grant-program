@@ -277,10 +277,13 @@ pub struct ClaimCertificate {
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct SolanaHasher {}
 impl Hasher for SolanaHasher {
-    type Hash = [u8; 32];
+    type Hash = [u8; 20];
 
     fn hashv(data: &[impl AsRef<[u8]>]) -> Self::Hash {
-        hashv(&data.iter().map(|x| x.as_ref()).collect::<Vec<&[u8]>>()).to_bytes()
+        let bytes = hashv(&data.iter().map(|x| x.as_ref()).collect::<Vec<&[u8]>>());
+        let mut hash = [0u8; 20];
+        hash.copy_from_slice(&bytes.as_ref()[0..20]);
+        hash
     }
 }
 
@@ -295,7 +298,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub const LEN: usize = 8 + 1 + 32 + 32 + 32 + 32;
+    pub const LEN: usize = 8 + 1 + 20 + 32 + 32 + 32;
 }
 
 #[account]
