@@ -1,9 +1,9 @@
 import React, { useCallback } from 'react'
 
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
-import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
 import { SignButton } from './wallets/SignButton'
 import { ECOSYSTEM } from './EcosystemProvider'
+import { fetchDiscordSignedMessage } from 'utils/api'
 
 // This component assumes that the user is already sign in.
 // Though it won't throw any error even if the user is not.
@@ -13,16 +13,7 @@ export function DiscordSignButton() {
 
   const signMessageFn = useCallback(async () => {
     if (publicKey === null) return
-
-    try {
-      const msg = await fetch(
-        `/api/grant/v1/discord_signed_message?publicKey=${publicKey.toString()}`
-      )
-      const signedMessage: SignedMessage = await msg.json()
-      return signedMessage
-    } catch {
-      return undefined
-    }
+    return await fetchDiscordSignedMessage(publicKey)
   }, [publicKey])
 
   // TODO: change message
