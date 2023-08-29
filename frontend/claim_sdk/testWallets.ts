@@ -1,4 +1,5 @@
 import path from 'path'
+import dotenv from 'dotenv'
 import { Ecosystem } from './claim'
 import {
   SignedMessage,
@@ -19,6 +20,8 @@ import { hardDriveSignMessage, signDiscordMessage } from './ecosystems/solana'
 import { AptosAccount } from 'aptos'
 import { aptosGetFullMessage } from './ecosystems/aptos'
 import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519'
+
+dotenv.config() // Load environment variables from .env file
 
 const KEY_DIR = './integration/keys/'
 export const TEST_DISCORD_USERNAME =
