@@ -2,6 +2,7 @@ import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
 import { SignMessageFn } from 'hooks/useSignMessage'
 import { useState, useCallback } from 'react'
 import Signed from '../../images/signed.inline.svg'
+import { classNames } from 'utils/classNames'
 
 export type SignButtonProps = {
   signMessageFn: SignMessageFn
@@ -29,14 +30,20 @@ export function SignButton({
     setIsSigning(false)
   }, [ecosystem, ecosystemMap, message, setSignedMessage, signMessageFn])
 
+  // to disable the button once it is signed
+  const disabled = ecosystemMap[ecosystem].signedMessage !== undefined
+
   return (
     <button
-      className="btn before:btn-bg btn--dark  before:bg-dark hover:text-dark hover:before:bg-light"
+      className={classNames(
+        'btn before:btn-bg btn--dark  before:bg-dark hover:text-dark hover:before:bg-light disabled:text-light disabled:before:bg-dark'
+      )}
       onClick={signMessageWrapper}
+      disabled={disabled}
     >
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
         <span className="flex items-center gap-3">
-          {ecosystemMap.Solana.signedMessage !== undefined ? (
+          {ecosystemMap[ecosystem].signedMessage !== undefined ? (
             <>
               Signed <Signed />{' '}
             </>

@@ -18,10 +18,10 @@ import {
   SolanaSignButton,
   SolanaWalletButton,
 } from '@components/wallets/Solana'
-import { signIn, signOut, useSession } from 'next-auth/react'
-import Image from 'next/image'
 import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
 import { classNames } from 'utils/classNames'
+import { DiscordButton } from '@components/DiscordButton'
+import { DiscordSignButton } from '@components/DiscordSignButton'
 
 const Eligibility2 = ({
   onBack,
@@ -126,29 +126,10 @@ const Eligibility2 = ({
             <TableRow
               label={'Discord Activity'}
               walletButton={<DiscordButton />}
-              signButton={<SolanaSignButton />}
+              signButton={<DiscordSignButton />}
               coins={ecosystemMap.Solana.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(ECOSYSTEM.SOLANA)}
+              isEligible={isEligible(ECOSYSTEM.DISCORD)}
             />
-            <tr className="border-b border-light-35 ">
-              <td className="w-full py-2 pl-10 pr-4 ">
-                <div className="flex items-center justify-between">
-                  <span className="font-header text-base18 font-thin">
-                    Discord Activity
-                  </span>
-                  <span className="flex items-center gap-5">
-                    <DiscordButton />
-                    <TooltipIcon />
-                    <Verified className="opacity-0" />
-                  </span>
-                </div>
-              </td>
-              <td className="min-w-[130px] border-l border-light-35 bg-dark-25">
-                <span className="flex items-center justify-center  gap-1 text-[20px]">
-                  {''}
-                </span>
-              </td>
-            </tr>
             <tr className="border-b border-light-35 ">
               <td className="w-full bg-darkGray5 py-2 pl-10 pr-4">
                 <div className="flex items-center justify-between">
