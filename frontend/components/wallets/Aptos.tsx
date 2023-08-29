@@ -50,7 +50,7 @@ export function AptosWalletButton() {
     [connect]
   )
 
-  const { setEligibility } = useEcosystem()
+  const { setEligibility, setSignedMessage } = useEcosystem()
 
   // fetch the eligibility and store it
   useEffect(() => {
@@ -61,8 +61,11 @@ export function AptosWalletButton() {
       } else {
         setEligibility(ECOSYSTEM.APTOS, undefined)
       }
+      // if the effect has been triggered again, it will only because of connected or account?.address
+      // i.e., the connected account has changed and hence set signedMessage to undefined
+      setSignedMessage(ECOSYSTEM.APTOS, undefined)
     })()
-  }, [connected, account?.address, setEligibility])
+  }, [connected, account?.address, setEligibility, setSignedMessage])
 
   return (
     <WalletButton

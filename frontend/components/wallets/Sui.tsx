@@ -1,6 +1,6 @@
 import { useWalletKit } from '@mysten/wallet-kit'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useEcosystem, ECOSYSTEM } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
 import { useSuiSignMessage } from 'hooks/useSignMessage'
@@ -50,7 +50,7 @@ export function SuiWalletButton() {
       ]
   }, [connect, detectedWallets])
 
-  const { setEligibility } = useEcosystem()
+  const { setEligibility, setSignedMessage } = useEcosystem()
 
   // fetch the eligibility and store it
   useEffect(() => {
@@ -64,8 +64,11 @@ export function SuiWalletButton() {
       } else {
         setEligibility(ECOSYSTEM.SUI, undefined)
       }
+      // if the effect has been triggered again, it will only because of connected or account?.address
+      // i.e., the connected account has changed and hence set signedMessage to undefined
+      setSignedMessage(ECOSYSTEM.SUI, undefined)
     })()
-  }, [isConnected, currentAccount?.address, setEligibility])
+  }, [isConnected, currentAccount?.address, setEligibility, setSignedMessage])
 
   return (
     <WalletButton

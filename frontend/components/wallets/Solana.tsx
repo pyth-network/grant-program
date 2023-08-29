@@ -117,7 +117,7 @@ export function SolanaWalletButton() {
 
   const wallets = useWallets()
 
-  const { setEligibility } = useEcosystem()
+  const { setEligibility, setSignedMessage } = useEcosystem()
 
   // fetch the eligibility and store it
   useEffect(() => {
@@ -128,8 +128,11 @@ export function SolanaWalletButton() {
       } else {
         setEligibility(ECOSYSTEM.SOLANA, undefined)
       }
+      // if the effect has been triggered again, it will only because of connected or account?.address
+      // i.e., the connected account has changed and hence set signedMessage to undefined
+      setSignedMessage(ECOSYSTEM.SOLANA, undefined)
     })()
-  }, [connected, base58, setEligibility])
+  }, [connected, base58, setEligibility, setSignedMessage])
 
   return (
     <WalletButton

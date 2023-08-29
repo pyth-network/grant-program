@@ -55,7 +55,7 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
     if (isWalletNotExist) window.open('https://www.keplr.app/download')
   }, [isWalletNotExist])
 
-  const { setEligibility } = useEcosystem()
+  const { setEligibility, setSignedMessage } = useEcosystem()
 
   // fetch the eligibility and store it
   useEffect(() => {
@@ -69,8 +69,11 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
       } else {
         setEligibility(chainNametoECOSYSTEM(chainName), undefined)
       }
+      // if the effect has been triggered again, it will only because of connected or account?.address
+      // i.e., the connected account has changed and hence set signedMessage to undefined
+      setSignedMessage(chainNametoECOSYSTEM(chainName), undefined)
     })()
-  }, [isWalletConnected, address, setEligibility, chainName])
+  }, [isWalletConnected, address, setEligibility, chainName, setSignedMessage])
 
   return (
     <WalletButton
