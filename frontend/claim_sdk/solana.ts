@@ -5,13 +5,19 @@ import { Idl, IdlAccounts, IdlTypes, Program } from '@coral-xyz/anchor'
 import { Buffer } from 'buffer'
 import { MerkleTree } from './merkleTree'
 import {
+  AddressLookupTableAccount,
+  AddressLookupTableProgram,
   Connection,
   Ed25519Program,
   LAMPORTS_PER_SOL,
   PublicKey,
   Secp256k1Program,
+  SystemProgram,
+  SYSVAR_INSTRUCTIONS_PUBKEY,
   Transaction,
+  TransactionMessage,
   TransactionSignature,
+  VersionedTransaction,
 } from '@solana/web3.js'
 import * as splToken from '@solana/spl-token'
 import { ClaimInfo, Ecosystem } from './claim'
@@ -131,6 +137,8 @@ export class TokenDispenserProvider {
     treasury: anchor.web3.PublicKey,
     dispenserGuard: anchor.web3.PublicKey
   ): Promise<TransactionSignature> {
+    const addressLookupTable = await this.initAddressLookupTable(treasury)
+
     return this.tokenDispenserProgram.methods
       .initialize(Array.from(root), dispenserGuard)
       .accounts({
@@ -138,8 +146,53 @@ export class TokenDispenserProvider {
         mint,
         treasury,
         systemProgram: anchor.web3.SystemProgram.programId,
+        addressLookupTable,
       })
       .rpc()
+  }
+
+  private async initAddressLookupTable(
+    treasury: anchor.web3.PublicKey
+  ): Promise<anchor.web3.PublicKey> {
+    const recentSlot = await this.provider.connection.getSlot()
+    const [loookupTableInstruction, lookupTableAddress] =
+      AddressLookupTableProgram.createLookupTable({
+        authority: this.provider.publicKey!,
+        payer: this.provider.publicKey!,
+        recentSlot,
+      })
+    const extendInstruction = AddressLookupTableProgram.extendLookupTable({
+      payer: this.provider.publicKey,
+      authority: this.provider.publicKey!,
+      lookupTable: lookupTableAddress,
+      addresses: [
+        this.configPda[0],
+        treasury,
+        TOKEN_PROGRAM_ID,
+        SystemProgram.programId,
+        SYSVAR_INSTRUCTIONS_PUBKEY,
+      ],
+    })
+    let createLookupTableTx = new VersionedTransaction(
+      new TransactionMessage({
+        instructions: [loookupTableInstruction, extendInstruction],
+        payerKey: this.provider.publicKey!,
+        recentBlockhash: (await this.connection.getLatestBlockhash()).blockhash,
+      }).compileToV0Message()
+    )
+    await this.provider.sendAndConfirm!(createLookupTableTx, [], {
+      skipPreflight: true,
+    })
+    return lookupTableAddress
+  }
+
+  private async getLookupTableAccount(): Promise<AddressLookupTableAccount> {
+    const lookupTableAddress = (await this.getConfig()).addressLookupTable
+    const resp = await this.connection.getAddressLookupTable(lookupTableAddress)
+    if (resp.value === null) {
+      throw new Error(`No Address Lookup Table found at ${lookupTableAddress}`)
+    }
+    return resp.value
   }
 
   public generateAuthorizationPayload(): string {
@@ -183,7 +236,7 @@ export class TokenDispenserProvider {
     }[]
   ): Promise<void> {
     /// This is only eth & cosmwasm for now
-    let txs: { tx: Transaction }[] = []
+    let txs: { tx: Transaction | VersionedTransaction }[] = []
 
     const createAtaTxn = await this.createAssociatedTokenAccountTxnIfNeeded()
     if (createAtaTxn) {
@@ -207,7 +260,7 @@ export class TokenDispenserProvider {
     claimInfo: ClaimInfo,
     proofOfInclusion: Uint8Array[],
     signedMessage: SignedMessage | undefined
-  ): Promise<Transaction> {
+  ): Promise<VersionedTransaction> {
     // 1. generate claim certificate
     //    a. create proofOfIdentity
     const proofOfIdentity = this.createProofOfIdentity(claimInfo, signedMessage)
@@ -231,8 +284,10 @@ export class TokenDispenserProvider {
     }
     const receiptPda = this.getReceiptPda(claimInfo)[0]
 
-    // 4. submit claim
-    return this.tokenDispenserProgram.methods
+    const lookupTableAccount = await this.getLookupTableAccount()
+
+    const ixs = signatureVerificationIx ? [signatureVerificationIx] : []
+    const claim_ix = await this.tokenDispenserProgram.methods
       .claim([claimCert])
       .accounts({
         claimant: this.claimant,
@@ -250,8 +305,18 @@ export class TokenDispenserProvider {
           isSigner: false,
         },
       ])
-      .preInstructions(signatureVerificationIx ? [signatureVerificationIx] : [])
-      .transaction()
+      .instruction()
+    ixs.push(claim_ix)
+
+    const claimTx = new VersionedTransaction(
+      new TransactionMessage({
+        instructions: ixs,
+        payerKey: this.provider.publicKey!,
+        recentBlockhash: (await this.connection.getLatestBlockhash()).blockhash,
+      }).compileToV0Message([lookupTableAccount!])
+    )
+
+    return claimTx
   }
 
   private createProofOfIdentity(
