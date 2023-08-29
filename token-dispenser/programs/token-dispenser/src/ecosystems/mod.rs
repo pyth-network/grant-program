@@ -21,9 +21,9 @@ pub mod sui;
  * constant in the typescript sdk
  * */
 pub const AUTHORIZATION_PAYLOAD: [&str; 3] = [
-    "Pyth Grant Program ID:\n",
-    "\nI irrevocably authorize Solana wallet\n",
-    "\nto withdraw my token allocation.\n",
+    "Pyth Grant PID:\n",
+    "\nI authorize wallet\n",
+    "\nto claim my token grant.\n",
 ];
 
 /**

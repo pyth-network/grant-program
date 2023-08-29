@@ -23,9 +23,9 @@ import { blake2b } from '@noble/hashes/blake2b'
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
 const AUTHORIZATION_PAYLOAD = [
-  'Pyth Grant Program ID:\n',
-  '\nI irrevocably authorize Solana wallet\n',
-  '\nto withdraw my token allocation.\n',
+  'Pyth Grant PID:\n',
+  '\nI authorize wallet\n',
+  '\nto claim my token grant.\n',
 ]
 
 /**
