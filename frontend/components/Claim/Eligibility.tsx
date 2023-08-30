@@ -14,7 +14,7 @@ import { CosmosWalletButton } from '@components/wallets/Cosmos'
 import { SolanaWalletButton } from '@components/wallets/Solana'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
-import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
+import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
 import { classNames } from 'utils/classNames'
 import { DiscordButton } from '@components/DiscordButton'
@@ -103,9 +103,9 @@ const Eligibility = ({
             label={'Discord Activity'}
             actionButton={<DiscordButton />}
             coins={ecosystemMap[
-              ECOSYSTEM.DISCORD
+              Ecosystem.DISCORD
             ].eligibility?.claimInfo.amount.toString()}
-            isActive={ecosystemMap[ECOSYSTEM.DISCORD].isActive}
+            isActive={ecosystemMap[Ecosystem.DISCORD].isActive}
           />
 
           <tr className="border-b border-light-35 ">

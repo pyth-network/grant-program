@@ -5,9 +5,13 @@ import { wallets } from '@cosmos-kit/keplr-extension'
 import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 import { fetchAmountAndProof } from 'utils/api'
-import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
+import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
+import { useCosmosSignMessage } from 'hooks/useSignMessage'
+import { SignButton } from './SignButton'
 
 const walletName = 'keplr-extension'
+
+type ChainName = 'injective' | 'osmosis' | 'neutron'
 
 type CosmosWalletProviderProps = {
   children: ReactNode
@@ -51,7 +55,7 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
     if (isWalletNotExist) window.open('https://www.keplr.app/download')
   }, [isWalletNotExist])
 
-  const { setEligibility } = useEcosystem()
+  const { setEligibility, setSignedMessage } = useEcosystem()
 
   // fetch the eligibility and store it
   useEffect(() => {
@@ -61,12 +65,15 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
           chainName === 'injective' ? 'injective' : 'cosmwasm',
           address
         )
-        setEligibility(chainNametoECOSYSTEM(chainName), eligibility)
+        setEligibility(chainNametoEcosystem(chainName), eligibility)
       } else {
-        setEligibility(chainNametoECOSYSTEM(chainName), undefined)
+        setEligibility(chainNametoEcosystem(chainName), undefined)
       }
+      // if the effect has been triggered again, it will only because of isWalletConnected or address
+      // i.e., the connected account has changed and hence set signedMessage to undefined
+      setSignedMessage(chainNametoEcosystem(chainName), undefined)
     })()
-  }, [isWalletConnected, address, setEligibility, chainName])
+  }, [isWalletConnected, address, setEligibility, chainName, setSignedMessage])
 
   return (
     <WalletButton
@@ -81,10 +88,20 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
   )
 }
 
-function chainNametoECOSYSTEM(
-  chainName: 'injective' | 'osmosis' | 'neutron'
-): ECOSYSTEM {
-  if (chainName === 'injective') return ECOSYSTEM.INJECTIVE
-  else if (chainName === 'osmosis') return ECOSYSTEM.OSMOSIS
-  else return ECOSYSTEM.NEUTRON
+function chainNametoEcosystem(chainName: ChainName): Ecosystem {
+  if (chainName === 'injective') return Ecosystem.INJECTIVE
+  else if (chainName === 'osmosis') return Ecosystem.OSMOSIS
+  else return Ecosystem.NEUTRON
+}
+
+export function CosmosSignButton({ chainName }: { chainName: ChainName }) {
+  const signMessageFn = useCosmosSignMessage(chainName)
+  // TODO: update this message
+  return (
+    <SignButton
+      signMessageFn={signMessageFn}
+      ecosystem={chainNametoEcosystem(chainName)}
+      message={'solana message'}
+    />
+  )
 }

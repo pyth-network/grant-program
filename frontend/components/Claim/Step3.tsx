@@ -1,6 +1,6 @@
 import React from 'react'
 import Arrow from '../../images/arrow.inline.svg'
-import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
+import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 
 const Step3 = ({ setStep }: { setStep: Function }) => {
   return (
@@ -17,17 +17,17 @@ const Step3 = ({ setStep }: { setStep: Function }) => {
 
           <p className="mb-6 font-light">I am active on…</p>
           <div className="mb-6 grid max-w-[420px] grid-cols-4 gap-4">
-            <CheckBox ecosystem={ECOSYSTEM.SOLANA} />
-            <CheckBox ecosystem={ECOSYSTEM.EVM} />
-            <CheckBox ecosystem={ECOSYSTEM.APTOS} />
-            <CheckBox ecosystem={ECOSYSTEM.SUI} />
-            <CheckBox ecosystem={ECOSYSTEM.INJECTIVE} />
-            <CheckBox ecosystem={ECOSYSTEM.OSMOSIS} />
-            <CheckBox ecosystem={ECOSYSTEM.NEUTRON} />
+            <CheckBox ecosystem={Ecosystem.SOLANA} />
+            <CheckBox ecosystem={Ecosystem.EVM} />
+            <CheckBox ecosystem={Ecosystem.APTOS} />
+            <CheckBox ecosystem={Ecosystem.SUI} />
+            <CheckBox ecosystem={Ecosystem.INJECTIVE} />
+            <CheckBox ecosystem={Ecosystem.OSMOSIS} />
+            <CheckBox ecosystem={Ecosystem.NEUTRON} />
           </div>
           <p className="mb-6 font-light">I am an active member of…</p>
           <div>
-            <CheckBox ecosystem={ECOSYSTEM.DISCORD} />
+            <CheckBox ecosystem={Ecosystem.DISCORD} />
           </div>
 
           <div className="mt-12 flex justify-end gap-4 ">
@@ -57,7 +57,7 @@ const Step3 = ({ setStep }: { setStep: Function }) => {
 }
 
 type CheckBoxProps = {
-  ecosystem: ECOSYSTEM
+  ecosystem: Ecosystem
 }
 function CheckBox({ ecosystem }: CheckBoxProps) {
   const { map, setActive } = useEcosystem()

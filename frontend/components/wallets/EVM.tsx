@@ -18,7 +18,9 @@ import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
 import { fetchAmountAndProof } from 'utils/api'
-import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
+import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
+import { SignButton } from './SignButton'
+import { useEVMSignMessage } from 'hooks/useSignMessage'
 
 // Configure chains & providers with the Alchemy provider.
 // Two popular providers are Alchemy (alchemy.com) and Infura (infura.io)
@@ -84,19 +86,22 @@ export function EVMWalletButton() {
     [connect]
   )
 
-  const { setEligibility } = useEcosystem()
+  const { setEligibility, setSignedMessage } = useEcosystem()
 
   // fetch the eligibility and store it
   useEffect(() => {
     ;(async () => {
       if (isConnected === true && address !== undefined) {
         const eligibility = await fetchAmountAndProof('evm', address)
-        setEligibility(ECOSYSTEM.EVM, eligibility)
+        setEligibility(Ecosystem.EVM, eligibility)
       } else {
-        setEligibility(ECOSYSTEM.EVM, undefined)
+        setEligibility(Ecosystem.EVM, undefined)
       }
+      // if the effect has been triggered again, it will only because of isConnected or address
+      // i.e., the connected account has changed and hence set signedMessage to undefined
+      setSignedMessage(Ecosystem.EVM, undefined)
     })()
-  }, [isConnected, address, setEligibility])
+  }, [isConnected, address, setEligibility, setSignedMessage])
 
   return (
     <WalletButton
@@ -110,6 +115,18 @@ export function EVMWalletButton() {
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton onClick={disconnect} address={address} />
       )}
+    />
+  )
+}
+
+export function EVMSignButton() {
+  const signMessageFn = useEVMSignMessage()
+  // TODO: update this message
+  return (
+    <SignButton
+      signMessageFn={signMessageFn}
+      ecosystem={Ecosystem.EVM}
+      message={'solana message'}
     />
   )
 }
