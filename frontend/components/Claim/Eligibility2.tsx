@@ -76,56 +76,62 @@ const Eligibility2 = ({
           <tbody>
             <TableRow
               label={'Solana Activity'}
-              walletButton={<SolanaWalletButton />}
+              walletButton={<SolanaWalletButton disableOnConnect />}
               signButton={<SolanaSignButton />}
               coins={ecosystemMap.Solana.eligibility?.claimInfo.amount.toString()}
               isEligible={isEligible(Ecosystem.SOLANA)}
             />
             <TableRow
               label={'EVM Activity'}
-              walletButton={<EVMWalletButton />}
+              walletButton={<EVMWalletButton disableOnConnect />}
               signButton={<EVMSignButton />}
               coins={ecosystemMap.Evm.eligibility?.claimInfo.amount.toString()}
               isEligible={isEligible(Ecosystem.EVM)}
             />
             <TableRow
               label={'Aptos Activity'}
-              walletButton={<AptosWalletButton />}
+              walletButton={<AptosWalletButton disableOnConnect />}
               signButton={<AptosSignButton />}
               coins={ecosystemMap.Aptos.eligibility?.claimInfo.amount.toString()}
               isEligible={isEligible(Ecosystem.APTOS)}
             />
             <TableRow
               label={'Sui Activity'}
-              walletButton={<SuiWalletButton />}
+              walletButton={<SuiWalletButton disableOnConnect />}
               signButton={<SuiSignButton />}
               coins={ecosystemMap.Sui.eligibility?.claimInfo.amount.toString()}
               isEligible={isEligible(Ecosystem.SUI)}
             />
             <TableRow
               label={'Injective Activity'}
-              walletButton={<CosmosWalletButton chainName="injective" />}
+              walletButton={
+                <CosmosWalletButton chainName="injective" disableOnConnect />
+              }
               signButton={<CosmosSignButton chainName="injective" />}
               coins={ecosystemMap.Injective.eligibility?.claimInfo.amount.toString()}
               isEligible={isEligible(Ecosystem.INJECTIVE)}
             />
             <TableRow
               label={'Osmosis Activity'}
-              walletButton={<CosmosWalletButton chainName="osmosis" />}
+              walletButton={
+                <CosmosWalletButton chainName="osmosis" disableOnConnect />
+              }
               signButton={<CosmosSignButton chainName="osmosis" />}
               coins={ecosystemMap.Osmosis.eligibility?.claimInfo.amount.toString()}
               isEligible={isEligible(Ecosystem.OSMOSIS)}
             />
             <TableRow
               label={'Neutron Activity'}
-              walletButton={<CosmosWalletButton chainName="neutron" />}
+              walletButton={
+                <CosmosWalletButton chainName="neutron" disableOnConnect />
+              }
               signButton={<CosmosSignButton chainName="neutron" />}
               coins={ecosystemMap.Neutron.eligibility?.claimInfo.amount.toString()}
               isEligible={isEligible(Ecosystem.NEUTRON)}
             />
             <TableRow
               label={'Discord Activity'}
-              walletButton={<DiscordButton />}
+              walletButton={<DiscordButton disableOnAuth />}
               signButton={<DiscordSignButton />}
               coins={ecosystemMap[
                 Ecosystem.DISCORD

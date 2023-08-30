@@ -10,7 +10,7 @@ import { fetchAmountAndProof } from 'utils/api'
 // TODO: when signing in to discord the page reloads which results into loss of all the
 // local state. Resolve that
 type DiscordButtonProps = {
-  disableOnAuth: boolean
+  disableOnAuth?: boolean
 }
 export function DiscordButton({ disableOnAuth }: DiscordButtonProps) {
   const { data, status } = useSession()
