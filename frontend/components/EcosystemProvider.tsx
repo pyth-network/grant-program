@@ -88,7 +88,8 @@ function getStoredEcosystemMap(): EcosystemMap | null {
 
 export function EcosystemProvider({ children }: { children: ReactNode }) {
   const [map, setMap] = useState(getStoredEcosystemMap() ?? ecosystemMap)
-  console.log(map)
+
+  // side effect update local storage if map is updated
   useEffect(() => {
     if (typeof window === 'undefined') return
     localStorage.setItem(ECOSYSTEM_MAP_STORAGE_KEY, JSON.stringify(map))
