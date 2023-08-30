@@ -5,7 +5,7 @@ import { wallets } from '@cosmos-kit/keplr-extension'
 import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 import { fetchAmountAndProof } from 'utils/api'
-import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
+import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { useCosmosSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
 
@@ -65,13 +65,13 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
           chainName === 'injective' ? 'injective' : 'cosmwasm',
           address
         )
-        setEligibility(chainNametoECOSYSTEM(chainName), eligibility)
+        setEligibility(chainNametoEcosystem(chainName), eligibility)
       } else {
-        setEligibility(chainNametoECOSYSTEM(chainName), undefined)
+        setEligibility(chainNametoEcosystem(chainName), undefined)
       }
       // if the effect has been triggered again, it will only because of isWalletConnected or address
       // i.e., the connected account has changed and hence set signedMessage to undefined
-      setSignedMessage(chainNametoECOSYSTEM(chainName), undefined)
+      setSignedMessage(chainNametoEcosystem(chainName), undefined)
     })()
   }, [isWalletConnected, address, setEligibility, chainName, setSignedMessage])
 
@@ -88,10 +88,10 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
   )
 }
 
-function chainNametoECOSYSTEM(chainName: ChainName): ECOSYSTEM {
-  if (chainName === 'injective') return ECOSYSTEM.INJECTIVE
-  else if (chainName === 'osmosis') return ECOSYSTEM.OSMOSIS
-  else return ECOSYSTEM.NEUTRON
+function chainNametoEcosystem(chainName: ChainName): Ecosystem {
+  if (chainName === 'injective') return Ecosystem.INJECTIVE
+  else if (chainName === 'osmosis') return Ecosystem.OSMOSIS
+  else return Ecosystem.NEUTRON
 }
 
 export function CosmosSignButton({ chainName }: { chainName: ChainName }) {
@@ -100,7 +100,7 @@ export function CosmosSignButton({ chainName }: { chainName: ChainName }) {
   return (
     <SignButton
       signMessageFn={signMessageFn}
-      ecosystem={chainNametoECOSYSTEM(chainName)}
+      ecosystem={chainNametoEcosystem(chainName)}
       message={'solana message'}
     />
   )

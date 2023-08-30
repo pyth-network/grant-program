@@ -1,4 +1,4 @@
-import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
+import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { SignMessageFn } from 'hooks/useSignMessage'
 import { useState, useCallback } from 'react'
 import Signed from '../../images/signed.inline.svg'
@@ -6,7 +6,7 @@ import { classNames } from 'utils/classNames'
 
 export type SignButtonProps = {
   signMessageFn: SignMessageFn
-  ecosystem: ECOSYSTEM
+  ecosystem: Ecosystem
   message: string
 }
 

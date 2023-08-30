@@ -1,7 +1,7 @@
 import { useWalletKit } from '@mysten/wallet-kit'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 import { useEffect, useMemo } from 'react'
-import { useEcosystem, ECOSYSTEM } from '@components/EcosystemProvider'
+import { useEcosystem, Ecosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
 import { useSuiSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
@@ -60,13 +60,13 @@ export function SuiWalletButton() {
           'sui',
           currentAccount?.address
         )
-        setEligibility(ECOSYSTEM.SUI, eligibility)
+        setEligibility(Ecosystem.SUI, eligibility)
       } else {
-        setEligibility(ECOSYSTEM.SUI, undefined)
+        setEligibility(Ecosystem.SUI, undefined)
       }
       // if the effect has been triggered again, it will only because of isConnected or currentAccount?.address
       // i.e., the connected account has changed and hence set signedMessage to undefined
-      setSignedMessage(ECOSYSTEM.SUI, undefined)
+      setSignedMessage(Ecosystem.SUI, undefined)
     })()
   }, [isConnected, currentAccount?.address, setEligibility, setSignedMessage])
 
@@ -93,7 +93,7 @@ export function SuiSignButton() {
   return (
     <SignButton
       signMessageFn={signMessageFn}
-      ecosystem={ECOSYSTEM.SUI}
+      ecosystem={Ecosystem.SUI}
       message={'solana message'}
     />
   )

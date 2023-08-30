@@ -2,7 +2,7 @@ import React, { useCallback } from 'react'
 
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
 import { SignButton } from './wallets/SignButton'
-import { ECOSYSTEM } from './EcosystemProvider'
+import { Ecosystem } from './EcosystemProvider'
 import { fetchDiscordSignedMessage } from 'utils/api'
 
 // This component assumes that the user is already sign in.
@@ -20,7 +20,7 @@ export function DiscordSignButton() {
   return (
     <SignButton
       signMessageFn={signMessageFn}
-      ecosystem={ECOSYSTEM.DISCORD}
+      ecosystem={Ecosystem.DISCORD}
       message={'change this message'}
     />
   )

@@ -19,10 +19,9 @@ import { useMemo, ReactElement, ReactNode, useCallback, useEffect } from 'react'
 import { clusterApiUrl } from '@solana/web3.js'
 import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import { Wallet, WalletButton, WalletConnectedButton } from './WalletButton'
-import { useEcosystem, ECOSYSTEM } from '@components/EcosystemProvider'
+import { useEcosystem, Ecosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
 import { SignButton } from './SignButton'
-import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
 import { useSolanaSignMessage } from 'hooks/useSignMessage'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
@@ -124,13 +123,13 @@ export function SolanaWalletButton() {
     ;(async () => {
       if (connected === true && base58 !== undefined) {
         const eligibility = await fetchAmountAndProof('solana', base58)
-        setEligibility(ECOSYSTEM.SOLANA, eligibility)
+        setEligibility(Ecosystem.SOLANA, eligibility)
       } else {
-        setEligibility(ECOSYSTEM.SOLANA, undefined)
+        setEligibility(Ecosystem.SOLANA, undefined)
       }
       // if the effect has been triggered again, it will only because of connected or  base58
       // i.e., the connected account has changed and hence set signedMessage to undefined
-      setSignedMessage(ECOSYSTEM.SOLANA, undefined)
+      setSignedMessage(Ecosystem.SOLANA, undefined)
     })()
   }, [connected, base58, setEligibility, setSignedMessage])
 
@@ -160,7 +159,7 @@ export function SolanaSignButton() {
   return (
     <SignButton
       signMessageFn={signMessageFn}
-      ecosystem={ECOSYSTEM.SOLANA}
+      ecosystem={Ecosystem.SOLANA}
       message={'solana message'}
     />
   )

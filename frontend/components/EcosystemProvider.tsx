@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { Eligibility } from 'utils/api'
 
-export enum ECOSYSTEM {
+export enum Ecosystem {
   SOLANA = 'Solana',
   EVM = 'Evm',
   APTOS = 'Aptos',
@@ -21,7 +21,7 @@ export enum ECOSYSTEM {
 }
 
 export type EcosystemMap = Record<
-  ECOSYSTEM,
+  Ecosystem,
   {
     // True, if the user is active in this ecosystem.
     isActive: boolean
@@ -36,12 +36,12 @@ export type EcosystemContextType = {
   // The state of all the ecosystems
   map: EcosystemMap
   // Set the isActive property of the given ecosystem
-  setActive: (ecosystem: ECOSYSTEM, isActive: boolean) => void
+  setActive: (ecosystem: Ecosystem, isActive: boolean) => void
   // Set the eligibility fetch using the API
-  setEligibility: (ecosystem: ECOSYSTEM, eligibility: Eligibility) => void
+  setEligibility: (ecosystem: Ecosystem, eligibility: Eligibility) => void
   // set the signed message for the ecosystem
   setSignedMessage: (
-    ecosystem: ECOSYSTEM,
+    ecosystem: Ecosystem,
     signedMessage: SignedMessage | undefined
   ) => void
 }
@@ -50,14 +50,14 @@ export const EcosystemContext = createContext<EcosystemContextType | undefined>(
 )
 
 // The default value for ecosystem
-const ecosystemMap = Object.values(ECOSYSTEM).reduce((map, currentValue) => {
+const ecosystemMap = Object.values(Ecosystem).reduce((map, currentValue) => {
   map[currentValue] = { isActive: false, eligibility: undefined }
   return map
 }, {} as EcosystemMap)
 
 export function EcosystemProvider({ children }: { children: ReactNode }) {
   const [map, setMap] = useState(ecosystemMap)
-  const setActive = useCallback((ecosytem: ECOSYSTEM, isActive: boolean) => {
+  const setActive = useCallback((ecosytem: Ecosystem, isActive: boolean) => {
     setMap((prevMap) => {
       const newMap = { ...prevMap }
       newMap[ecosytem].isActive = isActive
@@ -66,7 +66,7 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const setEligibility = useCallback(
-    (ecosytem: ECOSYSTEM, eligibility: Eligibility) => {
+    (ecosytem: Ecosystem, eligibility: Eligibility) => {
       setMap((prevMap) => {
         const newMap = { ...prevMap }
         newMap[ecosytem].eligibility = eligibility
@@ -77,7 +77,7 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
   )
 
   const setSignedMessage = useCallback(
-    (ecosytem: ECOSYSTEM, signedMessage: SignedMessage | undefined) => {
+    (ecosytem: Ecosystem, signedMessage: SignedMessage | undefined) => {
       setMap((prevMap) => {
         const newMap = { ...prevMap }
         newMap[ecosytem].signedMessage = signedMessage

@@ -4,7 +4,7 @@ import Discord from '../images/discord.inline.svg'
 
 import { signIn, signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
-import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
+import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
 
 // TODO: when signing in to discord the page reloads which results into loss of all the
@@ -44,13 +44,13 @@ export function DiscordButton() {
           'discord',
           data?.user?.name
         )
-        setEligibility(ECOSYSTEM.DISCORD, eligibility)
+        setEligibility(Ecosystem.DISCORD, eligibility)
       } else {
-        setEligibility(ECOSYSTEM.DISCORD, undefined)
+        setEligibility(Ecosystem.DISCORD, undefined)
       }
       // if the effect has been triggered again, it will only because the user has changed somehow
       // i.e., the connected account has changed and hence set signedMessage to undefined
-      setSignedMessage(ECOSYSTEM.DISCORD, undefined)
+      setSignedMessage(Ecosystem.DISCORD, undefined)
     })()
   }, [status, setEligibility, data?.user?.name, setSignedMessage])
 

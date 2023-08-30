@@ -18,7 +18,7 @@ import {
   SolanaSignButton,
   SolanaWalletButton,
 } from '@components/wallets/Solana'
-import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
+import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { classNames } from 'utils/classNames'
 import { DiscordButton } from '@components/DiscordButton'
 import { DiscordSignButton } from '@components/DiscordSignButton'
@@ -33,7 +33,7 @@ const Eligibility2 = ({
   const { map: ecosystemMap } = useEcosystem()
 
   const isEligible = useCallback(
-    (ecosystem: ECOSYSTEM) => {
+    (ecosystem: Ecosystem) => {
       const { isActive, eligibility } = ecosystemMap[ecosystem]
       return (
         isActive &&
@@ -79,56 +79,58 @@ const Eligibility2 = ({
               walletButton={<SolanaWalletButton />}
               signButton={<SolanaSignButton />}
               coins={ecosystemMap.Solana.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(ECOSYSTEM.SOLANA)}
+              isEligible={isEligible(Ecosystem.SOLANA)}
             />
             <TableRow
               label={'EVM Activity'}
               walletButton={<EVMWalletButton />}
               signButton={<EVMSignButton />}
               coins={ecosystemMap.Evm.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(ECOSYSTEM.EVM)}
+              isEligible={isEligible(Ecosystem.EVM)}
             />
             <TableRow
               label={'Aptos Activity'}
               walletButton={<AptosWalletButton />}
               signButton={<AptosSignButton />}
               coins={ecosystemMap.Aptos.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(ECOSYSTEM.APTOS)}
+              isEligible={isEligible(Ecosystem.APTOS)}
             />
             <TableRow
               label={'Sui Activity'}
               walletButton={<SuiWalletButton />}
               signButton={<SuiSignButton />}
               coins={ecosystemMap.Sui.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(ECOSYSTEM.SUI)}
+              isEligible={isEligible(Ecosystem.SUI)}
             />
             <TableRow
               label={'Injective Activity'}
               walletButton={<CosmosWalletButton chainName="injective" />}
               signButton={<CosmosSignButton chainName="injective" />}
               coins={ecosystemMap.Injective.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(ECOSYSTEM.INJECTIVE)}
+              isEligible={isEligible(Ecosystem.INJECTIVE)}
             />
             <TableRow
               label={'Osmosis Activity'}
               walletButton={<CosmosWalletButton chainName="osmosis" />}
               signButton={<CosmosSignButton chainName="osmosis" />}
               coins={ecosystemMap.Osmosis.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(ECOSYSTEM.OSMOSIS)}
+              isEligible={isEligible(Ecosystem.OSMOSIS)}
             />
             <TableRow
               label={'Neutron Activity'}
               walletButton={<CosmosWalletButton chainName="neutron" />}
               signButton={<CosmosSignButton chainName="neutron" />}
               coins={ecosystemMap.Neutron.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(ECOSYSTEM.NEUTRON)}
+              isEligible={isEligible(Ecosystem.NEUTRON)}
             />
             <TableRow
               label={'Discord Activity'}
               walletButton={<DiscordButton />}
               signButton={<DiscordSignButton />}
-              coins={ecosystemMap.Solana.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(ECOSYSTEM.DISCORD)}
+              coins={ecosystemMap[
+                Ecosystem.DISCORD
+              ].eligibility?.claimInfo.amount.toString()}
+              isEligible={isEligible(Ecosystem.DISCORD)}
             />
             <tr className="border-b border-light-35 ">
               <td className="w-full bg-darkGray5 py-2 pl-10 pr-4">
