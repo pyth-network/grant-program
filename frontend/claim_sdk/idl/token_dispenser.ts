@@ -528,55 +528,39 @@ export type TokenDispenser = {
   errors: [
     {
       code: 6000
-      name: 'ArithmeticOverflow'
-    },
-    {
-      code: 6001
-      name: 'MoreThanOneIdentityPerEcosystem'
-    },
-    {
-      code: 6002
       name: 'AlreadyClaimed'
     },
     {
-      code: 6003
+      code: 6001
       name: 'InvalidInclusionProof'
     },
     {
-      code: 6004
+      code: 6002
       name: 'WrongPda'
     },
     {
-      code: 6005
-      name: 'NotImplemented'
-    },
-    {
-      code: 6006
+      code: 6003
       name: 'SignatureVerificationWrongProgram'
     },
     {
-      code: 6007
+      code: 6004
       name: 'SignatureVerificationWrongAccounts'
     },
     {
-      code: 6008
+      code: 6005
       name: 'SignatureVerificationWrongHeader'
     },
     {
-      code: 6009
+      code: 6006
       name: 'SignatureVerificationWrongPayload'
     },
     {
-      code: 6010
+      code: 6007
       name: 'SignatureVerificationWrongPayloadMetadata'
     },
     {
-      code: 6011
+      code: 6008
       name: 'SignatureVerificationWrongSigner'
-    },
-    {
-      code: 6012
-      name: 'SignatureVerificationWrongClaimant'
     }
   ]
 }
@@ -1110,55 +1094,39 @@ export const IDL: TokenDispenser = {
   errors: [
     {
       code: 6000,
-      name: 'ArithmeticOverflow',
-    },
-    {
-      code: 6001,
-      name: 'MoreThanOneIdentityPerEcosystem',
-    },
-    {
-      code: 6002,
       name: 'AlreadyClaimed',
     },
     {
-      code: 6003,
+      code: 6001,
       name: 'InvalidInclusionProof',
     },
     {
-      code: 6004,
+      code: 6002,
       name: 'WrongPda',
     },
     {
-      code: 6005,
-      name: 'NotImplemented',
-    },
-    {
-      code: 6006,
+      code: 6003,
       name: 'SignatureVerificationWrongProgram',
     },
     {
-      code: 6007,
+      code: 6004,
       name: 'SignatureVerificationWrongAccounts',
     },
     {
-      code: 6008,
+      code: 6005,
       name: 'SignatureVerificationWrongHeader',
     },
     {
-      code: 6009,
+      code: 6006,
       name: 'SignatureVerificationWrongPayload',
     },
     {
-      code: 6010,
+      code: 6007,
       name: 'SignatureVerificationWrongPayloadMetadata',
     },
     {
-      code: 6011,
+      code: 6008,
       name: 'SignatureVerificationWrongSigner',
-    },
-    {
-      code: 6012,
-      name: 'SignatureVerificationWrongClaimant',
     },
   ],
 }

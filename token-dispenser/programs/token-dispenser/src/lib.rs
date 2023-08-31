@@ -315,12 +315,9 @@ pub struct Receipt {}
 
 #[error_code]
 pub enum ErrorCode {
-    ArithmeticOverflow,
-    MoreThanOneIdentityPerEcosystem,
     AlreadyClaimed,
     InvalidInclusionProof,
     WrongPda,
-    NotImplemented,
     // Signature verification errors
     SignatureVerificationWrongProgram,
     SignatureVerificationWrongAccounts,
@@ -328,7 +325,6 @@ pub enum ErrorCode {
     SignatureVerificationWrongPayload,
     SignatureVerificationWrongPayloadMetadata,
     SignatureVerificationWrongSigner,
-    SignatureVerificationWrongClaimant,
 }
 
 pub fn check_claim_receipt_is_uninitialized(claim_receipt_account: &AccountInfo) -> Result<()> {
