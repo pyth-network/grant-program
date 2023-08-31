@@ -207,7 +207,6 @@ where
 
 #[cfg(test)]
 use anchor_lang::prelude::ProgramError::BorshIoError;
-use anchor_lang::solana_program::hash::hashv;
 
 
 #[test]
@@ -359,6 +358,7 @@ pub fn test_serde() {
 
 #[test]
 pub fn test_secp256k1_sha256_verify_signer() {
+    use anchor_lang::solana_program::hash::hashv;
     let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
     let public_key = libsecp256k1::PublicKey::from_secret_key(&secret);
     let mut public_key_bytes = public_key.serialize();
