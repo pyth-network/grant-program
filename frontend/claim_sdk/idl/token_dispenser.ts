@@ -38,6 +38,11 @@ export type TokenDispenser = {
           name: 'systemProgram'
           isMut: false
           isSigner: false
+        },
+        {
+          name: 'addressLookupTable'
+          isMut: false
+          isSigner: false
         }
       ]
       args: [
@@ -140,6 +145,10 @@ export type TokenDispenser = {
           },
           {
             name: 'treasury'
+            type: 'publicKey'
+          },
+          {
+            name: 'addressLookupTable'
             type: 'publicKey'
           }
         ]
@@ -612,6 +621,11 @@ export const IDL: TokenDispenser = {
           isMut: false,
           isSigner: false,
         },
+        {
+          name: 'addressLookupTable',
+          isMut: false,
+          isSigner: false,
+        },
       ],
       args: [
         {
@@ -713,6 +727,10 @@ export const IDL: TokenDispenser = {
           },
           {
             name: 'treasury',
+            type: 'publicKey',
+          },
+          {
+            name: 'addressLookupTable',
             type: 'publicKey',
           },
         ],

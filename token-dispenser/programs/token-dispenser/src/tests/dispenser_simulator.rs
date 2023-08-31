@@ -25,7 +25,9 @@ use {
                 self,
                 create_account,
             },
+            sysvar::instructions::ID as SYSVAR_IX_ID,
         },
+        system_program,
         AccountDeserialize,
         AnchorSerialize,
         Id,
@@ -67,6 +69,7 @@ use {
         instruction::InstructionError,
         signature::Keypair,
         signer::Signer,
+        slot_hashes::SlotHashes,
         transaction::{
             Transaction,
             TransactionError,
@@ -210,10 +213,48 @@ impl DispenserSimulator {
         self.banks_client.process_transaction(transaction).await
     }
 
+
+    pub async fn init_lookup_table(&mut self) -> Result<Pubkey, BanksClientError> {
+        let recent_slot = self
+            .banks_client
+            .get_sysvar::<SlotHashes>()
+            .await?
+            .slot_hashes()
+            .last()
+            .unwrap()
+            .0;
+        let (create_ix, address_lookup_table) =
+            solana_address_lookup_table_program::instruction::create_lookup_table(
+                self.genesis_keypair.pubkey(),
+                self.genesis_keypair.pubkey(),
+                recent_slot,
+            );
+        self.process_ix(&[create_ix], &vec![]).await?;
+
+        let extend_ix = solana_address_lookup_table_program::instruction::extend_lookup_table(
+            address_lookup_table,
+            self.genesis_keypair.pubkey(),
+            Some(self.genesis_keypair.pubkey()),
+            vec![
+                get_config_pda().0,
+                self.pyth_treasury,
+                spl_token::id(),
+                system_program::System::id(),
+                SYSVAR_IX_ID,
+            ],
+        );
+
+        self.process_ix(&[extend_ix], &vec![]).await?;
+
+
+        Ok(address_lookup_table)
+    }
+
     pub async fn initialize(
         &mut self,
         merkle_root: MerkleRoot<SolanaHasher>,
         dispenser_guard: Pubkey,
+        address_lookup_table: Pubkey,
         mint_pubkey_override: Option<Pubkey>,
         treasury_pubkey_override: Option<Pubkey>,
     ) -> Result<(), BanksClientError> {
@@ -221,6 +262,7 @@ impl DispenserSimulator {
             self.genesis_keypair.pubkey(),
             mint_pubkey_override.unwrap_or(self.mint_keypair.pubkey()),
             treasury_pubkey_override.unwrap_or(self.pyth_treasury),
+            address_lookup_table,
         )
         .to_account_metas(None);
         let instruction_data = instruction::Initialize {
@@ -264,10 +306,12 @@ impl DispenserSimulator {
             })
             .collect();
 
+        let address_lookup_table = self.init_lookup_table().await.unwrap();
         let merkle_tree = merkleize(merkle_items).0;
         self.initialize(
             merkle_tree.root.clone(),
             dispenser_guard.pubkey(),
+            address_lookup_table,
             None,
             None,
         )
@@ -314,6 +358,9 @@ impl DispenserSimulator {
     }
 
 
+    // Note: Not using versioned transaction here since
+    // `BanksClient` doesn't support sending them and
+    // it's already tested in the typescript tests
     pub async fn claim(
         &mut self,
         claimant: &Keypair,

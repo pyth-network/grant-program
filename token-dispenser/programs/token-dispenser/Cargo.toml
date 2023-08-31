@@ -28,6 +28,7 @@ serde = "1.0.166"
 serde_json = "1.0.99"
 sha3 = "0.10.8"
 residua-uleb128 = "0.2.0"
+solana-address-lookup-table-program = "1.14.16"
 
 [dev-dependencies]
 hex = "0.4.3"

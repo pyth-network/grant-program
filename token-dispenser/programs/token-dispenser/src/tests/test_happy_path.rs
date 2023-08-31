@@ -262,10 +262,13 @@ pub async fn test_happy_path() {
         .await
         .unwrap();
 
+    let address_lookup_table = simulator.init_lookup_table().await.unwrap();
+
     simulator
         .initialize(
             merkle_tree.root.clone(),
             dispenser_guard.pubkey(),
+            address_lookup_table,
             None,
             None,
         )
@@ -278,6 +281,7 @@ pub async fn test_happy_path() {
         dispenser_guard: dispenser_guard.pubkey(),
         mint: simulator.mint_keypair.pubkey(),
         treasury,
+        address_lookup_table,
     };
 
 

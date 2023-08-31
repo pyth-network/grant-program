@@ -6,8 +6,13 @@ import {
   getDatabasePool,
 } from '../utils/db'
 import { ClaimInfo, Ecosystem } from '../claim_sdk/claim'
-import { Token } from '@solana/spl-token'
-import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import {
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SystemProgram,
+  SYSVAR_INSTRUCTIONS_PUBKEY,
+} from '@solana/web3.js'
 import { Buffer } from 'buffer'
 import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
 import {
@@ -138,6 +143,30 @@ describe('integration test', () => {
       expect(configAccount.mint).toEqual(mint.publicKey)
       expect(configAccount.treasury).toEqual(treasury)
       expect(configAccount.dispenserGuard).toEqual(dispenserGuard)
+      const lookupTableAddress = configAccount.addressLookupTable
+      const lookupTableResp =
+        await tokenDispenserProvider.connection.getAddressLookupTable(
+          lookupTableAddress
+        )
+      expect(lookupTableResp.value).toBeDefined()
+      const lookupTableAddresses = lookupTableResp.value!.state.addresses.map(
+        (a) => a.toBase58()
+      )
+      expect(
+        lookupTableAddresses.includes(
+          tokenDispenserProvider.getConfigPda()[0].toBase58()
+        )
+      ).toBeTruthy()
+      expect(lookupTableAddresses.includes(treasury.toBase58())).toBeTruthy()
+      expect(
+        lookupTableAddresses.includes(TOKEN_PROGRAM_ID.toBase58())
+      ).toBeTruthy()
+      expect(
+        lookupTableAddresses.includes(SystemProgram.programId.toBase58())
+      ).toBeTruthy()
+      expect(
+        lookupTableAddresses.includes(SYSVAR_INSTRUCTIONS_PUBKEY.toBase58())
+      ).toBeTruthy()
     })
 
     it('submits an evm claim', async () => {
