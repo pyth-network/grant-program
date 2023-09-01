@@ -3,7 +3,7 @@ import { ReactNode, createContext, useContext, useMemo } from 'react'
 import { useAnchorWallet } from '@solana/wallet-adapter-react'
 import { web3 } from '@coral-xyz/anchor'
 
-export const TokenDispensorContext = createContext<
+const TokenDispenserContext = createContext<
   CTokenDispenserProvider | undefined
 >(undefined)
 
@@ -23,14 +23,14 @@ export function TokenDispenserProvider({
   }, [wallet])
 
   return (
-    <TokenDispensorContext.Provider value={tokenDispenser}>
+    <TokenDispenserContext.Provider value={tokenDispenser}>
       {children}
-    </TokenDispensorContext.Provider>
+    </TokenDispenserContext.Provider>
   )
 }
 
 // It will return undefined if no Solana wallet is connected.
 export function useTokenDispenserProvider() {
-  const tokenDispenser = useContext(TokenDispensorContext)
+  const tokenDispenser = useContext(TokenDispenserContext)
   return tokenDispenser
 }
