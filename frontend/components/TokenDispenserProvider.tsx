@@ -16,9 +16,9 @@ export function TokenDispenserProvider({
   const tokenDispenser = useMemo(() => {
     if (wallet === undefined) return undefined
     return new CTokenDispenserProvider(
-      process.env.NEXT_PUBLIC_ENDPOINT!,
+      process.env.ENDPOINT!,
       wallet,
-      new web3.PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!)
+      new web3.PublicKey(process.env.PROGRAM_ID!)
     )
   }, [wallet])
 
