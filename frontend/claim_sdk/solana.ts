@@ -9,6 +9,7 @@ import {
   AddressLookupTableProgram,
   Connection,
   Ed25519Program,
+  Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
   Secp256k1Program,
@@ -24,7 +25,7 @@ import { ClaimInfo, Ecosystem } from './claim'
 import { TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import { SignedMessage } from './ecosystems/signatures'
 import { extractChainId } from './ecosystems/cosmos'
-import { blake2b } from '@noble/hashes/blake2b'
+import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -48,14 +49,14 @@ export class TokenDispenserProvider {
 
   constructor(
     endpoint: string,
-    wallet: anchor.Wallet,
+    wallet: anchor.Wallet | undefined,
     programId: anchor.web3.PublicKey,
     confirmOpts?: anchor.web3.ConfirmOptions
   ) {
     confirmOpts = confirmOpts ?? anchor.AnchorProvider.defaultOptions()
     const provider = new anchor.AnchorProvider(
       new anchor.web3.Connection(endpoint, confirmOpts.preflightCommitment),
-      wallet,
+      wallet ?? new NodeWallet(new Keypair()),
       confirmOpts
     )
     this.tokenDispenserProgram = new Program(
