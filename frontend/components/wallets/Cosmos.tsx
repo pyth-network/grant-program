@@ -1,4 +1,4 @@
-import { ReactElement, ReactNode, useCallback, useEffect } from 'react'
+import { ReactElement, ReactNode, useEffect } from 'react'
 import { ChainProvider, useChainWallet } from '@cosmos-kit/react-lite'
 import { assets, chains } from 'chain-registry'
 import { wallets } from '@cosmos-kit/keplr-extension'
@@ -48,7 +48,23 @@ export function CosmosWalletButton({
     logoUrl,
     isWalletNotExist,
     disconnect,
+    isWalletDisconnected,
   } = chainWalletContext
+
+  // Keplr doesn't provide any autoconnect feature
+  // Implementing it here
+  // When this component will render, it will check a localStorage key
+  // to know if the wallet was previously connected. If it was, it will
+  // connect with it again. Else, will do nothing
+  // We only have to do this check once the component renders.
+  // See Line 84, 99 to know how we are storing the status locally
+  useEffect(() => {
+    const key = getKeplrConnectionStatusKey(chainName)
+    const connected = localStorage.getItem(key)
+    if (connected === 'true') {
+      connect()
+    }
+  }, [])
 
   // The initial value of `isWalletNotExist` is false.
   // When the user clicks on connect, the value of `isWalletNotExist` is first set to false,
@@ -65,6 +81,9 @@ export function CosmosWalletButton({
   useEffect(() => {
     ;(async () => {
       if (isWalletConnected === true && address !== undefined) {
+        // Here, store locally that the wallet was connected
+        localStorage.setItem(getKeplrConnectionStatusKey(chainName), 'true')
+
         const eligibility = await fetchAmountAndProof(
           chainName === 'injective' ? 'injective' : 'cosmwasm',
           address
@@ -77,7 +96,16 @@ export function CosmosWalletButton({
       // i.e., the connected account has changed and hence set signedMessage to undefined
       setSignedMessage(chainNametoEcosystem(chainName), undefined)
     })()
-  }, [isWalletConnected, address, setEligibility, chainName, setSignedMessage])
+    if (isWalletDisconnected)
+      localStorage.setItem(getKeplrConnectionStatusKey(chainName), 'false')
+  }, [
+    isWalletConnected,
+    address,
+    setEligibility,
+    chainName,
+    setSignedMessage,
+    isWalletDisconnected,
+  ])
 
   return (
     <WalletButton
@@ -112,4 +140,9 @@ export function CosmosSignButton({ chainName }: { chainName: ChainName }) {
       message={'solana message'}
     />
   )
+}
+
+function getKeplrConnectionStatusKey(chainName: ChainName) {
+  const KEPLR_CONNECTION_STATUS_KEY = 'keplr-local-storage-connection-key'
+  return KEPLR_CONNECTION_STATUS_KEY + '-' + chainName
 }
