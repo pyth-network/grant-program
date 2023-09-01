@@ -367,13 +367,14 @@ pub fn test_secp256k1_sha256_verify_signer() {
     let message_hash = libsecp256k1::Message::parse_slice(hashv(&[&message]).as_ref()).unwrap();
     let (signature, recovery_id) = libsecp256k1::sign(&message_hash, &secret);
     let mut signature_bytes = signature.serialize();
-    secp256k1_sha256_verify_signer(
+    assert!(secp256k1_sha256_verify_signer(
         &Secp256k1Signature::from(signature_bytes),
         &recovery_id.serialize(),
         uncompressed_public_key,
         &message,
     )
-    .unwrap();
+    .is_ok());
+
 
     // wrong public key
     public_key_bytes[0] ^= 0xff;
@@ -442,11 +443,11 @@ pub fn test_secp256k1_sha256_verify_signer() {
     );
 
     recovery_id_bytes ^= 0xff;
-    secp256k1_sha256_verify_signer(
+    assert!(secp256k1_sha256_verify_signer(
         &Secp256k1Signature::from(signature_bytes),
         &recovery_id_bytes,
         uncompressed_public_key,
         &message,
     )
-    .unwrap();
+    .is_ok());
 }
