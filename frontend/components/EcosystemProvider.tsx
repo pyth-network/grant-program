@@ -130,7 +130,7 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
     setMap((prevMap) => {
       const newMap = { ...prevMap }
       Object.values(Ecosystem).forEach(
-        (k) => newMap[k as Ecosystem].signedMessage === undefined
+        (k) => (newMap[k as Ecosystem].signedMessage = undefined)
       )
       return newMap
     })
