@@ -63,10 +63,10 @@ export function DiscordButton({ disableOnAuth }: DiscordButtonProps) {
         'btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light disabled:text-light disabled:before:bg-dark'
       }
       onClick={() => {
-        if (disableOnAuth === true && status === 'authenticated') return
         if (status === 'unauthenticated') signIn('discord')
         if (status === 'authenticated') signOut()
       }}
+      disabled={disableOnAuth}
     >
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
         {logo}
