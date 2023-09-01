@@ -6,7 +6,10 @@ import { fetchAmountAndProof } from 'utils/api'
 import { useSuiSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
 
-export function SuiWalletButton() {
+type SuiWalletButtonProps = {
+  disableOnConnect?: boolean
+}
+export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
   const {
     currentAccount,
     disconnect,
@@ -81,6 +84,7 @@ export function SuiWalletButton() {
           onClick={disconnect}
           address={address}
           icon={currentWallet?.icon}
+          disabled={disableOnConnect}
         />
       )}
     />

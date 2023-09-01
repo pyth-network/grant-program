@@ -27,7 +27,12 @@ export function AptosWalletProvider({
   )
 }
 
-export function AptosWalletButton() {
+type AptosWalletButtonProps = {
+  disableOnConnect?: boolean
+}
+export function AptosWalletButton({
+  disableOnConnect,
+}: AptosWalletButtonProps) {
   const {
     disconnect,
     account,
@@ -82,6 +87,7 @@ export function AptosWalletButton() {
           onClick={disconnect}
           address={address}
           icon={wallet?.icon}
+          disabled={disableOnConnect}
         />
       )}
     />

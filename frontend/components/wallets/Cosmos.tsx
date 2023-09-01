@@ -33,8 +33,12 @@ export function CosmosWalletProvider({
 
 type CosmosWalletButtonProps = {
   chainName: 'injective' | 'osmosis' | 'neutron'
+  disableOnConnect?: boolean
 }
-export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
+export function CosmosWalletButton({
+  chainName,
+  disableOnConnect,
+}: CosmosWalletButtonProps) {
   const chainWalletContext = useChainWallet(chainName, walletName)
   const {
     address,
@@ -82,7 +86,11 @@ export function CosmosWalletButton({ chainName }: CosmosWalletButtonProps) {
       isLoading={isWalletConnecting}
       wallets={[{ name: 'keplr', icon: logoUrl, onSelect: connect }]}
       walletConnectedButton={(address: string) => (
-        <WalletConnectedButton onClick={disconnect} address={address} />
+        <WalletConnectedButton
+          onClick={disconnect}
+          address={address}
+          disabled={disableOnConnect}
+        />
       )}
     />
   )

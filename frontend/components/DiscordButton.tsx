@@ -9,7 +9,10 @@ import { fetchAmountAndProof } from 'utils/api'
 
 // TODO: when signing in to discord the page reloads which results into loss of all the
 // local state. Resolve that
-export function DiscordButton() {
+type DiscordButtonProps = {
+  disableOnAuth?: boolean
+}
+export function DiscordButton({ disableOnAuth }: DiscordButtonProps) {
   const { data, status } = useSession()
 
   const { logo, text } = useMemo(() => {
@@ -57,12 +60,13 @@ export function DiscordButton() {
   return (
     <button
       className={
-        'btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light'
+        'btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light disabled:text-light disabled:before:bg-dark'
       }
       onClick={() => {
         if (status === 'unauthenticated') signIn('discord')
         if (status === 'authenticated') signOut()
       }}
+      disabled={disableOnAuth}
     >
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
         {logo}

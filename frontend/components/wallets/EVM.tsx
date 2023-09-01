@@ -65,7 +65,10 @@ export function EVMWalletProvider({
   return <WagmiConfig config={config}> {children}</WagmiConfig>
 }
 
-export function EVMWalletButton() {
+type EvmWalletButtonProps = {
+  disableOnConnect?: boolean
+}
+export function EVMWalletButton({ disableOnConnect }: EvmWalletButtonProps) {
   const { disconnect } = useDisconnect()
   const { address, status, isConnected } = useAccount()
   const { connect, connectors } = useConnect()
@@ -113,7 +116,11 @@ export function EVMWalletButton() {
         onSelect: () => onSelect(connector),
       }))}
       walletConnectedButton={(address: string) => (
-        <WalletConnectedButton onClick={disconnect} address={address} />
+        <WalletConnectedButton
+          onClick={disconnect}
+          address={address}
+          disabled={disableOnConnect}
+        />
       )}
     />
   )
