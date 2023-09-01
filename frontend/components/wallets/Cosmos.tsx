@@ -8,6 +8,7 @@ import { fetchAmountAndProof } from 'utils/api'
 import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { useCosmosSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
+import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
 
 const walletName = 'keplr-extension'
 
@@ -102,14 +103,17 @@ function chainNametoEcosystem(chainName: ChainName): Ecosystem {
   else return Ecosystem.NEUTRON
 }
 
+// A Solana wallet must be connected before this component is rendered
+// If not this button will be disabled
 export function CosmosSignButton({ chainName }: { chainName: ChainName }) {
   const signMessageFn = useCosmosSignMessage(chainName)
-  // TODO: update this message
+  const tokenDispenser = useTokenDispenserProvider()
   return (
     <SignButton
       signMessageFn={signMessageFn}
       ecosystem={chainNametoEcosystem(chainName)}
-      message={'solana message'}
+      message={tokenDispenser?.generateAuthorizationPayload() ?? ''}
+      disable={tokenDispenser === undefined}
     />
   )
 }

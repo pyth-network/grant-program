@@ -8,12 +8,14 @@ export type SignButtonProps = {
   signMessageFn: SignMessageFn
   ecosystem: Ecosystem
   message: string
+  disable?: boolean
 }
 
 export function SignButton({
   signMessageFn,
   ecosystem,
   message,
+  disable,
 }: SignButtonProps) {
   const { setSignedMessage, map: ecosystemMap } = useEcosystem()
 
@@ -31,7 +33,8 @@ export function SignButton({
   }, [ecosystem, ecosystemMap, message, setSignedMessage, signMessageFn])
 
   // to disable the button once it is signed
-  const disabled = ecosystemMap[ecosystem].signedMessage !== undefined
+  const disabled =
+    ecosystemMap[ecosystem].signedMessage !== undefined || disable
 
   return (
     <button

@@ -10,6 +10,7 @@ import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
 import { useAptosSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
+import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
 
 type AptosWalletProviderProps = {
   children: ReactNode
@@ -94,14 +95,17 @@ export function AptosWalletButton({
   )
 }
 
+// A Solana wallet must be connected before this component is rendered
+// If not this button will be disabled
 export function AptosSignButton() {
   const signMessageFn = useAptosSignMessage()
-  // TODO: update this message
+  const tokenDispenser = useTokenDispenserProvider()
   return (
     <SignButton
       signMessageFn={signMessageFn}
       ecosystem={Ecosystem.APTOS}
-      message={'solana message'}
+      message={tokenDispenser?.generateAuthorizationPayload() ?? ''}
+      disable={tokenDispenser === undefined}
     />
   )
 }

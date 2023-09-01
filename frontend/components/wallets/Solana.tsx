@@ -23,6 +23,7 @@ import { useEcosystem, Ecosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
 import { SignButton } from './SignButton'
 import { useSolanaSignMessage } from 'hooks/useSignMessage'
+import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
 export const BACKPACK_WALLET_ADAPTER = new BackpackWalletAdapter()
@@ -159,14 +160,17 @@ export function SolanaWalletButton({
   )
 }
 
+// A Solana wallet must be connected before this component is rendered
+// If not this button will be disabled
 export function SolanaSignButton() {
   const signMessageFn = useSolanaSignMessage()
-  // TODO: update this message
+  const tokenDispenser = useTokenDispenserProvider()
   return (
     <SignButton
       signMessageFn={signMessageFn}
       ecosystem={Ecosystem.SOLANA}
-      message={'solana message'}
+      message={tokenDispenser?.generateAuthorizationPayload() ?? ''}
+      disable={tokenDispenser === undefined}
     />
   )
 }

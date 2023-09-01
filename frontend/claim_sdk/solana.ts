@@ -1,4 +1,5 @@
 import * as anchor from '@coral-xyz/anchor'
+import { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
 import tokenDispenser from './idl/token_dispenser.json'
 import type { TokenDispenser } from './idl/token_dispenser'
 import { Idl, IdlAccounts, IdlTypes, Program } from '@coral-xyz/anchor'
@@ -24,7 +25,6 @@ import { ClaimInfo, Ecosystem } from './claim'
 import { TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import { SignedMessage } from './ecosystems/signatures'
 import { extractChainId } from './ecosystems/cosmos'
-import { blake2b } from '@noble/hashes/blake2b'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -48,7 +48,7 @@ export class TokenDispenserProvider {
 
   constructor(
     endpoint: string,
-    wallet: anchor.Wallet,
+    wallet: Wallet,
     programId: anchor.web3.PublicKey,
     confirmOpts?: anchor.web3.ConfirmOptions
   ) {
