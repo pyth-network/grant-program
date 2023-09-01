@@ -2,3 +2,5 @@
 package.json
 package-lock.json
 public
+claim_sdk/idl/token_dispenser.ts
+claim_sdk/idl/token_dispenser.json
