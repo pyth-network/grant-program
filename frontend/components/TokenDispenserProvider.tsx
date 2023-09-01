@@ -22,7 +22,6 @@ export function TokenDispenserProvider({
     )
   }, [wallet])
 
-  console.log(wallet)
   return (
     <TokenDispensorContext.Provider value={tokenDispenser}>
       {children}
