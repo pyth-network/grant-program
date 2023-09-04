@@ -56,9 +56,9 @@ const Step5 = ({ setStep }: { setStep: Function }) => {
             Claim Airdrop
           </h3>
           <p className="mx-auto max-w-[454px] font-body text-base16">
-            By choosing to proceed to the next step, you confirm that you have
-            connected all relevant wallets and your Discord account associated
-            with your claim.
+            Please ensure that you have connected all the necessary wallets and
+            the Discord account with your claim. Additionally, you can repeat
+            the Airdrop Claim process using a different set of wallets.
           </p>
           <div className="mt-12 flex justify-center gap-4">
             <button
