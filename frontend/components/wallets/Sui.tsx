@@ -5,6 +5,7 @@ import { useEcosystem, Ecosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
 import { useSuiSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
+import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
 
 type SuiWalletButtonProps = {
   disableOnConnect?: boolean
@@ -91,14 +92,17 @@ export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
   )
 }
 
+// A Solana wallet must be connected before this component is rendered
+// If not this button will be disabled
 export function SuiSignButton() {
   const signMessageFn = useSuiSignMessage()
-  // TODO: update this message
+  const tokenDispenser = useTokenDispenserProvider()
   return (
     <SignButton
       signMessageFn={signMessageFn}
       ecosystem={Ecosystem.SUI}
-      message={'solana message'}
+      message={tokenDispenser?.generateAuthorizationPayload() ?? ''}
+      disable={tokenDispenser === undefined}
     />
   )
 }

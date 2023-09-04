@@ -50,6 +50,8 @@ export type EcosystemContextType = {
     ecosystem: Ecosystem,
     signedMessage: SignedMessage | undefined
   ) => void
+  // delete all the signed message by setting them to undefined
+  setAllSignedMessageUndefined: () => void
 }
 export const EcosystemContext = createContext<EcosystemContextType | undefined>(
   undefined
@@ -124,9 +126,31 @@ export function EcosystemProvider({ children }: { children: ReactNode }) {
     []
   )
 
+  const setAllSignedMessageUndefined = useCallback(() => {
+    setMap((prevMap) => {
+      const newMap = { ...prevMap }
+      Object.values(Ecosystem).forEach(
+        (k) => (newMap[k as Ecosystem].signedMessage = undefined)
+      )
+      return newMap
+    })
+  }, [])
+
   const contextValue = useMemo(
-    () => ({ map, setActive, setEligibility, setSignedMessage }),
-    [map, setActive, setEligibility, setSignedMessage]
+    () => ({
+      map,
+      setActive,
+      setEligibility,
+      setSignedMessage,
+      setAllSignedMessageUndefined,
+    }),
+    [
+      map,
+      setActive,
+      setEligibility,
+      setSignedMessage,
+      setAllSignedMessageUndefined,
+    ]
   )
 
   return (
