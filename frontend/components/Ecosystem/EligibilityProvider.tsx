@@ -34,8 +34,12 @@ function getStoredEligibilityMap(): EligibilityMap | null {
   // We need to do some customized parsing as it is a class.
   Object.keys(obj).forEach((key) => {
     if (obj[key] === undefined) return
-    obj[key].claimInfo.amount = new BN(obj[key].claimInfo.amount, 'hex')
-    obj[key].claimInfo = Object.setPrototypeOf(obj[key].claimInfo, ClaimInfo)
+    const claimInfo = obj[key].claimInfo
+    obj[key].claimInfo = new ClaimInfo(
+      claimInfo.ecosystem,
+      claimInfo.identity,
+      new BN(claimInfo.amount, 'hex')
+    )
   })
 
   return obj as EligibilityMap
