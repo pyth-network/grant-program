@@ -46,3 +46,57 @@ pub fn get_expected_payload(claimant: &Pubkey) -> String {
         + claimant.to_string().as_str()
         + AUTHORIZATION_PAYLOAD[2]
 }
+
+#[test]
+pub fn test_check_payload() {
+    let claimant = Pubkey::new_unique();
+    let payload = "Pyth Grant PID:\n".to_string()
+        + &crate::ID.to_string()
+        + "\nI authorize wallet\n"
+        + &claimant.to_string()
+        + "\nto claim my token grant.\n";
+
+    assert!(check_payload(payload.as_bytes(), &claimant).is_ok());
+
+    // incorrect claimant
+    let wrong_payload = "Pyth Grant PID:\n".to_string()
+        + &crate::ID.to_string()
+        + "\nI authorize wallet\n"
+        + &(Pubkey::new_unique()).to_string()
+        + "\nto claim my token grant.\n";
+
+    let res = check_payload(wrong_payload.as_bytes(), &claimant);
+    assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err(),
+        Error::from(ErrorCode::SignatureVerificationWrongPayload)
+    );
+
+    // incorrect program id
+    let wrong_payload = "Pyth Grant PID:\n".to_string()
+        + &(Pubkey::new_unique()).to_string()
+        + "\nI authorize wallet\n"
+        + &claimant.to_string()
+        + "\nto claim my token grant.\n";
+
+    let res = check_payload(wrong_payload.as_bytes(), &claimant);
+    assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err(),
+        Error::from(ErrorCode::SignatureVerificationWrongPayload)
+    );
+
+    // incorrect constants
+    let wrong_payload = "Grant PID:\n".to_string()
+        + &crate::ID.to_string()
+        + "\nI authorize wallet\n"
+        + &claimant.to_string()
+        + "\nto claim my token grant.\n";
+
+    let res = check_payload(wrong_payload.as_bytes(), &claimant);
+    assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err(),
+        Error::from(ErrorCode::SignatureVerificationWrongPayload)
+    );
+}
