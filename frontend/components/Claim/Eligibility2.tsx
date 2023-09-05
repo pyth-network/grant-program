@@ -1,11 +1,6 @@
-import React, { ReactElement, useCallback, useMemo, useState } from 'react'
+import React, { ReactElement } from 'react'
 import Arrow from '../../images/arrow.inline.svg'
 import Coin from '../../images/coin.inline.svg'
-
-import TooltipIcon from '../../images/tooltip.inline.svg'
-import Verified from '../../images/verified.inline.svg'
-import Discord from '../../images/discord.inline.svg'
-import Signed from '../../images/signed.inline.svg'
 
 import { AptosSignButton, AptosWalletButton } from '@components/wallets/Aptos'
 import { SuiSignButton, SuiWalletButton } from '@components/wallets/Sui'
@@ -22,6 +17,15 @@ import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { classNames } from 'utils/classNames'
 import { DiscordButton } from '@components/DiscordButton'
 import { DiscordSignButton } from '@components/DiscordSignButton'
+import {
+  useAptosAddress,
+  useCosmosAddress,
+  useEVMAddress,
+  useSolanaAddress,
+  useSuiAddress,
+} from 'hooks/useAddress'
+import { useSession } from 'next-auth/react'
+import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 
 const Eligibility2 = ({
   onBack,
@@ -30,19 +34,18 @@ const Eligibility2 = ({
   onBack: Function
   onProceed: Function
 }) => {
-  const { map: ecosystemMap } = useEcosystem()
+  const aptosAddress = useAptosAddress()
+  const injectiveAddress = useCosmosAddress('injective')
+  const osmosisAddress = useCosmosAddress('osmosis')
+  const neutronAddress = useCosmosAddress('neutron')
+  const evmAddress = useEVMAddress()
+  const solanaAddress = useSolanaAddress()
+  const suiAddress = useSuiAddress()
 
-  const isEligible = useCallback(
-    (ecosystem: Ecosystem) => {
-      const { isActive, eligibility } = ecosystemMap[ecosystem]
-      return (
-        isActive &&
-        eligibility !== undefined &&
-        eligibility.claimInfo.amount.gtn(0)
-      )
-    },
-    [ecosystemMap]
-  )
+  const { data } = useSession()
+
+  const { eligibility } = useEligiblity()
+
   return (
     <div className=" overflow-auto border border-light-35 bg-dark">
       <div className="min-w-[650px]">
@@ -78,29 +81,49 @@ const Eligibility2 = ({
               label={'Solana Activity'}
               walletButton={<SolanaWalletButton disableOnConnect />}
               signButton={<SolanaSignButton />}
-              coins={ecosystemMap.Solana.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(Ecosystem.SOLANA)}
+              coins={
+                solanaAddress &&
+                eligibility[solanaAddress]?.claimInfo.amount.toString()
+              }
+              isEligible={
+                solanaAddress ? eligibility[solanaAddress] !== undefined : false
+              }
             />
             <TableRow
               label={'EVM Activity'}
               walletButton={<EVMWalletButton disableOnConnect />}
               signButton={<EVMSignButton />}
-              coins={ecosystemMap.Evm.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(Ecosystem.EVM)}
+              coins={
+                evmAddress &&
+                eligibility[evmAddress]?.claimInfo.amount.toString()
+              }
+              isEligible={
+                evmAddress ? eligibility[evmAddress] !== undefined : false
+              }
             />
             <TableRow
               label={'Aptos Activity'}
               walletButton={<AptosWalletButton disableOnConnect />}
               signButton={<AptosSignButton />}
-              coins={ecosystemMap.Aptos.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(Ecosystem.APTOS)}
+              coins={
+                aptosAddress &&
+                eligibility[aptosAddress]?.claimInfo.amount.toString()
+              }
+              isEligible={
+                aptosAddress ? eligibility[aptosAddress] !== undefined : false
+              }
             />
             <TableRow
               label={'Sui Activity'}
               walletButton={<SuiWalletButton disableOnConnect />}
               signButton={<SuiSignButton />}
-              coins={ecosystemMap.Sui.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(Ecosystem.SUI)}
+              coins={
+                suiAddress &&
+                eligibility[suiAddress]?.claimInfo.amount.toString()
+              }
+              isEligible={
+                suiAddress ? eligibility[suiAddress] !== undefined : false
+              }
             />
             <TableRow
               label={'Injective Activity'}
@@ -108,8 +131,15 @@ const Eligibility2 = ({
                 <CosmosWalletButton chainName="injective" disableOnConnect />
               }
               signButton={<CosmosSignButton chainName="injective" />}
-              coins={ecosystemMap.Injective.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(Ecosystem.INJECTIVE)}
+              coins={
+                injectiveAddress &&
+                eligibility[injectiveAddress]?.claimInfo.amount.toString()
+              }
+              isEligible={
+                injectiveAddress
+                  ? eligibility[injectiveAddress] !== undefined
+                  : false
+              }
             />
             <TableRow
               label={'Osmosis Activity'}
@@ -117,8 +147,15 @@ const Eligibility2 = ({
                 <CosmosWalletButton chainName="osmosis" disableOnConnect />
               }
               signButton={<CosmosSignButton chainName="osmosis" />}
-              coins={ecosystemMap.Osmosis.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(Ecosystem.OSMOSIS)}
+              coins={
+                osmosisAddress &&
+                eligibility[osmosisAddress]?.claimInfo.amount.toString()
+              }
+              isEligible={
+                osmosisAddress
+                  ? eligibility[osmosisAddress] !== undefined
+                  : false
+              }
             />
             <TableRow
               label={'Neutron Activity'}
@@ -126,17 +163,29 @@ const Eligibility2 = ({
                 <CosmosWalletButton chainName="neutron" disableOnConnect />
               }
               signButton={<CosmosSignButton chainName="neutron" />}
-              coins={ecosystemMap.Neutron.eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(Ecosystem.NEUTRON)}
+              coins={
+                neutronAddress &&
+                eligibility[neutronAddress]?.claimInfo.amount.toString()
+              }
+              isEligible={
+                neutronAddress
+                  ? eligibility[neutronAddress] !== undefined
+                  : false
+              }
             />
             <TableRow
               label={'Discord Activity'}
               walletButton={<DiscordButton disableOnAuth />}
               signButton={<DiscordSignButton />}
-              coins={ecosystemMap[
-                Ecosystem.DISCORD
-              ].eligibility?.claimInfo.amount.toString()}
-              isEligible={isEligible(Ecosystem.DISCORD)}
+              coins={
+                data?.user?.name &&
+                eligibility[data?.user?.name]?.claimInfo.amount.toString()
+              }
+              isEligible={
+                data?.user?.name
+                  ? eligibility[data?.user?.name] !== undefined
+                  : false
+              }
             />
             <tr className="border-b border-light-35 ">
               <td className="w-full bg-darkGray5 py-2 pl-10 pr-4">
@@ -163,7 +212,7 @@ type TableRowProps = {
   label: string
   walletButton: ReactElement
   signButton: ReactElement
-  coins: string | undefined
+  coins: string | undefined | null
   isEligible: boolean
 }
 function TableRow({

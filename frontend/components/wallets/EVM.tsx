@@ -23,6 +23,7 @@ import { SignButton } from './SignButton'
 import { useEVMSignMessage } from 'hooks/useSignMessage'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useEVMAddress } from 'hooks/useAddress'
 
 // Configure chains & providers with the Alchemy provider.
 // Two popular providers are Alchemy (alchemy.com) and Infura (infura.io)
@@ -135,12 +136,17 @@ export function EVMWalletButton({ disableOnConnect }: EvmWalletButtonProps) {
 export function EVMSignButton() {
   const signMessageFn = useEVMSignMessage()
   const tokenDispenser = useTokenDispenserProvider()
-  return (
-    <SignButton
-      signMessageFn={signMessageFn}
-      ecosystem={Ecosystem.EVM}
-      message={tokenDispenser?.generateAuthorizationPayload() ?? ''}
-      disable={tokenDispenser === undefined}
-    />
-  )
+  const address = useEVMAddress()
+
+  if (address === undefined || tokenDispenser === undefined)
+    return <SignButton disable />
+  else
+    return (
+      <SignButton
+        signMessageFn={signMessageFn}
+        message={tokenDispenser.generateAuthorizationPayload()}
+        solanaIdentity={tokenDispenser.claimant.toBase58()}
+        ecosystemIdentity={address}
+      />
+    )
 }

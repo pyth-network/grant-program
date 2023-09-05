@@ -167,12 +167,15 @@ export function SolanaWalletButton({
 export function SolanaSignButton() {
   const signMessageFn = useSolanaSignMessage()
   const tokenDispenser = useTokenDispenserProvider()
-  return (
-    <SignButton
-      signMessageFn={signMessageFn}
-      ecosystem={Ecosystem.SOLANA}
-      message={tokenDispenser?.generateAuthorizationPayload() ?? ''}
-      disable={tokenDispenser === undefined}
-    />
-  )
+
+  if (tokenDispenser === undefined) return <SignButton disable />
+  else
+    return (
+      <SignButton
+        signMessageFn={signMessageFn}
+        message={tokenDispenser.generateAuthorizationPayload()}
+        solanaIdentity={tokenDispenser.claimant.toBase58()}
+        ecosystemIdentity={tokenDispenser.claimant.toBase58()}
+      />
+    )
 }

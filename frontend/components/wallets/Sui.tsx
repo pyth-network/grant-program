@@ -7,6 +7,7 @@ import { useSuiSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useSuiAddress } from 'hooks/useAddress'
 
 type SuiWalletButtonProps = {
   disableOnConnect?: boolean
@@ -101,12 +102,17 @@ export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
 export function SuiSignButton() {
   const signMessageFn = useSuiSignMessage()
   const tokenDispenser = useTokenDispenserProvider()
-  return (
-    <SignButton
-      signMessageFn={signMessageFn}
-      ecosystem={Ecosystem.SUI}
-      message={tokenDispenser?.generateAuthorizationPayload() ?? ''}
-      disable={tokenDispenser === undefined}
-    />
-  )
+  const address = useSuiAddress()
+
+  if (address === undefined || tokenDispenser === undefined)
+    return <SignButton disable />
+  else
+    return (
+      <SignButton
+        signMessageFn={signMessageFn}
+        message={tokenDispenser.generateAuthorizationPayload()}
+        solanaIdentity={tokenDispenser.claimant.toBase58()}
+        ecosystemIdentity={address}
+      />
+    )
 }

@@ -10,6 +10,7 @@ import { useCosmosSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useCosmosAddress } from 'hooks/useAddress'
 
 export const WALLET_NAME = 'keplr-extension'
 
@@ -143,14 +144,19 @@ function chainNametoEcosystem(chainName: ChainName): Ecosystem {
 export function CosmosSignButton({ chainName }: { chainName: ChainName }) {
   const signMessageFn = useCosmosSignMessage(chainName)
   const tokenDispenser = useTokenDispenserProvider()
-  return (
-    <SignButton
-      signMessageFn={signMessageFn}
-      ecosystem={chainNametoEcosystem(chainName)}
-      message={tokenDispenser?.generateAuthorizationPayload() ?? ''}
-      disable={tokenDispenser === undefined}
-    />
-  )
+  const address = useCosmosAddress(chainName)
+
+  if (address === undefined || tokenDispenser === undefined)
+    return <SignButton disable />
+  else
+    return (
+      <SignButton
+        signMessageFn={signMessageFn}
+        message={tokenDispenser.generateAuthorizationPayload()}
+        solanaIdentity={tokenDispenser.claimant.toBase58()}
+        ecosystemIdentity={address}
+      />
+    )
 }
 
 function getKeplrConnectionStatusKey(chainName: ChainName) {

@@ -12,6 +12,7 @@ import { useAptosSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useAptosAddress } from 'hooks/useAddress'
 
 type AptosWalletProviderProps = {
   children: ReactNode
@@ -74,9 +75,6 @@ export function AptosWalletButton({
             await fetchAmountAndProof('aptos', account?.address)
           )
       }
-      // TODO: if the effect has been triggered again, it will only because of connected or account?.address
-      // i.e., the connected account has changed and hence set signedMessage to undefined
-      // setSignedMessage(Ecosystem.APTOS, undefined)
     })()
   }, [connected, account?.address, setEligibility, eligibility])
 
@@ -107,12 +105,17 @@ export function AptosWalletButton({
 export function AptosSignButton() {
   const signMessageFn = useAptosSignMessage()
   const tokenDispenser = useTokenDispenserProvider()
-  return (
-    <SignButton
-      signMessageFn={signMessageFn}
-      ecosystem={Ecosystem.APTOS}
-      message={tokenDispenser?.generateAuthorizationPayload() ?? ''}
-      disable={tokenDispenser === undefined}
-    />
-  )
+  const address = useAptosAddress()
+
+  if (address === undefined || tokenDispenser === undefined)
+    return <SignButton disable />
+  else
+    return (
+      <SignButton
+        signMessageFn={signMessageFn}
+        message={tokenDispenser.generateAuthorizationPayload()}
+        solanaIdentity={tokenDispenser.claimant.toBase58()}
+        ecosystemIdentity={address}
+      />
+    )
 }
