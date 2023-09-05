@@ -9,10 +9,11 @@ import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { useCosmosSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
+import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 
-const walletName = 'keplr-extension'
+export const WALLET_NAME = 'keplr-extension'
 
-type ChainName = 'injective' | 'osmosis' | 'neutron'
+export type ChainName = 'injective' | 'osmosis' | 'neutron'
 
 type CosmosWalletProviderProps = {
   children: ReactNode
@@ -40,7 +41,7 @@ export function CosmosWalletButton({
   chainName,
   disableOnConnect,
 }: CosmosWalletButtonProps) {
-  const chainWalletContext = useChainWallet(chainName, walletName)
+  const chainWalletContext = useChainWallet(chainName, WALLET_NAME)
   const {
     address,
     isWalletConnecting,
@@ -76,7 +77,7 @@ export function CosmosWalletButton({
     if (isWalletNotExist) window.open('https://www.keplr.app/download')
   }, [isWalletNotExist])
 
-  const { setEligibility, setSignedMessage } = useEcosystem()
+  const { eligibility, setEligibility } = useEligiblity()
 
   // fetch the eligibility and store it
   useEffect(() => {
@@ -85,17 +86,23 @@ export function CosmosWalletButton({
         // Here, store locally that the wallet was connected
         localStorage.setItem(getKeplrConnectionStatusKey(chainName), 'true')
 
-        const eligibility = await fetchAmountAndProof(
-          chainName === 'injective' ? 'injective' : 'cosmwasm',
-          address
-        )
-        setEligibility(chainNametoEcosystem(chainName), eligibility)
-      } else {
-        setEligibility(chainNametoEcosystem(chainName), undefined)
+        // NOTE: we need to check if identity was previously stored
+        // We can't check it using eligibility[address] === undefined
+        // As, an undefined eligibility can be stored before.
+        // Hence, we are checking if the key exists in the object
+        if (address in eligibility) return
+        else
+          setEligibility(
+            address,
+            await fetchAmountAndProof(
+              chainName === 'injective' ? 'injective' : 'cosmwasm',
+              address
+            )
+          )
       }
-      // if the effect has been triggered again, it will only because of isWalletConnected or address
+      // TODO: if the effect has been triggered again, it will only because of isWalletConnected or address
       // i.e., the connected account has changed and hence set signedMessage to undefined
-      setSignedMessage(chainNametoEcosystem(chainName), undefined)
+      // setSignedMessage(chainNametoEcosystem(chainName), undefined)
     })()
     if (isWalletDisconnected)
       localStorage.setItem(getKeplrConnectionStatusKey(chainName), 'false')
@@ -104,8 +111,8 @@ export function CosmosWalletButton({
     address,
     setEligibility,
     chainName,
-    setSignedMessage,
     isWalletDisconnected,
+    eligibility,
   ])
 
   return (

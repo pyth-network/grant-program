@@ -6,6 +6,7 @@ import { signIn, signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
 import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
+import { useEligiblity } from './Ecosystem/EligibilityProvider'
 
 // TODO: when signing in to discord the page reloads which results into loss of all the
 // local state. Resolve that
@@ -37,25 +38,28 @@ export function DiscordButton({ disableOnAuth }: DiscordButtonProps) {
     }
   }, [status, data?.user])
 
-  const { setEligibility, setSignedMessage } = useEcosystem()
+  const { eligibility, setEligibility } = useEligiblity()
 
   // fetch the eligibility and store it
   useEffect(() => {
     ;(async () => {
       if (status === 'authenticated' && data?.user?.name) {
-        const eligibility = await fetchAmountAndProof(
-          'discord',
-          data?.user?.name
-        )
-        setEligibility(Ecosystem.DISCORD, eligibility)
-      } else {
-        setEligibility(Ecosystem.DISCORD, undefined)
+        // NOTE: we need to check if identity was previously stored
+        // We can't check it using eligibility[account?.address] === undefined
+        // As, an undefined eligibility can be stored before.
+        // Hence, we are checking if the key exists in the object
+        if (data?.user?.name in eligibility) return
+        else
+          setEligibility(
+            data?.user?.name,
+            await fetchAmountAndProof('discord', data?.user?.name)
+          )
       }
-      // if the effect has been triggered again, it will only because the user has changed somehow
+      // TODO: if the effect has been triggered again, it will only because the user has changed somehow
       // i.e., the connected account has changed and hence set signedMessage to undefined
-      setSignedMessage(Ecosystem.DISCORD, undefined)
+      // setSignedMessage(Ecosystem.DISCORD, undefined)//
     })()
-  }, [status, setEligibility, data?.user?.name, setSignedMessage])
+  }, [status, setEligibility, data?.user?.name, eligibility])
 
   return (
     <button

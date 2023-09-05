@@ -24,6 +24,7 @@ import { fetchAmountAndProof } from 'utils/api'
 import { SignButton } from './SignButton'
 import { useSolanaSignMessage } from 'hooks/useSignMessage'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
+import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
 export const BACKPACK_WALLET_ADAPTER = new BackpackWalletAdapter()
@@ -122,24 +123,23 @@ export function SolanaWalletButton({
 
   const wallets = useWallets()
 
-  const { setEligibility, setAllSignedMessageUndefined } = useEcosystem()
+  const { eligibility, setEligibility } = useEligiblity()
 
   // fetch the eligibility and store it
   useEffect(() => {
     ;(async () => {
       if (connected === true && base58 !== undefined) {
-        const eligibility = await fetchAmountAndProof('solana', base58)
-        setEligibility(Ecosystem.SOLANA, eligibility)
-      } else {
-        setEligibility(Ecosystem.SOLANA, undefined)
+        // NOTE: we need to check if identity was previously stored
+        // We can't check it using eligibility[base58] === undefined
+        // As, an undefined eligibility can be stored before.
+        // Hence, we are checking if the key exists in the object
+        if (base58 in eligibility) return
+        else setEligibility(base58, await fetchAmountAndProof('solana', base58))
       }
-      // if the effect has been triggered again, it will only because of connected or  base58
-      // i.e., the connected account has changed and hence set signedMessage to undefined
-      // also, if a solana wallet has changed we need to reset all the signed messages
-      // because the messages contain the solana wallet address
-      setAllSignedMessageUndefined()
+
+      // TODO: add code to set all signed message undefined
     })()
-  }, [connected, base58, setEligibility, setAllSignedMessageUndefined])
+  }, [base58, connected, eligibility, setEligibility])
 
   return (
     <WalletButton
