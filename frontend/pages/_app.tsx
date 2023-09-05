@@ -11,13 +11,14 @@ import { CosmosWalletProvider } from '@components/wallets/Cosmos'
 import { SessionProvider } from 'next-auth/react'
 import { EcosystemProvider } from '@components/EcosystemProvider'
 import { TokenDispenserProvider } from '@components/TokenDispenserProvider'
+import { EcosystemProviders } from '@components/Ecosystem'
 
 // Use require instead of import since order matters
 require('../styles/globals.css')
 
 const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
   return (
-    <EcosystemProvider>
+    <EcosystemProviders>
       <SessionProvider>
         <SolanaWalletProvider>
           <TokenDispenserProvider>
@@ -42,7 +43,7 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
           </TokenDispenserProvider>
         </SolanaWalletProvider>
       </SessionProvider>
-    </EcosystemProvider>
+    </EcosystemProviders>
   )
 }
 
