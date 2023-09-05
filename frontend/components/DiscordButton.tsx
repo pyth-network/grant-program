@@ -7,8 +7,6 @@ import Image from 'next/image'
 import { fetchAmountAndProof } from 'utils/api'
 import { useEligiblity } from './Ecosystem/EligibilityProvider'
 
-// TODO: when signing in to discord the page reloads which results into loss of all the
-// local state. Resolve that
 type DiscordButtonProps = {
   disableOnAuth?: boolean
 }
