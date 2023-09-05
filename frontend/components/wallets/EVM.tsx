@@ -104,9 +104,6 @@ export function EVMWalletButton({ disableOnConnect }: EvmWalletButtonProps) {
         if (address in eligibility) return
         else setEligibility(address, await fetchAmountAndProof('evm', address))
       }
-      // TODO: if the effect has been triggered again, it will only because of isConnected or address
-      // i.e., the connected account has changed and hence set signedMessage to undefined
-      // setSignedMessage(Ecosystem.EVM, undefined)
     })()
   }, [isConnected, address, setEligibility, eligibility])
 

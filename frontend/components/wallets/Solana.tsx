@@ -135,8 +135,6 @@ export function SolanaWalletButton({
         if (base58 in eligibility) return
         else setEligibility(base58, await fetchAmountAndProof('solana', base58))
       }
-
-      // TODO: add code to set all signed message undefined
     })()
   }, [base58, connected, eligibility, setEligibility])
 

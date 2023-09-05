@@ -72,9 +72,6 @@ export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
             await fetchAmountAndProof('sui', currentAccount?.address)
           )
       }
-      // TODO: if the effect has been triggered again, it will only because of isConnected or currentAccount?.address
-      // i.e., the connected account has changed and hence set signedMessage to undefined
-      // setSignedMessage(Ecosystem.SUI, undefined)
     })()
   }, [isConnected, currentAccount?.address, setEligibility, eligibility])
 

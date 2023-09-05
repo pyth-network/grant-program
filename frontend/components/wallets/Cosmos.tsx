@@ -100,9 +100,6 @@ export function CosmosWalletButton({
             )
           )
       }
-      // TODO: if the effect has been triggered again, it will only because of isWalletConnected or address
-      // i.e., the connected account has changed and hence set signedMessage to undefined
-      // setSignedMessage(chainNametoEcosystem(chainName), undefined)
     })()
     if (isWalletDisconnected)
       localStorage.setItem(getKeplrConnectionStatusKey(chainName), 'false')

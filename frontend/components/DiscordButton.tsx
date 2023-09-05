@@ -54,9 +54,6 @@ export function DiscordButton({ disableOnAuth }: DiscordButtonProps) {
             await fetchAmountAndProof('discord', data?.user?.name)
           )
       }
-      // TODO: if the effect has been triggered again, it will only because the user has changed somehow
-      // i.e., the connected account has changed and hence set signedMessage to undefined
-      // setSignedMessage(Ecosystem.DISCORD, undefined)//
     })()
   }, [status, setEligibility, data?.user?.name, eligibility])
 
