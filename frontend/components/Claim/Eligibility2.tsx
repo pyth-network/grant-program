@@ -13,7 +13,6 @@ import {
   SolanaSignButton,
   SolanaWalletButton,
 } from '@components/wallets/Solana'
-import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { classNames } from 'utils/classNames'
 import { DiscordButton } from '@components/DiscordButton'
 import { DiscordSignButton } from '@components/DiscordSignButton'

@@ -4,7 +4,6 @@ import Discord from '../images/discord.inline.svg'
 
 import { signIn, signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
-import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
 import { useEligiblity } from './Ecosystem/EligibilityProvider'
 

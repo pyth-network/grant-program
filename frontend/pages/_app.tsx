@@ -9,7 +9,6 @@ import { Toaster } from 'react-hot-toast'
 import { EVMWalletProvider } from '@components/wallets/EVM'
 import { CosmosWalletProvider } from '@components/wallets/Cosmos'
 import { SessionProvider } from 'next-auth/react'
-import { EcosystemProvider } from '@components/EcosystemProvider'
 import { TokenDispenserProvider } from '@components/TokenDispenserProvider'
 import { EcosystemProviders } from '@components/Ecosystem'
 

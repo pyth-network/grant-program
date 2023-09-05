@@ -5,7 +5,6 @@ import { wallets } from '@cosmos-kit/keplr-extension'
 import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 import { fetchAmountAndProof } from 'utils/api'
-import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { useCosmosSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
@@ -131,12 +130,6 @@ export function CosmosWalletButton({
       )}
     />
   )
-}
-
-function chainNametoEcosystem(chainName: ChainName): Ecosystem {
-  if (chainName === 'injective') return Ecosystem.INJECTIVE
-  else if (chainName === 'osmosis') return Ecosystem.OSMOSIS
-  else return Ecosystem.NEUTRON
 }
 
 // A Solana wallet must be connected before this component is rendered

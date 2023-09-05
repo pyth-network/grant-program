@@ -11,7 +11,6 @@ import { SuiWalletButton } from '@components/wallets/Sui'
 import { EVMWalletButton } from '@components/wallets/EVM'
 import { CosmosWalletButton } from '@components/wallets/Cosmos'
 import { SolanaWalletButton } from '@components/wallets/Solana'
-import { Ecosystem } from '@components/EcosystemProvider'
 import { classNames } from 'utils/classNames'
 import { DiscordButton } from '@components/DiscordButton'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
@@ -143,7 +142,7 @@ const Eligibility = ({
               data?.user?.name &&
               eligibility[data?.user?.name]?.claimInfo.amount.toString()
             }
-            isActive={activity[Ecosystem.DISCORD]}
+            isActive={activity['Pyth Discord']}
           />
 
           <tr className="border-b border-light-35 ">

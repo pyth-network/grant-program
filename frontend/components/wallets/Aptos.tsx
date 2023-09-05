@@ -6,7 +6,6 @@ import {
 import { PetraWallet } from 'petra-plugin-wallet-adapter'
 import { ReactElement, ReactNode, useCallback, useEffect, useMemo } from 'react'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
-import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
 import { useAptosSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'

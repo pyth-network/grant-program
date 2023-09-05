@@ -2,7 +2,6 @@ import React, { useCallback } from 'react'
 
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
 import { SignButton } from './wallets/SignButton'
-import { Ecosystem } from './EcosystemProvider'
 import { fetchDiscordSignedMessage } from 'utils/api'
 import { useSession } from 'next-auth/react'
 import { useTokenDispenserProvider } from './TokenDispenserProvider'

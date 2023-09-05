@@ -1,4 +1,3 @@
-import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { SignMessageFn } from 'hooks/useSignMessage'
 import { useState, useCallback } from 'react'
 import Signed from '../../images/signed.inline.svg'
