@@ -29,11 +29,11 @@ const Step5 = ({ setStep }: { setStep: Function }) => {
     }[] = []
 
     Object.keys(signatures).forEach((ecosystem) => {
-      // @ts-ignore: object can't be undefined as it will in the loop only if a value exists
+      // @ts-ignore: object can't be undefined as it will be in the loop only if a value exists
       Object.keys(signatures[ecosystem as Ecosystem]).forEach(
         (ecosystemIdentity) => {
           const signedMsg =
-            // @ts-ignore: object can't be undefined as it will in the loop only if a value exists
+            // @ts-ignore: object can't be undefined as it will be in the loop only if a value exists
             signatures[ecosystem as Ecosystem][ecosystemIdentity]
           const claim = {
             signedMessage: signedMsg,
