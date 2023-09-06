@@ -18,19 +18,15 @@ export function DiscordSignButton() {
   }, [tokenDispenser?.claimant])
 
   const { data } = useSession()
-  if (
-    data?.user?.name === undefined ||
-    data?.user?.name === null ||
-    tokenDispenser === undefined
+
+  return (
+    <SignButton
+      signMessageFn={signMessageFn}
+      message={tokenDispenser?.generateAuthorizationPayload()}
+      solanaIdentity={tokenDispenser?.claimant.toBase58()}
+      ecosystemIdentity={
+        data?.user?.name === null ? undefined : data?.user?.name
+      }
+    />
   )
-    return <SignButton disable />
-  else
-    return (
-      <SignButton
-        signMessageFn={signMessageFn}
-        message={tokenDispenser.generateAuthorizationPayload()}
-        solanaIdentity={tokenDispenser.claimant.toBase58()}
-        ecosystemIdentity={data?.user?.name}
-      />
-    )
 }
