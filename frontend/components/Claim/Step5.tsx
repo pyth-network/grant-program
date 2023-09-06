@@ -1,11 +1,59 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import Arrow from '../../images/arrow.inline.svg'
 import Modal from './Modal'
 import Eligibility2 from './Eligibility2'
+import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useSignature } from '@components/Ecosystem/SignatureProvider'
+import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
+import { ClaimInfo } from 'claim_sdk/claim'
+import { Ecosystem } from '@components/Ecosystem'
+import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
 
 const Step5 = ({ setStep }: { setStep: Function }) => {
   const [modal, openModal] = useState(false)
   const [screen, setScreen] = useState(1)
+  const tokenDispenser = useTokenDispenserProvider()
+  const { eligibility } = useEligiblity()
+  const { signatureMap } = useSignature()
+
+  const submitTxs = useCallback(async () => {
+    if (tokenDispenser === undefined) return
+    const solanaIdentity = tokenDispenser.claimant.toBase58()
+    const signatures = signatureMap[solanaIdentity]
+    if (signatures === undefined) return
+
+    const claims: {
+      claimInfo: ClaimInfo
+      proofOfInclusion: Uint8Array[]
+      signedMessage: SignedMessage | undefined
+    }[] = []
+
+    Object.keys(signatures).forEach((ecosystem) => {
+      // @ts-ignore: object can't be undefined as it will in the loop only if a value exists
+      Object.keys(signatures[ecosystem as Ecosystem]).forEach(
+        (ecosystemIdentity) => {
+          const signedMsg =
+            // @ts-ignore: object can't be undefined as it will in the loop only if a value exists
+            signatures[ecosystem as Ecosystem][ecosystemIdentity]
+          const claim = {
+            signedMessage: signedMsg,
+            // the eligibility will not be undefined because a signature is present
+            // as a signature will only be requested if the wallet was eligible
+            claimInfo:
+              eligibility[ecosystem as Ecosystem][ecosystemIdentity]!.claimInfo,
+            proofOfInclusion:
+              eligibility[ecosystem as Ecosystem][ecosystemIdentity]!
+                .proofOfInclusion,
+          }
+
+          claims.push(claim)
+        }
+      )
+    })
+
+    await tokenDispenser.submitClaims(claims)
+  }, [eligibility, signatureMap, tokenDispenser])
+
   return (
     <>
       {screen == 1 ? (
@@ -72,7 +120,10 @@ const Step5 = ({ setStep }: { setStep: Function }) => {
             </button>
             <button
               className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-              onClick={() => setStep(6)}
+              onClick={async () => {
+                await submitTxs()
+                setStep(6)
+              }}
             >
               <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
                 proceed
