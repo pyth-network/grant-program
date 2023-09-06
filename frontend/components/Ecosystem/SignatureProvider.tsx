@@ -41,8 +41,6 @@ export function SignatureProvider({ children }: ProviderProps) {
     getStoredSignatureMap() ?? {}
   )
 
-  console.log(signatureMap)
-
   // side effect: whenever the eligibility map changes sync the local storage
   useEffect(() => {
     if (typeof window === 'undefined') return
