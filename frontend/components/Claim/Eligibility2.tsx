@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react'
+import React, { ReactElement, useCallback } from 'react'
 import Arrow from '../../images/arrow.inline.svg'
 import Coin from '../../images/coin.inline.svg'
 
@@ -45,6 +45,21 @@ const Eligibility2 = ({
 
   const { eligibility } = useEligiblity()
 
+  const getEligibleBalance = useCallback(
+    (identity: string | undefined | null) => {
+      if (identity === undefined || identity === null) return undefined
+      else return eligibility[identity]?.claimInfo.amount.toString()
+    },
+    [eligibility]
+  )
+
+  const isEligible = useCallback(
+    (identity: string | undefined | null) => {
+      return identity ? eligibility[identity] !== undefined : false
+    },
+    [eligibility]
+  )
+
   return (
     <div className=" overflow-auto border border-light-35 bg-dark">
       <div className="min-w-[650px]">
@@ -80,49 +95,29 @@ const Eligibility2 = ({
               label={'Solana Activity'}
               walletButton={<SolanaWalletButton disableOnConnect />}
               signButton={<SolanaSignButton />}
-              coins={
-                solanaAddress &&
-                eligibility[solanaAddress]?.claimInfo.amount.toString()
-              }
-              isEligible={
-                solanaAddress ? eligibility[solanaAddress] !== undefined : false
-              }
+              coins={getEligibleBalance(solanaAddress)}
+              isEligible={isEligible(solanaAddress)}
             />
             <TableRow
               label={'EVM Activity'}
               walletButton={<EVMWalletButton disableOnConnect />}
               signButton={<EVMSignButton />}
-              coins={
-                evmAddress &&
-                eligibility[evmAddress]?.claimInfo.amount.toString()
-              }
-              isEligible={
-                evmAddress ? eligibility[evmAddress] !== undefined : false
-              }
+              coins={getEligibleBalance(evmAddress)}
+              isEligible={isEligible(evmAddress)}
             />
             <TableRow
               label={'Aptos Activity'}
               walletButton={<AptosWalletButton disableOnConnect />}
               signButton={<AptosSignButton />}
-              coins={
-                aptosAddress &&
-                eligibility[aptosAddress]?.claimInfo.amount.toString()
-              }
-              isEligible={
-                aptosAddress ? eligibility[aptosAddress] !== undefined : false
-              }
+              coins={getEligibleBalance(aptosAddress)}
+              isEligible={isEligible(aptosAddress)}
             />
             <TableRow
               label={'Sui Activity'}
               walletButton={<SuiWalletButton disableOnConnect />}
               signButton={<SuiSignButton />}
-              coins={
-                suiAddress &&
-                eligibility[suiAddress]?.claimInfo.amount.toString()
-              }
-              isEligible={
-                suiAddress ? eligibility[suiAddress] !== undefined : false
-              }
+              coins={getEligibleBalance(suiAddress)}
+              isEligible={isEligible(suiAddress)}
             />
             <TableRow
               label={'Injective Activity'}
@@ -130,15 +125,8 @@ const Eligibility2 = ({
                 <CosmosWalletButton chainName="injective" disableOnConnect />
               }
               signButton={<CosmosSignButton chainName="injective" />}
-              coins={
-                injectiveAddress &&
-                eligibility[injectiveAddress]?.claimInfo.amount.toString()
-              }
-              isEligible={
-                injectiveAddress
-                  ? eligibility[injectiveAddress] !== undefined
-                  : false
-              }
+              coins={getEligibleBalance(injectiveAddress)}
+              isEligible={isEligible(injectiveAddress)}
             />
             <TableRow
               label={'Osmosis Activity'}
@@ -146,15 +134,8 @@ const Eligibility2 = ({
                 <CosmosWalletButton chainName="osmosis" disableOnConnect />
               }
               signButton={<CosmosSignButton chainName="osmosis" />}
-              coins={
-                osmosisAddress &&
-                eligibility[osmosisAddress]?.claimInfo.amount.toString()
-              }
-              isEligible={
-                osmosisAddress
-                  ? eligibility[osmosisAddress] !== undefined
-                  : false
-              }
+              coins={getEligibleBalance(osmosisAddress)}
+              isEligible={isEligible(osmosisAddress)}
             />
             <TableRow
               label={'Neutron Activity'}
@@ -162,29 +143,15 @@ const Eligibility2 = ({
                 <CosmosWalletButton chainName="neutron" disableOnConnect />
               }
               signButton={<CosmosSignButton chainName="neutron" />}
-              coins={
-                neutronAddress &&
-                eligibility[neutronAddress]?.claimInfo.amount.toString()
-              }
-              isEligible={
-                neutronAddress
-                  ? eligibility[neutronAddress] !== undefined
-                  : false
-              }
+              coins={getEligibleBalance(neutronAddress)}
+              isEligible={isEligible(neutronAddress)}
             />
             <TableRow
               label={'Discord Activity'}
               walletButton={<DiscordButton disableOnAuth />}
               signButton={<DiscordSignButton />}
-              coins={
-                data?.user?.name &&
-                eligibility[data?.user?.name]?.claimInfo.amount.toString()
-              }
-              isEligible={
-                data?.user?.name
-                  ? eligibility[data?.user?.name] !== undefined
-                  : false
-              }
+              coins={getEligibleBalance(data?.user?.name)}
+              isEligible={isEligible(data?.user?.name)}
             />
             <tr className="border-b border-light-35 ">
               <td className="w-full bg-darkGray5 py-2 pl-10 pr-4">
