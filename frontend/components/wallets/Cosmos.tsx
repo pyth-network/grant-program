@@ -10,6 +10,7 @@ import { SignButton } from './SignButton'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 import { useCosmosAddress } from 'hooks/useAddress'
+import { Ecosystem } from '@components/Ecosystem'
 
 export const WALLET_NAME = 'keplr-extension'
 
@@ -90,9 +91,10 @@ export function CosmosWalletButton({
         // We can't check it using eligibility[address] === undefined
         // As, an undefined eligibility can be stored before.
         // Hence, we are checking if the key exists in the object
-        if (address in eligibility) return
+        if (address in eligibility[chainNametoEcosystem(chainName)]) return
         else
           setEligibility(
+            chainNametoEcosystem(chainName),
             address,
             await fetchAmountAndProof(
               chainName === 'injective' ? 'injective' : 'cosmwasm',
@@ -148,4 +150,10 @@ export function CosmosSignButton({ chainName }: { chainName: ChainName }) {
 function getKeplrConnectionStatusKey(chainName: ChainName) {
   const KEPLR_CONNECTION_STATUS_KEY = 'keplr-local-storage-connection-key'
   return KEPLR_CONNECTION_STATUS_KEY + '-' + chainName
+}
+
+function chainNametoEcosystem(chainName: ChainName) {
+  if (chainName === 'injective') return Ecosystem.INJECTIVE
+  else if (chainName === 'osmosis') return Ecosystem.OSMOSIS
+  else return Ecosystem.NEUTRON
 }

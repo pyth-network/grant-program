@@ -14,7 +14,6 @@ import { SolanaWalletButton } from '@components/wallets/Solana'
 import { classNames } from 'utils/classNames'
 import { DiscordButton } from '@components/DiscordButton'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
-import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 import {
   useAptosAddress,
   useCosmosAddress,
@@ -23,6 +22,8 @@ import {
   useSuiAddress,
 } from 'hooks/useAddress'
 import { useSession } from 'next-auth/react'
+import { useCoins } from 'hooks/useCoins'
+import { Ecosystem } from '@components/Ecosystem'
 
 // TODO: Add loading support for sub components to disable proceed back buttons.
 const Eligibility = ({
@@ -33,7 +34,6 @@ const Eligibility = ({
   onProceed: Function
 }) => {
   const { activity } = useActivity()
-  const { eligibility } = useEligiblity()
 
   const aptosAddress = useAptosAddress()
   const injectiveAddress = useCosmosAddress('injective')
@@ -44,6 +44,8 @@ const Eligibility = ({
   const suiAddress = useSuiAddress()
 
   const { data } = useSession()
+
+  const getEligibleCoins = useCoins()
 
   return (
     <div className=" border border-light-35 bg-dark">
@@ -77,71 +79,49 @@ const Eligibility = ({
           <TableRow
             label={'Solana Activity'}
             actionButton={<SolanaWalletButton />}
-            coins={
-              solanaAddress &&
-              eligibility[solanaAddress]?.claimInfo.amount.toString()
-            }
+            coins={getEligibleCoins(Ecosystem.SOLANA, solanaAddress)}
             isActive={activity.Solana}
           />
           <TableRow
             label={'EVM Activity'}
             actionButton={<EVMWalletButton />}
-            coins={
-              evmAddress && eligibility[evmAddress]?.claimInfo.amount.toString()
-            }
+            coins={getEligibleCoins(Ecosystem.EVM, evmAddress)}
             isActive={activity.Evm}
           />
           <TableRow
             label={'Aptos Activity'}
             actionButton={<AptosWalletButton />}
-            coins={
-              aptosAddress &&
-              eligibility[aptosAddress]?.claimInfo.amount.toString()
-            }
+            coins={getEligibleCoins(Ecosystem.APTOS, aptosAddress)}
             isActive={activity.Aptos}
           />
           <TableRow
             label={'Sui Activity'}
             actionButton={<SuiWalletButton />}
-            coins={
-              suiAddress && eligibility[suiAddress]?.claimInfo.amount.toString()
-            }
+            coins={getEligibleCoins(Ecosystem.SUI, suiAddress)}
             isActive={activity.Sui}
           />
           <TableRow
             label={'Injective Activity'}
             actionButton={<CosmosWalletButton chainName="injective" />}
-            coins={
-              injectiveAddress &&
-              eligibility[injectiveAddress]?.claimInfo.amount.toString()
-            }
+            coins={getEligibleCoins(Ecosystem.INJECTIVE, injectiveAddress)}
             isActive={activity.Injective}
           />
           <TableRow
             label={'Osmosis Activity'}
             actionButton={<CosmosWalletButton chainName="osmosis" />}
-            coins={
-              osmosisAddress &&
-              eligibility[osmosisAddress]?.claimInfo.amount.toString()
-            }
+            coins={getEligibleCoins(Ecosystem.OSMOSIS, osmosisAddress)}
             isActive={activity.Osmosis}
           />
           <TableRow
             label={'Neutron Activity'}
             actionButton={<CosmosWalletButton chainName="neutron" />}
-            coins={
-              neutronAddress &&
-              eligibility[neutronAddress]?.claimInfo.amount.toString()
-            }
+            coins={getEligibleCoins(Ecosystem.NEUTRON, neutronAddress)}
             isActive={activity.Neutron}
           />
           <TableRow
             label={'Discord Activity'}
             actionButton={<DiscordButton />}
-            coins={
-              data?.user?.name &&
-              eligibility[data?.user?.name]?.claimInfo.amount.toString()
-            }
+            coins={getEligibleCoins(Ecosystem.DISCORD, data?.user?.name)}
             isActive={activity['Pyth Discord']}
           />
 

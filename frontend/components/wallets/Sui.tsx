@@ -7,6 +7,7 @@ import { SignButton } from './SignButton'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 import { useSuiAddress } from 'hooks/useAddress'
+import { Ecosystem } from '@components/Ecosystem'
 
 type SuiWalletButtonProps = {
   disableOnConnect?: boolean
@@ -65,9 +66,10 @@ export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
         // We can't check it using eligibility[address] === undefined
         // As, an undefined eligibility can be stored before.
         // Hence, we are checking if the key exists in the object
-        if (currentAccount?.address in eligibility) return
+        if (currentAccount?.address in eligibility[Ecosystem.SUI]) return
         else
           setEligibility(
+            Ecosystem.SUI,
             currentAccount?.address,
             await fetchAmountAndProof('sui', currentAccount?.address)
           )

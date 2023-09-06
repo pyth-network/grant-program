@@ -12,6 +12,7 @@ import { SignButton } from './SignButton'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 import { useAptosAddress } from 'hooks/useAddress'
+import { Ecosystem } from '@components/Ecosystem'
 
 type AptosWalletProviderProps = {
   children: ReactNode
@@ -67,9 +68,10 @@ export function AptosWalletButton({
         // We can't check it using eligibility[account?.address] === undefined
         // As, an undefined eligibility can be stored before.
         // Hence, we are checking if the key exists in the object
-        if (account?.address in eligibility) return
+        if (account?.address in eligibility[Ecosystem.APTOS]) return
         else
           setEligibility(
+            Ecosystem.APTOS,
             account?.address,
             await fetchAmountAndProof('aptos', account?.address)
           )

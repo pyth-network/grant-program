@@ -6,6 +6,7 @@ import { signIn, signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
 import { fetchAmountAndProof } from 'utils/api'
 import { useEligiblity } from './Ecosystem/EligibilityProvider'
+import { Ecosystem } from './Ecosystem'
 
 type DiscordButtonProps = {
   disableOnAuth?: boolean
@@ -45,9 +46,10 @@ export function DiscordButton({ disableOnAuth }: DiscordButtonProps) {
         // We can't check it using eligibility[account?.address] === undefined
         // As, an undefined eligibility can be stored before.
         // Hence, we are checking if the key exists in the object
-        if (data?.user?.name in eligibility) return
+        if (data?.user?.name in eligibility[Ecosystem.DISCORD]) return
         else
           setEligibility(
+            Ecosystem.DISCORD,
             data?.user?.name,
             await fetchAmountAndProof('discord', data?.user?.name)
           )

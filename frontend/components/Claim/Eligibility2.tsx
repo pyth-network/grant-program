@@ -26,6 +26,8 @@ import {
 import { useSession } from 'next-auth/react'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
+import { useCoins } from 'hooks/useCoins'
+import { Ecosystem } from '@components/Ecosystem'
 
 const Eligibility2 = ({
   onBack,
@@ -48,17 +50,11 @@ const Eligibility2 = ({
 
   const { eligibility } = useEligiblity()
 
-  const getEligibleBalance = useCallback(
-    (identity: string | undefined | null) => {
-      if (identity === undefined || identity === null) return undefined
-      else return eligibility[identity]?.claimInfo.amount.toString()
-    },
-    [eligibility]
-  )
+  const getEligibleCoins = useCoins()
 
   const isEligible = useCallback(
-    (identity: string | undefined | null) => {
-      return identity ? eligibility[identity] !== undefined : false
+    (ecosystem: Ecosystem, identity: string | undefined | null) => {
+      return identity ? eligibility[ecosystem][identity] !== undefined : false
     },
     [eligibility]
   )
@@ -98,29 +94,33 @@ const Eligibility2 = ({
               label={'Solana Activity'}
               walletButton={<SolanaWalletButton disableOnConnect />}
               signButton={<SolanaSignButton />}
-              coins={getEligibleBalance(solanaAddress)}
-              isEligible={activity.Solana && isEligible(solanaAddress)}
+              coins={getEligibleCoins(Ecosystem.SOLANA, solanaAddress)}
+              isEligible={
+                activity.Solana && isEligible(Ecosystem.SOLANA, solanaAddress)
+              }
             />
             <TableRow
               label={'EVM Activity'}
               walletButton={<EVMWalletButton disableOnConnect />}
               signButton={<EVMSignButton />}
-              coins={getEligibleBalance(evmAddress)}
-              isEligible={activity.Evm && isEligible(evmAddress)}
+              coins={getEligibleCoins(Ecosystem.EVM, evmAddress)}
+              isEligible={activity.Evm && isEligible(Ecosystem.EVM, evmAddress)}
             />
             <TableRow
               label={'Aptos Activity'}
               walletButton={<AptosWalletButton disableOnConnect />}
               signButton={<AptosSignButton />}
-              coins={getEligibleBalance(aptosAddress)}
-              isEligible={activity.Aptos && isEligible(aptosAddress)}
+              coins={getEligibleCoins(Ecosystem.APTOS, aptosAddress)}
+              isEligible={
+                activity.Aptos && isEligible(Ecosystem.APTOS, aptosAddress)
+              }
             />
             <TableRow
               label={'Sui Activity'}
               walletButton={<SuiWalletButton disableOnConnect />}
               signButton={<SuiSignButton />}
-              coins={getEligibleBalance(suiAddress)}
-              isEligible={activity.Sui && isEligible(suiAddress)}
+              coins={getEligibleCoins(Ecosystem.SUI, suiAddress)}
+              isEligible={activity.Sui && isEligible(Ecosystem.SUI, suiAddress)}
             />
             <TableRow
               label={'Injective Activity'}
@@ -128,8 +128,11 @@ const Eligibility2 = ({
                 <CosmosWalletButton chainName="injective" disableOnConnect />
               }
               signButton={<CosmosSignButton chainName="injective" />}
-              coins={getEligibleBalance(injectiveAddress)}
-              isEligible={activity.Injective && isEligible(injectiveAddress)}
+              coins={getEligibleCoins(Ecosystem.INJECTIVE, injectiveAddress)}
+              isEligible={
+                activity.Injective &&
+                isEligible(Ecosystem.INJECTIVE, injectiveAddress)
+              }
             />
             <TableRow
               label={'Osmosis Activity'}
@@ -137,8 +140,11 @@ const Eligibility2 = ({
                 <CosmosWalletButton chainName="osmosis" disableOnConnect />
               }
               signButton={<CosmosSignButton chainName="osmosis" />}
-              coins={getEligibleBalance(osmosisAddress)}
-              isEligible={activity.Osmosis && isEligible(osmosisAddress)}
+              coins={getEligibleCoins(Ecosystem.OSMOSIS, osmosisAddress)}
+              isEligible={
+                activity.Osmosis &&
+                isEligible(Ecosystem.OSMOSIS, osmosisAddress)
+              }
             />
             <TableRow
               label={'Neutron Activity'}
@@ -146,16 +152,20 @@ const Eligibility2 = ({
                 <CosmosWalletButton chainName="neutron" disableOnConnect />
               }
               signButton={<CosmosSignButton chainName="neutron" />}
-              coins={getEligibleBalance(neutronAddress)}
-              isEligible={activity.Neutron && isEligible(neutronAddress)}
+              coins={getEligibleCoins(Ecosystem.NEUTRON, neutronAddress)}
+              isEligible={
+                activity.Neutron &&
+                isEligible(Ecosystem.NEUTRON, neutronAddress)
+              }
             />
             <TableRow
               label={'Discord Activity'}
               walletButton={<DiscordButton disableOnAuth />}
               signButton={<DiscordSignButton />}
-              coins={getEligibleBalance(data?.user?.name)}
+              coins={getEligibleCoins(Ecosystem.DISCORD, data?.user?.name)}
               isEligible={
-                activity['Pyth Discord'] && isEligible(data?.user?.name)
+                activity['Pyth Discord'] &&
+                isEligible(Ecosystem.DISCORD, data?.user?.name)
               }
             />
             <tr className="border-b border-light-35 ">

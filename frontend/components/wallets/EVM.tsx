@@ -23,6 +23,7 @@ import { useEVMSignMessage } from 'hooks/useSignMessage'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 import { useEVMAddress } from 'hooks/useAddress'
+import { Ecosystem } from '@components/Ecosystem'
 
 // Configure chains & providers with the Alchemy provider.
 // Two popular providers are Alchemy (alchemy.com) and Infura (infura.io)
@@ -101,8 +102,13 @@ export function EVMWalletButton({ disableOnConnect }: EvmWalletButtonProps) {
         // We can't check it using eligibility[address] === undefined
         // As, an undefined eligibility can be stored before.
         // Hence, we are checking if the key exists in the object
-        if (address in eligibility) return
-        else setEligibility(address, await fetchAmountAndProof('evm', address))
+        if (address in eligibility[Ecosystem.EVM]) return
+        else
+          setEligibility(
+            Ecosystem.EVM,
+            address,
+            await fetchAmountAndProof('evm', address)
+          )
       }
     })()
   }, [isConnected, address, setEligibility, eligibility])

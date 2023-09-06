@@ -24,6 +24,7 @@ import { SignButton } from './SignButton'
 import { useSolanaSignMessage } from 'hooks/useSignMessage'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { Ecosystem } from '@components/Ecosystem'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
 export const BACKPACK_WALLET_ADAPTER = new BackpackWalletAdapter()
@@ -132,8 +133,13 @@ export function SolanaWalletButton({
         // We can't check it using eligibility[base58] === undefined
         // As, an undefined eligibility can be stored before.
         // Hence, we are checking if the key exists in the object
-        if (base58 in eligibility) return
-        else setEligibility(base58, await fetchAmountAndProof('solana', base58))
+        if (base58 in eligibility[Ecosystem.SOLANA]) return
+        else
+          setEligibility(
+            Ecosystem.SOLANA,
+            base58,
+            await fetchAmountAndProof('solana', base58)
+          )
       }
     })()
   }, [base58, connected, eligibility, setEligibility])

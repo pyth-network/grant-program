@@ -1,6 +1,7 @@
 import React from 'react'
 import Arrow from '../../images/arrow.inline.svg'
-import { Ecosystem, useActivity } from '@components/Ecosystem/ActivityProvider'
+import { useActivity } from '@components/Ecosystem/ActivityProvider'
+import { Ecosystem } from '@components/Ecosystem'
 
 const Step3 = ({ setStep }: { setStep: Function }) => {
   return (

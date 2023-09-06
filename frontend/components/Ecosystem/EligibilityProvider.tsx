@@ -6,16 +6,24 @@ import {
   useState,
 } from 'react'
 import { Eligibility } from 'utils/api'
-import { ProviderProps } from '.'
+import { ProviderProps, Ecosystem } from '.'
 import { BN } from '@coral-xyz/anchor'
 import { ClaimInfo } from 'claim_sdk/claim'
 
-type EligibilityMap = {
-  [identity: string]: Eligibility
-}
+export type EligibilityMap = Record<
+  Ecosystem,
+  {
+    [identity: string]: Eligibility
+  }
+>
+
 type EligibilityContextType = {
   eligibility: EligibilityMap
-  setEligibility: (identity: string, eligibility: Eligibility) => void
+  setEligibility: (
+    ecosystem: Ecosystem,
+    identity: string,
+    eligibility: Eligibility
+  ) => void
 }
 const EligibilityContext = createContext<EligibilityContextType | undefined>(
   undefined
@@ -32,18 +40,30 @@ function getStoredEligibilityMap(): EligibilityMap | null {
 
   // Every other key value pair is fine, except for ClaimInfo.
   // We need to do some customized parsing as it is a class.
-  Object.keys(obj).forEach((key) => {
-    if (obj[key] === undefined) return
-    obj[key].claimInfo.amount = new BN(obj[key].claimInfo.amount, 'hex')
-    obj[key].claimInfo = Object.setPrototypeOf(obj[key].claimInfo, ClaimInfo)
+  Object.keys(obj).forEach((ecosystem) => {
+    Object.keys(obj[ecosystem]).forEach((identity) => {
+      if (obj[ecosystem][identity] === undefined) return
+      const claimInfo = obj[ecosystem][identity].claimInfo
+      obj[ecosystem][identity].claimInfo = new ClaimInfo(
+        claimInfo.ecosystem,
+        claimInfo.identity,
+        new BN(claimInfo.amount, 'hex')
+      )
+    })
   })
 
   return obj as EligibilityMap
 }
 
+function getDefaultEligibilityMap() {
+  const map: any = {}
+  Object.values(Ecosystem).forEach((key) => (map[key] = {}))
+  return map as EligibilityMap
+}
+
 export function EligibilityProvider({ children }: ProviderProps) {
   const [eligibility, setEligibility] = useState(
-    getStoredEligibilityMap() ?? {}
+    getStoredEligibilityMap() ?? getDefaultEligibilityMap()
   )
 
   // side effect: whenever the eligibility map changes sync the local storage
@@ -53,8 +73,12 @@ export function EligibilityProvider({ children }: ProviderProps) {
   }, [eligibility])
 
   const setEligibilityWrapper = useCallback(
-    (identity: string, eligibility: Eligibility) => {
-      setEligibility((prev) => ({ ...prev, [identity]: eligibility }))
+    (ecosystem: Ecosystem, identity: string, eligibility: Eligibility) => {
+      setEligibility((prev) => {
+        // note prev[ecosystem] will not be undefined
+        prev[ecosystem][identity] = eligibility
+        return { ...prev }
+      })
     },
     []
   )

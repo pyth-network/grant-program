@@ -5,18 +5,8 @@ import {
   useEffect,
   useState,
 } from 'react'
-import { ProviderProps } from '.'
+import { Ecosystem, ProviderProps } from '.'
 
-export enum Ecosystem {
-  SOLANA = 'Solana',
-  EVM = 'Evm',
-  APTOS = 'Aptos',
-  SUI = 'Sui',
-  INJECTIVE = 'Injective',
-  OSMOSIS = 'Osmosis',
-  NEUTRON = 'Neutron',
-  DISCORD = 'Pyth Discord',
-}
 type ActivityMap = Record<Ecosystem, boolean>
 type ActivityContextType = {
   activity: ActivityMap
