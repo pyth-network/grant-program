@@ -25,6 +25,7 @@ import {
 } from 'hooks/useAddress'
 import { useSession } from 'next-auth/react'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useActivity } from '@components/Ecosystem/ActivityProvider'
 
 const Eligibility2 = ({
   onBack,
@@ -42,6 +43,8 @@ const Eligibility2 = ({
   const suiAddress = useSuiAddress()
 
   const { data } = useSession()
+
+  const { activity } = useActivity()
 
   const { eligibility } = useEligiblity()
 
@@ -96,28 +99,28 @@ const Eligibility2 = ({
               walletButton={<SolanaWalletButton disableOnConnect />}
               signButton={<SolanaSignButton />}
               coins={getEligibleBalance(solanaAddress)}
-              isEligible={isEligible(solanaAddress)}
+              isEligible={activity.Solana && isEligible(solanaAddress)}
             />
             <TableRow
               label={'EVM Activity'}
               walletButton={<EVMWalletButton disableOnConnect />}
               signButton={<EVMSignButton />}
               coins={getEligibleBalance(evmAddress)}
-              isEligible={isEligible(evmAddress)}
+              isEligible={activity.Evm && isEligible(evmAddress)}
             />
             <TableRow
               label={'Aptos Activity'}
               walletButton={<AptosWalletButton disableOnConnect />}
               signButton={<AptosSignButton />}
               coins={getEligibleBalance(aptosAddress)}
-              isEligible={isEligible(aptosAddress)}
+              isEligible={activity.Aptos && isEligible(aptosAddress)}
             />
             <TableRow
               label={'Sui Activity'}
               walletButton={<SuiWalletButton disableOnConnect />}
               signButton={<SuiSignButton />}
               coins={getEligibleBalance(suiAddress)}
-              isEligible={isEligible(suiAddress)}
+              isEligible={activity.Sui && isEligible(suiAddress)}
             />
             <TableRow
               label={'Injective Activity'}
@@ -126,7 +129,7 @@ const Eligibility2 = ({
               }
               signButton={<CosmosSignButton chainName="injective" />}
               coins={getEligibleBalance(injectiveAddress)}
-              isEligible={isEligible(injectiveAddress)}
+              isEligible={activity.Injective && isEligible(injectiveAddress)}
             />
             <TableRow
               label={'Osmosis Activity'}
@@ -135,7 +138,7 @@ const Eligibility2 = ({
               }
               signButton={<CosmosSignButton chainName="osmosis" />}
               coins={getEligibleBalance(osmosisAddress)}
-              isEligible={isEligible(osmosisAddress)}
+              isEligible={activity.Osmosis && isEligible(osmosisAddress)}
             />
             <TableRow
               label={'Neutron Activity'}
@@ -144,14 +147,16 @@ const Eligibility2 = ({
               }
               signButton={<CosmosSignButton chainName="neutron" />}
               coins={getEligibleBalance(neutronAddress)}
-              isEligible={isEligible(neutronAddress)}
+              isEligible={activity.Neutron && isEligible(neutronAddress)}
             />
             <TableRow
               label={'Discord Activity'}
               walletButton={<DiscordButton disableOnAuth />}
               signButton={<DiscordSignButton />}
               coins={getEligibleBalance(data?.user?.name)}
-              isEligible={isEligible(data?.user?.name)}
+              isEligible={
+                activity['Pyth Discord'] && isEligible(data?.user?.name)
+              }
             />
             <tr className="border-b border-light-35 ">
               <td className="w-full bg-darkGray5 py-2 pl-10 pr-4">
