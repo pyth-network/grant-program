@@ -10,7 +10,7 @@ use {
  * verifying the claimant's pubkey controls the discord account.
  * The dispenser guard key should not be used for anything else.
  */
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct DiscordMessage {
     username: String,
     claimant: Pubkey,
@@ -25,11 +25,11 @@ impl DiscordMessage {
         let result = DiscordMessage::try_from_slice(data)?;
 
         if result.username != *username {
-            return Err(ErrorCode::SignatureVerificationWrongPayload.into());
+            return err!(ErrorCode::SignatureVerificationWrongPayload);
         }
 
         if result.claimant != *claimant {
-            return Err(ErrorCode::SignatureVerificationWrongPayload.into());
+            return err!(ErrorCode::SignatureVerificationWrongPayload);
         }
 
         Ok(result)
@@ -52,4 +52,46 @@ impl Ed25519TestMessage for DiscordMessage {
     fn get_message_with_metadata(&self) -> Vec<u8> {
         self.try_to_vec().unwrap()
     }
+}
+
+
+#[test]
+pub fn test_discord_parse_and_check_claimant_and_username() {
+    let claimant = Pubkey::new_unique();
+    let username = claimant.to_string();
+    let message = DiscordMessage::for_claimant(&claimant);
+    assert_eq!(
+        DiscordMessage::parse_and_check_claimant_and_username(
+            &message.get_message_with_metadata(),
+            &username,
+            &claimant,
+        )
+        .unwrap()
+        .get_username(),
+        username
+    );
+
+    let other_claimant = Pubkey::new_unique();
+    let res = DiscordMessage::parse_and_check_claimant_and_username(
+        &message.get_message_with_metadata(),
+        &username,
+        &other_claimant,
+    );
+    assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err(),
+        Error::from(ErrorCode::SignatureVerificationWrongPayload)
+    );
+
+    let other_username = "other_username";
+    let res = DiscordMessage::parse_and_check_claimant_and_username(
+        &message.get_message_with_metadata(),
+        other_username,
+        &claimant,
+    );
+    assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err(),
+        Error::from(ErrorCode::SignatureVerificationWrongPayload)
+    );
 }
