@@ -142,6 +142,7 @@ export function CosmosSignButton({ chainName }: { chainName: ChainName }) {
       signMessageFn={signMessageFn}
       message={tokenDispenser?.generateAuthorizationPayload()}
       solanaIdentity={tokenDispenser?.claimant.toBase58()}
+      ecosystem={chainNametoEcosystem(chainName)}
       ecosystemIdentity={address}
     />
   )

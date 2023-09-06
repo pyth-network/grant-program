@@ -107,6 +107,7 @@ export function SuiSignButton() {
       signMessageFn={signMessageFn}
       message={tokenDispenser?.generateAuthorizationPayload()}
       solanaIdentity={tokenDispenser?.claimant.toBase58()}
+      ecosystem={Ecosystem.SUI}
       ecosystemIdentity={address}
     />
   )

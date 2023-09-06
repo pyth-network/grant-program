@@ -1,10 +1,9 @@
 import React, { useCallback } from 'react'
-
-import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
 import { SignButton } from './wallets/SignButton'
 import { fetchDiscordSignedMessage } from 'utils/api'
 import { useSession } from 'next-auth/react'
 import { useTokenDispenserProvider } from './TokenDispenserProvider'
+import { Ecosystem } from './Ecosystem'
 
 // This component assumes that the user is already sign in.
 // Though it won't throw any error even if the user is not.
@@ -24,6 +23,7 @@ export function DiscordSignButton() {
       signMessageFn={signMessageFn}
       message={tokenDispenser?.generateAuthorizationPayload()}
       solanaIdentity={tokenDispenser?.claimant.toBase58()}
+      ecosystem={Ecosystem.DISCORD}
       ecosystemIdentity={
         data?.user?.name === null ? undefined : data?.user?.name
       }

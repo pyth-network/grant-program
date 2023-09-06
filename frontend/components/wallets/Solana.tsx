@@ -176,6 +176,7 @@ export function SolanaSignButton() {
       signMessageFn={signMessageFn}
       message={tokenDispenser?.generateAuthorizationPayload()}
       solanaIdentity={tokenDispenser?.claimant.toBase58()}
+      ecosystem={Ecosystem.SOLANA}
       ecosystemIdentity={tokenDispenser?.claimant.toBase58()}
     />
   )

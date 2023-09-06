@@ -112,6 +112,7 @@ export function AptosSignButton() {
       signMessageFn={signMessageFn}
       message={tokenDispenser?.generateAuthorizationPayload()}
       solanaIdentity={tokenDispenser?.claimant.toBase58()}
+      ecosystem={Ecosystem.APTOS}
       ecosystemIdentity={address}
     />
   )

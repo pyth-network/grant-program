@@ -145,6 +145,7 @@ export function EVMSignButton() {
       signMessageFn={signMessageFn}
       message={tokenDispenser?.generateAuthorizationPayload()}
       solanaIdentity={tokenDispenser?.claimant.toBase58()}
+      ecosystem={Ecosystem.EVM}
       ecosystemIdentity={address}
     />
   )

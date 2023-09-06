@@ -3,9 +3,11 @@ import { useState, useCallback } from 'react'
 import Signed from '../../images/signed.inline.svg'
 import { classNames } from 'utils/classNames'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
+import { Ecosystem } from '@components/Ecosystem'
 
 export type SignButtonProps = {
   signMessageFn: SignMessageFn
+  ecosystem: Ecosystem
   message?: string
   solanaIdentity?: string
   ecosystemIdentity?: string
@@ -18,6 +20,7 @@ export function SignButton({
   message,
   solanaIdentity,
   ecosystemIdentity,
+  ecosystem,
 }: SignButtonProps): JSX.Element {
   const { signatureMap, setSignature } = useSignature()
   const [isSigning, setIsSigning] = useState(false)
@@ -33,18 +36,19 @@ export function SignButton({
 
     // If we already have the signed message, we will not ask the user to sign it again
     if (
-      signatureMap[solanaIdentity] !== undefined &&
-      signatureMap[solanaIdentity][ecosystemIdentity] !== undefined
+      signatureMap[solanaIdentity]?.[ecosystem]?.[ecosystemIdentity] !==
+      undefined
     )
       return
     setIsSigning(true)
     const signedMessage = await signMessageFn(message)
     // Storing the message in the context
     if (signedMessage !== undefined)
-      setSignature(solanaIdentity, ecosystemIdentity, signedMessage)
+      setSignature(solanaIdentity, ecosystem, ecosystemIdentity, signedMessage)
 
     setIsSigning(false)
   }, [
+    ecosystem,
     ecosystemIdentity,
     message,
     setSignature,
@@ -60,8 +64,7 @@ export function SignButton({
 
   const isSigned =
     !isDisabled &&
-    signatureMap[solanaIdentity] !== undefined &&
-    signatureMap[solanaIdentity][ecosystemIdentity] !== undefined
+    signatureMap[solanaIdentity]?.[ecosystem]?.[ecosystemIdentity] !== undefined
 
   return (
     <button

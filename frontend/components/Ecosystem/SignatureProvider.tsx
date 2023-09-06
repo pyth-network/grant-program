@@ -5,18 +5,21 @@ import {
   useEffect,
   useState,
 } from 'react'
-import { ProviderProps } from '.'
+import { Ecosystem, ProviderProps } from '.'
 import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
 
 type SignatureMap = {
   [solanaIdentity: string]: {
-    [ecosystemIdentity: string]: SignedMessage
+    [ecosystem in Ecosystem]?: {
+      [ecosystemIdentity: string]: SignedMessage
+    }
   }
 }
 type SignatureContextType = {
   signatureMap: SignatureMap
   setSignature: (
     solanaIdentity: string,
+    ecosystem: Ecosystem,
     ecosystemIdentity: string,
     signedMsg: SignedMessage
   ) => void
@@ -50,12 +53,16 @@ export function SignatureProvider({ children }: ProviderProps) {
   const setSignatureMapWrapper = useCallback(
     (
       solanaIdentity: string,
+      ecosystem: Ecosystem,
       ecosystemIdentity: string,
       signedMsg: SignedMessage
     ) => {
       setSignatureMap((prev) => {
         if (prev[solanaIdentity] === undefined) prev[solanaIdentity] = {}
-        prev[solanaIdentity][ecosystemIdentity] = signedMsg
+        if (prev[solanaIdentity][ecosystem] === undefined)
+          prev[solanaIdentity][ecosystem] = {}
+
+        prev[solanaIdentity][ecosystem]![ecosystemIdentity] = signedMsg
         return { ...prev }
       })
     },
