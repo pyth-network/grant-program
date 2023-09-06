@@ -46,3 +46,57 @@ pub fn get_expected_payload(claimant: &Pubkey) -> String {
         + claimant.to_string().as_str()
         + AUTHORIZATION_PAYLOAD[2]
 }
+
+#[test]
+pub fn test_check_payload() {
+    let claimant = Pubkey::new_unique();
+    let payload = AUTHORIZATION_PAYLOAD[0].to_string()
+        + &crate::ID.to_string()
+        + AUTHORIZATION_PAYLOAD[1]
+        + claimant.to_string().as_str()
+        + AUTHORIZATION_PAYLOAD[2];
+
+    assert!(check_payload(payload.as_bytes(), &claimant).is_ok());
+
+    // incorrect claimant
+    let wrong_payload = AUTHORIZATION_PAYLOAD[0].to_string()
+        + &crate::ID.to_string()
+        + AUTHORIZATION_PAYLOAD[1]
+        + &(Pubkey::new_unique()).to_string()
+        + AUTHORIZATION_PAYLOAD[2];
+
+    let res = check_payload(wrong_payload.as_bytes(), &claimant);
+    assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err(),
+        Error::from(ErrorCode::SignatureVerificationWrongPayload)
+    );
+
+    // incorrect program id
+    let wrong_payload = AUTHORIZATION_PAYLOAD[0].to_string()
+        + &(Pubkey::new_unique()).to_string()
+        + AUTHORIZATION_PAYLOAD[1]
+        + &claimant.to_string()
+        + AUTHORIZATION_PAYLOAD[2];
+
+    let res = check_payload(wrong_payload.as_bytes(), &claimant);
+    assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err(),
+        Error::from(ErrorCode::SignatureVerificationWrongPayload)
+    );
+
+    // incorrect constants
+    let wrong_payload = "Grant PID:\n".to_string()
+        + &crate::ID.to_string()
+        + AUTHORIZATION_PAYLOAD[1]
+        + &claimant.to_string()
+        + AUTHORIZATION_PAYLOAD[2];
+
+    let res = check_payload(wrong_payload.as_bytes(), &claimant);
+    assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err(),
+        Error::from(ErrorCode::SignatureVerificationWrongPayload)
+    );
+}
