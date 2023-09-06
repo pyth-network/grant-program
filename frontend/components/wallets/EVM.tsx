@@ -18,10 +18,12 @@ import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
 import { fetchAmountAndProof } from 'utils/api'
-import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
 import { SignButton } from './SignButton'
 import { useEVMSignMessage } from 'hooks/useSignMessage'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
+import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useEVMAddress } from 'hooks/useAddress'
+import { Ecosystem } from '@components/Ecosystem'
 
 // Configure chains & providers with the Alchemy provider.
 // Two popular providers are Alchemy (alchemy.com) and Infura (infura.io)
@@ -90,22 +92,26 @@ export function EVMWalletButton({ disableOnConnect }: EvmWalletButtonProps) {
     [connect]
   )
 
-  const { setEligibility, setSignedMessage } = useEcosystem()
+  const { eligibility, setEligibility } = useEligiblity()
 
   // fetch the eligibility and store it
   useEffect(() => {
     ;(async () => {
       if (isConnected === true && address !== undefined) {
-        const eligibility = await fetchAmountAndProof('evm', address)
-        setEligibility(Ecosystem.EVM, eligibility)
-      } else {
-        setEligibility(Ecosystem.EVM, undefined)
+        // NOTE: we need to check if identity was previously stored
+        // We can't check it using eligibility[address] === undefined
+        // As, an undefined eligibility can be stored before.
+        // Hence, we are checking if the key exists in the object
+        if (address in eligibility[Ecosystem.EVM]) return
+        else
+          setEligibility(
+            Ecosystem.EVM,
+            address,
+            await fetchAmountAndProof('evm', address)
+          )
       }
-      // if the effect has been triggered again, it will only because of isConnected or address
-      // i.e., the connected account has changed and hence set signedMessage to undefined
-      setSignedMessage(Ecosystem.EVM, undefined)
     })()
-  }, [isConnected, address, setEligibility, setSignedMessage])
+  }, [isConnected, address, setEligibility, eligibility])
 
   return (
     <WalletButton
@@ -132,12 +138,15 @@ export function EVMWalletButton({ disableOnConnect }: EvmWalletButtonProps) {
 export function EVMSignButton() {
   const signMessageFn = useEVMSignMessage()
   const tokenDispenser = useTokenDispenserProvider()
+  const address = useEVMAddress()
+
   return (
     <SignButton
       signMessageFn={signMessageFn}
+      message={tokenDispenser?.generateAuthorizationPayload()}
+      solanaIdentity={tokenDispenser?.claimant.toBase58()}
       ecosystem={Ecosystem.EVM}
-      message={tokenDispenser?.generateAuthorizationPayload() ?? ''}
-      disable={tokenDispenser === undefined}
+      ecosystemIdentity={address}
     />
   )
 }

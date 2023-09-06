@@ -1,10 +1,9 @@
-import React, { ReactElement, useEffect, useMemo } from 'react'
+import React, { ReactElement } from 'react'
 import Arrow from '../../images/arrow.inline.svg'
 import Coin from '../../images/coin.inline.svg'
 
 import TooltipIcon from '../../images/tooltip.inline.svg'
 import Verified from '../../images/verified.inline.svg'
-import Discord from '../../images/discord.inline.svg'
 import Tooltip from '@components/Tooltip'
 
 import { AptosWalletButton } from '@components/wallets/Aptos'
@@ -12,12 +11,19 @@ import { SuiWalletButton } from '@components/wallets/Sui'
 import { EVMWalletButton } from '@components/wallets/EVM'
 import { CosmosWalletButton } from '@components/wallets/Cosmos'
 import { SolanaWalletButton } from '@components/wallets/Solana'
-import { signIn, signOut, useSession } from 'next-auth/react'
-import Image from 'next/image'
-import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
-import { fetchAmountAndProof } from 'utils/api'
 import { classNames } from 'utils/classNames'
 import { DiscordButton } from '@components/DiscordButton'
+import { useActivity } from '@components/Ecosystem/ActivityProvider'
+import {
+  useAptosAddress,
+  useCosmosAddress,
+  useEVMAddress,
+  useSolanaAddress,
+  useSuiAddress,
+} from 'hooks/useAddress'
+import { useSession } from 'next-auth/react'
+import { useCoins } from 'hooks/useCoins'
+import { Ecosystem } from '@components/Ecosystem'
 
 // TODO: Add loading support for sub components to disable proceed back buttons.
 const Eligibility = ({
@@ -27,7 +33,20 @@ const Eligibility = ({
   onBack: Function
   onProceed: Function
 }) => {
-  const { map: ecosystemMap } = useEcosystem()
+  const { activity } = useActivity()
+
+  const aptosAddress = useAptosAddress()
+  const injectiveAddress = useCosmosAddress('injective')
+  const osmosisAddress = useCosmosAddress('osmosis')
+  const neutronAddress = useCosmosAddress('neutron')
+  const evmAddress = useEVMAddress()
+  const solanaAddress = useSolanaAddress()
+  const suiAddress = useSuiAddress()
+
+  const { data } = useSession()
+
+  const getEligibleCoins = useCoins()
+
   return (
     <div className=" border border-light-35 bg-dark">
       <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-8 px-10">
@@ -60,52 +79,50 @@ const Eligibility = ({
           <TableRow
             label={'Solana Activity'}
             actionButton={<SolanaWalletButton />}
-            coins={ecosystemMap.Solana.eligibility?.claimInfo.amount.toString()}
-            isActive={ecosystemMap.Solana.isActive}
+            coins={getEligibleCoins(Ecosystem.SOLANA, solanaAddress)}
+            isActive={activity.Solana}
           />
           <TableRow
             label={'EVM Activity'}
             actionButton={<EVMWalletButton />}
-            coins={ecosystemMap.Evm.eligibility?.claimInfo.amount.toString()}
-            isActive={ecosystemMap.Evm.isActive}
+            coins={getEligibleCoins(Ecosystem.EVM, evmAddress)}
+            isActive={activity.Evm}
           />
           <TableRow
             label={'Aptos Activity'}
             actionButton={<AptosWalletButton />}
-            coins={ecosystemMap.Aptos.eligibility?.claimInfo.amount.toString()}
-            isActive={ecosystemMap.Aptos.isActive}
+            coins={getEligibleCoins(Ecosystem.APTOS, aptosAddress)}
+            isActive={activity.Aptos}
           />
           <TableRow
             label={'Sui Activity'}
             actionButton={<SuiWalletButton />}
-            coins={ecosystemMap.Sui.eligibility?.claimInfo.amount.toString()}
-            isActive={ecosystemMap.Sui.isActive}
+            coins={getEligibleCoins(Ecosystem.SUI, suiAddress)}
+            isActive={activity.Sui}
           />
           <TableRow
             label={'Injective Activity'}
             actionButton={<CosmosWalletButton chainName="injective" />}
-            coins={ecosystemMap.Injective.eligibility?.claimInfo.amount.toString()}
-            isActive={ecosystemMap.Injective.isActive}
+            coins={getEligibleCoins(Ecosystem.INJECTIVE, injectiveAddress)}
+            isActive={activity.Injective}
           />
           <TableRow
             label={'Osmosis Activity'}
             actionButton={<CosmosWalletButton chainName="osmosis" />}
-            coins={ecosystemMap.Osmosis.eligibility?.claimInfo.amount.toString()}
-            isActive={ecosystemMap.Osmosis.isActive}
+            coins={getEligibleCoins(Ecosystem.OSMOSIS, osmosisAddress)}
+            isActive={activity.Osmosis}
           />
           <TableRow
             label={'Neutron Activity'}
             actionButton={<CosmosWalletButton chainName="neutron" />}
-            coins={ecosystemMap.Neutron.eligibility?.claimInfo.amount.toString()}
-            isActive={ecosystemMap.Neutron.isActive}
+            coins={getEligibleCoins(Ecosystem.NEUTRON, neutronAddress)}
+            isActive={activity.Neutron}
           />
           <TableRow
             label={'Discord Activity'}
             actionButton={<DiscordButton />}
-            coins={ecosystemMap[
-              Ecosystem.DISCORD
-            ].eligibility?.claimInfo.amount.toString()}
-            isActive={ecosystemMap[Ecosystem.DISCORD].isActive}
+            coins={getEligibleCoins(Ecosystem.DISCORD, data?.user?.name)}
+            isActive={activity['Pyth Discord']}
           />
 
           <tr className="border-b border-light-35 ">
@@ -131,7 +148,7 @@ const Eligibility = ({
 type TableRowProps = {
   label: string
   actionButton: ReactElement
-  coins: string | undefined
+  coins: string | undefined | null
   isActive: boolean
 }
 function TableRow({ label, actionButton, coins, isActive }: TableRowProps) {

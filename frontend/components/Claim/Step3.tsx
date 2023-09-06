@@ -1,6 +1,7 @@
 import React from 'react'
 import Arrow from '../../images/arrow.inline.svg'
-import { Ecosystem, useEcosystem } from '@components/EcosystemProvider'
+import { useActivity } from '@components/Ecosystem/ActivityProvider'
+import { Ecosystem } from '@components/Ecosystem'
 
 const Step3 = ({ setStep }: { setStep: Function }) => {
   return (
@@ -60,15 +61,15 @@ type CheckBoxProps = {
   ecosystem: Ecosystem
 }
 function CheckBox({ ecosystem }: CheckBoxProps) {
-  const { map, setActive } = useEcosystem()
+  const { activity, setActivity } = useActivity()
 
   return (
     <label className="checkbox">
       <input
         type="checkbox"
-        checked={map[ecosystem].isActive}
+        checked={activity[ecosystem]}
         onChange={(e) => {
-          setActive(ecosystem, e.target.checked)
+          setActivity(ecosystem, e.target.checked)
         }}
       />
       {ecosystem}

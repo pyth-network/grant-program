@@ -1,11 +1,13 @@
 import { useWalletKit } from '@mysten/wallet-kit'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 import { useEffect, useMemo } from 'react'
-import { useEcosystem, Ecosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
 import { useSuiSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
+import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useSuiAddress } from 'hooks/useAddress'
+import { Ecosystem } from '@components/Ecosystem'
 
 type SuiWalletButtonProps = {
   disableOnConnect?: boolean
@@ -54,25 +56,26 @@ export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
       ]
   }, [connect, detectedWallets])
 
-  const { setEligibility, setSignedMessage } = useEcosystem()
+  const { eligibility, setEligibility } = useEligiblity()
 
   // fetch the eligibility and store it
   useEffect(() => {
     ;(async () => {
       if (isConnected === true && currentAccount?.address !== undefined) {
-        const eligibility = await fetchAmountAndProof(
-          'sui',
-          currentAccount?.address
-        )
-        setEligibility(Ecosystem.SUI, eligibility)
-      } else {
-        setEligibility(Ecosystem.SUI, undefined)
+        // NOTE: we need to check if identity was previously stored
+        // We can't check it using eligibility[address] === undefined
+        // As, an undefined eligibility can be stored before.
+        // Hence, we are checking if the key exists in the object
+        if (currentAccount?.address in eligibility[Ecosystem.SUI]) return
+        else
+          setEligibility(
+            Ecosystem.SUI,
+            currentAccount?.address,
+            await fetchAmountAndProof('sui', currentAccount?.address)
+          )
       }
-      // if the effect has been triggered again, it will only because of isConnected or currentAccount?.address
-      // i.e., the connected account has changed and hence set signedMessage to undefined
-      setSignedMessage(Ecosystem.SUI, undefined)
     })()
-  }, [isConnected, currentAccount?.address, setEligibility, setSignedMessage])
+  }, [isConnected, currentAccount?.address, setEligibility, eligibility])
 
   return (
     <WalletButton
@@ -97,12 +100,15 @@ export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
 export function SuiSignButton() {
   const signMessageFn = useSuiSignMessage()
   const tokenDispenser = useTokenDispenserProvider()
+  const address = useSuiAddress()
+
   return (
     <SignButton
       signMessageFn={signMessageFn}
+      message={tokenDispenser?.generateAuthorizationPayload()}
+      solanaIdentity={tokenDispenser?.claimant.toBase58()}
       ecosystem={Ecosystem.SUI}
-      message={tokenDispenser?.generateAuthorizationPayload() ?? ''}
-      disable={tokenDispenser === undefined}
+      ecosystemIdentity={address}
     />
   )
 }
