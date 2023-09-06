@@ -70,7 +70,6 @@ export function EligibilityProvider({ children }: ProviderProps) {
     getStoredEligibilityMap() ?? getDefaultEligibilityMap()
   )
 
-  console.log(eligibility)
   // side effect: whenever the eligibility map changes sync the local storage
   useEffect(() => {
     if (typeof window === 'undefined') return
