@@ -100,15 +100,12 @@ export function SuiSignButton() {
   const tokenDispenser = useTokenDispenserProvider()
   const address = useSuiAddress()
 
-  if (address === undefined || tokenDispenser === undefined)
-    return <SignButton disable />
-  else
-    return (
-      <SignButton
-        signMessageFn={signMessageFn}
-        message={tokenDispenser.generateAuthorizationPayload()}
-        solanaIdentity={tokenDispenser.claimant.toBase58()}
-        ecosystemIdentity={address}
-      />
-    )
+  return (
+    <SignButton
+      signMessageFn={signMessageFn}
+      message={tokenDispenser?.generateAuthorizationPayload()}
+      solanaIdentity={tokenDispenser?.claimant.toBase58()}
+      ecosystemIdentity={address}
+    />
+  )
 }

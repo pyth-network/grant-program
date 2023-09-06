@@ -4,35 +4,32 @@ import Signed from '../../images/signed.inline.svg'
 import { classNames } from 'utils/classNames'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
 
-export type SignButtonProps =
-  | {
-      signMessageFn: SignMessageFn
-      message: string
-      solanaIdentity: string
-      ecosystemIdentity: string
-      disable?: false
-    }
-  | {
-      signMessageFn?: SignMessageFn
-      message?: string
-      solanaIdentity?: string
-      ecosystemIdentity?: string
-      disable: true
-    }
+export type SignButtonProps = {
+  signMessageFn: SignMessageFn
+  message?: string
+  solanaIdentity?: string
+  ecosystemIdentity?: string
+}
 
+// SignButton will be disabled, if any of the message, solanaIdentity, or ecosystemIdentity
+// is undefined
 export function SignButton({
   signMessageFn,
   message,
   solanaIdentity,
   ecosystemIdentity,
-  disable,
-}: SignButtonProps) {
+}: SignButtonProps): JSX.Element {
   const { signatureMap, setSignature } = useSignature()
   const [isSigning, setIsSigning] = useState(false)
 
   // It wraps the signMessageFn and additionally implement loading and storing
   const signMessageWrapper = useCallback(async () => {
-    if (disable === true) return
+    if (
+      message === undefined ||
+      solanaIdentity === undefined ||
+      ecosystemIdentity === undefined
+    )
+      return
 
     // If we already have the signed message, we will not ask the user to sign it again
     if (
@@ -48,7 +45,6 @@ export function SignButton({
 
     setIsSigning(false)
   }, [
-    disable,
     ecosystemIdentity,
     message,
     setSignature,
@@ -57,8 +53,13 @@ export function SignButton({
     solanaIdentity,
   ])
 
+  const isDisabled =
+    message === undefined ||
+    solanaIdentity === undefined ||
+    ecosystemIdentity === undefined
+
   const isSigned =
-    !disable &&
+    !isDisabled &&
     signatureMap[solanaIdentity] !== undefined &&
     signatureMap[solanaIdentity][ecosystemIdentity] !== undefined
 
@@ -68,7 +69,7 @@ export function SignButton({
         'btn before:btn-bg btn--dark  before:bg-dark hover:text-dark hover:before:bg-light disabled:text-light disabled:before:bg-dark'
       )}
       onClick={signMessageWrapper}
-      disabled={disable || isSigned}
+      disabled={isDisabled || isSigned}
     >
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
         <span className="flex items-center gap-3">

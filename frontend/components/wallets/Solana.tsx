@@ -165,14 +165,12 @@ export function SolanaSignButton() {
   const signMessageFn = useSolanaSignMessage()
   const tokenDispenser = useTokenDispenserProvider()
 
-  if (tokenDispenser === undefined) return <SignButton disable />
-  else
-    return (
-      <SignButton
-        signMessageFn={signMessageFn}
-        message={tokenDispenser.generateAuthorizationPayload()}
-        solanaIdentity={tokenDispenser.claimant.toBase58()}
-        ecosystemIdentity={tokenDispenser.claimant.toBase58()}
-      />
-    )
+  return (
+    <SignButton
+      signMessageFn={signMessageFn}
+      message={tokenDispenser?.generateAuthorizationPayload()}
+      solanaIdentity={tokenDispenser?.claimant.toBase58()}
+      ecosystemIdentity={tokenDispenser?.claimant.toBase58()}
+    />
+  )
 }
