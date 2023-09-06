@@ -49,6 +49,10 @@ function getStoredEligibilityMap(): EligibilityMap | null {
         claimInfo.identity,
         new BN(claimInfo.amount, 'hex')
       )
+
+      obj[ecosystem][identity].proofOfInclusion = obj[ecosystem][
+        identity
+      ].proofOfInclusion.map((chunk: any) => Buffer.from(chunk))
     })
   })
 
@@ -66,6 +70,7 @@ export function EligibilityProvider({ children }: ProviderProps) {
     getStoredEligibilityMap() ?? getDefaultEligibilityMap()
   )
 
+  console.log(eligibility)
   // side effect: whenever the eligibility map changes sync the local storage
   useEffect(() => {
     if (typeof window === 'undefined') return
