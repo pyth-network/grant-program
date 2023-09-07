@@ -3,7 +3,6 @@ import React, { useMemo, useState } from 'react'
 import Phantom from '../../images/phantom.inline.svg'
 import Backpack from '../../images/backpack.inline.svg'
 import Solflare from '../../images/solflare.inline.svg'
-import Arrow from '../../images/arrow.inline.svg'
 import { useWallet } from '@solana/wallet-adapter-react'
 import {
   BACKPACK_WALLET_ADAPTER,
@@ -17,6 +16,7 @@ import {
   WalletModal,
 } from '@components/wallets/WalletButton'
 import { truncateAddress } from 'utils/truncateAddress'
+import { ProceedButton, BackButton } from '@components/buttons'
 
 const Step2 = ({ setStep }: { setStep: Function }) => {
   const { publicKey, wallet, disconnect, connecting, connected, connect } =
@@ -38,15 +38,7 @@ const Step2 = ({ setStep }: { setStep: Function }) => {
           <h4 className="font-header text-[28px] font-light leading-[1.2]">
             Log in with Solana
           </h4>
-          <button
-            className="btn before:btn-bg  btn--dark before:bg-[#242339] hover:text-dark hover:before:bg-light"
-            onClick={() => setStep(1)}
-          >
-            <span className="relative inline-flex items-center whitespace-nowrap">
-              <Arrow className="mr-2.5 origin-center rotate-180" />
-              back
-            </span>
-          </button>
+          <BackButton onBack={() => setStep(1)} />
         </div>
         <div className="px-10 py-8 text-base16">
           <p className="mb-6">
@@ -76,14 +68,7 @@ const Step2 = ({ setStep }: { setStep: Function }) => {
                   Change wallet
                 </span>
               </div>
-              <button
-                className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-                onClick={() => setStep(3)}
-              >
-                <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                  proceed <Arrow />
-                </span>
-              </button>
+              <ProceedButton onProceed={() => setStep(3)} />
             </div>
           )}
         </div>

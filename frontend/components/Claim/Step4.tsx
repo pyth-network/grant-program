@@ -1,15 +1,10 @@
 import React, { useState } from 'react'
-import { Listbox, Transition } from '@headlessui/react'
-import Arrow from '../../images/arrow.inline.svg'
-
-import Down from '../../images/down.inline.svg'
-
 import Phantom from '../../images/phantom.inline.svg'
 import Backpack from '../../images/backpack.inline.svg'
 import Solflare from '../../images/solflare.inline.svg'
 
-import Modal from './Modal'
 import Eligibility from './Eligibility'
+import { ProceedButton, BackButton } from '@components/buttons'
 
 const wallets = [
   { id: 1, name: 'Phantom', icon: <Phantom /> },
@@ -18,8 +13,6 @@ const wallets = [
 ]
 
 const Step4 = ({ setStep }: { setStep: Function }) => {
-  const [wallet, setWallet] = useState(null)
-  const [modal, openModal] = useState(false)
   const [screen, setScreen] = useState(1)
   return (
     <>
@@ -41,24 +34,8 @@ const Step4 = ({ setStep }: { setStep: Function }) => {
             </p>
 
             <div className="mt-12 flex justify-end gap-4">
-              <button
-                className="btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light"
-                onClick={() => setStep(3)}
-              >
-                <span className="relative inline-flex items-center whitespace-nowrap">
-                  <Arrow className="mr-2.5 origin-center rotate-180" />
-                  back
-                </span>
-              </button>
-              <button
-                className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-                onClick={() => setScreen(2)}
-              >
-                <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                  proceed
-                  <Arrow />
-                </span>
-              </button>
+              <BackButton onBack={() => setStep(3)} />
+              <ProceedButton onProceed={() => setScreen(2)} />
             </div>
           </div>
         </div>
