@@ -83,6 +83,8 @@ pub async fn test_claim_fails_with_wrong_accounts() {
                         offchain_claim_certificate,
                         &merkle_tree,
                         Some(fake_claimant_fund),
+                        None,
+                        None
                     )
                     .await
                     .unwrap_err()
@@ -109,6 +111,8 @@ pub async fn test_claim_fails_with_wrong_accounts() {
                         offchain_claim_certificate,
                         &merkle_tree,
                         Some(fake_claimant_fund),
+                        None,
+                        None
                     )
                     .await
                     .unwrap_err()
@@ -126,6 +130,8 @@ pub async fn test_claim_fails_with_wrong_accounts() {
                     &copy_keypair(claimant),
                     offchain_claim_certificate,
                     &merkle_tree,
+                    None,
+                    None,
                     None,
                 )
                 .await
@@ -162,6 +168,8 @@ pub async fn test_claim_fails_with_wrong_accounts() {
                         offchain_claim_certificate,
                         &merkle_tree,
                         Some(fake_claimant_funds[i]),
+                        None,
+                        None
                     )
                     .await
                     .unwrap_err()
@@ -240,6 +248,8 @@ pub async fn test_claim_fails_with_insufficient_funds() {
                 offchain_claim_certificate,
                 &merkle_tree,
                 None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -265,6 +275,8 @@ pub async fn test_claim_fails_with_insufficient_funds() {
                     offchain_claim_certificate,
                     &merkle_tree,
                     None,
+                    None,
+                    None
                 )
                 .await
                 .unwrap_err()
@@ -296,6 +308,8 @@ pub async fn test_claim_fails_with_insufficient_funds() {
                 &copy_keypair(claimant),
                 offchain_claim_certificate,
                 &merkle_tree,
+                None,
+                None,
                 None,
             )
             .await
@@ -394,6 +408,8 @@ pub async fn test_claim_fails_if_delegate_revoked() {
                         &copy_keypair(claimant),
                         offchain_claim_certificate,
                         &merkle_tree,
+                        None,
+                        None,
                         None
                     )
                     .await
@@ -427,6 +443,8 @@ pub async fn test_claim_fails_if_delegate_revoked() {
                 &copy_keypair(claimant),
                 offchain_claim_certificate,
                 &merkle_tree,
+                None,
+                None,
                 None,
             )
             .await

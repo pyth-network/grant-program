@@ -52,6 +52,7 @@ use {
         },
     },
     pythnet_sdk::accumulators::merkle::{
+        MerklePath,
         MerkleRoot,
         MerkleTree,
     },
@@ -367,9 +368,11 @@ impl DispenserSimulator {
         off_chain_claim_certificate: &TestClaimCertificate,
         merkle_tree: &MerkleTree<SolanaHasher>,
         claimant_fund: Option<Pubkey>,
+        merkle_proof_override: Option<MerklePath<SolanaHasher>>,
+        claim_receipt_override: Option<Pubkey>,
     ) -> Result<(), BanksClientError> {
         let (claim_certificate, option_instruction) =
-            off_chain_claim_certificate.as_claim_certificate(merkle_tree, 0);
+            off_chain_claim_certificate.as_claim_certificate(merkle_tree, 0, merkle_proof_override);
         let config = self
             .get_account_data::<crate::Config>(get_config_pda().0)
             .await
@@ -383,13 +386,15 @@ impl DispenserSimulator {
         .to_account_metas(None);
 
         accounts.push(AccountMeta::new(
-            get_receipt_pda(
-                &<TestClaimCertificate as Into<ClaimInfo>>::into(
-                    off_chain_claim_certificate.clone(),
+            claim_receipt_override.unwrap_or(
+                get_receipt_pda(
+                    &<TestClaimCertificate as Into<ClaimInfo>>::into(
+                        off_chain_claim_certificate.clone(),
+                    )
+                    .try_to_vec()?,
                 )
-                .try_to_vec()?,
-            )
-            .0,
+                .0,
+            ),
             false,
         ));
 

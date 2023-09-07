@@ -40,7 +40,10 @@ use {
     anchor_spl::associated_token::get_associated_token_address,
     pythnet_sdk::{
         accumulators::{
-            merkle::MerkleTree,
+            merkle::{
+                MerklePath,
+                MerkleTree,
+            },
             Accumulator,
         },
         hashers::keccak256::Keccak256,
@@ -158,6 +161,7 @@ impl TestClaimCertificate {
         &self,
         merkle_tree: &MerkleTree<SolanaHasher>,
         index: u8,
+        proof_of_inclusion_override: Option<MerklePath<SolanaHasher>>,
     ) -> (ClaimCertificate, Option<Instruction>) {
         let option_instruction = match &self.off_chain_proof_of_identity {
             TestIdentityCertificate::Evm(evm) => Some(evm.as_instruction(index, true)),
@@ -174,9 +178,11 @@ impl TestClaimCertificate {
             ClaimCertificate {
                 amount:             self.amount,
                 proof_of_identity:  self.off_chain_proof_of_identity.as_claim_certificate(index),
-                proof_of_inclusion: merkle_tree
-                    .prove(&Into::<ClaimInfo>::into(self.clone()).try_to_vec().unwrap())
-                    .unwrap(),
+                proof_of_inclusion: proof_of_inclusion_override.unwrap_or(
+                    merkle_tree
+                        .prove(&Into::<ClaimInfo>::into(self.clone()).try_to_vec().unwrap())
+                        .unwrap(),
+                ),
             },
             option_instruction,
         )
@@ -215,7 +221,7 @@ impl TestIdentityCertificate {
 
 impl TestClaimCertificate {
     pub fn as_instruction_error_index(&self, merkle_tree: &MerkleTree<SolanaHasher>) -> u8 {
-        match self.as_claim_certificate(merkle_tree, 0).1 {
+        match self.as_claim_certificate(merkle_tree, 0, None).1 {
             Some(_) => 1,
             None => 0,
         }
@@ -329,6 +335,8 @@ pub async fn test_happy_path() {
                 offchain_claim_certificate,
                 &merkle_tree,
                 None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -346,6 +354,8 @@ pub async fn test_happy_path() {
                     &copy_keypair(&simulator.genesis_keypair),
                     offchain_claim_certificate,
                     &merkle_tree,
+                    None,
+                    None,
                     None
                 )
                 .await
