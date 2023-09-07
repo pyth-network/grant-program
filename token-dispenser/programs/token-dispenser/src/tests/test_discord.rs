@@ -79,6 +79,8 @@ pub async fn test_discord() {
                 &copy_keypair(&simulator.genesis_keypair),
                 &mock_offchain_certificates[1],
                 &merkle_tree,
+                None,
+                None,
                 None
             )
             .await
@@ -91,6 +93,8 @@ pub async fn test_discord() {
             &copy_keypair(&simulator.genesis_keypair),
             &mock_offchain_certificates[0],
             &merkle_tree,
+            None,
+            None,
             None
         )
         .await
@@ -102,6 +106,8 @@ pub async fn test_discord() {
                 &copy_keypair(&simulator.genesis_keypair),
                 &mock_offchain_certificates[0],
                 &merkle_tree,
+                None,
+                None,
                 None
             )
             .await
