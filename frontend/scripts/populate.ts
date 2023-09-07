@@ -1,4 +1,4 @@
-import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
 import { loadAnchorWallet, loadTestWallets } from '../claim_sdk/testWallets'
 import { envOrErr } from '../claim_sdk/index'
@@ -7,17 +7,18 @@ import {
   clearDatabase,
   getDatabasePool,
 } from '../utils/db'
-import * as anchor from '@coral-xyz/anchor'
 
 const pool = getDatabasePool()
 
 const ENDPOINT = envOrErr('ENDPOINT')
 const PROGRAM_ID = envOrErr('PROGRAM_ID')
+const DISPENSER_GUARD = Keypair.fromSecretKey(
+  new Uint8Array(JSON.parse(envOrErr('DISPENSER_GUARD')))
+)
 
 async function main() {
   await clearDatabase(pool)
   const root = await addTestWalletsToDatabase(pool, await loadTestWallets())
-  const dispenserGuard = anchor.web3.Keypair.generate()
 
   // Intialize the token dispenser
   const tokenDispenserProvider = new TokenDispenserProvider(
@@ -40,7 +41,7 @@ async function main() {
     root,
     mintAndTreasury.mint.publicKey,
     mintAndTreasury.treasury,
-    dispenserGuard.publicKey
+    DISPENSER_GUARD.publicKey
   )
 }
 
