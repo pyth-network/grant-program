@@ -24,21 +24,21 @@ const Claim = () => {
         return <Welcome onProceed={() => setStep(2)} />
       case 2:
         return (
-          <LogInWithSolana
+          <PastActivity
             onBack={() => setStep(1)}
             onProceed={() => setStep(3)}
           />
         )
       case 3:
         return (
-          <PastActivity
+          <VerifyEligibility
             onBack={() => setStep(2)}
             onProceed={() => setStep(4)}
           />
         )
       case 4:
         return (
-          <VerifyEligibility
+          <LogInWithSolana
             onBack={() => setStep(3)}
             onProceed={() => setStep(5)}
           />
@@ -91,7 +91,7 @@ const Claim = () => {
               role="button"
               onClick={() => setStep(2)}
             >
-              <span>2</span> Log in with Solana
+              <span>2</span> Review Airdrop Eligibility
             </li>
             <li
               className={`claim_li ${
@@ -100,7 +100,7 @@ const Claim = () => {
               role="button"
               onClick={() => setStep(3)}
             >
-              <span>3</span> Review Airdrop Eligibility
+              <span>3</span> Verify Eligibility
             </li>
             <li
               className={`claim_li ${
@@ -109,7 +109,7 @@ const Claim = () => {
               role="button"
               onClick={() => setStep(4)}
             >
-              <span>4</span> Verify Eligibility
+              <span>4</span> Log in with Solana
             </li>
             <li
               className={`claim_li ${
