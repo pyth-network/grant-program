@@ -36,6 +36,22 @@ function getStoredSignatureMap(): SignatureMap | null {
   if (mapStr === null) return null
 
   const obj = JSON.parse(mapStr)
+  Object.keys(obj).forEach((solanaIdentity) => {
+    Object.keys(obj[solanaIdentity]).forEach((ecosystem) => {
+      Object.keys(obj[solanaIdentity][ecosystem]).forEach(
+        (ecosystemIdentity) => {
+          const signedMsg = obj[solanaIdentity][ecosystem][ecosystemIdentity]
+          obj[solanaIdentity][ecosystem][ecosystemIdentity] = {
+            // parsing the stringified buffer here
+            publicKey: Buffer.from(signedMsg.publicKey),
+            signature: Buffer.from(signedMsg.signature),
+            recoveryId: signedMsg.recoveryId,
+            fullMessage: Buffer.from(signedMsg.fullMessage),
+          }
+        }
+      )
+    })
+  })
   return obj as SignatureMap
 }
 
@@ -62,7 +78,15 @@ export function SignatureProvider({ children }: ProviderProps) {
         if (prev[solanaIdentity][ecosystem] === undefined)
           prev[solanaIdentity][ecosystem] = {}
 
-        prev[solanaIdentity][ecosystem]![ecosystemIdentity] = signedMsg
+        prev[solanaIdentity][ecosystem]![ecosystemIdentity] = {
+          // signed msgs fields are sometimes a buffer and sometimes a uint8array
+          // JSON stringify these fields differently
+          // And it is more complex to parse the stringified uint8array than a buffer
+          publicKey: Buffer.from(signedMsg.publicKey),
+          signature: Buffer.from(signedMsg.signature),
+          recoveryId: signedMsg.recoveryId,
+          fullMessage: Buffer.from(signedMsg.fullMessage),
+        }
         return { ...prev }
       })
     },

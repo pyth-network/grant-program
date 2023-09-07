@@ -1,11 +1,85 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import Arrow from '../../images/arrow.inline.svg'
 import Modal from './Modal'
 import Eligibility2 from './Eligibility2'
+import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useSignature } from '@components/Ecosystem/SignatureProvider'
+import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
+import { Ecosystem } from '@components/Ecosystem'
+import {
+  useAptosAddress,
+  useCosmosAddress,
+  useEVMAddress,
+  useSuiAddress,
+} from 'hooks/useAddress'
+import { useSession } from 'next-auth/react'
 
 const Step5 = ({ setStep }: { setStep: Function }) => {
   const [modal, openModal] = useState(false)
   const [screen, setScreen] = useState(1)
+  const tokenDispenser = useTokenDispenserProvider()
+  const { eligibility: eligibilityMap } = useEligiblity()
+  const { signatureMap } = useSignature()
+
+  const aptosAddress = useAptosAddress()
+  const injectiveAddress = useCosmosAddress('injective')
+  const osmosisAddress = useCosmosAddress('osmosis')
+  const neutronAddress = useCosmosAddress('neutron')
+  const evmAddress = useEVMAddress()
+  const suiAddress = useSuiAddress()
+  const { data } = useSession()
+
+  const getClaim = useCallback(
+    (
+      ecosystem: Ecosystem,
+      solanaIdentity?: string,
+      ecosystemIdentity?: string | null
+    ) => {
+      if (solanaIdentity === undefined || !ecosystemIdentity) return
+
+      const signatures = signatureMap[solanaIdentity]
+      const signedMsg = signatures?.[ecosystem]?.[ecosystemIdentity]
+      const eligibility = eligibilityMap[ecosystem][ecosystemIdentity]
+      if (eligibility === undefined || signedMsg === undefined) return
+
+      return {
+        signedMessage: signedMsg,
+        claimInfo: eligibility.claimInfo,
+        proofOfInclusion: eligibility.proofOfInclusion,
+      }
+    },
+    [eligibilityMap, signatureMap]
+  )
+
+  const submitTxs = useCallback(async () => {
+    const solanaIdentity = tokenDispenser?.claimant.toBase58()
+
+    // get claims for only those ecosystem which are connected by the user
+    const claims = [
+      getClaim(Ecosystem.APTOS, solanaIdentity, aptosAddress),
+      getClaim(Ecosystem.EVM, solanaIdentity, evmAddress),
+      getClaim(Ecosystem.INJECTIVE, solanaIdentity, injectiveAddress),
+      getClaim(Ecosystem.NEUTRON, solanaIdentity, neutronAddress),
+      getClaim(Ecosystem.OSMOSIS, solanaIdentity, osmosisAddress),
+      getClaim(Ecosystem.SOLANA, solanaIdentity, solanaIdentity),
+      getClaim(Ecosystem.SUI, solanaIdentity, suiAddress),
+      getClaim(Ecosystem.DISCORD, solanaIdentity, data?.user?.name),
+    ].filter((claim) => claim !== undefined)
+
+    // @ts-ignore fitlering undefined in the previous step
+    await tokenDispenser?.submitClaims(claims)
+  }, [
+    aptosAddress,
+    data?.user?.name,
+    evmAddress,
+    getClaim,
+    injectiveAddress,
+    neutronAddress,
+    osmosisAddress,
+    suiAddress,
+    tokenDispenser,
+  ])
+
   return (
     <>
       {screen == 1 ? (
@@ -72,7 +146,10 @@ const Step5 = ({ setStep }: { setStep: Function }) => {
             </button>
             <button
               className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-              onClick={() => setStep(6)}
+              onClick={async () => {
+                await submitTxs()
+                setStep(6)
+              }}
             >
               <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
                 proceed
