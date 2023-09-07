@@ -5,54 +5,80 @@ import Eligibility2 from './Eligibility2'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
-import { ClaimInfo } from 'claim_sdk/claim'
 import { Ecosystem } from '@components/Ecosystem'
-import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
+import {
+  useAptosAddress,
+  useCosmosAddress,
+  useEVMAddress,
+  useSuiAddress,
+} from 'hooks/useAddress'
+import { useSession } from 'next-auth/react'
 
 const Step5 = ({ setStep }: { setStep: Function }) => {
   const [modal, openModal] = useState(false)
   const [screen, setScreen] = useState(1)
   const tokenDispenser = useTokenDispenserProvider()
-  const { eligibility } = useEligiblity()
+  const { eligibility: eligibilityMap } = useEligiblity()
   const { signatureMap } = useSignature()
 
+  const aptosAddress = useAptosAddress()
+  const injectiveAddress = useCosmosAddress('injective')
+  const osmosisAddress = useCosmosAddress('osmosis')
+  const neutronAddress = useCosmosAddress('neutron')
+  const evmAddress = useEVMAddress()
+  const suiAddress = useSuiAddress()
+  const { data } = useSession()
+
+  const getClaim = useCallback(
+    (
+      ecosystem: Ecosystem,
+      solanaIdentity?: string,
+      ecosystemIdentity?: string | null
+    ) => {
+      if (solanaIdentity === undefined || !ecosystemIdentity) return
+
+      const signatures = signatureMap[solanaIdentity]
+      const signedMsg = signatures?.[ecosystem]?.[ecosystemIdentity]
+      const eligibility = eligibilityMap[ecosystem][ecosystemIdentity]
+      if (eligibility === undefined || signedMsg === undefined) return
+
+      return {
+        signedMessage: signedMsg,
+        claimInfo: eligibility.claimInfo,
+        proofOfInclusion: eligibility.proofOfInclusion,
+      }
+    },
+    [eligibilityMap, signatureMap]
+  )
+
   const submitTxs = useCallback(async () => {
-    if (tokenDispenser === undefined) return
-    const solanaIdentity = tokenDispenser.claimant.toBase58()
-    const signatures = signatureMap[solanaIdentity]
-    if (signatures === undefined) return
+    const solanaIdentity = tokenDispenser?.claimant.toBase58()
 
-    const claims: {
-      claimInfo: ClaimInfo
-      proofOfInclusion: Uint8Array[]
-      signedMessage: SignedMessage | undefined
-    }[] = []
+    // get claims for only those ecosystem which are connected by the user
+    const claims = [
+      getClaim(Ecosystem.APTOS, solanaIdentity, aptosAddress),
+      getClaim(Ecosystem.EVM, solanaIdentity, evmAddress),
+      getClaim(Ecosystem.INJECTIVE, solanaIdentity, injectiveAddress),
+      getClaim(Ecosystem.NEUTRON, solanaIdentity, neutronAddress),
+      getClaim(Ecosystem.OSMOSIS, solanaIdentity, osmosisAddress),
+      getClaim(Ecosystem.SOLANA, solanaIdentity, solanaIdentity),
+      getClaim(Ecosystem.SUI, solanaIdentity, suiAddress),
+      getClaim(Ecosystem.DISCORD, solanaIdentity, data?.user?.name),
+    ].filter((claim) => claim !== undefined)
 
-    Object.keys(signatures).forEach((ecosystem) => {
-      // @ts-ignore: object can't be undefined as it will be in the loop only if a value exists
-      Object.keys(signatures[ecosystem as Ecosystem]).forEach(
-        (ecosystemIdentity) => {
-          const signedMsg =
-            // @ts-ignore: object can't be undefined as it will be in the loop only if a value exists
-            signatures[ecosystem as Ecosystem][ecosystemIdentity]
-          const claim = {
-            signedMessage: signedMsg,
-            // the eligibility will not be undefined because a signature is present
-            // as a signature will only be requested if the wallet was eligible
-            claimInfo:
-              eligibility[ecosystem as Ecosystem][ecosystemIdentity]!.claimInfo,
-            proofOfInclusion:
-              eligibility[ecosystem as Ecosystem][ecosystemIdentity]!
-                .proofOfInclusion,
-          }
-
-          claims.push(claim)
-        }
-      )
-    })
-
-    await tokenDispenser.submitClaims(claims)
-  }, [eligibility, signatureMap, tokenDispenser])
+    // @ts-ignore fitlering undefined in the previous step
+    await tokenDispenser?.submitClaims(claims)
+  }, [
+    aptosAddress,
+    data?.user?.name,
+    evmAddress,
+    getClaim,
+    injectiveAddress,
+    neutronAddress,
+    osmosisAddress,
+    suiAddress,
+    tokenDispenser,
+  ])
 
   return (
     <>
