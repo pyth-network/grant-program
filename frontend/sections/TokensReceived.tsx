@@ -1,12 +1,12 @@
 import React from 'react'
-import Pyth from '../../images/pyth.inline.svg'
+import Pyth from '@images/pyth.inline.svg'
 
-import Twitter from '../../images/twitter.inline.svg'
-import Telegram from '../../images/telegram.inline.svg'
-import Discord from '../../images/discord.inline.svg'
-import Linkedin from '../../images/linkedin.inline.svg'
+import Twitter from '@images/twitter.inline.svg'
+import Telegram from '@images/telegram.inline.svg'
+import Discord from '@images/discord.inline.svg'
+import Linkedin from '@images/linkedin.inline.svg'
 
-const Step6 = () => {
+export const TokensReceived = () => {
   return (
     <>
       <div className=" border border-light-35 bg-dark">
@@ -69,5 +69,3 @@ const Step6 = () => {
     </>
   )
 }
-
-export default Step6

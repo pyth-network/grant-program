@@ -1,18 +1,9 @@
 import React, { useState } from 'react'
-import Phantom from '../../images/phantom.inline.svg'
-import Backpack from '../../images/backpack.inline.svg'
-import Solflare from '../../images/solflare.inline.svg'
-
-import Eligibility from './Eligibility'
+import Eligibility from './WalletsEligibility'
 import { ProceedButton, BackButton } from '@components/buttons'
+import { StepProps } from './common'
 
-const wallets = [
-  { id: 1, name: 'Phantom', icon: <Phantom /> },
-  { id: 2, name: 'Backpack', icon: <Backpack /> },
-  { id: 2, name: 'Solflare', icon: <Solflare /> },
-]
-
-const Step4 = ({ setStep }: { setStep: Function }) => {
+export const VerifyEligibility = ({ onBack, onProceed }: StepProps) => {
   const [screen, setScreen] = useState(1)
   return (
     <>
@@ -34,16 +25,14 @@ const Step4 = ({ setStep }: { setStep: Function }) => {
             </p>
 
             <div className="mt-12 flex justify-end gap-4">
-              <BackButton onBack={() => setStep(3)} />
+              <BackButton onBack={onBack} />
               <ProceedButton onProceed={() => setScreen(2)} />
             </div>
           </div>
         </div>
       ) : (
-        <Eligibility onBack={() => setScreen(1)} onProceed={() => setStep(5)} />
+        <Eligibility onBack={() => setScreen(1)} onProceed={onProceed} />
       )}
     </>
   )
 }
-
-export default Step4

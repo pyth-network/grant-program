@@ -2,8 +2,9 @@ import React from 'react'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
 import { Ecosystem } from '@components/Ecosystem'
 import { ProceedButton, BackButton } from '@components/buttons'
+import { StepProps } from './common'
 
-const Step3 = ({ setStep }: { setStep: Function }) => {
+export const PastActivity = ({ onBack, onProceed }: StepProps) => {
   return (
     <>
       <div className=" border border-light-35 bg-dark">
@@ -32,8 +33,8 @@ const Step3 = ({ setStep }: { setStep: Function }) => {
           </div>
 
           <div className="mt-12 flex justify-end gap-4 ">
-            <BackButton onBack={() => setStep(2)} />
-            <ProceedButton onProceed={() => setStep(4)} />
+            <BackButton onBack={onBack} />
+            <ProceedButton onProceed={onProceed} />
           </div>
         </div>
       </div>
@@ -60,5 +61,3 @@ function CheckBox({ ecosystem }: CheckBoxProps) {
     </label>
   )
 }
-
-export default Step3

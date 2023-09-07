@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react'
-import Modal from './Modal'
-import Eligibility2 from './Eligibility2'
+import Modal from '../components/Modal'
+import Eligibility2 from './SignForEligibleWallets'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
@@ -13,8 +13,9 @@ import {
 } from 'hooks/useAddress'
 import { useSession } from 'next-auth/react'
 import { ProceedButton, BackButton } from '@components/buttons'
+import { StepProps } from './common'
 
-const Step5 = ({ setStep }: { setStep: Function }) => {
+export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
   const [modal, openModal] = useState(false)
   const [screen, setScreen] = useState(1)
   const tokenDispenser = useTokenDispenserProvider()
@@ -97,7 +98,7 @@ const Step5 = ({ setStep }: { setStep: Function }) => {
             <p>Your claimed PYTH tokens will go to this Solana wallet:</p>
 
             <div className="mt-12 flex justify-end gap-4">
-              <BackButton onBack={() => setStep(4)} />
+              <BackButton onBack={onBack} />
               <ProceedButton onProceed={() => setScreen(2)} />
             </div>
           </div>
@@ -123,7 +124,7 @@ const Step5 = ({ setStep }: { setStep: Function }) => {
             <ProceedButton
               onProceed={async () => {
                 await submitTxs()
-                setStep(6)
+                onProceed()
               }}
             />
           </div>
@@ -132,5 +133,3 @@ const Step5 = ({ setStep }: { setStep: Function }) => {
     </>
   )
 }
-
-export default Step5

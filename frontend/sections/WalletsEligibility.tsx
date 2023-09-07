@@ -1,9 +1,9 @@
 import React, { ReactElement } from 'react'
-import Arrow from '../../images/arrow.inline.svg'
-import Coin from '../../images/coin.inline.svg'
+import Arrow from '@images/arrow.inline.svg'
+import Coin from '@images/coin.inline.svg'
 
-import TooltipIcon from '../../images/tooltip.inline.svg'
-import Verified from '../../images/verified.inline.svg'
+import TooltipIcon from '@images/tooltip.inline.svg'
+import Verified from '@images/verified.inline.svg'
 import Tooltip from '@components/Tooltip'
 
 import { AptosWalletButton } from '@components/wallets/Aptos'
@@ -25,7 +25,6 @@ import { useSession } from 'next-auth/react'
 import { useCoins } from 'hooks/useCoins'
 import { Ecosystem } from '@components/Ecosystem'
 
-// TODO: Add loading support for sub components to disable proceed back buttons.
 const Eligibility = ({
   onBack,
   onProceed,

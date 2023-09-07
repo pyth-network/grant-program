@@ -1,7 +1,7 @@
 import React from 'react'
 import { ProceedButton } from '@components/buttons'
 
-const Step1 = ({ setStep }: { setStep: Function }) => {
+export const Welcome = ({ onProceed }: { onProceed: () => void }) => {
   return (
     <>
       <div className=" border border-light-35 bg-dark">
@@ -36,12 +36,10 @@ const Step1 = ({ setStep }: { setStep: Function }) => {
             account to calculate how many tokens you are eligible to claim.
           </p>
           <div className="mt-12 flex justify-end">
-            <ProceedButton onProceed={() => setStep(2)} />
+            <ProceedButton onProceed={onProceed} />
           </div>
         </div>
       </div>
     </>
   )
 }
-
-export default Step1

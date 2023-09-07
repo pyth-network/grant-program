@@ -1,5 +1,5 @@
 import React from 'react'
-import Close from '../../images/close.inline.svg'
+import Close from '@images/close.inline.svg'
 
 const Modal = ({
   openModal,

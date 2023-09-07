@@ -16,7 +16,9 @@
     "jsx": "preserve",
     "incremental": true,
     "paths": {
-      "@components/*": ["components/*"]
+      "@components/*": ["components/*"],
+      "@images/*": ["images/*"],
+      "@sections/*": ["sections/*"]
     },
     "useUnknownInCatchVariables": false
   },

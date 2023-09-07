@@ -1,6 +1,6 @@
 import { SignMessageFn } from 'hooks/useSignMessage'
 import { useState, useCallback } from 'react'
-import Signed from '../../images/signed.inline.svg'
+import Signed from '@images/signed.inline.svg'
 import { classNames } from 'utils/classNames'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
 import { Ecosystem } from '@components/Ecosystem'

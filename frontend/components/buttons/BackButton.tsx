@@ -1,4 +1,4 @@
-import Arrow from '../../images/arrow.inline.svg'
+import Arrow from '@images/arrow.inline.svg'
 import { Button } from './Button'
 
 export type BackButtonProps = {
