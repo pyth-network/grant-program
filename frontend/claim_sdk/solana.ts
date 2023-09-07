@@ -252,7 +252,9 @@ export class TokenDispenserProvider {
       })
     }
     if (this.tokenDispenserProgram.provider.sendAll) {
-      await this.tokenDispenserProgram.provider.sendAll(txs)
+      await this.tokenDispenserProgram.provider.sendAll(txs, {
+        skipPreflight: true,
+      })
     }
   }
 
