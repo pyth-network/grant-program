@@ -204,7 +204,7 @@ export class TokenDispenserProvider {
     )
   }
 
-  public async createAssociatedTokenAccountTxnIfNeeded(): Promise<Transaction | null> {
+  public async createAssociatedTokenAccountTxnIfNeeded(): Promise<VersionedTransaction | null> {
     const config = await this.getConfig()
     const associatedTokenAccount = await this.getClaimantFundAddress()
     if (
@@ -221,8 +221,16 @@ export class TokenDispenserProvider {
           this.claimant,
           this.claimant
         )
-      const txn = new Transaction()
-      txn.add(createAssociatedTokenAccountIx)
+
+      const txn = new VersionedTransaction(
+        new TransactionMessage({
+          instructions: [createAssociatedTokenAccountIx],
+          payerKey: this.provider.publicKey!,
+          recentBlockhash: (await this.connection.getLatestBlockhash())
+            .blockhash,
+        }).compileToV0Message()
+      )
+
       return txn
     }
     return null
@@ -251,10 +259,33 @@ export class TokenDispenserProvider {
         ),
       })
     }
-    if (this.tokenDispenserProgram.provider.sendAll) {
-      await this.tokenDispenserProgram.provider.sendAll(txs, {
-        skipPreflight: true,
-      })
+    if (this.tokenDispenserProgram.provider.sendAndConfirm !== undefined) {
+      const txArr = txs.map((tx) => tx.tx)
+
+      const signedTxs = await (
+        this.tokenDispenserProgram.provider as anchor.AnchorProvider
+      ).wallet.signAllTransactions(txArr)
+
+      const sendTxs = signedTxs.map(
+        async (signedTx) =>
+          await this.connection.sendTransaction(
+            signedTx as VersionedTransaction
+          )
+      )
+
+      const settled = await Promise.allSettled(sendTxs)
+
+      console.log(settled)
+
+      // One error received is
+      // "Program log: AnchorError caused by account: claimant_fund. Error Code: AccountNotInitialized.
+      // Error Number: 3012. Error Message: The program expected this account to be already initialized."
+      // I guess `createAssociatedTokenAccountTxnIfNeeded` this transaction need to be executed first
+      // And then others should execute. Like we should wait for it.
+
+      // await this.tokenDispenserProgram.provider.sendAll(txs, {
+      //   skipPreflight: true,
+      // })
     }
   }
 
