@@ -242,7 +242,7 @@ export class TokenDispenserProvider {
       proofOfInclusion: Uint8Array[]
       signedMessage: SignedMessage | undefined
     }[]
-  ): Promise<void> {
+  ): Promise<Promise<string>[]> {
     /// This is only eth & cosmwasm for now
     let txs: { tx: Transaction | VersionedTransaction }[] = []
 
@@ -250,6 +250,7 @@ export class TokenDispenserProvider {
     if (createAtaTxn) {
       txs.push({ tx: createAtaTxn })
     }
+
     for (const claim of claims) {
       txs.push({
         tx: await this.generateClaimTransaction(
@@ -259,34 +260,46 @@ export class TokenDispenserProvider {
         ),
       })
     }
-    if (this.tokenDispenserProgram.provider.sendAndConfirm !== undefined) {
-      const txArr = txs.map((tx) => tx.tx)
+    const txArr = txs.map((tx) => tx.tx)
 
-      const signedTxs = await (
-        this.tokenDispenserProgram.provider as anchor.AnchorProvider
-      ).wallet.signAllTransactions(txArr)
+    let signedTxs = await (
+      this.tokenDispenserProgram.provider as anchor.AnchorProvider
+    ).wallet.signAllTransactions(txArr)
 
-      const sendTxs = signedTxs.map(
-        async (signedTx) =>
-          await this.connection.sendTransaction(
-            signedTx as VersionedTransaction
-          )
-      )
+    // send createAtaTxn first and then others. Others need a TokenAccount before
+    // being able to be executed
+    if (createAtaTxn !== null) {
+      try {
+        const signature = await this.connection.sendTransaction(
+          signedTxs[0] as VersionedTransaction
+        )
 
-      const settled = await Promise.allSettled(sendTxs)
+        const latestBlockHash = await this.connection.getLatestBlockhash()
+        await this.connection.confirmTransaction(
+          {
+            signature,
+            blockhash: latestBlockHash.blockhash,
+            lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+          },
+          'max'
+        )
 
-      console.log(settled)
-
-      // One error received is
-      // "Program log: AnchorError caused by account: claimant_fund. Error Code: AccountNotInitialized.
-      // Error Number: 3012. Error Message: The program expected this account to be already initialized."
-      // I guess `createAssociatedTokenAccountTxnIfNeeded` this transaction need to be executed first
-      // And then others should execute. Like we should wait for it.
-
-      // await this.tokenDispenserProgram.provider.sendAll(txs, {
-      //   skipPreflight: true,
-      // })
+        // remove the executed tx
+        signedTxs = signedTxs.slice(1)
+      } catch (e) {
+        console.error(e)
+        // TODO: How to handle the error here?
+        throw Error('create account tx failed')
+      }
     }
+
+    // send the remaining ones
+    const sendTxs = signedTxs.map(
+      async (signedTx) =>
+        await this.connection.sendTransaction(signedTx as VersionedTransaction)
+    )
+
+    return sendTxs
   }
 
   public async generateClaimTransaction(

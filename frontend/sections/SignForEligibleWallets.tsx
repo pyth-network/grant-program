@@ -28,13 +28,17 @@ import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
 import { useCoins } from 'hooks/useCoins'
 import { Ecosystem } from '@components/Ecosystem'
+import { EcosystemClaimState } from './Step5'
 
 const Eligibility2 = ({
   onBack,
   onProceed,
+  ecosystemState,
 }: {
   onBack: Function
   onProceed: Function
+  // this will not be undefined only when some claim is in progress
+  ecosystemState: { [key in Ecosystem]?: EcosystemClaimState } | undefined
 }) => {
   const aptosAddress = useAptosAddress()
   const injectiveAddress = useCosmosAddress('injective')
@@ -58,6 +62,8 @@ const Eligibility2 = ({
     },
     [eligibility]
   )
+
+  console.log(ecosystemState)
 
   return (
     <div className=" overflow-auto border border-light-35 bg-dark">
