@@ -540,7 +540,9 @@ pub fn checked_create_claim_receipt<'info>(
     let transfer_instruction = system_instruction::transfer(
         &claimant.key(),
         &claim_receipt_account.key(),
-        Rent::get()?.minimum_balance(0),
+        Rent::get()?
+            .minimum_balance(0)
+            .saturating_sub(claim_receipt_account.lamports()),
     );
     invoke(&transfer_instruction, &account_infos)?;
 

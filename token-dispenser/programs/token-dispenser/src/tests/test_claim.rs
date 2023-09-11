@@ -2,16 +2,23 @@ use {
     super::dispenser_simulator::DispenserSimulator,
     crate::{
         get_config_pda,
-        tests::dispenser_simulator::{
-            copy_keypair,
-            IntoTransactionError,
+        get_receipt_pda,
+        tests::{
+            dispenser_simulator::{
+                copy_keypair,
+                IntoTransactionError,
+            },
+            test_happy_path::TestClaimCertificate,
         },
+        ClaimInfo,
         ErrorCode,
         SolanaHasher,
     },
     anchor_lang::{
         prelude::Pubkey,
         solana_program::program_option::COption,
+        system_program::{self,},
+        AnchorSerialize,
     },
     anchor_spl::{
         associated_token::get_associated_token_address,
@@ -26,6 +33,8 @@ use {
     },
     solana_program_test::tokio,
     solana_sdk::{
+        account::Account,
+        native_token::LAMPORTS_PER_SOL,
         signature::Keypair,
         signer::Signer,
     },
@@ -490,5 +499,75 @@ pub async fn test_claim_fails_with_wrong_receipt_pubkey() {
                 ErrorCode::WrongPda.into_transaction_error(ix_index_error)
             );
         }
+    }
+}
+
+#[tokio::test]
+pub async fn test_claim_works_if_receipt_has_balance() {
+    let dispenser_guard: Keypair = Keypair::new();
+
+    let mut simulator = DispenserSimulator::new().await;
+    let claimant_1 = Keypair::new();
+
+    let (merkle_tree, mock_offchain_certificates_and_claimants) = simulator
+        .initialize_with_claimants(vec![copy_keypair(&claimant_1)], &dispenser_guard)
+        .await
+        .unwrap();
+
+    let (claimant, offchain_claim_certificates, _) = &mock_offchain_certificates_and_claimants[0];
+    for offchain_claim_certificate in offchain_claim_certificates {
+        let receipt_pda = get_receipt_pda(
+            &<TestClaimCertificate as Into<ClaimInfo>>::into(offchain_claim_certificate.clone())
+                .try_to_vec()
+                .unwrap(),
+        )
+        .0;
+
+        simulator
+            .airdrop(receipt_pda, LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        let receipt_account: Account = simulator.get_account(receipt_pda).await.unwrap();
+
+
+        assert_eq!(receipt_account.lamports, LAMPORTS_PER_SOL);
+        assert_eq!(receipt_account.owner, system_program::ID);
+
+        assert!(simulator
+            .claim(
+                &copy_keypair(claimant),
+                offchain_claim_certificate,
+                &merkle_tree,
+                None,
+                None,
+                None
+            )
+            .await
+            .is_ok());
+
+        let receipt_account: Account = simulator.get_account(receipt_pda).await.unwrap();
+
+
+        assert_eq!(receipt_account.lamports, LAMPORTS_PER_SOL);
+        assert_eq!(receipt_account.owner, crate::id());
+
+
+        let ix_index_error = offchain_claim_certificate.as_instruction_error_index(&merkle_tree);
+        assert_eq!(
+            simulator
+                .claim(
+                    &copy_keypair(claimant),
+                    offchain_claim_certificate,
+                    &merkle_tree,
+                    None,
+                    None,
+                    None
+                )
+                .await
+                .unwrap_err()
+                .unwrap(),
+            ErrorCode::AlreadyClaimed.into_transaction_error(ix_index_error)
+        );
     }
 }
