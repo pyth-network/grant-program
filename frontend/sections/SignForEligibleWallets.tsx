@@ -1,4 +1,4 @@
-import React, { ReactElement, useCallback } from 'react'
+import React, { ReactElement, useCallback, useMemo } from 'react'
 import Arrow from '@images/arrow.inline.svg'
 import Coin from '@images/coin.inline.svg'
 
@@ -28,7 +28,41 @@ import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
 import { useCoins } from 'hooks/useCoins'
 import { Ecosystem } from '@components/Ecosystem'
-import { EcosystemClaimState } from './Step5'
+import { EcosystemClaimState } from './SignAndClaim'
+
+import Loader from '@images/loader.inline.svg'
+import Failed from '@images/not.inline.svg'
+import Success from '@images/verified.inline.svg'
+
+function ClaimState({
+  ecosystemState,
+}: {
+  ecosystemState: EcosystemClaimState | undefined
+}) {
+  const { transactionSignature, loading, error } = ecosystemState ?? {}
+
+  const text = useMemo(() => {
+    if (loading === true) return 'claiming...'
+    if (transactionSignature !== undefined && transactionSignature !== null)
+      return 'claimed'
+    if (error !== undefined && error !== null) return 'failed'
+  }, [error, loading, transactionSignature])
+
+  const icon = useMemo(() => {
+    if (loading === true) return <Loader />
+    if (transactionSignature !== undefined && transactionSignature !== null)
+      return <Success />
+    if (error !== undefined && error !== null) return <Failed />
+  }, [error, loading, transactionSignature])
+
+  if (ecosystemState === undefined) return <></>
+  return (
+    <div className="flex items-center justify-between gap-4 text-base18">
+      {text}
+      {icon}
+    </div>
+  )
+}
 
 const Eligibility2 = ({
   onBack,
@@ -99,7 +133,15 @@ const Eligibility2 = ({
             <TableRow
               label={'Solana Activity'}
               walletButton={<SolanaWalletButton disableOnConnect />}
-              signButton={<SolanaSignButton />}
+              signButton={
+                ecosystemState === undefined ? (
+                  <SolanaSignButton />
+                ) : (
+                  <ClaimState
+                    ecosystemState={ecosystemState[Ecosystem.SOLANA]}
+                  />
+                )
+              }
               coins={getEligibleCoins(Ecosystem.SOLANA, solanaAddress)}
               isEligible={
                 activity.Solana && isEligible(Ecosystem.SOLANA, solanaAddress)
@@ -108,14 +150,28 @@ const Eligibility2 = ({
             <TableRow
               label={'EVM Activity'}
               walletButton={<EVMWalletButton disableOnConnect />}
-              signButton={<EVMSignButton />}
+              signButton={
+                ecosystemState === undefined ? (
+                  <EVMSignButton />
+                ) : (
+                  <ClaimState ecosystemState={ecosystemState[Ecosystem.EVM]} />
+                )
+              }
               coins={getEligibleCoins(Ecosystem.EVM, evmAddress)}
               isEligible={activity.Evm && isEligible(Ecosystem.EVM, evmAddress)}
             />
             <TableRow
               label={'Aptos Activity'}
               walletButton={<AptosWalletButton disableOnConnect />}
-              signButton={<AptosSignButton />}
+              signButton={
+                ecosystemState === undefined ? (
+                  <AptosSignButton />
+                ) : (
+                  <ClaimState
+                    ecosystemState={ecosystemState[Ecosystem.APTOS]}
+                  />
+                )
+              }
               coins={getEligibleCoins(Ecosystem.APTOS, aptosAddress)}
               isEligible={
                 activity.Aptos && isEligible(Ecosystem.APTOS, aptosAddress)
@@ -124,7 +180,13 @@ const Eligibility2 = ({
             <TableRow
               label={'Sui Activity'}
               walletButton={<SuiWalletButton disableOnConnect />}
-              signButton={<SuiSignButton />}
+              signButton={
+                ecosystemState === undefined ? (
+                  <SuiSignButton />
+                ) : (
+                  <ClaimState ecosystemState={ecosystemState[Ecosystem.SUI]} />
+                )
+              }
               coins={getEligibleCoins(Ecosystem.SUI, suiAddress)}
               isEligible={activity.Sui && isEligible(Ecosystem.SUI, suiAddress)}
             />
@@ -133,7 +195,15 @@ const Eligibility2 = ({
               walletButton={
                 <CosmosWalletButton chainName="injective" disableOnConnect />
               }
-              signButton={<CosmosSignButton chainName="injective" />}
+              signButton={
+                ecosystemState === undefined ? (
+                  <CosmosSignButton chainName="injective" />
+                ) : (
+                  <ClaimState
+                    ecosystemState={ecosystemState[Ecosystem.INJECTIVE]}
+                  />
+                )
+              }
               coins={getEligibleCoins(Ecosystem.INJECTIVE, injectiveAddress)}
               isEligible={
                 activity.Injective &&
@@ -145,7 +215,15 @@ const Eligibility2 = ({
               walletButton={
                 <CosmosWalletButton chainName="osmosis" disableOnConnect />
               }
-              signButton={<CosmosSignButton chainName="osmosis" />}
+              signButton={
+                ecosystemState === undefined ? (
+                  <CosmosSignButton chainName="osmosis" />
+                ) : (
+                  <ClaimState
+                    ecosystemState={ecosystemState[Ecosystem.OSMOSIS]}
+                  />
+                )
+              }
               coins={getEligibleCoins(Ecosystem.OSMOSIS, osmosisAddress)}
               isEligible={
                 activity.Osmosis &&
@@ -157,7 +235,15 @@ const Eligibility2 = ({
               walletButton={
                 <CosmosWalletButton chainName="neutron" disableOnConnect />
               }
-              signButton={<CosmosSignButton chainName="neutron" />}
+              signButton={
+                ecosystemState === undefined ? (
+                  <CosmosSignButton chainName="neutron" />
+                ) : (
+                  <ClaimState
+                    ecosystemState={ecosystemState[Ecosystem.NEUTRON]}
+                  />
+                )
+              }
               coins={getEligibleCoins(Ecosystem.NEUTRON, neutronAddress)}
               isEligible={
                 activity.Neutron &&
@@ -167,7 +253,15 @@ const Eligibility2 = ({
             <TableRow
               label={'Discord Activity'}
               walletButton={<DiscordButton disableOnAuth />}
-              signButton={<DiscordSignButton />}
+              signButton={
+                ecosystemState === undefined ? (
+                  <DiscordSignButton />
+                ) : (
+                  <ClaimState
+                    ecosystemState={ecosystemState[Ecosystem.DISCORD]}
+                  />
+                )
+              }
               coins={getEligibleCoins(Ecosystem.DISCORD, data?.user?.name)}
               isEligible={
                 activity['Pyth Discord'] &&
