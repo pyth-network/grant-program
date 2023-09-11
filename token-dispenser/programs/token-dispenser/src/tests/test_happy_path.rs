@@ -298,29 +298,13 @@ pub async fn test_happy_path() {
         .iter()
         .map(|item| item.amount)
         .sum::<u64>();
-    let mint_to_amount = 10 * claim_sum;
 
-    simulator.mint_to_treasury(mint_to_amount).await.unwrap();
-    simulator
-        .verify_token_account_data(treasury, mint_to_amount, COption::None, 0)
-        .await
-        .unwrap();
+    let mint_amounts = [
+        mock_offchain_certificates[0].amount,
+        claim_sum - mock_offchain_certificates[0].amount,
+    ];
 
-    simulator
-        .approve_treasury_delegate(get_config_pda().0, mint_to_amount)
-        .await
-        .unwrap();
-
-    simulator
-        .verify_token_account_data(
-            treasury,
-            mint_to_amount,
-            COption::Some(config_pubkey),
-            mint_to_amount,
-        )
-        .await
-        .unwrap();
-
+    // verify receipt pdas don't exist
     for serialized_item in &merkle_items_serialized {
         assert!(simulator
             .get_account(get_receipt_pda(serialized_item).0)
@@ -328,7 +312,65 @@ pub async fn test_happy_path() {
             .is_none());
     }
 
-    for offchain_claim_certificate in &mock_offchain_certificates {
+    // mint only enough for first claim
+    simulator.mint_to_treasury(mint_amounts[0]).await.unwrap();
+    simulator
+        .verify_token_account_data(treasury, mint_amounts[0], COption::None, 0)
+        .await
+        .unwrap();
+
+    // approve total claim sum amount
+    simulator
+        .approve_treasury_delegate(get_config_pda().0, claim_sum)
+        .await
+        .unwrap();
+
+    simulator
+        .verify_token_account_data(
+            treasury,
+            mint_amounts[0],
+            COption::Some(config_pubkey),
+            claim_sum,
+        )
+        .await
+        .unwrap();
+
+    simulator
+        .claim(
+            &copy_keypair(&simulator.genesis_keypair),
+            &mock_offchain_certificates[0],
+            &merkle_tree,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+    // verify treasury is empty but delegated amount is still valid
+    simulator
+        .verify_token_account_data(
+            treasury,
+            0,
+            COption::Some(config_pubkey),
+            claim_sum - mint_amounts[0],
+        )
+        .await
+        .unwrap();
+
+    // mint enough for rest of the claims
+    simulator.mint_to_treasury(mint_amounts[1]).await.unwrap();
+    simulator
+        .verify_token_account_data(
+            treasury,
+            mint_amounts[1],
+            COption::Some(config_pubkey),
+            claim_sum - mint_amounts[0],
+        )
+        .await
+        .unwrap();
+
+    for offchain_claim_certificate in &mock_offchain_certificates[1..] {
         simulator
             .claim(
                 &copy_keypair(&simulator.genesis_keypair),
@@ -367,6 +409,13 @@ pub async fn test_happy_path() {
 
     // Check state
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
+
+    // treasury should have 0 balance and delegated amount/user should be 0 since
+    // delegated amount was transferred
+    simulator
+        .verify_token_account_data(treasury, 0, COption::None, 0)
+        .await
+        .unwrap();
 
     let claimant_fund = get_associated_token_address(
         &simulator.genesis_keypair.pubkey(),
