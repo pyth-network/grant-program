@@ -286,7 +286,6 @@ pub async fn test_claim_fails_with_insufficient_funds() {
         .await
         .unwrap();
 
-    println!("1");
     for (claimant, _, amount) in &mock_offchain_certificates_and_claimants {
         simulator
             .verify_token_account_data(
