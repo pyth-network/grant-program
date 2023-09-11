@@ -305,11 +305,6 @@ pub async fn test_claim_fails_if_delegate_revoked() {
 
     let mut simulator = DispenserSimulator::new().await;
     let claimant_1 = Keypair::new();
-    simulator
-        .airdrop(claimant_1.pubkey(), 1000000000)
-        .await
-        .unwrap();
-
 
     let (merkle_tree, mock_offchain_certificates_and_claimants) = simulator
         .initialize_with_claimants(
