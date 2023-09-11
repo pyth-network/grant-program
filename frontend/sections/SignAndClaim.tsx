@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react'
-import Arrow from '../../images/arrow.inline.svg'
-import Modal from './Modal'
-import Eligibility2 from './Eligibility2'
+import Modal from '../components/Modal'
+import Eligibility2 from './SignForEligibleWallets'
 import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
@@ -13,8 +12,10 @@ import {
   useSuiAddress,
 } from 'hooks/useAddress'
 import { useSession } from 'next-auth/react'
+import { ProceedButton, BackButton } from '@components/buttons'
+import { StepProps } from './common'
 
-const Step5 = ({ setStep }: { setStep: Function }) => {
+export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
   const [modal, openModal] = useState(false)
   const [screen, setScreen] = useState(1)
   const tokenDispenser = useTokenDispenserProvider()
@@ -97,24 +98,8 @@ const Step5 = ({ setStep }: { setStep: Function }) => {
             <p>Your claimed PYTH tokens will go to this Solana wallet:</p>
 
             <div className="mt-12 flex justify-end gap-4">
-              <button
-                className="btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light"
-                onClick={() => setStep(4)}
-              >
-                <span className="relative inline-flex items-center whitespace-nowrap">
-                  <Arrow className="mr-2.5 origin-center rotate-180" />
-                  back
-                </span>
-              </button>
-              <button
-                className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-                onClick={() => setScreen(2)}
-              >
-                <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                  proceed
-                  <Arrow />
-                </span>
-              </button>
+              <BackButton onBack={onBack} />
+              <ProceedButton onProceed={() => setScreen(2)} />
             </div>
           </div>
         </div>
@@ -135,32 +120,16 @@ const Step5 = ({ setStep }: { setStep: Function }) => {
             the Airdrop Claim process using a different set of wallets.
           </p>
           <div className="mt-12 flex justify-center gap-4">
-            <button
-              className="btn before:btn-bg  btn--dark before:bg-darkGray hover:text-dark hover:before:bg-light"
-              onClick={() => openModal(false)}
-            >
-              <span className="relative inline-flex items-center whitespace-nowrap">
-                <Arrow className="mr-2.5 origin-center rotate-180" />
-                back
-              </span>
-            </button>
-            <button
-              className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-              onClick={async () => {
+            <BackButton onBack={() => openModal(false)} />
+            <ProceedButton
+              onProceed={async () => {
                 await submitTxs()
-                setStep(6)
+                onProceed()
               }}
-            >
-              <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                proceed
-                <Arrow />
-              </span>
-            </button>
+            />
           </div>
         </Modal>
       )}
     </>
   )
 }
-
-export default Step5

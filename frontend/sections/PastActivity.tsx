@@ -1,9 +1,10 @@
 import React from 'react'
-import Arrow from '../../images/arrow.inline.svg'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
 import { Ecosystem } from '@components/Ecosystem'
+import { ProceedButton, BackButton } from '@components/buttons'
+import { StepProps } from './common'
 
-const Step3 = ({ setStep }: { setStep: Function }) => {
+export const PastActivity = ({ onBack, onProceed }: StepProps) => {
   return (
     <>
       <div className=" border border-light-35 bg-dark">
@@ -32,24 +33,8 @@ const Step3 = ({ setStep }: { setStep: Function }) => {
           </div>
 
           <div className="mt-12 flex justify-end gap-4 ">
-            <button
-              className="btn before:btn-bg  btn--dark before:bg-dark hover:text-dark hover:before:bg-light"
-              onClick={() => setStep(2)}
-            >
-              <span className="relative inline-flex items-center whitespace-nowrap">
-                <Arrow className="mr-2.5 origin-center rotate-180" />
-                back
-              </span>
-            </button>
-            <button
-              className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-              onClick={() => setStep(4)}
-            >
-              <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                proceed
-                <Arrow />
-              </span>
-            </button>
+            <BackButton onBack={onBack} />
+            <ProceedButton onProceed={onProceed} />
           </div>
         </div>
       </div>
@@ -76,5 +61,3 @@ function CheckBox({ ecosystem }: CheckBoxProps) {
     </label>
   )
 }
-
-export default Step3

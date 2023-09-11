@@ -1,10 +1,10 @@
 import { ReactElement, useLayoutEffect, useState } from 'react'
 import { truncateAddress } from 'utils/truncateAddress'
-import Wallet from '../../images/wallet.inline.svg'
+import Wallet from '@images/wallet.inline.svg'
 import Image from 'next/image'
-import Modal from '@components/Claim/Modal'
+import Modal from '@components/Modal'
 import { Listbox, Transition } from '@headlessui/react'
-import Down from '../../images/down2.inline.svg'
+import Down from '@images/down2.inline.svg'
 
 export type WalletConnectedButtonProps = {
   onClick: () => void

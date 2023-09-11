@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react'
 
-import Phantom from '../../images/phantom.inline.svg'
-import Backpack from '../../images/backpack.inline.svg'
-import Solflare from '../../images/solflare.inline.svg'
-import Arrow from '../../images/arrow.inline.svg'
+import Phantom from '@images/phantom.inline.svg'
+import Backpack from '@images/backpack.inline.svg'
+import Solflare from '@images/solflare.inline.svg'
 import { useWallet } from '@solana/wallet-adapter-react'
 import {
   BACKPACK_WALLET_ADAPTER,
@@ -17,8 +16,10 @@ import {
   WalletModal,
 } from '@components/wallets/WalletButton'
 import { truncateAddress } from 'utils/truncateAddress'
+import { ProceedButton, BackButton } from '@components/buttons'
+import { StepProps } from './common'
 
-const Step2 = ({ setStep }: { setStep: Function }) => {
+export const LogInWithSolana = ({ onBack, onProceed }: StepProps) => {
   const { publicKey, wallet, disconnect, connecting, connected, connect } =
     useWallet()
 
@@ -33,20 +34,12 @@ const Step2 = ({ setStep }: { setStep: Function }) => {
 
   return (
     <>
-      <div className=" border border-light-35 bg-dark">
+      <div className="border border-light-35 bg-dark">
         <div className="flex items-center justify-between border-b border-light-35  bg-[#242339] py-8 px-10">
           <h4 className="font-header text-[28px] font-light leading-[1.2]">
             Log in with Solana
           </h4>
-          <button
-            className="btn before:btn-bg  btn--dark before:bg-[#242339] hover:text-dark hover:before:bg-light"
-            onClick={() => setStep(1)}
-          >
-            <span className="relative inline-flex items-center whitespace-nowrap">
-              <Arrow className="mr-2.5 origin-center rotate-180" />
-              back
-            </span>
-          </button>
+          <BackButton onBack={onBack} />
         </div>
         <div className="px-10 py-8 text-base16">
           <p className="mb-6">
@@ -76,14 +69,7 @@ const Step2 = ({ setStep }: { setStep: Function }) => {
                   Change wallet
                 </span>
               </div>
-              <button
-                className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
-                onClick={() => setStep(3)}
-              >
-                <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                  proceed <Arrow />
-                </span>
-              </button>
+              <ProceedButton onProceed={onProceed} />
             </div>
           )}
         </div>
@@ -136,5 +122,3 @@ const SelectWallets = () => {
     </>
   )
 }
-
-export default Step2

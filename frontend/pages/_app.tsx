@@ -1,4 +1,3 @@
-import { ChakraProvider } from '@chakra-ui/react'
 import { AptosWalletProvider } from '@components/wallets/Aptos'
 import { SolanaWalletProvider } from '@components/wallets/Solana'
 import type { AppProps } from 'next/app'
@@ -12,8 +11,7 @@ import { SessionProvider } from 'next-auth/react'
 import { TokenDispenserProvider } from '@components/TokenDispenserProvider'
 import { EcosystemProviders } from '@components/Ecosystem'
 
-// Use require instead of import since order matters
-require('../styles/globals.css')
+import '../styles/globals.css'
 
 const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
   return (

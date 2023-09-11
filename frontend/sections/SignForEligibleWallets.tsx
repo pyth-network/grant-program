@@ -1,6 +1,6 @@
 import React, { ReactElement, useCallback } from 'react'
-import Arrow from '../../images/arrow.inline.svg'
-import Coin from '../../images/coin.inline.svg'
+import Arrow from '@images/arrow.inline.svg'
+import Coin from '@images/coin.inline.svg'
 
 import { AptosSignButton, AptosWalletButton } from '@components/wallets/Aptos'
 import { SuiSignButton, SuiWalletButton } from '@components/wallets/Sui'

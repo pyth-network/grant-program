@@ -1,17 +1,19 @@
 import Image from 'next/image'
 import React, { useState } from 'react'
-import bg from '../images/bg.png'
-import chest from '../images/chest.png'
-import chest2 from '../images/chest2.png'
+import bg from '@images/bg.png'
+import chest from '@images/chest.png'
+import chest2 from '@images/chest2.png'
 
 import Link from 'next/link'
 
-import Step1 from '@components/Claim/Step1'
-import Step2 from '@components/Claim/Step2'
-import Step3 from '@components/Claim/Step3'
-import Step4 from '@components/Claim/Step4'
-import Step5 from '@components/Claim/Step5'
-import Step6 from '@components/Claim/Step6'
+import {
+  Welcome,
+  LogInWithSolana,
+  PastActivity,
+  VerifyEligibility,
+  SignAndClaim,
+  TokensReceived,
+} from 'sections'
 
 const Claim = () => {
   const [step, setStep] = useState(1)
@@ -19,17 +21,37 @@ const Claim = () => {
   const renderStep = () => {
     switch (step) {
       case 1:
-        return <Step1 setStep={setStep} />
+        return <Welcome onProceed={() => setStep(2)} />
       case 2:
-        return <Step2 setStep={setStep} />
+        return (
+          <PastActivity
+            onBack={() => setStep(1)}
+            onProceed={() => setStep(3)}
+          />
+        )
       case 3:
-        return <Step3 setStep={setStep} />
+        return (
+          <VerifyEligibility
+            onBack={() => setStep(2)}
+            onProceed={() => setStep(4)}
+          />
+        )
       case 4:
-        return <Step4 setStep={setStep} />
+        return (
+          <LogInWithSolana
+            onBack={() => setStep(3)}
+            onProceed={() => setStep(5)}
+          />
+        )
       case 5:
-        return <Step5 setStep={setStep} />
+        return (
+          <SignAndClaim
+            onBack={() => setStep(4)}
+            onProceed={() => setStep(6)}
+          />
+        )
       case 6:
-        return <Step6 />
+        return <TokensReceived />
     }
   }
 
@@ -69,7 +91,7 @@ const Claim = () => {
               role="button"
               onClick={() => setStep(2)}
             >
-              <span>2</span> Log in with Solana
+              <span>2</span> Review Airdrop Eligibility
             </li>
             <li
               className={`claim_li ${
@@ -78,7 +100,7 @@ const Claim = () => {
               role="button"
               onClick={() => setStep(3)}
             >
-              <span>3</span> Review Airdrop Eligibility
+              <span>3</span> Verify Eligibility
             </li>
             <li
               className={`claim_li ${
@@ -87,7 +109,7 @@ const Claim = () => {
               role="button"
               onClick={() => setStep(4)}
             >
-              <span>4</span> Verify Eligibility
+              <span>4</span> Log in with Solana
             </li>
             <li
               className={`claim_li ${
