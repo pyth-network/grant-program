@@ -17,7 +17,7 @@ use {
     anchor_lang::{
         prelude::Pubkey,
         solana_program::program_option::COption,
-        system_program::{self,},
+        system_program,
         AnchorSerialize,
     },
     anchor_spl::{
