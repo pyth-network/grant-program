@@ -288,9 +288,20 @@ export class TokenDispenserProvider {
     }
 
     // send the remaining ones
-    const sendTxs = signedTxs.map(
-      async (signedTx) => await this.connection.sendTransaction(signedTx)
-    )
+    const sendTxs = signedTxs.map(async (signedTx) => {
+      const signature = await this.connection.sendTransaction(signedTx)
+      const latestBlockHash = await this.connection.getLatestBlockhash()
+      await this.connection.confirmTransaction(
+        {
+          signature,
+          blockhash: latestBlockHash.blockhash,
+          lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+        },
+        'confirmed'
+      )
+
+      return signature
+    })
 
     return sendTxs
   }
