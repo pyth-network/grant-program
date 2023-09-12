@@ -5,6 +5,8 @@ import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
 
 // It returns a function which can be used to fetch an ecosystem claim info
+// Note many ecosystem signatrues or eligibility might be stored locally
+// But it will return for only those which are currently connected
 export function useGetClaim() {
   const { eligibility: eligibilityMap } = useEligibility()
   const getEcosystemIdentity = useGetEcosystemIdentity()
