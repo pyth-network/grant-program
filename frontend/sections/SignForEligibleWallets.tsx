@@ -35,11 +35,11 @@ import Failed from '@images/not.inline.svg'
 import Success from '@images/verified.inline.svg'
 
 function ClaimState({
-  ecosystemState,
+  ecosystemClaimState,
 }: {
-  ecosystemState: EcosystemClaimState | undefined
+  ecosystemClaimState: EcosystemClaimState | undefined
 }) {
-  const { transactionSignature, loading, error } = ecosystemState ?? {}
+  const { transactionSignature, loading, error } = ecosystemClaimState ?? {}
 
   const text = useMemo(() => {
     if (loading === true) return 'claiming...'
@@ -55,7 +55,7 @@ function ClaimState({
     if (error !== undefined && error !== null) return <Failed />
   }, [error, loading, transactionSignature])
 
-  if (ecosystemState === undefined) return <></>
+  if (ecosystemClaimState === undefined) return <></>
   return (
     <div className="flex items-center justify-between gap-4 text-base18">
       {text}
@@ -67,12 +67,12 @@ function ClaimState({
 const Eligibility2 = ({
   onBack,
   onProceed,
-  ecosystemState,
+  ecosystemsClaimState,
 }: {
   onBack: Function
   onProceed: Function
   // this will not be undefined only when some claim is in progress
-  ecosystemState: { [key in Ecosystem]?: EcosystemClaimState } | undefined
+  ecosystemsClaimState: { [key in Ecosystem]?: EcosystemClaimState } | undefined
 }) => {
   const aptosAddress = useAptosAddress()
   const injectiveAddress = useCosmosAddress('injective')
@@ -132,11 +132,11 @@ const Eligibility2 = ({
               label={'Solana Activity'}
               walletButton={<SolanaWalletButton disableOnConnect />}
               signButton={
-                ecosystemState === undefined ? (
+                ecosystemsClaimState === undefined ? (
                   <SolanaSignButton />
                 ) : (
                   <ClaimState
-                    ecosystemState={ecosystemState[Ecosystem.SOLANA]}
+                    ecosystemClaimState={ecosystemsClaimState[Ecosystem.SOLANA]}
                   />
                 )
               }
@@ -149,10 +149,12 @@ const Eligibility2 = ({
               label={'EVM Activity'}
               walletButton={<EVMWalletButton disableOnConnect />}
               signButton={
-                ecosystemState === undefined ? (
+                ecosystemsClaimState === undefined ? (
                   <EVMSignButton />
                 ) : (
-                  <ClaimState ecosystemState={ecosystemState[Ecosystem.EVM]} />
+                  <ClaimState
+                    ecosystemClaimState={ecosystemsClaimState[Ecosystem.EVM]}
+                  />
                 )
               }
               coins={getEligibleCoins(Ecosystem.EVM, evmAddress)}
@@ -162,11 +164,11 @@ const Eligibility2 = ({
               label={'Aptos Activity'}
               walletButton={<AptosWalletButton disableOnConnect />}
               signButton={
-                ecosystemState === undefined ? (
+                ecosystemsClaimState === undefined ? (
                   <AptosSignButton />
                 ) : (
                   <ClaimState
-                    ecosystemState={ecosystemState[Ecosystem.APTOS]}
+                    ecosystemClaimState={ecosystemsClaimState[Ecosystem.APTOS]}
                   />
                 )
               }
@@ -179,10 +181,12 @@ const Eligibility2 = ({
               label={'Sui Activity'}
               walletButton={<SuiWalletButton disableOnConnect />}
               signButton={
-                ecosystemState === undefined ? (
+                ecosystemsClaimState === undefined ? (
                   <SuiSignButton />
                 ) : (
-                  <ClaimState ecosystemState={ecosystemState[Ecosystem.SUI]} />
+                  <ClaimState
+                    ecosystemClaimState={ecosystemsClaimState[Ecosystem.SUI]}
+                  />
                 )
               }
               coins={getEligibleCoins(Ecosystem.SUI, suiAddress)}
@@ -194,11 +198,13 @@ const Eligibility2 = ({
                 <CosmosWalletButton chainName="injective" disableOnConnect />
               }
               signButton={
-                ecosystemState === undefined ? (
+                ecosystemsClaimState === undefined ? (
                   <CosmosSignButton chainName="injective" />
                 ) : (
                   <ClaimState
-                    ecosystemState={ecosystemState[Ecosystem.INJECTIVE]}
+                    ecosystemClaimState={
+                      ecosystemsClaimState[Ecosystem.INJECTIVE]
+                    }
                   />
                 )
               }
@@ -214,11 +220,13 @@ const Eligibility2 = ({
                 <CosmosWalletButton chainName="osmosis" disableOnConnect />
               }
               signButton={
-                ecosystemState === undefined ? (
+                ecosystemsClaimState === undefined ? (
                   <CosmosSignButton chainName="osmosis" />
                 ) : (
                   <ClaimState
-                    ecosystemState={ecosystemState[Ecosystem.OSMOSIS]}
+                    ecosystemClaimState={
+                      ecosystemsClaimState[Ecosystem.OSMOSIS]
+                    }
                   />
                 )
               }
@@ -234,11 +242,13 @@ const Eligibility2 = ({
                 <CosmosWalletButton chainName="neutron" disableOnConnect />
               }
               signButton={
-                ecosystemState === undefined ? (
+                ecosystemsClaimState === undefined ? (
                   <CosmosSignButton chainName="neutron" />
                 ) : (
                   <ClaimState
-                    ecosystemState={ecosystemState[Ecosystem.NEUTRON]}
+                    ecosystemClaimState={
+                      ecosystemsClaimState[Ecosystem.NEUTRON]
+                    }
                   />
                 )
               }
@@ -252,11 +262,13 @@ const Eligibility2 = ({
               label={'Discord Activity'}
               walletButton={<DiscordButton disableOnAuth />}
               signButton={
-                ecosystemState === undefined ? (
+                ecosystemsClaimState === undefined ? (
                   <DiscordSignButton />
                 ) : (
                   <ClaimState
-                    ecosystemState={ecosystemState[Ecosystem.DISCORD]}
+                    ecosystemClaimState={
+                      ecosystemsClaimState[Ecosystem.DISCORD]
+                    }
                   />
                 )
               }

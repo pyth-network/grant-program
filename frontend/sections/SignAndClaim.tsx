@@ -22,7 +22,7 @@ export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
   const [modal, openModal] = useState(false)
   const [screen, setScreen] = useState(1)
   const tokenDispenser = useTokenDispenserProvider()
-  const [ecosystemState, setEcosystemState] =
+  const [ecosystemsClaimState, setEcosystemsClaimState] =
     useState<{ [key in Ecosystem]?: EcosystemClaimState }>()
   const getClaim = useGetClaim()
 
@@ -55,7 +55,7 @@ export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
         error: undefined,
       }
     })
-    setEcosystemState(stateObj)
+    setEcosystemsClaimState(stateObj)
     try {
       const broadcastPromises = await tokenDispenser?.submitClaims(claims)
       broadcastPromises.forEach(async (broadcastPromise, index) => {
@@ -63,7 +63,7 @@ export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
           const transactionSignature = await broadcastPromise
           // NOTE: there is an implicit order restriction
           // Transaction Order should be same as Ecosystems array order
-          setEcosystemState((ecosystemState) => ({
+          setEcosystemsClaimState((ecosystemState) => ({
             ...ecosystemState,
             [ecosystems[index]]: {
               transactionSignature,
@@ -72,7 +72,7 @@ export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
             },
           }))
         } catch (error) {
-          setEcosystemState((ecosystemState) => ({
+          setEcosystemsClaimState((ecosystemState) => ({
             ...ecosystemState,
             [ecosystems[index]]: {
               transactionSignature: null,
@@ -93,7 +93,7 @@ export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
         }
       })
 
-      setEcosystemState(newStateObj)
+      setEcosystemsClaimState(newStateObj)
     }
   }, [getClaim, tokenDispenser])
 
@@ -123,7 +123,7 @@ export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
         <Eligibility2
           onBack={() => setScreen(1)}
           onProceed={() => openModal(true)}
-          ecosystemState={ecosystemState}
+          ecosystemsClaimState={ecosystemsClaimState}
         />
       )}
       {modal && (
