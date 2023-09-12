@@ -7,6 +7,8 @@ import { useGetClaim } from 'hooks/useGetClaim'
 import { Ecosystem } from '@components/Ecosystem'
 import { ProceedButton, BackButton } from '@components/buttons'
 import { StepProps } from './common'
+import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
+import { ClaimInfo } from 'claim_sdk/claim'
 
 // Following the convention,
 // If undefined we still have to fetch
@@ -23,17 +25,28 @@ export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
   const tokenDispenser = useTokenDispenserProvider()
   const [ecosystemState, setEcosystemState] =
     useState<{ [key in Ecosystem]?: EcosystemClaimState }>()
-
-  const ecosystems = useConnectedAndSignedEcosystem()
   const getClaim = useGetClaim()
 
   const submitTxs = useCallback(async () => {
     // This checks that the solana wallet is connected
     if (tokenDispenser === undefined) return
+    const ecosystems: Ecosystem[] = []
+    const claims: {
+      signedMessage: SignedMessage
+      claimInfo: ClaimInfo
+      proofOfInclusion: Uint8Array[]
+    }[] = []
+
     // Since we are fetching claim for only those ecosystem which are connected
     // and as we have checked that a solana wallet is connected in above step
     // `getClaim` call should not return undefined
-    const claims = ecosystems.map((ecosystem) => getClaim(ecosystem)!)
+    Object.values(Ecosystem).forEach((ecosystem) => {
+      const claim = getClaim(ecosystem)
+      if (claim !== undefined) {
+        claims.push(claim)
+        ecosystems.push(ecosystem)
+      }
+    })
 
     const stateObj: { [key in Ecosystem]?: EcosystemClaimState } = {}
     ecosystems.forEach((ecosystem) => {
@@ -83,7 +96,7 @@ export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
 
       setEcosystemState(newStateObj)
     }
-  }, [ecosystems, getClaim, tokenDispenser])
+  }, [getClaim, tokenDispenser])
 
   return (
     <>
