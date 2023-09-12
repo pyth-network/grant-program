@@ -8,7 +8,8 @@ export type BackButtonProps = {
 export function BackButton({ onBack, disabled }: BackButtonProps) {
   return (
     <Button onClick={onBack} type={'secondary'} disabled={disabled}>
-      back <Arrow className="mr-2.5 origin-center rotate-180" />
+      <Arrow className="origin-center rotate-180" />
+      back
     </Button>
   )
 }
