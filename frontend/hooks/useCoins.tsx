@@ -1,5 +1,5 @@
 import { Ecosystem } from '@components/Ecosystem'
-import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { useCallback } from 'react'
 
 // useCoins return a function which can read the granted amount
@@ -7,7 +7,7 @@ import { useCallback } from 'react'
 // The returned function returns the amount in string if available
 // Else undefined
 export function useCoins() {
-  const { eligibility } = useEligiblity()
+  const { eligibility } = useEligibility()
 
   return useCallback(
     (ecosystem: Ecosystem, identity: string | undefined | null) => {

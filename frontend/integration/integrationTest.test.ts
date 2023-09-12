@@ -179,13 +179,15 @@ describe('integration test', () => {
         tokenDispenserProvider.generateAuthorizationPayload()
       )
 
-      await tokenDispenserProvider.submitClaims([
-        {
-          claimInfo,
-          proofOfInclusion,
-          signedMessage,
-        },
-      ])
+      await Promise.all(
+        await tokenDispenserProvider.submitClaims([
+          {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage,
+          },
+        ])
+      )
 
       expect(
         await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
@@ -209,13 +211,15 @@ describe('integration test', () => {
         tokenDispenserProvider.generateAuthorizationPayload()
       )
 
-      await tokenDispenserProvider.submitClaims([
-        {
-          claimInfo,
-          proofOfInclusion,
-          signedMessage,
-        },
-      ])
+      await Promise.all(
+        await tokenDispenserProvider.submitClaims([
+          {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage,
+          },
+        ])
+      )
 
       expect(
         await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
@@ -263,7 +267,7 @@ describe('integration test', () => {
         )
       ).toBeFalsy()
 
-      await tokenDispenserProvider.submitClaims(claims)
+      await Promise.all(await tokenDispenserProvider.submitClaims(claims))
 
       expect(
         await tokenDispenserProvider.isClaimAlreadySubmitted(
@@ -299,13 +303,15 @@ describe('integration test', () => {
         tokenDispenserProvider.generateAuthorizationPayload()
       )
 
-      await tokenDispenserProvider.submitClaims([
-        {
-          claimInfo,
-          proofOfInclusion,
-          signedMessage,
-        },
-      ])
+      await Promise.all(
+        await tokenDispenserProvider.submitClaims([
+          {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage,
+          },
+        ])
+      )
 
       expect(
         await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
@@ -333,13 +339,15 @@ describe('integration test', () => {
         tokenDispenserProvider.generateAuthorizationPayload()
       )
 
-      await tokenDispenserProvider.submitClaims([
-        {
-          claimInfo,
-          proofOfInclusion,
-          signedMessage,
-        },
-      ])
+      await Promise.all(
+        await tokenDispenserProvider.submitClaims([
+          {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage,
+          },
+        ])
+      )
 
       expect(
         await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
@@ -373,13 +381,15 @@ describe('integration test', () => {
           tokenDispenserProvider.claimant
         )
 
-        await tokenDispenserProvider.submitClaims([
-          {
-            claimInfo,
-            proofOfInclusion,
-            signedMessage,
-          },
-        ])
+        await Promise.all(
+          await tokenDispenserProvider.submitClaims([
+            {
+              claimInfo,
+              proofOfInclusion,
+              signedMessage,
+            },
+          ])
+        )
 
         expect(
           await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
@@ -414,13 +424,15 @@ describe('integration test', () => {
 
       // No signing since claimant will sign the transaction
 
-      await tokenDispenserProvider.submitClaims([
-        {
-          claimInfo,
-          proofOfInclusion,
-          signedMessage: undefined,
-        },
-      ])
+      await Promise.all(
+        await tokenDispenserProvider.submitClaims([
+          {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage: undefined,
+          },
+        ])
+      )
 
       expect(
         await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)
@@ -457,13 +469,15 @@ describe('integration test', () => {
         tokenDispenserProvider.generateAuthorizationPayload()
       )
 
-      await tokenDispenserProvider.submitClaims([
-        {
-          claimInfo,
-          proofOfInclusion,
-          signedMessage,
-        },
-      ])
+      await Promise.all(
+        await tokenDispenserProvider.submitClaims([
+          {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage,
+          },
+        ])
+      )
 
       expect(
         await tokenDispenserProvider.isClaimAlreadySubmitted(claimInfo)

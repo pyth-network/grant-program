@@ -1,85 +1,101 @@
 import React, { useCallback, useState } from 'react'
-import Modal from '../components/Modal'
+import Modal from '@components/Modal'
 import Eligibility2 from './SignForEligibleWallets'
-import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
-import { useSignature } from '@components/Ecosystem/SignatureProvider'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
+import { useGetClaim } from 'hooks/useGetClaim'
 import { Ecosystem } from '@components/Ecosystem'
-import {
-  useAptosAddress,
-  useCosmosAddress,
-  useEVMAddress,
-  useSuiAddress,
-} from 'hooks/useAddress'
-import { useSession } from 'next-auth/react'
 import { ProceedButton, BackButton } from '@components/buttons'
 import { StepProps } from './common'
+import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
+import { ClaimInfo } from 'claim_sdk/claim'
+
+// Following the convention,
+// If undefined we still have to fetch
+// If null we have fetched
+export type EcosystemClaimState = {
+  transactionSignature: string | undefined | null
+  loading: boolean
+  error: any | undefined | null
+}
 
 export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
   const [modal, openModal] = useState(false)
   const [screen, setScreen] = useState(1)
   const tokenDispenser = useTokenDispenserProvider()
-  const { eligibility: eligibilityMap } = useEligiblity()
-  const { signatureMap } = useSignature()
-
-  const aptosAddress = useAptosAddress()
-  const injectiveAddress = useCosmosAddress('injective')
-  const osmosisAddress = useCosmosAddress('osmosis')
-  const neutronAddress = useCosmosAddress('neutron')
-  const evmAddress = useEVMAddress()
-  const suiAddress = useSuiAddress()
-  const { data } = useSession()
-
-  const getClaim = useCallback(
-    (
-      ecosystem: Ecosystem,
-      solanaIdentity?: string,
-      ecosystemIdentity?: string | null
-    ) => {
-      if (solanaIdentity === undefined || !ecosystemIdentity) return
-
-      const signatures = signatureMap[solanaIdentity]
-      const signedMsg = signatures?.[ecosystem]?.[ecosystemIdentity]
-      const eligibility = eligibilityMap[ecosystem][ecosystemIdentity]
-      if (eligibility === undefined || signedMsg === undefined) return
-
-      return {
-        signedMessage: signedMsg,
-        claimInfo: eligibility.claimInfo,
-        proofOfInclusion: eligibility.proofOfInclusion,
-      }
-    },
-    [eligibilityMap, signatureMap]
-  )
+  const [ecosystemsClaimState, setEcosystemsClaimState] =
+    useState<{ [key in Ecosystem]?: EcosystemClaimState }>()
+  const getClaim = useGetClaim()
 
   const submitTxs = useCallback(async () => {
-    const solanaIdentity = tokenDispenser?.claimant.toBase58()
+    // This checks that the solana wallet is connected
+    if (tokenDispenser === undefined) return
+    const ecosystems: Ecosystem[] = []
+    const claims: {
+      signedMessage: SignedMessage
+      claimInfo: ClaimInfo
+      proofOfInclusion: Uint8Array[]
+    }[] = []
 
-    // get claims for only those ecosystem which are connected by the user
-    const claims = [
-      getClaim(Ecosystem.APTOS, solanaIdentity, aptosAddress),
-      getClaim(Ecosystem.EVM, solanaIdentity, evmAddress),
-      getClaim(Ecosystem.INJECTIVE, solanaIdentity, injectiveAddress),
-      getClaim(Ecosystem.NEUTRON, solanaIdentity, neutronAddress),
-      getClaim(Ecosystem.OSMOSIS, solanaIdentity, osmosisAddress),
-      getClaim(Ecosystem.SOLANA, solanaIdentity, solanaIdentity),
-      getClaim(Ecosystem.SUI, solanaIdentity, suiAddress),
-      getClaim(Ecosystem.DISCORD, solanaIdentity, data?.user?.name),
-    ].filter((claim) => claim !== undefined)
+    // Since we are fetching claim for only those ecosystem which are connected
+    // and as we have checked that a solana wallet is connected in above step
+    // `getClaim` call should not return undefined
+    Object.values(Ecosystem).forEach((ecosystem) => {
+      const claim = getClaim(ecosystem)
+      if (claim !== undefined) {
+        claims.push(claim)
+        ecosystems.push(ecosystem)
+      }
+    })
 
-    // @ts-ignore fitlering undefined in the previous step
-    await tokenDispenser?.submitClaims(claims)
-  }, [
-    aptosAddress,
-    data?.user?.name,
-    evmAddress,
-    getClaim,
-    injectiveAddress,
-    neutronAddress,
-    osmosisAddress,
-    suiAddress,
-    tokenDispenser,
-  ])
+    const stateObj: { [key in Ecosystem]?: EcosystemClaimState } = {}
+    ecosystems.forEach((ecosystem) => {
+      stateObj[ecosystem] = {
+        transactionSignature: undefined,
+        loading: true,
+        error: undefined,
+      }
+    })
+    setEcosystemsClaimState(stateObj)
+    try {
+      const broadcastPromises = await tokenDispenser?.submitClaims(claims)
+      broadcastPromises.forEach(async (broadcastPromise, index) => {
+        try {
+          const transactionSignature = await broadcastPromise
+          // NOTE: there is an implicit order restriction
+          // Transaction Order should be same as Ecosystems array order
+          setEcosystemsClaimState((ecosystemState) => ({
+            ...ecosystemState,
+            [ecosystems[index]]: {
+              transactionSignature,
+              loading: false,
+              error: null,
+            },
+          }))
+        } catch (error) {
+          setEcosystemsClaimState((ecosystemState) => ({
+            ...ecosystemState,
+            [ecosystems[index]]: {
+              transactionSignature: null,
+              loading: false,
+              error,
+            },
+          }))
+        }
+      })
+    } catch (e) {
+      console.error(e)
+      const newStateObj: { [key in Ecosystem]?: EcosystemClaimState } = {}
+      ecosystems.forEach((ecosystem) => {
+        newStateObj[ecosystem] = {
+          transactionSignature: null,
+          loading: false,
+          error: e,
+        }
+      })
+
+      setEcosystemsClaimState(newStateObj)
+    }
+  }, [getClaim, tokenDispenser])
 
   return (
     <>
@@ -107,6 +123,7 @@ export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
         <Eligibility2
           onBack={() => setScreen(1)}
           onProceed={() => openModal(true)}
+          ecosystemsClaimState={ecosystemsClaimState}
         />
       )}
       {modal && (
@@ -123,8 +140,8 @@ export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
             <BackButton onBack={() => openModal(false)} />
             <ProceedButton
               onProceed={async () => {
+                openModal(false)
                 await submitTxs()
-                onProceed()
               }}
             />
           </div>

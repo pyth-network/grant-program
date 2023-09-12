@@ -10,7 +10,7 @@ import { fetchAmountAndProof } from 'utils/api'
 import { useAptosSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
-import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { useAptosAddress } from 'hooks/useAddress'
 import { Ecosystem } from '@components/Ecosystem'
 
@@ -58,7 +58,7 @@ export function AptosWalletButton({
     [connect]
   )
 
-  const { eligibility, setEligibility } = useEligiblity()
+  const { eligibility, setEligibility } = useEligibility()
 
   // fetch the eligibility and store it
   useEffect(() => {

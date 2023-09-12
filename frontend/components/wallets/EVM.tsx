@@ -21,7 +21,7 @@ import { fetchAmountAndProof } from 'utils/api'
 import { SignButton } from './SignButton'
 import { useEVMSignMessage } from 'hooks/useSignMessage'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
-import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { useEVMAddress } from 'hooks/useAddress'
 import { Ecosystem } from '@components/Ecosystem'
 
@@ -92,7 +92,7 @@ export function EVMWalletButton({ disableOnConnect }: EvmWalletButtonProps) {
     [connect]
   )
 
-  const { eligibility, setEligibility } = useEligiblity()
+  const { eligibility, setEligibility } = useEligibility()
 
   // fetch the eligibility and store it
   useEffect(() => {

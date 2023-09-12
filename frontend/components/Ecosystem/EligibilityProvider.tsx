@@ -96,7 +96,7 @@ export function EligibilityProvider({ children }: ProviderProps) {
   )
 }
 
-export function useEligiblity(): EligibilityContextType {
+export function useEligibility(): EligibilityContextType {
   const ctx = useContext(EligibilityContext)
   if (ctx === undefined)
     throw new Error('Must be used inside Eligibility Provider')

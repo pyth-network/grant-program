@@ -15,7 +15,6 @@ import {
   Secp256k1Program,
   SystemProgram,
   SYSVAR_INSTRUCTIONS_PUBKEY,
-  Transaction,
   TransactionMessage,
   TransactionSignature,
   VersionedTransaction,
@@ -204,7 +203,7 @@ export class TokenDispenserProvider {
     )
   }
 
-  public async createAssociatedTokenAccountTxnIfNeeded(): Promise<Transaction | null> {
+  public async createAssociatedTokenAccountTxnIfNeeded(): Promise<VersionedTransaction | null> {
     const config = await this.getConfig()
     const associatedTokenAccount = await this.getClaimantFundAddress()
     if (
@@ -221,8 +220,16 @@ export class TokenDispenserProvider {
           this.claimant,
           this.claimant
         )
-      const txn = new Transaction()
-      txn.add(createAssociatedTokenAccountIx)
+
+      const txn = new VersionedTransaction(
+        new TransactionMessage({
+          instructions: [createAssociatedTokenAccountIx],
+          payerKey: this.provider.publicKey!,
+          recentBlockhash: (await this.connection.getLatestBlockhash())
+            .blockhash,
+        }).compileToV0Message()
+      )
+
       return txn
     }
     return null
@@ -234,28 +241,69 @@ export class TokenDispenserProvider {
       proofOfInclusion: Uint8Array[]
       signedMessage: SignedMessage | undefined
     }[]
-  ): Promise<void> {
-    /// This is only eth & cosmwasm for now
-    let txs: { tx: Transaction | VersionedTransaction }[] = []
+  ): Promise<Promise<string>[]> {
+    let txs: VersionedTransaction[] = []
 
     const createAtaTxn = await this.createAssociatedTokenAccountTxnIfNeeded()
     if (createAtaTxn) {
-      txs.push({ tx: createAtaTxn })
+      txs.push(createAtaTxn)
     }
+
     for (const claim of claims) {
-      txs.push({
-        tx: await this.generateClaimTransaction(
+      txs.push(
+        await this.generateClaimTransaction(
           claim.claimInfo,
           claim.proofOfInclusion,
           claim.signedMessage
-        ),
-      })
+        )
+      )
     }
-    if (this.tokenDispenserProgram.provider.sendAll) {
-      await this.tokenDispenserProgram.provider.sendAll(txs, {
-        skipPreflight: true,
-      })
+    let signedTxs = await (
+      this.tokenDispenserProgram.provider as anchor.AnchorProvider
+    ).wallet.signAllTransactions(txs)
+
+    // send createAtaTxn first and then others. Others need a TokenAccount before
+    // being able to be executed
+    if (createAtaTxn !== null) {
+      try {
+        const signature = await this.connection.sendTransaction(signedTxs[0])
+
+        const latestBlockHash = await this.connection.getLatestBlockhash()
+        await this.connection.confirmTransaction(
+          {
+            signature,
+            blockhash: latestBlockHash.blockhash,
+            lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+          },
+          'confirmed'
+        )
+
+        // remove the executed tx
+        signedTxs = signedTxs.slice(1)
+      } catch (e) {
+        console.error(e)
+        // TODO: How to handle the error here?
+        throw Error('create account tx failed')
+      }
     }
+
+    // send the remaining ones
+    const sendTxs = signedTxs.map(async (signedTx) => {
+      const signature = await this.connection.sendTransaction(signedTx)
+      const latestBlockHash = await this.connection.getLatestBlockhash()
+      await this.connection.confirmTransaction(
+        {
+          signature,
+          blockhash: latestBlockHash.blockhash,
+          lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+        },
+        'confirmed'
+      )
+
+      return signature
+    })
+
+    return sendTxs
   }
 
   public async generateClaimTransaction(

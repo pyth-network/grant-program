@@ -5,7 +5,7 @@ import { fetchAmountAndProof } from 'utils/api'
 import { useSuiSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
-import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { useSuiAddress } from 'hooks/useAddress'
 import { Ecosystem } from '@components/Ecosystem'
 
@@ -56,7 +56,7 @@ export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
       ]
   }, [connect, detectedWallets])
 
-  const { eligibility, setEligibility } = useEligiblity()
+  const { eligibility, setEligibility } = useEligibility()
 
   // fetch the eligibility and store it
   useEffect(() => {

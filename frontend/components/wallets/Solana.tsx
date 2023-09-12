@@ -23,7 +23,7 @@ import { fetchAmountAndProof } from 'utils/api'
 import { SignButton } from './SignButton'
 import { useSolanaSignMessage } from 'hooks/useSignMessage'
 import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
-import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { Ecosystem } from '@components/Ecosystem'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
@@ -123,7 +123,7 @@ export function SolanaWalletButton({
 
   const wallets = useWallets()
 
-  const { eligibility, setEligibility } = useEligiblity()
+  const { eligibility, setEligibility } = useEligibility()
 
   // fetch the eligibility and store it
   useEffect(() => {

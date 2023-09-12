@@ -5,7 +5,7 @@ import Discord from '@images/discord.inline.svg'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
 import { fetchAmountAndProof } from 'utils/api'
-import { useEligiblity } from './Ecosystem/EligibilityProvider'
+import { useEligibility } from './Ecosystem/EligibilityProvider'
 import { Ecosystem } from './Ecosystem'
 
 type DiscordButtonProps = {
@@ -36,7 +36,7 @@ export function DiscordButton({ disableOnAuth }: DiscordButtonProps) {
     }
   }, [status, data?.user])
 
-  const { eligibility, setEligibility } = useEligiblity()
+  const { eligibility, setEligibility } = useEligibility()
 
   // fetch the eligibility and store it
   useEffect(() => {
