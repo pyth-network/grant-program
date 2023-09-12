@@ -98,3 +98,24 @@ impl From<[u8; Self::LEN]> for SuiAddress {
         SuiAddress(bytes)
     }
 }
+
+
+#[test]
+pub fn test_check_hashed_payload() {
+    let claimant = Pubkey::new_unique();
+    let expected_hash = SuiMessage::get_expected_hash(&get_expected_payload(&claimant));
+
+    assert!(SuiMessage::check_hashed_payload(&expected_hash, &claimant).is_ok());
+
+    assert_eq!(
+        SuiMessage::check_hashed_payload(&expected_hash, &Pubkey::new_unique()),
+        err!(ErrorCode::SignatureVerificationWrongPayload)
+    );
+    assert_eq!(
+        SuiMessage::check_hashed_payload(
+            &SuiMessage::get_expected_hash("this_is_the_wrong_payload"),
+            &claimant
+        ),
+        err!(ErrorCode::SignatureVerificationWrongPayload)
+    );
+}
