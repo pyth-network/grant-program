@@ -68,6 +68,7 @@ use {
             ReadableAccount,
         },
         instruction::InstructionError,
+        native_token::LAMPORTS_PER_SOL,
         signature::Keypair,
         signer::Signer,
         slot_hashes::SlotHashes,
@@ -180,6 +181,27 @@ impl DispenserSimulator {
         self.process_ix(init_mint_ixs, &vec![mint_keypair]).await
     }
 
+    pub async fn setup_treasury(&mut self, mint_amount: u64) -> Result<(), BanksClientError> {
+        self.mint_to_treasury(mint_amount).await.unwrap();
+        self.verify_token_account_data(self.pyth_treasury, mint_amount, COption::None, 0)
+            .await
+            .unwrap();
+
+        self.approve_treasury_delegate(get_config_pda().0, mint_amount)
+            .await
+            .unwrap();
+
+        self.verify_token_account_data(
+            self.pyth_treasury,
+            mint_amount,
+            COption::Some(get_config_pda().0),
+            mint_amount,
+        )
+        .await
+        .unwrap();
+        Ok(())
+    }
+
     pub async fn mint_to_treasury(&mut self, mint_amount: u64) -> Result<(), BanksClientError> {
         let mint_to_ix = &[mint_to(
             &Token::id(),
@@ -283,24 +305,39 @@ impl DispenserSimulator {
     ) -> Result<
         (
             MerkleTree<SolanaHasher>,
-            Vec<(Keypair, Vec<TestClaimCertificate>)>,
+            Vec<(Keypair, Vec<TestClaimCertificate>, u64)>,
         ),
         BanksClientError,
     > {
-        let mock_offchain_certificates_and_claimants: Vec<(Keypair, Vec<TestClaimCertificate>)> =
-            claimants
-                .into_iter()
-                .map(|c| {
-                    let pubkey = c.pubkey();
-                    (
-                        c,
-                        DispenserSimulator::generate_test_claim_certs(&pubkey, dispenser_guard),
-                    )
-                })
-                .collect::<Vec<_>>();
+        for claimant_keypair in &claimants {
+            self.airdrop(claimant_keypair.pubkey(), LAMPORTS_PER_SOL)
+                .await?;
+            self.create_associated_token_account(
+                &claimant_keypair.pubkey(),
+                &self.mint_keypair.pubkey(),
+            )
+            .await
+            .unwrap();
+        }
+
+        let mock_offchain_certificates_and_claimants: Vec<(
+            Keypair,
+            Vec<TestClaimCertificate>,
+            u64,
+        )> = claimants
+            .into_iter()
+            .map(|c| {
+                let pubkey = c.pubkey();
+                let test_claim_certs =
+                    DispenserSimulator::generate_test_claim_certs(&pubkey, dispenser_guard);
+                let amount = test_claim_certs.iter().map(|y| y.amount).sum::<u64>();
+                (c, test_claim_certs, amount)
+            })
+            .collect::<Vec<_>>();
+
         let merkle_items: Vec<ClaimInfo> = mock_offchain_certificates_and_claimants
             .iter()
-            .flat_map(|(_, claim_certs)| {
+            .flat_map(|(_, claim_certs, _)| {
                 claim_certs
                     .iter()
                     .map(|item: &TestClaimCertificate| item.clone().into())
@@ -308,7 +345,9 @@ impl DispenserSimulator {
             .collect();
 
         let address_lookup_table = self.init_lookup_table().await.unwrap();
+
         let merkle_tree = merkleize(merkle_items).0;
+
         self.initialize(
             merkle_tree.root.clone(),
             dispenser_guard.pubkey(),
@@ -317,6 +356,16 @@ impl DispenserSimulator {
             None,
         )
         .await?;
+
+        let claim_sums = mock_offchain_certificates_and_claimants
+            .iter()
+            .map(|x| x.1.iter().map(|y| y.amount).sum::<u64>())
+            .collect::<Vec<u64>>();
+
+        self.setup_treasury(claim_sums.iter().sum::<u64>())
+            .await
+            .unwrap();
+
         Ok((merkle_tree, mock_offchain_certificates_and_claimants))
     }
 
