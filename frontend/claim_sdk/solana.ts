@@ -242,27 +242,25 @@ export class TokenDispenserProvider {
       signedMessage: SignedMessage | undefined
     }[]
   ): Promise<Promise<string>[]> {
-    let txs: { tx: VersionedTransaction }[] = []
+    let txs: VersionedTransaction[] = []
 
     const createAtaTxn = await this.createAssociatedTokenAccountTxnIfNeeded()
     if (createAtaTxn) {
-      txs.push({ tx: createAtaTxn })
+      txs.push(createAtaTxn)
     }
 
     for (const claim of claims) {
-      txs.push({
-        tx: await this.generateClaimTransaction(
+      txs.push(
+        await this.generateClaimTransaction(
           claim.claimInfo,
           claim.proofOfInclusion,
           claim.signedMessage
-        ),
-      })
+        )
+      )
     }
-    const txArr = txs.map((tx) => tx.tx)
-
     let signedTxs = await (
       this.tokenDispenserProgram.provider as anchor.AnchorProvider
-    ).wallet.signAllTransactions(txArr)
+    ).wallet.signAllTransactions(txs)
 
     // send createAtaTxn first and then others. Others need a TokenAccount before
     // being able to be executed
