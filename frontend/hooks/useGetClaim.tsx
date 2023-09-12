@@ -1,12 +1,12 @@
 import { useCallback } from 'react'
 import { useGetEcosystemIdentity } from './useGetEcosystemIdentity'
 import { Ecosystem } from '@components/Ecosystem'
-import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
 
 // It returns a function which can be used to fetch an ecosystem claim info
 export function useGetClaim() {
-  const { eligibility: eligibilityMap } = useEligiblity()
+  const { eligibility: eligibilityMap } = useEligibility()
   const getEcosystemIdentity = useGetEcosystemIdentity()
   const { signatureMap } = useSignature()
 

@@ -20,8 +20,8 @@ export function useConnectedAndSignedEcosystem(): Ecosystem[] {
       const ecosystemIdentity = getEcosystemIdentity(ecosystem)
       if (ecosystemIdentity === undefined) return false
       else {
-        const signatures = signatureMap[solanaIdentity]
-        const signature = signatures[ecosystem]?.[ecosystemIdentity]
+        const signature =
+          signatureMap[solanaIdentity]?.[ecosystem]?.[ecosystemIdentity]
         if (signature !== undefined) return true
       }
     },

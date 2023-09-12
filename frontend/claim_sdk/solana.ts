@@ -15,7 +15,6 @@ import {
   Secp256k1Program,
   SystemProgram,
   SYSVAR_INSTRUCTIONS_PUBKEY,
-  Transaction,
   TransactionMessage,
   TransactionSignature,
   VersionedTransaction,
@@ -243,8 +242,7 @@ export class TokenDispenserProvider {
       signedMessage: SignedMessage | undefined
     }[]
   ): Promise<Promise<string>[]> {
-    /// This is only eth & cosmwasm for now
-    let txs: { tx: Transaction | VersionedTransaction }[] = []
+    let txs: { tx: VersionedTransaction }[] = []
 
     const createAtaTxn = await this.createAssociatedTokenAccountTxnIfNeeded()
     if (createAtaTxn) {
@@ -270,9 +268,7 @@ export class TokenDispenserProvider {
     // being able to be executed
     if (createAtaTxn !== null) {
       try {
-        const signature = await this.connection.sendTransaction(
-          signedTxs[0] as VersionedTransaction
-        )
+        const signature = await this.connection.sendTransaction(signedTxs[0])
 
         const latestBlockHash = await this.connection.getLatestBlockhash()
         await this.connection.confirmTransaction(
@@ -281,7 +277,7 @@ export class TokenDispenserProvider {
             blockhash: latestBlockHash.blockhash,
             lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
           },
-          'max'
+          'confirmed'
         )
 
         // remove the executed tx
@@ -295,8 +291,7 @@ export class TokenDispenserProvider {
 
     // send the remaining ones
     const sendTxs = signedTxs.map(
-      async (signedTx) =>
-        await this.connection.sendTransaction(signedTx as VersionedTransaction)
+      async (signedTx) => await this.connection.sendTransaction(signedTx)
     )
 
     return sendTxs

@@ -24,7 +24,7 @@ import {
   useSuiAddress,
 } from 'hooks/useAddress'
 import { useSession } from 'next-auth/react'
-import { useEligiblity } from '@components/Ecosystem/EligibilityProvider'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
 import { useCoins } from 'hooks/useCoins'
 import { Ecosystem } from '@components/Ecosystem'
@@ -86,7 +86,7 @@ const Eligibility2 = ({
 
   const { activity } = useActivity()
 
-  const { eligibility } = useEligiblity()
+  const { eligibility } = useEligibility()
 
   const getEligibleCoins = useCoins()
 
@@ -96,8 +96,6 @@ const Eligibility2 = ({
     },
     [eligibility]
   )
-
-  console.log(ecosystemState)
 
   return (
     <div className=" overflow-auto border border-light-35 bg-dark">

@@ -76,7 +76,7 @@ export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
       ecosystems.forEach((ecosystem) => {
         newStateObj[ecosystem] = {
           transactionSignature: null,
-          loading: true,
+          loading: false,
           error: e,
         }
       })
