@@ -2,7 +2,7 @@ import React, { useCallback } from 'react'
 import { SignButton } from './wallets/SignButton'
 import { fetchDiscordSignedMessage } from 'utils/api'
 import { useSession } from 'next-auth/react'
-import { useTokenDispenserProvider } from './TokenDispenserProvider'
+import { useTokenDispenserProvider } from '../hooks/useTokenDispenserProvider'
 import { Ecosystem } from './Ecosystem'
 
 // This component assumes that the user is already sign in.

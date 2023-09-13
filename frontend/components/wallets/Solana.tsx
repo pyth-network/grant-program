@@ -22,7 +22,7 @@ import { Wallet, WalletButton, WalletConnectedButton } from './WalletButton'
 import { fetchAmountAndProof } from 'utils/api'
 import { SignButton } from './SignButton'
 import { useSolanaSignMessage } from 'hooks/useSignMessage'
-import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
+import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { Ecosystem } from '@components/Ecosystem'
 
