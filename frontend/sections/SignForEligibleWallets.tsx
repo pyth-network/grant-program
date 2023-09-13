@@ -195,6 +195,9 @@ function TableRow({ ecosystem, ecosystemClaimState }: TableRowProps) {
     isClaimAlreadySubmitted,
   ])
 
+  const eligibility = getEligibility(ecosystem)
+  const eligibleCoins = getEligibleCoins(ecosystem)
+
   return (
     <tr className={classNames('border-b border-light-35 ')}>
       <td
@@ -230,7 +233,12 @@ function TableRow({ ecosystem, ecosystemClaimState }: TableRowProps) {
       </td>
       <td className="min-w-[130px] border-l border-light-35 bg-darkGray5">
         <span className="flex items-center justify-center  gap-1 text-[20px]">
-          {getEligibleCoins(ecosystem)} <Coin />
+          {eligibility?.isClaimAlreadySubmitted ? (
+            <s>{eligibleCoins}</s>
+          ) : (
+            <>{eligibleCoins}</>
+          )}{' '}
+          <Coin />
         </span>
       </td>
     </tr>

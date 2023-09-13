@@ -8,6 +8,7 @@ import {
 import { ProviderProps, Ecosystem } from '.'
 import { BN } from '@coral-xyz/anchor'
 import { ClaimInfo } from 'claim_sdk/claim'
+import { useIsClaimAlreadySubmitted } from 'hooks/useIsClaimAlreadySubmitted'
 
 type Eligibility =
   | {
@@ -30,12 +31,7 @@ type EligibilityContextType = {
     ecosystem: Ecosystem,
     identity: string,
     eligibility: Eligibility
-  ) => void
-  setIsClaimAlreadySubmitted: (
-    ecosystem: Ecosystem,
-    identity: string,
-    isClaimAlreadySubmitted: boolean
-  ) => void
+  ) => Promise<void>
 }
 const EligibilityContext = createContext<EligibilityContextType | undefined>(
   undefined
@@ -82,6 +78,8 @@ export function EligibilityProvider({ children }: ProviderProps) {
     getStoredEligibilityMap() ?? getDefaultEligibilityMap()
   )
 
+  const isClaimAlreadySubmitted = useIsClaimAlreadySubmitted()
+
   // side effect: whenever the eligibility map changes sync the local storage
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -89,32 +87,32 @@ export function EligibilityProvider({ children }: ProviderProps) {
   }, [eligibility])
 
   const setEligibilityWrapper = useCallback(
-    (ecosystem: Ecosystem, identity: string, eligibility: Eligibility) => {
-      setEligibility((prev) => {
-        // note prev[ecosystem] will not be undefined
-        prev[ecosystem][identity] = eligibility
-        return { ...prev }
-      })
-    },
-    []
-  )
-
-  const setIsClaimAlreadySubmitted = useCallback(
-    (
+    async (
       ecosystem: Ecosystem,
       identity: string,
-      isClaimAlreadySubmitted: boolean
+      eligibility:
+        | { claimInfo: ClaimInfo; proofOfInclusion: Uint8Array[] }
+        | undefined
     ) => {
-      setEligibility((prev) => {
-        // note prev[ecosystem] will not be undefined
-        if (prev[ecosystem][identity] === undefined) return prev
-        // we are checking it just above. WTF ts?
-        prev[ecosystem][identity]!.isClaimAlreadySubmitted =
-          isClaimAlreadySubmitted
-        return { ...prev }
-      })
+      if (eligibility !== undefined) {
+        const isSubmitted = await isClaimAlreadySubmitted(eligibility.claimInfo)
+        setEligibility((prev) => {
+          prev[ecosystem][identity] = {
+            ...eligibility,
+            isClaimAlreadySubmitted: isSubmitted,
+          }
+
+          return { ...prev }
+        })
+      } else {
+        setEligibility((prev) => {
+          // note prev[ecosystem] will not be undefined
+          prev[ecosystem][identity] = undefined
+          return { ...prev }
+        })
+      }
     },
-    []
+    [isClaimAlreadySubmitted]
   )
 
   return (
@@ -122,7 +120,6 @@ export function EligibilityProvider({ children }: ProviderProps) {
       value={{
         eligibility,
         setEligibility: setEligibilityWrapper,
-        setIsClaimAlreadySubmitted,
       }}
     >
       {children}

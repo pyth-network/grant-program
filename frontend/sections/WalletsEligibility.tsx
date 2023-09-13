@@ -16,7 +16,6 @@ import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { useGetEligibility } from 'hooks/useGetEligibility'
-import { useIsClaimAlreadySubmitted } from 'hooks/useIsClaimAlreadySubmitted'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 
 const Eligibility = ({
@@ -121,12 +120,11 @@ function TableRow({ ecosystem }: TableRowProps) {
   const getEcosystemIdentity = useGetEcosystemIdentity()
   const getEligibleCoins = useCoins()
   const getEligibility = useGetEligibility()
-  const isClaimAlreadySubmitted = useIsClaimAlreadySubmitted()
   const [rowDisabled, setRowDisabled] = useState(true)
   // if it is undefined, no tooltip will be shown
   const [rowTooltipContent, setRowTooltipContent] = useState<string>()
 
-  const { setIsClaimAlreadySubmitted } = useEligibility()
+  const eligibility = getEligibility(ecosystem)
 
   useEffect(() => {
     ;(async () => {
@@ -143,17 +141,11 @@ function TableRow({ ecosystem }: TableRowProps) {
           return
         }
 
-        const eligibility = getEligibility(ecosystem)
         if (eligibility?.claimInfo !== undefined) {
-          const isSubmitted = await isClaimAlreadySubmitted(
-            eligibility?.claimInfo
-          )
-          if (isSubmitted === false) {
+          if (eligibility?.isClaimAlreadySubmitted === false) {
             setRowDisabled(false)
-            setIsClaimAlreadySubmitted(ecosystem, identity, false)
             return
           } else {
-            setIsClaimAlreadySubmitted(ecosystem, identity, true)
             setRowTooltipContent(
               'The tokens for this ecosystem has already been claimed.'
             )
@@ -167,16 +159,10 @@ function TableRow({ ecosystem }: TableRowProps) {
 
       setRowDisabled(true)
     })()
-  }, [
-    activity,
-    ecosystem,
-    getEcosystemIdentity,
-    getEligibility,
-    isClaimAlreadySubmitted,
-    setIsClaimAlreadySubmitted,
-  ])
+  }, [activity, ecosystem, eligibility, getEcosystemIdentity, getEligibility])
 
   const identity = getEcosystemIdentity(ecosystem)
+  const eligibleCoins = getEligibleCoins(ecosystem)
 
   const tooltipContent = useMemo(() => {
     if (identity !== undefined)
@@ -220,7 +206,12 @@ function TableRow({ ecosystem }: TableRowProps) {
       </td>
       <td className="min-w-[130px] border-l border-light-35 bg-dark-25">
         <span className="flex items-center justify-center  gap-1 text-[20px]">
-          {getEligibleCoins(ecosystem)} <Coin />
+          {eligibility?.isClaimAlreadySubmitted ? (
+            <s>{eligibleCoins}</s>
+          ) : (
+            <>{eligibleCoins}</>
+          )}{' '}
+          <Coin />
         </span>
       </td>
     </tr>
