@@ -2,12 +2,12 @@ import Image from 'next/image'
 import React, { useState } from 'react'
 
 import bg from '../images/bg.png'
-import step1 from "../images/step1.png"
-import step2 from "../images/step2.png"
-import step3 from "../images/step3.png"
-import step4 from "../images/step4.png"
-import step5 from "../images/step5.png"
-import step6 from "../images/step6.png"
+import step1 from '../images/step1.png'
+import step2 from '../images/step2.png'
+import step3 from '../images/step3.png'
+import step4 from '../images/step4.png'
+import step5 from '../images/step5.png'
+import step6 from '../images/step6.png'
 
 import Link from 'next/link'
 
@@ -158,12 +158,12 @@ const Claim = () => {
           objectPosition="left bottom"
         />
         <span className="absolute left-0 bottom-0">
-          {step == 1 &&  <Image src={step1} alt="" />}
-          {step == 2 &&  <Image src={step2} alt="" />}
-          {step == 3 &&  <Image src={step3} alt="" />}
-          {step == 4 &&  <Image src={step4} alt="" />}
-          {step == 5 &&  <Image src={step5} alt="" />}
-          {step == 6 &&  <Image src={step6} alt="" />}
+          {step == 1 && <Image src={step1} alt="" priority />}
+          {step == 2 && <Image src={step2} alt="" priority />}
+          {step == 3 && <Image src={step3} alt="" priority />}
+          {step == 4 && <Image src={step4} alt="" priority />}
+          {step == 5 && <Image src={step5} alt="" priority />}
+          {step == 6 && <Image src={step6} alt="" priority />}
         </span>
       </span>
     </>
