@@ -14,7 +14,6 @@ const Tooltip = ({
   children,
   content,
   className,
-  contentClassName,
   placement = 'top',
 }: TooltipProps) => {
   return content ? (
@@ -32,20 +31,11 @@ const Tooltip = ({
         </div>
       }
     >
-      <div className={`${contentClassName}`}>{children}</div>
+      <div>{children}</div>
     </Tippy>
   ) : (
     <>{children}</>
   )
 }
-
-const Content: React.FC<{ className: string; children: React.ReactNode }> = ({
-  className = '',
-  children,
-}) => {
-  return <div>{children}</div>
-}
-
-Tooltip.Content = Content
 
 export default Tooltip

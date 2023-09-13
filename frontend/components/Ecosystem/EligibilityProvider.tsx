@@ -5,10 +5,14 @@ import {
   useEffect,
   useState,
 } from 'react'
-import { Eligibility } from 'utils/api'
+import { Eligibility as FetchedEligibility } from 'utils/api'
 import { ProviderProps, Ecosystem } from '.'
 import { BN } from '@coral-xyz/anchor'
 import { ClaimInfo } from 'claim_sdk/claim'
+
+type Eligibility = FetchedEligibility & {
+  isClaimAlreadySubmitted?: boolean
+}
 
 export type EligibilityMap = Record<
   Ecosystem,
@@ -23,6 +27,11 @@ type EligibilityContextType = {
     ecosystem: Ecosystem,
     identity: string,
     eligibility: Eligibility
+  ) => void
+  setIsClaimAlreadySubmitted: (
+    ecosystem: Ecosystem,
+    identity: string,
+    isClaimAlreadySubmitted: boolean
   ) => void
 }
 const EligibilityContext = createContext<EligibilityContextType | undefined>(
@@ -87,9 +96,30 @@ export function EligibilityProvider({ children }: ProviderProps) {
     []
   )
 
+  const setIsClaimAlreadySubmitted = useCallback(
+    (
+      ecosystem: Ecosystem,
+      identity: string,
+      isClaimAlreadySubmitted: boolean
+    ) => {
+      setEligibility((prev) => {
+        // note prev[ecosystem] will not be undefined
+        if (prev[ecosystem][identity] === undefined) return prev
+        prev[ecosystem][identity].isClaimAlreadySubmitted =
+          isClaimAlreadySubmitted
+        return { ...prev }
+      })
+    },
+    []
+  )
+
   return (
     <EligibilityContext.Provider
-      value={{ eligibility, setEligibility: setEligibilityWrapper }}
+      value={{
+        eligibility,
+        setEligibility: setEligibilityWrapper,
+        setIsClaimAlreadySubmitted,
+      }}
     >
       {children}
     </EligibilityContext.Provider>

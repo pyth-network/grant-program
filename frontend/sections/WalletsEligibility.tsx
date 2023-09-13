@@ -15,6 +15,9 @@ import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
+import { useGetClaimInfo } from 'hooks/useGetClaimInfo'
+import { useIsClaimAlreadySubmitted } from 'hooks/useIsClaimAlreadySubmitted'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 
 const Eligibility = ({
   onBack,
@@ -25,9 +28,11 @@ const Eligibility = ({
 }) => {
   const { activity } = useActivity()
   const totalGrantedCoins = useTotalGrantedCoins()
-
   const [isProceedDisabled, setIsProceedDisabled] = useState(true)
+  const [proceedTooltipContent, setProceedTooltipContent] = useState<string>()
   const getEcosystemIdentity = useGetEcosystemIdentity()
+  const { eligibility } = useEligibility()
+
   useEffect(() => {
     // we will check if the user has connected to all the ecosystem they have
     // selected as active
@@ -36,14 +41,37 @@ const Eligibility = ({
     Object.values(Ecosystem).forEach((ecosystem) => {
       if (activity[ecosystem] === false) return
       else {
-        if (getEcosystemIdentity(ecosystem) === undefined)
-          isConnectionPending = true
+        const identity = getEcosystemIdentity(ecosystem)
+        if (identity === undefined) isConnectionPending = true
       }
     })
 
-    if (isConnectionPending) setIsProceedDisabled(true)
-    else setIsProceedDisabled(false)
-  }, [activity, getEcosystemIdentity])
+    // We will also check if there are some tokens yet to claim
+    let areAllTokensClaimed: boolean = true
+    Object.values(Ecosystem).forEach((ecosystem) => {
+      const identity = getEcosystemIdentity(ecosystem)
+      if (identity !== undefined) {
+        const { isClaimAlreadySubmitted } =
+          eligibility[ecosystem][identity] ?? {}
+        if (isClaimAlreadySubmitted === false) areAllTokensClaimed = false
+      }
+    })
+
+    // Proceed is disabled if a connection is pending or
+    // if there is no tokens to claim
+    if (isConnectionPending) {
+      setIsProceedDisabled(true)
+      setProceedTooltipContent('Some ecosystem are not yet connected.')
+      return
+    } else if (areAllTokensClaimed) {
+      setIsProceedDisabled(true)
+      setProceedTooltipContent('There are no tokens to claim.')
+      return
+    } else {
+      setIsProceedDisabled(false)
+      setProceedTooltipContent(undefined)
+    }
+  }, [activity, eligibility, getEcosystemIdentity])
 
   return (
     <div className=" border border-light-35 bg-dark">
@@ -53,7 +81,11 @@ const Eligibility = ({
         </h4>
         <div className="flex gap-4">
           <BackButton onBack={onBack} />
-          <ProceedButton onProceed={onProceed} disabled={isProceedDisabled} />
+          <ProceedButton
+            onProceed={onProceed}
+            disabled={isProceedDisabled}
+            tooltipContent={proceedTooltipContent}
+          />
         </div>
       </div>
       <table>
@@ -93,42 +125,102 @@ function TableRow({ ecosystem }: TableRowProps) {
   const { activity } = useActivity()
   const getEcosystemIdentity = useGetEcosystemIdentity()
   const getEligibleCoins = useCoins()
+  const getClaimInfo = useGetClaimInfo()
+  const isClaimAlreadySubmitted = useIsClaimAlreadySubmitted()
+  const [rowDisabled, setRowDisabled] = useState(true)
+  // if it is undefined, no tooltip will be shown
+  const [rowTooltipContent, setRowTooltipContent] = useState<string>()
 
-  const isActive = activity[ecosystem]
+  const { setIsClaimAlreadySubmitted } = useEligibility()
+
+  useEffect(() => {
+    ;(async () => {
+      // Row isn't disabled when
+      // Ecosysten is active, has not yet connected
+      // Or Ecosystem is active, have a claimInfo, which isn't yet submitted
+      const isActive = activity[ecosystem]
+      const identity = getEcosystemIdentity(ecosystem)
+
+      if (isActive === true) {
+        // the ecosystem has not been connected yet
+        if (identity === undefined) {
+          setRowDisabled(false)
+          return
+        }
+
+        const claimInfo = getClaimInfo(ecosystem)
+        if (claimInfo !== undefined) {
+          const isSubmitted = await isClaimAlreadySubmitted(claimInfo)
+          if (isSubmitted === false) {
+            setRowDisabled(false)
+            // setIsTokenUnclaimed(true)
+            setIsClaimAlreadySubmitted(ecosystem, identity, false)
+            return
+          } else {
+            setIsClaimAlreadySubmitted(ecosystem, identity, true)
+            setRowTooltipContent(
+              'The tokens for this ecosystem has already been claimed.'
+            )
+          }
+        } else {
+          setRowTooltipContent(
+            'There are no tokens to claim for this ecosystem.'
+          )
+        }
+      }
+
+      setRowDisabled(true)
+    })()
+  }, [
+    activity,
+    ecosystem,
+    getClaimInfo,
+    getEcosystemIdentity,
+    isClaimAlreadySubmitted,
+    setIsClaimAlreadySubmitted,
+  ])
+
   const identity = getEcosystemIdentity(ecosystem)
 
   const tooltipContent = useMemo(() => {
     if (identity !== undefined)
-      return 'Congratulations! This wallet is successfully connected. Click on the wallet address to disconnect.'
+      return 'Congratulations! This ecosystem is successfully connected. Click on the button to disconnect.'
     else
-      return 'Please connect the wallet to check for the granted Pyth tokens.'
+      return 'Please connect the ecosystem to check for the granted Pyth tokens.'
   }, [identity])
 
   const icon = useMemo(() => {
-    if (isActive && identity !== undefined) return <Verified />
-    else return <NotVerified />
-  }, [identity, isActive])
+    if (rowDisabled) return <NotVerified />
+    else return <Verified />
+  }, [rowDisabled])
 
   return (
-    <tr
-      className={classNames(
-        'border-b border-light-35 ',
-        isActive ? '' : 'disabled'
-      )}
-    >
-      <td className="w-full py-2 pl-10 pr-4">
-        <div className="flex items-center justify-between">
-          <span className="font-header text-base18 font-thin">
-            {getEcosystemTableLabel(ecosystem)}
-          </span>
-          <span className="flex items-center gap-5">
-            <EcosystemConnectButton ecosystem={ecosystem} />
-            <Tooltip content={tooltipContent}>
-              <TooltipIcon />
-            </Tooltip>
-            {icon}
-          </span>
-        </div>
+    <tr className={'border-b border-light-35 '}>
+      <td
+        className={classNames(
+          'w-full py-2 pl-10 pr-4',
+          rowDisabled ? 'opacity-25' : ''
+        )}
+      >
+        <Tooltip content={rowTooltipContent} placement={'right'}>
+          <div
+            className={classNames(
+              'flex items-center justify-between',
+              rowDisabled ? 'pointer-events-none' : ''
+            )}
+          >
+            <span className="font-header text-base18 font-thin">
+              {getEcosystemTableLabel(ecosystem)}
+            </span>
+            <span className={'flex items-center gap-5'}>
+              <EcosystemConnectButton ecosystem={ecosystem} />
+              <Tooltip content={tooltipContent}>
+                <TooltipIcon />
+              </Tooltip>
+              {icon}
+            </span>
+          </div>
+        </Tooltip>
       </td>
       <td className="min-w-[130px] border-l border-light-35 bg-dark-25">
         <span className="flex items-center justify-center  gap-1 text-[20px]">
