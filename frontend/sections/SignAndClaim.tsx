@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react'
 import Modal from '@components/Modal'
 import Eligibility2 from './SignForEligibleWallets'
-import { useTokenDispenserProvider } from '@components/TokenDispenserProvider'
+import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
 import { useGetClaim } from 'hooks/useGetClaim'
 import { Ecosystem } from '@components/Ecosystem'
 import { ProceedButton, BackButton } from '@components/buttons'

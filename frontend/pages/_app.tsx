@@ -8,7 +8,6 @@ import { Toaster } from 'react-hot-toast'
 import { EVMWalletProvider } from '@components/wallets/EVM'
 import { CosmosWalletProvider } from '@components/wallets/Cosmos'
 import { SessionProvider } from 'next-auth/react'
-import { TokenDispenserProvider } from '@components/TokenDispenserProvider'
 import { EcosystemProviders } from '@components/Ecosystem'
 
 import '../styles/globals.css'
@@ -18,26 +17,24 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
     <EcosystemProviders>
       <SessionProvider>
         <SolanaWalletProvider>
-          <TokenDispenserProvider>
-            <AptosWalletProvider>
-              <SuiWalletProvider>
-                <EVMWalletProvider>
-                  <CosmosWalletProvider>
-                    <Component {...pageProps} />
-                    <Toaster
-                      position="bottom-left"
-                      toastOptions={{
-                        style: {
-                          wordBreak: 'break-word',
-                        },
-                      }}
-                      reverseOrder={false}
-                    />
-                  </CosmosWalletProvider>
-                </EVMWalletProvider>
-              </SuiWalletProvider>
-            </AptosWalletProvider>
-          </TokenDispenserProvider>
+          <AptosWalletProvider>
+            <SuiWalletProvider>
+              <EVMWalletProvider>
+                <CosmosWalletProvider>
+                  <Component {...pageProps} />
+                  <Toaster
+                    position="bottom-left"
+                    toastOptions={{
+                      style: {
+                        wordBreak: 'break-word',
+                      },
+                    }}
+                    reverseOrder={false}
+                  />
+                </CosmosWalletProvider>
+              </EVMWalletProvider>
+            </SuiWalletProvider>
+          </AptosWalletProvider>
         </SolanaWalletProvider>
       </SessionProvider>
     </EcosystemProviders>
