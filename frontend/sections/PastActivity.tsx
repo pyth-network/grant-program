@@ -1,10 +1,23 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
 import { Ecosystem } from '@components/Ecosystem'
 import { ProceedButton, BackButton } from '@components/buttons'
 import { StepProps } from './common'
 
 export const PastActivity = ({ onBack, onProceed }: StepProps) => {
+  const { activity } = useActivity()
+  const [isProceedDisabled, setIsProceedDisabled] = useState(true)
+
+  // The rule to proceed is:
+  // The user must be active in at least one of the ecosystem.
+  useEffect(() => {
+    const isAnyActive = Object.values(activity).find(
+      (isActive) => isActive === true
+    )
+    if (isAnyActive === undefined) setIsProceedDisabled(true)
+    else setIsProceedDisabled(false)
+  }, [activity])
+
   return (
     <>
       <div className=" border border-light-35 bg-dark">
@@ -34,7 +47,7 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
 
           <div className="mt-12 flex justify-end gap-4 ">
             <BackButton onBack={onBack} />
-            <ProceedButton onProceed={onProceed} />
+            <ProceedButton onProceed={onProceed} disabled={isProceedDisabled} />
           </div>
         </div>
       </div>
