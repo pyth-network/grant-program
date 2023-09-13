@@ -140,7 +140,7 @@ const Eligibility2 = ({
                   />
                 )
               }
-              coins={getEligibleCoins(Ecosystem.SOLANA, solanaAddress)}
+              coins={getEligibleCoins(Ecosystem.SOLANA)}
               isEligible={
                 activity.Solana && isEligible(Ecosystem.SOLANA, solanaAddress)
               }
@@ -157,7 +157,7 @@ const Eligibility2 = ({
                   />
                 )
               }
-              coins={getEligibleCoins(Ecosystem.EVM, evmAddress)}
+              coins={getEligibleCoins(Ecosystem.EVM)}
               isEligible={activity.Evm && isEligible(Ecosystem.EVM, evmAddress)}
             />
             <TableRow
@@ -172,7 +172,7 @@ const Eligibility2 = ({
                   />
                 )
               }
-              coins={getEligibleCoins(Ecosystem.APTOS, aptosAddress)}
+              coins={getEligibleCoins(Ecosystem.APTOS)}
               isEligible={
                 activity.Aptos && isEligible(Ecosystem.APTOS, aptosAddress)
               }
@@ -189,7 +189,7 @@ const Eligibility2 = ({
                   />
                 )
               }
-              coins={getEligibleCoins(Ecosystem.SUI, suiAddress)}
+              coins={getEligibleCoins(Ecosystem.SUI)}
               isEligible={activity.Sui && isEligible(Ecosystem.SUI, suiAddress)}
             />
             <TableRow
@@ -208,7 +208,7 @@ const Eligibility2 = ({
                   />
                 )
               }
-              coins={getEligibleCoins(Ecosystem.INJECTIVE, injectiveAddress)}
+              coins={getEligibleCoins(Ecosystem.INJECTIVE)}
               isEligible={
                 activity.Injective &&
                 isEligible(Ecosystem.INJECTIVE, injectiveAddress)
@@ -230,7 +230,7 @@ const Eligibility2 = ({
                   />
                 )
               }
-              coins={getEligibleCoins(Ecosystem.OSMOSIS, osmosisAddress)}
+              coins={getEligibleCoins(Ecosystem.OSMOSIS)}
               isEligible={
                 activity.Osmosis &&
                 isEligible(Ecosystem.OSMOSIS, osmosisAddress)
@@ -252,7 +252,7 @@ const Eligibility2 = ({
                   />
                 )
               }
-              coins={getEligibleCoins(Ecosystem.NEUTRON, neutronAddress)}
+              coins={getEligibleCoins(Ecosystem.NEUTRON)}
               isEligible={
                 activity.Neutron &&
                 isEligible(Ecosystem.NEUTRON, neutronAddress)
@@ -272,7 +272,7 @@ const Eligibility2 = ({
                   />
                 )
               }
-              coins={getEligibleCoins(Ecosystem.DISCORD, data?.user?.name)}
+              coins={getEligibleCoins(Ecosystem.DISCORD)}
               isEligible={
                 activity['Pyth Discord'] &&
                 isEligible(Ecosystem.DISCORD, data?.user?.name)
