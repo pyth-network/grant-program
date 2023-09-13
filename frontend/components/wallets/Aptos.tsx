@@ -6,8 +6,13 @@ import {
 import { PetraWallet } from 'petra-plugin-wallet-adapter'
 import { ReactElement, ReactNode, useCallback, useEffect, useMemo } from 'react'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
-import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
+import { useAptosSignMessage } from 'hooks/useSignMessage'
+import { SignButton } from './SignButton'
+import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
+import { useAptosAddress } from 'hooks/useAddress'
+import { Ecosystem } from '@components/Ecosystem'
 
 type AptosWalletProviderProps = {
   children: ReactNode
@@ -25,7 +30,12 @@ export function AptosWalletProvider({
   )
 }
 
-export function AptosWalletButton() {
+type AptosWalletButtonProps = {
+  disableOnConnect?: boolean
+}
+export function AptosWalletButton({
+  disableOnConnect,
+}: AptosWalletButtonProps) {
   const {
     disconnect,
     account,
@@ -48,19 +58,26 @@ export function AptosWalletButton() {
     [connect]
   )
 
-  const { setEligibility } = useEcosystem()
+  const { eligibility, setEligibility } = useEligibility()
 
   // fetch the eligibility and store it
   useEffect(() => {
     ;(async () => {
       if (connected === true && account?.address !== undefined) {
-        const eligibility = await fetchAmountAndProof('aptos', account?.address)
-        setEligibility(ECOSYSTEM.APTOS, eligibility)
-      } else {
-        setEligibility(ECOSYSTEM.APTOS, undefined)
+        // NOTE: we need to check if identity was previously stored
+        // We can't check it using eligibility[account?.address] === undefined
+        // As, an undefined eligibility can be stored before.
+        // Hence, we are checking if the key exists in the object
+        if (account?.address in eligibility[Ecosystem.APTOS]) return
+        else
+          setEligibility(
+            Ecosystem.APTOS,
+            account?.address,
+            await fetchAmountAndProof('aptos', account?.address)
+          )
       }
     })()
-  }, [connected, account?.address, setEligibility])
+  }, [connected, account?.address, setEligibility, eligibility])
 
   return (
     <WalletButton
@@ -77,8 +94,26 @@ export function AptosWalletButton() {
           onClick={disconnect}
           address={address}
           icon={wallet?.icon}
+          disabled={disableOnConnect}
         />
       )}
+    />
+  )
+}
+
+// A Solana wallet must be connected before this component is rendered
+// If not this button will be disabled
+export function AptosSignButton() {
+  const signMessageFn = useAptosSignMessage()
+  const tokenDispenser = useTokenDispenserProvider()
+  const address = useAptosAddress()
+  return (
+    <SignButton
+      signMessageFn={signMessageFn}
+      message={tokenDispenser?.generateAuthorizationPayload()}
+      solanaIdentity={tokenDispenser?.claimant.toBase58()}
+      ecosystem={Ecosystem.APTOS}
+      ecosystemIdentity={address}
     />
   )
 }

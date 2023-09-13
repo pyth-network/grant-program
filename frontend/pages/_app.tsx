@@ -1,4 +1,3 @@
-import { ChakraProvider } from '@chakra-ui/react'
 import { AptosWalletProvider } from '@components/wallets/Aptos'
 import { SolanaWalletProvider } from '@components/wallets/Solana'
 import type { AppProps } from 'next/app'
@@ -9,14 +8,13 @@ import { Toaster } from 'react-hot-toast'
 import { EVMWalletProvider } from '@components/wallets/EVM'
 import { CosmosWalletProvider } from '@components/wallets/Cosmos'
 import { SessionProvider } from 'next-auth/react'
-import { EcosystemProvider } from '@components/EcosystemProvider'
+import { EcosystemProviders } from '@components/Ecosystem'
 
-// Use require instead of import since order matters
-require('../styles/globals.css')
+import '../styles/globals.css'
 
 const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
   return (
-    <EcosystemProvider>
+    <EcosystemProviders>
       <SessionProvider>
         <SolanaWalletProvider>
           <AptosWalletProvider>
@@ -39,7 +37,7 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
           </AptosWalletProvider>
         </SolanaWalletProvider>
       </SessionProvider>
-    </EcosystemProvider>
+    </EcosystemProviders>
   )
 }
 

@@ -1,16 +1,17 @@
 import { ReactElement, useLayoutEffect, useState } from 'react'
 import { truncateAddress } from 'utils/truncateAddress'
-import Wallet from '../../images/wallet.inline.svg'
+import Wallet from '@images/wallet.inline.svg'
 import Image from 'next/image'
-import Modal from '@components/Claim/Modal'
+import Modal from '@components/Modal'
 import { Listbox, Transition } from '@headlessui/react'
-import Down from '../../images/down2.inline.svg'
+import Down from '@images/down2.inline.svg'
 
 export type WalletConnectedButtonProps = {
   onClick: () => void
   address: string
   icon?: string
   onHoverText?: string
+  disabled?: boolean
 }
 
 export function WalletConnectedButton({
@@ -18,6 +19,7 @@ export function WalletConnectedButton({
   address,
   icon,
   onHoverText = 'disconnect',
+  disabled,
 }: WalletConnectedButtonProps) {
   const dispAddress = truncateAddress(address)
 
@@ -29,10 +31,11 @@ export function WalletConnectedButton({
 
   return (
     <button
-      className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light"
+      className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light disabled:text-light disabled:before:bg-dark"
       onClick={onClick}
-      onMouseEnter={() => setButtonText(onHoverText)}
-      onMouseLeave={() => setButtonText(dispAddress)}
+      onMouseEnter={() => !disabled && setButtonText(onHoverText)}
+      onMouseLeave={() => !disabled && setButtonText(dispAddress)}
+      disabled={disabled}
     >
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
         <WalletIcon icon={icon} />

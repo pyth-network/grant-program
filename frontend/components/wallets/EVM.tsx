@@ -18,7 +18,12 @@ import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
 import { fetchAmountAndProof } from 'utils/api'
-import { ECOSYSTEM, useEcosystem } from '@components/EcosystemProvider'
+import { SignButton } from './SignButton'
+import { useEVMSignMessage } from 'hooks/useSignMessage'
+import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
+import { useEVMAddress } from 'hooks/useAddress'
+import { Ecosystem } from '@components/Ecosystem'
 
 // Configure chains & providers with the Alchemy provider.
 // Two popular providers are Alchemy (alchemy.com) and Infura (infura.io)
@@ -63,7 +68,10 @@ export function EVMWalletProvider({
   return <WagmiConfig config={config}> {children}</WagmiConfig>
 }
 
-export function EVMWalletButton() {
+type EvmWalletButtonProps = {
+  disableOnConnect?: boolean
+}
+export function EVMWalletButton({ disableOnConnect }: EvmWalletButtonProps) {
   const { disconnect } = useDisconnect()
   const { address, status, isConnected } = useAccount()
   const { connect, connectors } = useConnect()
@@ -84,19 +92,26 @@ export function EVMWalletButton() {
     [connect]
   )
 
-  const { setEligibility } = useEcosystem()
+  const { eligibility, setEligibility } = useEligibility()
 
   // fetch the eligibility and store it
   useEffect(() => {
     ;(async () => {
       if (isConnected === true && address !== undefined) {
-        const eligibility = await fetchAmountAndProof('evm', address)
-        setEligibility(ECOSYSTEM.EVM, eligibility)
-      } else {
-        setEligibility(ECOSYSTEM.EVM, undefined)
+        // NOTE: we need to check if identity was previously stored
+        // We can't check it using eligibility[address] === undefined
+        // As, an undefined eligibility can be stored before.
+        // Hence, we are checking if the key exists in the object
+        if (address in eligibility[Ecosystem.EVM]) return
+        else
+          setEligibility(
+            Ecosystem.EVM,
+            address,
+            await fetchAmountAndProof('evm', address)
+          )
       }
     })()
-  }, [isConnected, address, setEligibility])
+  }, [isConnected, address, setEligibility, eligibility])
 
   return (
     <WalletButton
@@ -108,8 +123,30 @@ export function EVMWalletButton() {
         onSelect: () => onSelect(connector),
       }))}
       walletConnectedButton={(address: string) => (
-        <WalletConnectedButton onClick={disconnect} address={address} />
+        <WalletConnectedButton
+          onClick={disconnect}
+          address={address}
+          disabled={disableOnConnect}
+        />
       )}
+    />
+  )
+}
+
+// A Solana wallet must be connected before this component is rendered
+// If not this button will be disabled
+export function EVMSignButton() {
+  const signMessageFn = useEVMSignMessage()
+  const tokenDispenser = useTokenDispenserProvider()
+  const address = useEVMAddress()
+
+  return (
+    <SignButton
+      signMessageFn={signMessageFn}
+      message={tokenDispenser?.generateAuthorizationPayload()}
+      solanaIdentity={tokenDispenser?.claimant.toBase58()}
+      ecosystem={Ecosystem.EVM}
+      ecosystemIdentity={address}
     />
   )
 }

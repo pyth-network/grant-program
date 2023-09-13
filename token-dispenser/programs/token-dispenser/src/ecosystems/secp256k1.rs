@@ -355,3 +355,99 @@ pub fn test_serde() {
 
     assert_eq!(secp256k1_ix, expected_secp256k1_ix);
 }
+
+#[test]
+pub fn test_secp256k1_sha256_verify_signer() {
+    use anchor_lang::solana_program::hash::hashv;
+    let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
+    let public_key = libsecp256k1::PublicKey::from_secret_key(&secret);
+    let mut public_key_bytes = public_key.serialize();
+    let uncompressed_public_key = &UncompressedSecp256k1Pubkey::from(public_key_bytes);
+    let mut message = b"hello".to_vec();
+    let message_hash = libsecp256k1::Message::parse_slice(hashv(&[&message]).as_ref()).unwrap();
+    let (signature, recovery_id) = libsecp256k1::sign(&message_hash, &secret);
+    let mut signature_bytes = signature.serialize();
+    assert!(secp256k1_sha256_verify_signer(
+        &Secp256k1Signature::from(signature_bytes),
+        &recovery_id.serialize(),
+        uncompressed_public_key,
+        &message,
+    )
+    .is_ok());
+
+
+    // wrong public key
+    public_key_bytes[0] ^= 0xff;
+    let uncompressed_public_key = &UncompressedSecp256k1Pubkey::from(public_key_bytes);
+    let res = secp256k1_sha256_verify_signer(
+        &Secp256k1Signature::from(signature_bytes),
+        &recovery_id.serialize(),
+        uncompressed_public_key,
+        &message,
+    );
+    assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err(),
+        Error::from(ErrorCode::SignatureVerificationWrongSigner)
+    );
+
+    public_key_bytes[0] ^= 0xff;
+    let uncompressed_public_key = &UncompressedSecp256k1Pubkey::from(public_key_bytes);
+
+    // invalid signature
+    signature_bytes[0] ^= 0xff;
+
+    let res = secp256k1_sha256_verify_signer(
+        &Secp256k1Signature::from(signature_bytes),
+        &recovery_id.serialize(),
+        uncompressed_public_key,
+        &message,
+    );
+    assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err(),
+        Error::from(ErrorCode::SignatureVerificationWrongSigner)
+    );
+
+    signature_bytes[0] ^= 0xff;
+
+    // invalid message
+    message[0] ^= 0xff;
+    let res = secp256k1_sha256_verify_signer(
+        &Secp256k1Signature::from(signature_bytes),
+        &recovery_id.serialize(),
+        uncompressed_public_key,
+        &message,
+    );
+    assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err(),
+        Error::from(ErrorCode::SignatureVerificationWrongSigner)
+    );
+
+    message[0] ^= 0xff;
+
+    let mut recovery_id_bytes = recovery_id.serialize();
+    recovery_id_bytes ^= 0xff;
+
+    let res = secp256k1_sha256_verify_signer(
+        &Secp256k1Signature::from(signature_bytes),
+        &recovery_id_bytes,
+        uncompressed_public_key,
+        &message,
+    );
+    assert!(res.is_err());
+    assert_eq!(
+        res.unwrap_err(),
+        Error::from(ErrorCode::SignatureVerificationWrongSigner)
+    );
+
+    recovery_id_bytes ^= 0xff;
+    assert!(secp256k1_sha256_verify_signer(
+        &Secp256k1Signature::from(signature_bytes),
+        &recovery_id_bytes,
+        uncompressed_public_key,
+        &message,
+    )
+    .is_ok());
+}

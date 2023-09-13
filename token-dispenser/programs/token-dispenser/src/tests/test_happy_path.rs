@@ -40,7 +40,10 @@ use {
     anchor_spl::associated_token::get_associated_token_address,
     pythnet_sdk::{
         accumulators::{
-            merkle::MerkleTree,
+            merkle::{
+                MerklePath,
+                MerkleTree,
+            },
             Accumulator,
         },
         hashers::keccak256::Keccak256,
@@ -158,6 +161,7 @@ impl TestClaimCertificate {
         &self,
         merkle_tree: &MerkleTree<SolanaHasher>,
         index: u8,
+        proof_of_inclusion_override: Option<MerklePath<SolanaHasher>>,
     ) -> (ClaimCertificate, Option<Instruction>) {
         let option_instruction = match &self.off_chain_proof_of_identity {
             TestIdentityCertificate::Evm(evm) => Some(evm.as_instruction(index, true)),
@@ -174,9 +178,11 @@ impl TestClaimCertificate {
             ClaimCertificate {
                 amount:             self.amount,
                 proof_of_identity:  self.off_chain_proof_of_identity.as_claim_certificate(index),
-                proof_of_inclusion: merkle_tree
-                    .prove(&Into::<ClaimInfo>::into(self.clone()).try_to_vec().unwrap())
-                    .unwrap(),
+                proof_of_inclusion: proof_of_inclusion_override.unwrap_or(
+                    merkle_tree
+                        .prove(&Into::<ClaimInfo>::into(self.clone()).try_to_vec().unwrap())
+                        .unwrap(),
+                ),
             },
             option_instruction,
         )
@@ -215,7 +221,7 @@ impl TestIdentityCertificate {
 
 impl TestClaimCertificate {
     pub fn as_instruction_error_index(&self, merkle_tree: &MerkleTree<SolanaHasher>) -> u8 {
-        match self.as_claim_certificate(merkle_tree, 0).1 {
+        match self.as_claim_certificate(merkle_tree, 0, None).1 {
             Some(_) => 1,
             None => 0,
         }
@@ -262,10 +268,13 @@ pub async fn test_happy_path() {
         .await
         .unwrap();
 
+    let address_lookup_table = simulator.init_lookup_table().await.unwrap();
+
     simulator
         .initialize(
             merkle_tree.root.clone(),
             dispenser_guard.pubkey(),
+            address_lookup_table,
             None,
             None,
         )
@@ -278,6 +287,7 @@ pub async fn test_happy_path() {
         dispenser_guard: dispenser_guard.pubkey(),
         mint: simulator.mint_keypair.pubkey(),
         treasury,
+        address_lookup_table,
     };
 
 
@@ -288,29 +298,13 @@ pub async fn test_happy_path() {
         .iter()
         .map(|item| item.amount)
         .sum::<u64>();
-    let mint_to_amount = 10 * claim_sum;
 
-    simulator.mint_to_treasury(mint_to_amount).await.unwrap();
-    simulator
-        .verify_token_account_data(treasury, mint_to_amount, COption::None, 0)
-        .await
-        .unwrap();
+    let mint_amounts = [
+        mock_offchain_certificates[0].amount,
+        claim_sum - mock_offchain_certificates[0].amount,
+    ];
 
-    simulator
-        .approve_treasury_delegate(get_config_pda().0, mint_to_amount)
-        .await
-        .unwrap();
-
-    simulator
-        .verify_token_account_data(
-            treasury,
-            mint_to_amount,
-            COption::Some(config_pubkey),
-            mint_to_amount,
-        )
-        .await
-        .unwrap();
-
+    // verify receipt pdas don't exist
     for serialized_item in &merkle_items_serialized {
         assert!(simulator
             .get_account(get_receipt_pda(serialized_item).0)
@@ -318,12 +312,72 @@ pub async fn test_happy_path() {
             .is_none());
     }
 
-    for offchain_claim_certificate in &mock_offchain_certificates {
+    // mint only enough for first claim
+    simulator.mint_to_treasury(mint_amounts[0]).await.unwrap();
+    simulator
+        .verify_token_account_data(treasury, mint_amounts[0], COption::None, 0)
+        .await
+        .unwrap();
+
+    // approve total claim sum amount
+    simulator
+        .approve_treasury_delegate(get_config_pda().0, claim_sum)
+        .await
+        .unwrap();
+
+    simulator
+        .verify_token_account_data(
+            treasury,
+            mint_amounts[0],
+            COption::Some(config_pubkey),
+            claim_sum,
+        )
+        .await
+        .unwrap();
+
+    simulator
+        .claim(
+            &copy_keypair(&simulator.genesis_keypair),
+            &mock_offchain_certificates[0],
+            &merkle_tree,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+    // verify treasury is empty but delegated amount is still valid
+    simulator
+        .verify_token_account_data(
+            treasury,
+            0,
+            COption::Some(config_pubkey),
+            claim_sum - mint_amounts[0],
+        )
+        .await
+        .unwrap();
+
+    // mint enough for rest of the claims
+    simulator.mint_to_treasury(mint_amounts[1]).await.unwrap();
+    simulator
+        .verify_token_account_data(
+            treasury,
+            mint_amounts[1],
+            COption::Some(config_pubkey),
+            claim_sum - mint_amounts[0],
+        )
+        .await
+        .unwrap();
+
+    for offchain_claim_certificate in &mock_offchain_certificates[1..] {
         simulator
             .claim(
                 &copy_keypair(&simulator.genesis_keypair),
                 offchain_claim_certificate,
                 &merkle_tree,
+                None,
+                None,
                 None,
             )
             .await
@@ -342,6 +396,8 @@ pub async fn test_happy_path() {
                     &copy_keypair(&simulator.genesis_keypair),
                     offchain_claim_certificate,
                     &merkle_tree,
+                    None,
+                    None,
                     None
                 )
                 .await
@@ -353,6 +409,13 @@ pub async fn test_happy_path() {
 
     // Check state
     assert_claim_receipts_exist(&merkle_items_serialized, &mut simulator).await;
+
+    // treasury should have 0 balance and delegated amount/user should be 0 since
+    // delegated amount was transferred
+    simulator
+        .verify_token_account_data(treasury, 0, COption::None, 0)
+        .await
+        .unwrap();
 
     let claimant_fund = get_associated_token_address(
         &simulator.genesis_keypair.pubkey(),

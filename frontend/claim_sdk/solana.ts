@@ -1,31 +1,36 @@
 import * as anchor from '@coral-xyz/anchor'
+import { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
 import tokenDispenser from './idl/token_dispenser.json'
 import type { TokenDispenser } from './idl/token_dispenser'
 import { Idl, IdlAccounts, IdlTypes, Program } from '@coral-xyz/anchor'
 import { Buffer } from 'buffer'
 import { MerkleTree } from './merkleTree'
 import {
+  AddressLookupTableAccount,
+  AddressLookupTableProgram,
   Connection,
   Ed25519Program,
   LAMPORTS_PER_SOL,
   PublicKey,
   Secp256k1Program,
-  Transaction,
+  SystemProgram,
+  SYSVAR_INSTRUCTIONS_PUBKEY,
+  TransactionMessage,
   TransactionSignature,
+  VersionedTransaction,
 } from '@solana/web3.js'
 import * as splToken from '@solana/spl-token'
 import { ClaimInfo, Ecosystem } from './claim'
 import { TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import { SignedMessage } from './ecosystems/signatures'
 import { extractChainId } from './ecosystems/cosmos'
-import { blake2b } from '@noble/hashes/blake2b'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
 const AUTHORIZATION_PAYLOAD = [
-  'Pyth Grant Program ID:\n',
-  '\nI irrevocably authorize Solana wallet\n',
-  '\nto withdraw my token allocation.\n',
+  'Pyth Grant PID:\n',
+  '\nI authorize wallet\n',
+  '\nto claim my token grant.\n',
 ]
 
 /**
@@ -42,7 +47,7 @@ export class TokenDispenserProvider {
 
   constructor(
     endpoint: string,
-    wallet: anchor.Wallet,
+    wallet: Wallet,
     programId: anchor.web3.PublicKey,
     confirmOpts?: anchor.web3.ConfirmOptions
   ) {
@@ -131,6 +136,8 @@ export class TokenDispenserProvider {
     treasury: anchor.web3.PublicKey,
     dispenserGuard: anchor.web3.PublicKey
   ): Promise<TransactionSignature> {
+    const addressLookupTable = await this.initAddressLookupTable(treasury)
+
     return this.tokenDispenserProgram.methods
       .initialize(Array.from(root), dispenserGuard)
       .accounts({
@@ -138,8 +145,53 @@ export class TokenDispenserProvider {
         mint,
         treasury,
         systemProgram: anchor.web3.SystemProgram.programId,
+        addressLookupTable,
       })
       .rpc()
+  }
+
+  private async initAddressLookupTable(
+    treasury: anchor.web3.PublicKey
+  ): Promise<anchor.web3.PublicKey> {
+    const recentSlot = await this.provider.connection.getSlot()
+    const [loookupTableInstruction, lookupTableAddress] =
+      AddressLookupTableProgram.createLookupTable({
+        authority: this.provider.publicKey!,
+        payer: this.provider.publicKey!,
+        recentSlot,
+      })
+    const extendInstruction = AddressLookupTableProgram.extendLookupTable({
+      payer: this.provider.publicKey,
+      authority: this.provider.publicKey!,
+      lookupTable: lookupTableAddress,
+      addresses: [
+        this.configPda[0],
+        treasury,
+        TOKEN_PROGRAM_ID,
+        SystemProgram.programId,
+        SYSVAR_INSTRUCTIONS_PUBKEY,
+      ],
+    })
+    let createLookupTableTx = new VersionedTransaction(
+      new TransactionMessage({
+        instructions: [loookupTableInstruction, extendInstruction],
+        payerKey: this.provider.publicKey!,
+        recentBlockhash: (await this.connection.getLatestBlockhash()).blockhash,
+      }).compileToV0Message()
+    )
+    await this.provider.sendAndConfirm!(createLookupTableTx, [], {
+      skipPreflight: true,
+    })
+    return lookupTableAddress
+  }
+
+  private async getLookupTableAccount(): Promise<AddressLookupTableAccount> {
+    const lookupTableAddress = (await this.getConfig()).addressLookupTable
+    const resp = await this.connection.getAddressLookupTable(lookupTableAddress)
+    if (resp.value === null) {
+      throw new Error(`No Address Lookup Table found at ${lookupTableAddress}`)
+    }
+    return resp.value
   }
 
   public generateAuthorizationPayload(): string {
@@ -151,7 +203,7 @@ export class TokenDispenserProvider {
     )
   }
 
-  public async createAssociatedTokenAccountTxnIfNeeded(): Promise<Transaction | null> {
+  public async createAssociatedTokenAccountTxnIfNeeded(): Promise<VersionedTransaction | null> {
     const config = await this.getConfig()
     const associatedTokenAccount = await this.getClaimantFundAddress()
     if (
@@ -168,8 +220,16 @@ export class TokenDispenserProvider {
           this.claimant,
           this.claimant
         )
-      const txn = new Transaction()
-      txn.add(createAssociatedTokenAccountIx)
+
+      const txn = new VersionedTransaction(
+        new TransactionMessage({
+          instructions: [createAssociatedTokenAccountIx],
+          payerKey: this.provider.publicKey!,
+          recentBlockhash: (await this.connection.getLatestBlockhash())
+            .blockhash,
+        }).compileToV0Message()
+      )
+
       return txn
     }
     return null
@@ -181,40 +241,83 @@ export class TokenDispenserProvider {
       proofOfInclusion: Uint8Array[]
       signedMessage: SignedMessage | undefined
     }[]
-  ): Promise<void> {
-    /// This is only eth & cosmwasm for now
-    let txs: { tx: Transaction }[] = []
+  ): Promise<Promise<string>[]> {
+    let txs: VersionedTransaction[] = []
 
     const createAtaTxn = await this.createAssociatedTokenAccountTxnIfNeeded()
     if (createAtaTxn) {
-      txs.push({ tx: createAtaTxn })
+      txs.push(createAtaTxn)
     }
+
     for (const claim of claims) {
-      txs.push({
-        tx: await this.generateClaimTransaction(
+      txs.push(
+        await this.generateClaimTransaction(
           claim.claimInfo,
           claim.proofOfInclusion,
           claim.signedMessage
-        ),
-      })
+        )
+      )
     }
-    if (this.tokenDispenserProgram.provider.sendAll) {
-      await this.tokenDispenserProgram.provider.sendAll(txs)
+    let signedTxs = await (
+      this.tokenDispenserProgram.provider as anchor.AnchorProvider
+    ).wallet.signAllTransactions(txs)
+
+    // send createAtaTxn first and then others. Others need a TokenAccount before
+    // being able to be executed
+    if (createAtaTxn !== null) {
+      try {
+        const signature = await this.connection.sendTransaction(signedTxs[0])
+
+        const latestBlockHash = await this.connection.getLatestBlockhash()
+        await this.connection.confirmTransaction(
+          {
+            signature,
+            blockhash: latestBlockHash.blockhash,
+            lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+          },
+          'confirmed'
+        )
+
+        // remove the executed tx
+        signedTxs = signedTxs.slice(1)
+      } catch (e) {
+        console.error(e)
+        // TODO: How to handle the error here?
+        throw Error('create account tx failed')
+      }
     }
+
+    // send the remaining ones
+    const sendTxs = signedTxs.map(async (signedTx) => {
+      const signature = await this.connection.sendTransaction(signedTx)
+      const latestBlockHash = await this.connection.getLatestBlockhash()
+      await this.connection.confirmTransaction(
+        {
+          signature,
+          blockhash: latestBlockHash.blockhash,
+          lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+        },
+        'confirmed'
+      )
+
+      return signature
+    })
+
+    return sendTxs
   }
 
   public async generateClaimTransaction(
     claimInfo: ClaimInfo,
     proofOfInclusion: Uint8Array[],
     signedMessage: SignedMessage | undefined
-  ): Promise<Transaction> {
+  ): Promise<VersionedTransaction> {
     // 1. generate claim certificate
-    //    a. create identityProof
-    const identityProof = this.createIdentityProof(claimInfo, signedMessage)
+    //    a. create proofOfIdentity
+    const proofOfIdentity = this.createProofOfIdentity(claimInfo, signedMessage)
 
     const claimCert: IdlTypes<TokenDispenser>['ClaimCertificate'] = {
       amount: claimInfo.amount,
-      proofOfIdentity: identityProof,
+      proofOfIdentity,
       proofOfInclusion,
     }
 
@@ -231,8 +334,10 @@ export class TokenDispenserProvider {
     }
     const receiptPda = this.getReceiptPda(claimInfo)[0]
 
-    // 4. submit claim
-    return this.tokenDispenserProgram.methods
+    const lookupTableAccount = await this.getLookupTableAccount()
+
+    const ixs = signatureVerificationIx ? [signatureVerificationIx] : []
+    const claim_ix = await this.tokenDispenserProgram.methods
       .claim([claimCert])
       .accounts({
         claimant: this.claimant,
@@ -250,11 +355,21 @@ export class TokenDispenserProvider {
           isSigner: false,
         },
       ])
-      .preInstructions(signatureVerificationIx ? [signatureVerificationIx] : [])
-      .transaction()
+      .instruction()
+    ixs.push(claim_ix)
+
+    const claimTx = new VersionedTransaction(
+      new TransactionMessage({
+        instructions: ixs,
+        payerKey: this.provider.publicKey!,
+        recentBlockhash: (await this.connection.getLatestBlockhash()).blockhash,
+      }).compileToV0Message([lookupTableAccount!])
+    )
+
+    return claimTx
   }
 
-  private createIdentityProof(
+  private createProofOfIdentity(
     claimInfo: ClaimInfo,
     signedMessage: SignedMessage | undefined
   ): IdlTypes<TokenDispenser>['IdentityCertificate'] {

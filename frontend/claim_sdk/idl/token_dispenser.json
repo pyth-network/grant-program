@@ -22,7 +22,9 @@
           "name": "mint",
           "isMut": false,
           "isSigner": false,
-          "docs": ["Mint of the treasury"]
+          "docs": [
+            "Mint of the treasury"
+          ]
         },
         {
           "name": "treasury",
@@ -38,13 +40,21 @@
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "addressLookupTable",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
         {
           "name": "merkleRoot",
           "type": {
-            "array": ["u8", 32]
+            "array": [
+              "u8",
+              20
+            ]
           }
         },
         {
@@ -127,7 +137,10 @@
           {
             "name": "merkleRoot",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                20
+              ]
             }
           },
           {
@@ -140,6 +153,10 @@
           },
           {
             "name": "treasury",
+            "type": "publicKey"
+          },
+          {
+            "name": "addressLookupTable",
             "type": "publicKey"
           }
         ]
@@ -313,7 +330,10 @@
             "name": "proofOfInclusion",
             "type": {
               "vec": {
-                "array": ["u8", 32]
+                "array": [
+                  "u8",
+                  20
+                ]
               }
             }
           }
@@ -343,7 +363,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 32]
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               }
             ]
@@ -354,7 +377,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 20]
+                  "array": [
+                    "u8",
+                    20
+                  ]
                 }
               }
             ]
@@ -365,7 +391,10 @@
               {
                 "name": "address",
                 "type": {
-                  "array": ["u8", 32]
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               }
             ]
@@ -376,7 +405,10 @@
               {
                 "name": "address",
                 "type": {
-                  "array": ["u8", 32]
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               }
             ]
@@ -426,7 +458,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 20]
+                  "array": [
+                    "u8",
+                    20
+                  ]
                 }
               },
               {
@@ -444,7 +479,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 32]
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               },
               {
@@ -459,7 +497,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 32]
+                  "array": [
+                    "u8",
+                    32
+                  ]
                 }
               },
               {
@@ -478,7 +519,10 @@
               {
                 "name": "signature",
                 "type": {
-                  "array": ["u8", 64]
+                  "array": [
+                    "u8",
+                    64
+                  ]
                 }
               },
               {
@@ -488,7 +532,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 65]
+                  "array": [
+                    "u8",
+                    65
+                  ]
                 }
               },
               {
@@ -503,7 +550,10 @@
               {
                 "name": "pubkey",
                 "type": {
-                  "array": ["u8", 20]
+                  "array": [
+                    "u8",
+                    20
+                  ]
                 }
               },
               {
@@ -519,55 +569,39 @@
   "errors": [
     {
       "code": 6000,
-      "name": "ArithmeticOverflow"
-    },
-    {
-      "code": 6001,
-      "name": "MoreThanOneIdentityPerEcosystem"
-    },
-    {
-      "code": 6002,
       "name": "AlreadyClaimed"
     },
     {
-      "code": 6003,
+      "code": 6001,
       "name": "InvalidInclusionProof"
     },
     {
-      "code": 6004,
+      "code": 6002,
       "name": "WrongPda"
     },
     {
-      "code": 6005,
-      "name": "NotImplemented"
-    },
-    {
-      "code": 6006,
+      "code": 6003,
       "name": "SignatureVerificationWrongProgram"
     },
     {
-      "code": 6007,
+      "code": 6004,
       "name": "SignatureVerificationWrongAccounts"
     },
     {
-      "code": 6008,
+      "code": 6005,
       "name": "SignatureVerificationWrongHeader"
     },
     {
-      "code": 6009,
+      "code": 6006,
       "name": "SignatureVerificationWrongPayload"
     },
     {
-      "code": 6010,
+      "code": 6007,
       "name": "SignatureVerificationWrongPayloadMetadata"
     },
     {
-      "code": 6011,
+      "code": 6008,
       "name": "SignatureVerificationWrongSigner"
-    },
-    {
-      "code": 6012,
-      "name": "SignatureVerificationWrongClaimant"
     }
   ]
 }

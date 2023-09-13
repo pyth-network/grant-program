@@ -90,6 +90,7 @@ pub mod token_dispenser {
         config.dispenser_guard = dispenser_guard;
         config.mint = ctx.accounts.mint.key();
         config.treasury = ctx.accounts.treasury.key();
+        config.address_lookup_table = ctx.accounts.address_lookup_table.key();
         Ok(())
     }
 
@@ -164,17 +165,20 @@ pub mod token_dispenser {
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
-    pub payer:          Signer<'info>,
+    pub payer:                Signer<'info>,
     #[account(init, payer = payer, space = Config::LEN, seeds = [CONFIG_SEED], bump)]
-    pub config:         Account<'info, Config>,
+    pub config:               Account<'info, Config>,
     /// Mint of the treasury
-    pub mint:           Account<'info, Mint>,
+    pub mint:                 Account<'info, Mint>,
     /// Treasury token account. This is an externally owned token account and
     /// the owner of this account will approve the config as a delegate using the
     /// solana CLI command `spl-token approve <treasury_account_address> <approve_amount> <config_address>`
     #[account( token::mint = mint )]
-    pub treasury:       Account<'info, TokenAccount>,
-    pub system_program: Program<'info, System>,
+    pub treasury:             Account<'info, TokenAccount>,
+    pub system_program:       Program<'info, System>,
+    /// CHECK: Anchor doesn't have built-in support for address lookup table so adding this check to make sure at least the PDA owner is correct
+    #[account(owner = solana_address_lookup_table_program::id())]
+    pub address_lookup_table: UncheckedAccount<'info>,
 }
 
 #[derive(Accounts)]
@@ -277,25 +281,29 @@ pub struct ClaimCertificate {
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct SolanaHasher {}
 impl Hasher for SolanaHasher {
-    type Hash = [u8; 32];
+    type Hash = [u8; 20];
 
     fn hashv(data: &[impl AsRef<[u8]>]) -> Self::Hash {
-        hashv(&data.iter().map(|x| x.as_ref()).collect::<Vec<&[u8]>>()).to_bytes()
+        let bytes = hashv(&data.iter().map(|x| x.as_ref()).collect::<Vec<&[u8]>>());
+        let mut hash = [0u8; 20];
+        hash.copy_from_slice(&bytes.as_ref()[0..20]);
+        hash
     }
 }
 
 #[account]
 #[derive(PartialEq, Debug)]
 pub struct Config {
-    pub bump:            u8,
-    pub merkle_root:     MerkleRoot<SolanaHasher>,
-    pub dispenser_guard: Pubkey,
-    pub mint:            Pubkey,
-    pub treasury:        Pubkey,
+    pub bump:                 u8,
+    pub merkle_root:          MerkleRoot<SolanaHasher>,
+    pub dispenser_guard:      Pubkey,
+    pub mint:                 Pubkey,
+    pub treasury:             Pubkey,
+    pub address_lookup_table: Pubkey,
 }
 
 impl Config {
-    pub const LEN: usize = 8 + 1 + 32 + 32 + 32 + 32;
+    pub const LEN: usize = 8 + 1 + 20 + 32 + 32 + 32 + 32;
 }
 
 #[account]
@@ -307,12 +315,9 @@ pub struct Receipt {}
 
 #[error_code]
 pub enum ErrorCode {
-    ArithmeticOverflow,
-    MoreThanOneIdentityPerEcosystem,
     AlreadyClaimed,
     InvalidInclusionProof,
     WrongPda,
-    NotImplemented,
     // Signature verification errors
     SignatureVerificationWrongProgram,
     SignatureVerificationWrongAccounts,
@@ -320,7 +325,6 @@ pub enum ErrorCode {
     SignatureVerificationWrongPayload,
     SignatureVerificationWrongPayloadMetadata,
     SignatureVerificationWrongSigner,
-    SignatureVerificationWrongClaimant,
 }
 
 pub fn check_claim_receipt_is_uninitialized(claim_receipt_account: &AccountInfo) -> Result<()> {
@@ -536,7 +540,9 @@ pub fn checked_create_claim_receipt<'info>(
     let transfer_instruction = system_instruction::transfer(
         &claimant.key(),
         &claim_receipt_account.key(),
-        Rent::get()?.minimum_balance(0),
+        Rent::get()?
+            .minimum_balance(0)
+            .saturating_sub(claim_receipt_account.lamports()),
     );
     invoke(&transfer_instruction, &account_infos)?;
 
@@ -574,13 +580,19 @@ pub fn get_receipt_pda(leaf: &[u8]) -> (Pubkey, u8) {
 }
 
 impl crate::accounts::Initialize {
-    pub fn populate(payer: Pubkey, mint: Pubkey, treasury: Pubkey) -> Self {
+    pub fn populate(
+        payer: Pubkey,
+        mint: Pubkey,
+        treasury: Pubkey,
+        address_lookup_table: Pubkey,
+    ) -> Self {
         crate::accounts::Initialize {
             payer,
             config: get_config_pda().0,
             mint,
             treasury,
             system_program: system_program::System::id(),
+            address_lookup_table,
         }
     }
 }

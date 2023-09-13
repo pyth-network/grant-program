@@ -12,8 +12,8 @@ jq '(..|objects| select(.type? and .type.defined? and .type.defined == "Ed25519S
 jq '(..|objects| select(.type? and .type.defined? and .type.defined == "SuiAddress")).type |= {"array": ["u8", 32]}' |
 jq '(..|objects| select(.type? and .type.defined? and .type.defined == "AptosAddress")).type |= {"array": ["u8", 32]}' |
 # ADD EXTERNAL STRUCTS
-jq '(..|objects| select(.type? and .type.defined? and .type.defined == "MerklePath<SolanaHasher>")).type |= {"vec":{"array":["u8",32]}}' |
-jq '(..|objects| select(.type? and .type.defined? and .type.defined == "MerkleRoot<SolanaHasher>")).type |= {"array": ["u8", 32]}' |
+jq '(..|objects| select(.type? and .type.defined? and .type.defined == "MerklePath<SolanaHasher>")).type |= {"vec":{"array":["u8",20]}}' |
+jq '(..|objects| select(.type? and .type.defined? and .type.defined == "MerkleRoot<SolanaHasher>")).type |= {"array": ["u8", 20]}' |
 # DELETE TEST STRUCTS
 jq '.types |= map(select(.name != "TestIdentityCertificate"))' > ../frontend/claim_sdk/idl/token_dispenser.json
 

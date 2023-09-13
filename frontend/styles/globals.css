@@ -133,3 +133,17 @@
   opacity: 0.25;
   pointer-events: none;
 }
+
+html {
+  overflow-y: scroll;
+}
+html::-webkit-scrollbar {
+  width: 3px;
+}
+html::-webkit-scrollbar-track {
+  background-color: #110f23;
+}
+html::-webkit-scrollbar-thumb {
+  background-color: #e6dafe;
+  border-radius: 3px;
+}

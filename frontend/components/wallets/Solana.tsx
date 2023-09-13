@@ -19,8 +19,12 @@ import { useMemo, ReactElement, ReactNode, useCallback, useEffect } from 'react'
 import { clusterApiUrl } from '@solana/web3.js'
 import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import { Wallet, WalletButton, WalletConnectedButton } from './WalletButton'
-import { useEcosystem, ECOSYSTEM } from '@components/EcosystemProvider'
 import { fetchAmountAndProof } from 'utils/api'
+import { SignButton } from './SignButton'
+import { useSolanaSignMessage } from 'hooks/useSignMessage'
+import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
+import { Ecosystem } from '@components/Ecosystem'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
 export const BACKPACK_WALLET_ADAPTER = new BackpackWalletAdapter()
@@ -107,26 +111,38 @@ export function useWallets(): Wallet[] {
   }, [onSelect, wallets])
 }
 
-export function SolanaWalletButton() {
+type SolanaWalletButtonProps = {
+  disableOnConnect?: boolean
+}
+export function SolanaWalletButton({
+  disableOnConnect,
+}: SolanaWalletButtonProps) {
   const { publicKey, disconnect, connecting, connected, wallet } = useWallet()
 
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey])
 
   const wallets = useWallets()
 
-  const { setEligibility } = useEcosystem()
+  const { eligibility, setEligibility } = useEligibility()
 
   // fetch the eligibility and store it
   useEffect(() => {
     ;(async () => {
       if (connected === true && base58 !== undefined) {
-        const eligibility = await fetchAmountAndProof('solana', base58)
-        setEligibility(ECOSYSTEM.SOLANA, eligibility)
-      } else {
-        setEligibility(ECOSYSTEM.SOLANA, undefined)
+        // NOTE: we need to check if identity was previously stored
+        // We can't check it using eligibility[base58] === undefined
+        // As, an undefined eligibility can be stored before.
+        // Hence, we are checking if the key exists in the object
+        if (base58 in eligibility[Ecosystem.SOLANA]) return
+        else
+          setEligibility(
+            Ecosystem.SOLANA,
+            base58,
+            await fetchAmountAndProof('solana', base58)
+          )
       }
     })()
-  }, [connected, base58, setEligibility])
+  }, [base58, connected, eligibility, setEligibility])
 
   return (
     <WalletButton
@@ -141,9 +157,27 @@ export function SolanaWalletButton() {
             onClick={disconnect}
             address={address}
             icon={wallet?.adapter.icon}
+            disabled={disableOnConnect}
           />
         )
       }}
+    />
+  )
+}
+
+// A Solana wallet must be connected before this component is rendered
+// If not this button will be disabled
+export function SolanaSignButton() {
+  const signMessageFn = useSolanaSignMessage()
+  const tokenDispenser = useTokenDispenserProvider()
+
+  return (
+    <SignButton
+      signMessageFn={signMessageFn}
+      message={tokenDispenser?.generateAuthorizationPayload()}
+      solanaIdentity={tokenDispenser?.claimant.toBase58()}
+      ecosystem={Ecosystem.SOLANA}
+      ecosystemIdentity={tokenDispenser?.claimant.toBase58()}
     />
   )
 }

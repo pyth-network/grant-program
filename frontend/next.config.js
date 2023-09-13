@@ -13,6 +13,7 @@ module.exports = {
   env: {
     ENDPOINT: process.env.ENDPOINT,
     CLUSTER: process.env.CLUSTER,
+    PROGRAM_ID: process.env.PROGRAM_ID,
   },
   webpack: (config) => {
     config.experiments = { asyncWebAssembly: true, layers: true }

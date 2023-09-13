@@ -45,11 +45,12 @@ pub async fn test_discord() {
 
     let total_claim_sum = merkle_items.iter().fold(0, |acc, item| acc + item.amount);
     let (merkle_tree, _) = merkleize(merkle_items);
-
+    let address_lookup_table = simulator.init_lookup_table().await.unwrap();
     simulator
         .initialize(
             merkle_tree.root.clone(),
             dispenser_guard.pubkey(),
+            address_lookup_table,
             None,
             None,
         )
@@ -78,6 +79,8 @@ pub async fn test_discord() {
                 &copy_keypair(&simulator.genesis_keypair),
                 &mock_offchain_certificates[1],
                 &merkle_tree,
+                None,
+                None,
                 None
             )
             .await
@@ -90,6 +93,8 @@ pub async fn test_discord() {
             &copy_keypair(&simulator.genesis_keypair),
             &mock_offchain_certificates[0],
             &merkle_tree,
+            None,
+            None,
             None
         )
         .await
@@ -101,6 +106,8 @@ pub async fn test_discord() {
                 &copy_keypair(&simulator.genesis_keypair),
                 &mock_offchain_certificates[0],
                 &merkle_tree,
+                None,
+                None,
                 None
             )
             .await
