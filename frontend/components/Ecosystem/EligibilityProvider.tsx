@@ -5,14 +5,17 @@ import {
   useEffect,
   useState,
 } from 'react'
-import { Eligibility as FetchedEligibility } from 'utils/api'
 import { ProviderProps, Ecosystem } from '.'
 import { BN } from '@coral-xyz/anchor'
 import { ClaimInfo } from 'claim_sdk/claim'
 
-type Eligibility = FetchedEligibility & {
-  isClaimAlreadySubmitted?: boolean
-}
+type Eligibility =
+  | {
+      claimInfo: ClaimInfo
+      proofOfInclusion: Uint8Array[]
+      isClaimAlreadySubmitted?: boolean
+    }
+  | undefined
 
 export type EligibilityMap = Record<
   Ecosystem,
@@ -105,7 +108,8 @@ export function EligibilityProvider({ children }: ProviderProps) {
       setEligibility((prev) => {
         // note prev[ecosystem] will not be undefined
         if (prev[ecosystem][identity] === undefined) return prev
-        prev[ecosystem][identity].isClaimAlreadySubmitted =
+        // we are checking it just above. WTF ts?
+        prev[ecosystem][identity]!.isClaimAlreadySubmitted =
           isClaimAlreadySubmitted
         return { ...prev }
       })

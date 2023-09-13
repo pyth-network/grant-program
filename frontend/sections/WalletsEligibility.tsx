@@ -15,7 +15,7 @@ import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
-import { useGetClaimInfo } from 'hooks/useGetClaimInfo'
+import { useGetEligibility } from 'hooks/useGetEligibility'
 import { useIsClaimAlreadySubmitted } from 'hooks/useIsClaimAlreadySubmitted'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 
@@ -90,14 +90,9 @@ const Eligibility = ({
       </div>
       <table>
         <tbody>
-          <TableRow ecosystem={Ecosystem.SOLANA} />
-          <TableRow ecosystem={Ecosystem.EVM} />
-          <TableRow ecosystem={Ecosystem.APTOS} />
-          <TableRow ecosystem={Ecosystem.SUI} />
-          <TableRow ecosystem={Ecosystem.INJECTIVE} />
-          <TableRow ecosystem={Ecosystem.OSMOSIS} />
-          <TableRow ecosystem={Ecosystem.NEUTRON} />
-          <TableRow ecosystem={Ecosystem.DISCORD} />
+          {Object.values(Ecosystem).map((ecosystem) => (
+            <TableRow ecosystem={ecosystem} key={ecosystem} />
+          ))}
           <tr className="border-b border-light-35 ">
             <td className="w-full bg-darkGray5 py-2 pl-10 pr-4">
               <div className="flex items-center justify-between">
@@ -125,7 +120,7 @@ function TableRow({ ecosystem }: TableRowProps) {
   const { activity } = useActivity()
   const getEcosystemIdentity = useGetEcosystemIdentity()
   const getEligibleCoins = useCoins()
-  const getClaimInfo = useGetClaimInfo()
+  const getEligibility = useGetEligibility()
   const isClaimAlreadySubmitted = useIsClaimAlreadySubmitted()
   const [rowDisabled, setRowDisabled] = useState(true)
   // if it is undefined, no tooltip will be shown
@@ -136,7 +131,7 @@ function TableRow({ ecosystem }: TableRowProps) {
   useEffect(() => {
     ;(async () => {
       // Row isn't disabled when
-      // Ecosysten is active, has not yet connected
+      // Ecosystem is active, has not yet connected
       // Or Ecosystem is active, have a claimInfo, which isn't yet submitted
       const isActive = activity[ecosystem]
       const identity = getEcosystemIdentity(ecosystem)
@@ -148,12 +143,13 @@ function TableRow({ ecosystem }: TableRowProps) {
           return
         }
 
-        const claimInfo = getClaimInfo(ecosystem)
-        if (claimInfo !== undefined) {
-          const isSubmitted = await isClaimAlreadySubmitted(claimInfo)
+        const eligibility = getEligibility(ecosystem)
+        if (eligibility?.claimInfo !== undefined) {
+          const isSubmitted = await isClaimAlreadySubmitted(
+            eligibility?.claimInfo
+          )
           if (isSubmitted === false) {
             setRowDisabled(false)
-            // setIsTokenUnclaimed(true)
             setIsClaimAlreadySubmitted(ecosystem, identity, false)
             return
           } else {
@@ -174,8 +170,8 @@ function TableRow({ ecosystem }: TableRowProps) {
   }, [
     activity,
     ecosystem,
-    getClaimInfo,
     getEcosystemIdentity,
+    getEligibility,
     isClaimAlreadySubmitted,
     setIsClaimAlreadySubmitted,
   ])
