@@ -4,11 +4,9 @@ import { assets, chains } from 'chain-registry'
 import { wallets } from '@cosmos-kit/keplr-extension'
 import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
-import { fetchAmountAndProof } from 'utils/api'
 import { useCosmosSignMessage } from 'hooks/useSignMessage'
 import { SignButton } from './SignButton'
 import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
-import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { useCosmosAddress } from 'hooks/useAddress'
 import { Ecosystem } from '@components/Ecosystem'
 
@@ -67,7 +65,7 @@ export function CosmosWalletButton({
     if (connected === 'true') {
       connect()
     }
-  }, [])
+  }, [chainName, connect])
 
   // The initial value of `isWalletNotExist` is false.
   // When the user clicks on connect, the value of `isWalletNotExist` is first set to false,
@@ -78,41 +76,17 @@ export function CosmosWalletButton({
     if (isWalletNotExist) window.open('https://www.keplr.app/download')
   }, [isWalletNotExist])
 
-  const { eligibility, setEligibility } = useEligibility()
-
   // fetch the eligibility and store it
   useEffect(() => {
     ;(async () => {
       if (isWalletConnected === true && address !== undefined) {
         // Here, store locally that the wallet was connected
         localStorage.setItem(getKeplrConnectionStatusKey(chainName), 'true')
-
-        // NOTE: we need to check if identity was previously stored
-        // We can't check it using eligibility[address] === undefined
-        // As, an undefined eligibility can be stored before.
-        // Hence, we are checking if the key exists in the object
-        if (address in eligibility[chainNametoEcosystem(chainName)]) return
-        else
-          setEligibility(
-            chainNametoEcosystem(chainName),
-            address,
-            await fetchAmountAndProof(
-              chainName === 'injective' ? 'injective' : 'cosmwasm',
-              address
-            )
-          )
       }
     })()
     if (isWalletDisconnected)
       localStorage.setItem(getKeplrConnectionStatusKey(chainName), 'false')
-  }, [
-    isWalletConnected,
-    address,
-    setEligibility,
-    chainName,
-    isWalletDisconnected,
-    eligibility,
-  ])
+  }, [isWalletConnected, address, chainName, isWalletDisconnected])
 
   return (
     <WalletButton

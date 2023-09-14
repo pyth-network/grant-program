@@ -9,6 +9,10 @@ import { ProviderProps, Ecosystem } from '.'
 import { BN } from '@coral-xyz/anchor'
 import { ClaimInfo } from 'claim_sdk/claim'
 import { useIsClaimAlreadySubmitted } from 'hooks/useIsClaimAlreadySubmitted'
+import { useActivity } from './ActivityProvider'
+import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
+import { fetchAmountAndProof } from 'utils/api'
+import { enumToSdkEcosystem } from 'utils/ecosystemEnumToEcosystem'
 
 type Eligibility =
   | {
@@ -26,12 +30,7 @@ export type EligibilityMap = Record<
 >
 
 type EligibilityContextType = {
-  eligibility: EligibilityMap
-  setEligibility: (
-    ecosystem: Ecosystem,
-    identity: string,
-    eligibility: Eligibility
-  ) => Promise<void>
+  getEligibility: (ecosystem: Ecosystem) => Eligibility
 }
 const EligibilityContext = createContext<EligibilityContextType | undefined>(
   undefined
@@ -74,52 +73,127 @@ function getDefaultEligibilityMap() {
 }
 
 export function EligibilityProvider({ children }: ProviderProps) {
-  const [eligibility, setEligibility] = useState(
+  const [eligibilityMap, setEligibilityMap] = useState(
     getStoredEligibilityMap() ?? getDefaultEligibilityMap()
   )
 
   const isClaimAlreadySubmitted = useIsClaimAlreadySubmitted()
+  const getEcosystemIdentity = useGetEcosystemIdentity()
 
-  // side effect: whenever the eligibility map changes sync the local storage
+  // side effect: whenever the eligibilityMap changes sync the local storage
   useEffect(() => {
     if (typeof window === 'undefined') return
-    localStorage.setItem(ELIGIBILITY_KEY, JSON.stringify(eligibility))
-  }, [eligibility])
+    localStorage.setItem(ELIGIBILITY_KEY, JSON.stringify(eligibilityMap))
+  }, [eligibilityMap])
 
-  const setEligibilityWrapper = useCallback(
-    async (
-      ecosystem: Ecosystem,
-      identity: string,
-      eligibility:
-        | { claimInfo: ClaimInfo; proofOfInclusion: Uint8Array[] }
-        | undefined
-    ) => {
-      if (eligibility !== undefined) {
-        const isSubmitted = await isClaimAlreadySubmitted(eligibility.claimInfo)
-        setEligibility((prev) => {
-          prev[ecosystem][identity] = {
-            ...eligibility,
-            isClaimAlreadySubmitted: isSubmitted,
-          }
+  // Whenever any ecosystem identity changes
+  // Fetch its eligibility, and store it
+  useEffect(() => {
+    ;(async () => {
+      // using changes array to make only one call to setState
+      let changes: [Ecosystem, string, Eligibility][] = []
+      await Promise.all(
+        Object.values(Ecosystem).map(async (ecosystem) => {
+          const identity = getEcosystemIdentity(ecosystem)
+          // If there is no current connection or if the eligibility was set previously
+          // don't do anything
+          // NOTE: we need to check if identity was previously stored
+          // We can't check it using eligibilityMap[ecosystem][identity] === undefined
+          // As, an undefined eligibility can be stored before.
+          // Hence, we are checking if the key exists in the object
+          if (identity === undefined || identity in eligibilityMap[ecosystem])
+            return
 
-          return { ...prev }
+          // No eligibility was stored before
+          let fetchedEligibility = await fetchAmountAndProof(
+            enumToSdkEcosystem(ecosystem),
+            identity
+          )
+          // Even if the fetchedEligibility was undefined
+          // We are still updating the eligibilityMap to add the key to the object
+          changes.push([ecosystem, identity, fetchedEligibility])
         })
-      } else {
-        setEligibility((prev) => {
-          // note prev[ecosystem] will not be undefined
-          prev[ecosystem][identity] = undefined
+      )
+
+      if (changes.length !== 0) {
+        setEligibilityMap((prev) => {
+          changes.forEach(([ecosystem, identity, eligibility]) => {
+            prev[ecosystem][identity] = eligibility
+          })
+
           return { ...prev }
         })
       }
+    })()
+  }, [eligibilityMap, getEcosystemIdentity, isClaimAlreadySubmitted])
+
+  // Fetch the latest claim status of ecosystem
+  useEffect(() => {
+    ;(async () => {
+      // We are using changes array to make the setState call only once
+      let changes: [Ecosystem, string][] = []
+      await Promise.all(
+        Object.values(Ecosystem).map(async (ecosystem) => {
+          {
+            const identity = getEcosystemIdentity(ecosystem)
+            // If there is no current connection
+            if (identity === undefined) return
+
+            if (identity in eligibilityMap[ecosystem]) {
+              if (eligibilityMap[ecosystem][identity] === undefined) return
+              if (
+                eligibilityMap[ecosystem][identity]!.isClaimAlreadySubmitted ===
+                true
+              )
+                return
+
+              // fetch the latest claim status
+              const isSubmitted = await isClaimAlreadySubmitted(
+                eligibilityMap[ecosystem][identity]!.claimInfo
+              )
+              if (isSubmitted === true) {
+                changes.push([ecosystem, identity])
+              }
+            }
+          }
+        })
+      )
+
+      if (changes.length !== 0) {
+        setEligibilityMap((prev) => {
+          for (let [ecosystem, identity] of changes) {
+            prev[ecosystem][identity] = {
+              // store ecosystem, identity in array maybe
+              ...prev[ecosystem][identity]!,
+              isClaimAlreadySubmitted: true,
+            }
+          }
+          return { ...prev }
+        })
+      }
+    })()
+  }, [eligibilityMap, getEcosystemIdentity, isClaimAlreadySubmitted])
+
+  const { activity } = useActivity()
+  // `getEligibility` will return the eligibility for the given ecosystem.
+  // If the ecosystem is not active or there is no auth connection, it will
+  // return undefined. Else whatever the value was stored for the current connection
+  const getEligibility = useCallback(
+    (ecosystem: Ecosystem): Eligibility => {
+      if (activity[ecosystem] === false) return undefined
+      else {
+        const identity = getEcosystemIdentity(ecosystem)
+        if (identity === undefined) return undefined
+        else return eligibilityMap[ecosystem][identity]
+      }
     },
-    [isClaimAlreadySubmitted]
+    [activity, eligibilityMap, getEcosystemIdentity]
   )
 
   return (
     <EligibilityContext.Provider
       value={{
-        eligibility,
-        setEligibility: setEligibilityWrapper,
+        getEligibility: getEligibility,
       }}
     >
       {children}

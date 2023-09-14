@@ -15,7 +15,6 @@ import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
-import { useGetEligibility } from 'hooks/useGetEligibility'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 
 const Eligibility = ({
@@ -30,7 +29,7 @@ const Eligibility = ({
   const [isProceedDisabled, setIsProceedDisabled] = useState(true)
   const [proceedTooltipContent, setProceedTooltipContent] = useState<string>()
   const getEcosystemIdentity = useGetEcosystemIdentity()
-  const { eligibility } = useEligibility()
+  const { getEligibility } = useEligibility()
 
   useEffect(() => {
     // we will check if the user has connected to all the ecosystem they have
@@ -48,11 +47,9 @@ const Eligibility = ({
     // We will also check if there are some tokens yet to claim
     let areAllTokensClaimed: boolean = true
     Object.values(Ecosystem).forEach((ecosystem) => {
-      const identity = getEcosystemIdentity(ecosystem)
-      if (identity !== undefined) {
-        const { isClaimAlreadySubmitted } =
-          eligibility[ecosystem][identity] ?? {}
-        if (isClaimAlreadySubmitted === false) areAllTokensClaimed = false
+      const eligibility = getEligibility(ecosystem)
+      if (eligibility?.isClaimAlreadySubmitted !== true) {
+        areAllTokensClaimed = false
       }
     })
 
@@ -70,7 +67,7 @@ const Eligibility = ({
       setIsProceedDisabled(false)
       setProceedTooltipContent(undefined)
     }
-  }, [activity, eligibility, getEcosystemIdentity])
+  }, [activity, getEcosystemIdentity, getEligibility])
 
   return (
     <div className=" border border-light-35 bg-dark">
@@ -119,7 +116,7 @@ function TableRow({ ecosystem }: TableRowProps) {
   const { activity } = useActivity()
   const getEcosystemIdentity = useGetEcosystemIdentity()
   const getEligibleCoins = useCoins()
-  const getEligibility = useGetEligibility()
+  const { getEligibility } = useEligibility()
   const [rowDisabled, setRowDisabled] = useState(true)
   // if it is undefined, no tooltip will be shown
   const [rowTooltipContent, setRowTooltipContent] = useState<string>()

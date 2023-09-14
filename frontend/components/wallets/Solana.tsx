@@ -19,11 +19,9 @@ import { useMemo, ReactElement, ReactNode, useCallback, useEffect } from 'react'
 import { clusterApiUrl } from '@solana/web3.js'
 import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import { Wallet, WalletButton, WalletConnectedButton } from './WalletButton'
-import { fetchAmountAndProof } from 'utils/api'
 import { SignButton } from './SignButton'
 import { useSolanaSignMessage } from 'hooks/useSignMessage'
 import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
-import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { Ecosystem } from '@components/Ecosystem'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
@@ -122,27 +120,6 @@ export function SolanaWalletButton({
   const base58 = useMemo(() => publicKey?.toBase58(), [publicKey])
 
   const wallets = useWallets()
-
-  const { eligibility, setEligibility } = useEligibility()
-
-  // fetch the eligibility and store it
-  useEffect(() => {
-    ;(async () => {
-      if (connected === true && base58 !== undefined) {
-        // NOTE: we need to check if identity was previously stored
-        // We can't check it using eligibility[base58] === undefined
-        // As, an undefined eligibility can be stored before.
-        // Hence, we are checking if the key exists in the object
-        if (base58 in eligibility[Ecosystem.SOLANA]) return
-        else
-          setEligibility(
-            Ecosystem.SOLANA,
-            base58,
-            await fetchAmountAndProof('solana', base58)
-          )
-      }
-    })()
-  }, [base58, connected, eligibility, setEligibility])
 
   return (
     <WalletButton

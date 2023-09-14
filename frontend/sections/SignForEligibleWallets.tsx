@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import Arrow from '@images/arrow.inline.svg'
 import Coin from '@images/coin.inline.svg'
 
 import { classNames } from 'utils/classNames'
@@ -14,14 +13,13 @@ import Success from '@images/verified.inline.svg'
 import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
-import { useGetEligibility } from 'hooks/useGetEligibility'
 import { useIsClaimAlreadySubmitted } from 'hooks/useIsClaimAlreadySubmitted'
 import Tooltip from '@components/Tooltip'
 import { EcosystemSignButton } from '@components/EcosystemSignButton'
 import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
-import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
 import { BackButton, ProceedButton } from '@components/buttons'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 
 const Eligibility2 = ({
   onBack,
@@ -38,9 +36,8 @@ const Eligibility2 = ({
   const [isProceedDisabled, setIsProceedDisabled] = useState(true)
   const [proceedTooltipContent, setProceedTooltipContent] = useState<string>()
   const getEcosystemIdentity = useGetEcosystemIdentity()
-  const { eligibility } = useEligibility()
   const { signatureMap } = useSignature()
-  const getEligibility = useGetEligibility()
+  const { getEligibility } = useEligibility()
 
   useEffect(() => {
     // If we are on this step, that means there is atleast one ecosystem
@@ -83,13 +80,7 @@ const Eligibility2 = ({
       setIsProceedDisabled(false)
       setProceedTooltipContent(undefined)
     }
-  }, [
-    activity,
-    eligibility,
-    getEcosystemIdentity,
-    getEligibility,
-    signatureMap,
-  ])
+  }, [activity, getEcosystemIdentity, getEligibility, signatureMap])
 
   return (
     <div className=" overflow-auto border border-light-35 bg-dark">
@@ -146,7 +137,7 @@ function TableRow({ ecosystem, ecosystemClaimState }: TableRowProps) {
   const getEligibleCoins = useCoins()
   const { activity } = useActivity()
   const getEcosystemIdentity = useGetEcosystemIdentity()
-  const getEligibility = useGetEligibility()
+  const { getEligibility } = useEligibility()
   const isClaimAlreadySubmitted = useIsClaimAlreadySubmitted()
   const [rowDisabled, setRowDisabled] = useState(true)
   // if it is undefined, no tooltip will be shown

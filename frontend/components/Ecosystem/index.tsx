@@ -21,6 +21,8 @@ export type ProviderProps = {
 }
 export function EcosystemProviders({ children }: ProviderProps) {
   return (
+    // Order matters here EligibilityProvider can use ActivityProvider
+    // And SignatureProvider can use both
     <ActivityProvider>
       <EligibilityProvider>
         <SignatureProvider>{children}</SignatureProvider>

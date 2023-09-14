@@ -10,7 +10,7 @@ import { useActivity } from '@components/Ecosystem/ActivityProvider'
 // But it will return for only those which are currently connected and active
 export function useGetClaim() {
   const { activity } = useActivity()
-  const { eligibility: eligibilityMap } = useEligibility()
+  const { getEligibility } = useEligibility()
   const getEcosystemIdentity = useGetEcosystemIdentity()
   const { signatureMap } = useSignature()
 
@@ -24,7 +24,7 @@ export function useGetClaim() {
       if (solanaIdentity === undefined || ecosystemIdentity === undefined)
         return undefined
 
-      const eligibility = eligibilityMap[ecosystem]?.[ecosystemIdentity]
+      const eligibility = getEligibility(ecosystem)
       const signature =
         signatureMap[solanaIdentity]?.[ecosystem]?.[ecosystemIdentity]
 
@@ -36,6 +36,6 @@ export function useGetClaim() {
         proofOfInclusion: eligibility.proofOfInclusion,
       }
     },
-    [activity, eligibilityMap, getEcosystemIdentity, signatureMap]
+    [activity, getEcosystemIdentity, getEligibility, signatureMap]
   )
 }

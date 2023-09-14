@@ -14,13 +14,15 @@ import '../styles/globals.css'
 
 const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
   return (
-    <EcosystemProviders>
-      <SessionProvider>
-        <SolanaWalletProvider>
-          <AptosWalletProvider>
-            <SuiWalletProvider>
-              <EVMWalletProvider>
-                <CosmosWalletProvider>
+    <SessionProvider>
+      <SolanaWalletProvider>
+        <AptosWalletProvider>
+          <SuiWalletProvider>
+            <EVMWalletProvider>
+              <CosmosWalletProvider>
+                {/* WARN: EcosystemProviders might use wallet provider addresses and hence
+                 They should be inside all those providers. */}
+                <EcosystemProviders>
                   <Component {...pageProps} />
                   <Toaster
                     position="bottom-left"
@@ -31,13 +33,13 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
                     }}
                     reverseOrder={false}
                   />
-                </CosmosWalletProvider>
-              </EVMWalletProvider>
-            </SuiWalletProvider>
-          </AptosWalletProvider>
-        </SolanaWalletProvider>
-      </SessionProvider>
-    </EcosystemProviders>
+                </EcosystemProviders>
+              </CosmosWalletProvider>
+            </EVMWalletProvider>
+          </SuiWalletProvider>
+        </AptosWalletProvider>
+      </SolanaWalletProvider>
+    </SessionProvider>
   )
 }
 
