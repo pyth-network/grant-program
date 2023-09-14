@@ -169,9 +169,9 @@ function TableRow({ ecosystem }: TableRowProps) {
   }, [identity])
 
   const icon = useMemo(() => {
-    if (rowDisabled) return <NotVerified />
-    else return <Verified />
-  }, [rowDisabled])
+    if (identity !== undefined) return <Verified />
+    else return <NotVerified />
+  }, [identity])
 
   return (
     <tr className={'border-b border-light-35 '}>
