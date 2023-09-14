@@ -122,12 +122,12 @@ function TableRow({ ecosystem }: TableRowProps) {
   const [rowTooltipContent, setRowTooltipContent] = useState<string>()
 
   const eligibility = getEligibility(ecosystem)
+  const isActive = activity[ecosystem]
 
   useEffect(() => {
     ;(async () => {
       // Row is disabled when
       // The ecosystem is inactive
-      const isActive = activity[ecosystem]
       if (isActive === false) {
         setRowDisabled(true)
         return
@@ -150,12 +150,12 @@ function TableRow({ ecosystem }: TableRowProps) {
       setRowDisabled(false)
     })()
   }, [
-    activity,
     ecosystem,
     eligibility?.claimInfo,
     eligibility?.isClaimAlreadySubmitted,
     getEcosystemIdentity,
     getEligibility,
+    isActive,
   ])
 
   const identity = getEcosystemIdentity(ecosystem)
@@ -169,9 +169,9 @@ function TableRow({ ecosystem }: TableRowProps) {
   }, [identity])
 
   const icon = useMemo(() => {
-    if (identity !== undefined) return <Verified />
+    if (isActive && identity !== undefined) return <Verified />
     else return <NotVerified />
-  }, [identity])
+  }, [identity, isActive])
 
   return (
     <tr className={'border-b border-light-35 '}>
