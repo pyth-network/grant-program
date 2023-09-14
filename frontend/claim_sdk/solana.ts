@@ -261,6 +261,8 @@ export class TokenDispenserProvider {
 
     let signedTxs: VersionedTransaction[]
     // We have to call signTransaction for backpack
+    // Backpack fails when calling signAll
+    // If there is a single tx
     if (txs.length === 1) {
       signedTxs = [
         await (
