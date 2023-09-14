@@ -38,6 +38,11 @@ const Eligibility2 = ({
   const getEcosystemIdentity = useGetEcosystemIdentity()
   const { getSignature } = useSignature()
   const { getEligibility } = useEligibility()
+  const [backDisabled, setBackDisabled] = useState(true)
+  useEffect(() => {
+    if (ecosystemsClaimState !== undefined) setBackDisabled(true)
+    else setBackDisabled(false)
+  }, [ecosystemsClaimState])
 
   useEffect(() => {
     // If we are on this step, that means there is atleast one ecosystem
@@ -90,7 +95,7 @@ const Eligibility2 = ({
             Verify Eligibility
           </h4>
           <div className="flex gap-4">
-            <BackButton onBack={onBack} />
+            <BackButton onBack={onBack} disabled={backDisabled} />
             <ProceedButton
               onProceed={onProceed}
               disabled={isProceedDisabled}
