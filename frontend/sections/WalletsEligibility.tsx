@@ -48,7 +48,7 @@ const Eligibility = ({
     let areAllTokensClaimed: boolean = true
     Object.values(Ecosystem).forEach((ecosystem) => {
       const eligibility = getEligibility(ecosystem)
-      if (eligibility?.isClaimAlreadySubmitted !== true) {
+      if (eligibility?.isClaimAlreadySubmitted === false) {
         areAllTokensClaimed = false
       }
     })
