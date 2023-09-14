@@ -61,7 +61,7 @@ export function CosmosWalletButton({
     if (connected === 'true') {
       connect()
     }
-  }, [chainName, connect])
+  }, [])
 
   // The initial value of `isWalletNotExist` is false.
   // When the user clicks on connect, the value of `isWalletNotExist` is first set to false,
