@@ -125,24 +125,17 @@ function TableRow({ ecosystem }: TableRowProps) {
 
   useEffect(() => {
     ;(async () => {
-      // Row isn't disabled when
-      // Ecosystem is active, has not yet connected
-      // Or Ecosystem is active, have a claimInfo, which isn't yet submitted
+      // Row is disabled when
+      // The ecosystem is inactive
       const isActive = activity[ecosystem]
-      const identity = getEcosystemIdentity(ecosystem)
+      if (isActive === false) {
+        setRowDisabled(true)
+        return
+      }
 
       if (isActive === true) {
-        // the ecosystem has not been connected yet
-        if (identity === undefined) {
-          setRowDisabled(false)
-          return
-        }
-
         if (eligibility?.claimInfo !== undefined) {
-          if (eligibility?.isClaimAlreadySubmitted !== true) {
-            setRowDisabled(false)
-            return
-          } else {
+          if (eligibility?.isClaimAlreadySubmitted === true) {
             setRowTooltipContent(
               'The tokens for this ecosystem has already been claimed.'
             )
@@ -154,7 +147,7 @@ function TableRow({ ecosystem }: TableRowProps) {
         }
       }
 
-      setRowDisabled(true)
+      setRowDisabled(false)
     })()
   }, [
     activity,
@@ -188,35 +181,35 @@ function TableRow({ ecosystem }: TableRowProps) {
           rowDisabled ? 'opacity-25' : ''
         )}
       >
-        <Tooltip content={rowTooltipContent} placement={'right'}>
-          <div
-            className={classNames(
-              'flex items-center justify-between',
-              rowDisabled ? 'pointer-events-none' : ''
-            )}
-          >
-            <span className="font-header text-base18 font-thin">
-              {getEcosystemTableLabel(ecosystem)}
-            </span>
-            <span className={'flex items-center gap-5'}>
-              <EcosystemConnectButton ecosystem={ecosystem} />
-              <Tooltip content={tooltipContent}>
-                <TooltipIcon />
-              </Tooltip>
-              {icon}
-            </span>
-          </div>
-        </Tooltip>
+        <div
+          className={classNames(
+            'flex items-center justify-between',
+            rowDisabled ? 'pointer-events-none' : ''
+          )}
+        >
+          <span className="font-header text-base18 font-thin">
+            {getEcosystemTableLabel(ecosystem)}
+          </span>
+          <span className={'flex items-center gap-5'}>
+            <EcosystemConnectButton ecosystem={ecosystem} />
+            <Tooltip content={tooltipContent}>
+              <TooltipIcon />
+            </Tooltip>
+            {icon}
+          </span>
+        </div>
       </td>
       <td className="min-w-[130px] border-l border-light-35 bg-dark-25">
-        <span className="flex items-center justify-center  gap-1 text-[20px]">
-          {eligibility?.isClaimAlreadySubmitted ? (
-            <s>{eligibleCoins}</s>
-          ) : (
-            <>{eligibleCoins}</>
-          )}{' '}
-          <Coin />
-        </span>
+        <Tooltip content={rowTooltipContent} placement={'right'}>
+          <span className="flex items-center justify-center  gap-1 text-[20px]">
+            {eligibility?.isClaimAlreadySubmitted ? (
+              <s>{eligibleCoins}</s>
+            ) : (
+              <>{eligibleCoins}</>
+            )}{' '}
+            <Coin />
+          </span>
+        </Tooltip>
       </td>
     </tr>
   )
