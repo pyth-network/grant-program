@@ -139,7 +139,7 @@ function TableRow({ ecosystem }: TableRowProps) {
         }
 
         if (eligibility?.claimInfo !== undefined) {
-          if (eligibility?.isClaimAlreadySubmitted === false) {
+          if (eligibility?.isClaimAlreadySubmitted !== true) {
             setRowDisabled(false)
             return
           } else {
@@ -156,7 +156,14 @@ function TableRow({ ecosystem }: TableRowProps) {
 
       setRowDisabled(true)
     })()
-  }, [activity, ecosystem, eligibility, getEcosystemIdentity, getEligibility])
+  }, [
+    activity,
+    ecosystem,
+    eligibility?.claimInfo,
+    eligibility?.isClaimAlreadySubmitted,
+    getEcosystemIdentity,
+    getEligibility,
+  ])
 
   const identity = getEcosystemIdentity(ecosystem)
   const eligibleCoins = getEligibleCoins(ecosystem)
