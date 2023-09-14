@@ -17,11 +17,6 @@ import { publicProvider } from 'wagmi/providers/public'
 import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
-import { SignButton } from './SignButton'
-import { useEVMSignMessage } from 'hooks/useSignMessage'
-import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
-import { useEVMAddress } from 'hooks/useAddress'
-import { Ecosystem } from '@components/Ecosystem'
 
 // Configure chains & providers with the Alchemy provider.
 // Two popular providers are Alchemy (alchemy.com) and Infura (infura.io)
@@ -106,24 +101,6 @@ export function EVMWalletButton({ disableOnConnect }: EvmWalletButtonProps) {
           disabled={disableOnConnect}
         />
       )}
-    />
-  )
-}
-
-// A Solana wallet must be connected before this component is rendered
-// If not this button will be disabled
-export function EVMSignButton() {
-  const signMessageFn = useEVMSignMessage()
-  const tokenDispenser = useTokenDispenserProvider()
-  const address = useEVMAddress()
-
-  return (
-    <SignButton
-      signMessageFn={signMessageFn}
-      message={tokenDispenser?.generateAuthorizationPayload()}
-      solanaIdentity={tokenDispenser?.claimant.toBase58()}
-      ecosystem={Ecosystem.EVM}
-      ecosystemIdentity={address}
     />
   )
 }

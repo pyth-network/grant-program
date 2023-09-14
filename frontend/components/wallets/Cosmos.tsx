@@ -4,10 +4,6 @@ import { assets, chains } from 'chain-registry'
 import { wallets } from '@cosmos-kit/keplr-extension'
 import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
-import { useCosmosSignMessage } from 'hooks/useSignMessage'
-import { SignButton } from './SignButton'
-import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
-import { useCosmosAddress } from 'hooks/useAddress'
 import { Ecosystem } from '@components/Ecosystem'
 
 export const WALLET_NAME = 'keplr-extension'
@@ -101,23 +97,6 @@ export function CosmosWalletButton({
           disabled={disableOnConnect}
         />
       )}
-    />
-  )
-}
-
-// A Solana wallet must be connected before this component is rendered
-// If not this button will be disabled
-export function CosmosSignButton({ chainName }: { chainName: ChainName }) {
-  const signMessageFn = useCosmosSignMessage(chainName)
-  const tokenDispenser = useTokenDispenserProvider()
-  const address = useCosmosAddress(chainName)
-  return (
-    <SignButton
-      signMessageFn={signMessageFn}
-      message={tokenDispenser?.generateAuthorizationPayload()}
-      solanaIdentity={tokenDispenser?.claimant.toBase58()}
-      ecosystem={chainNametoEcosystem(chainName)}
-      ecosystemIdentity={address}
     />
   )
 }

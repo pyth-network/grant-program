@@ -19,10 +19,6 @@ import { useMemo, ReactElement, ReactNode, useCallback, useEffect } from 'react'
 import { clusterApiUrl } from '@solana/web3.js'
 import { Adapter, WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import { Wallet, WalletButton, WalletConnectedButton } from './WalletButton'
-import { SignButton } from './SignButton'
-import { useSolanaSignMessage } from 'hooks/useSignMessage'
-import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
-import { Ecosystem } from '@components/Ecosystem'
 
 export const PHANTOM_WALLET_ADAPTER = new PhantomWalletAdapter()
 export const BACKPACK_WALLET_ADAPTER = new BackpackWalletAdapter()
@@ -138,23 +134,6 @@ export function SolanaWalletButton({
           />
         )
       }}
-    />
-  )
-}
-
-// A Solana wallet must be connected before this component is rendered
-// If not this button will be disabled
-export function SolanaSignButton() {
-  const signMessageFn = useSolanaSignMessage()
-  const tokenDispenser = useTokenDispenserProvider()
-
-  return (
-    <SignButton
-      signMessageFn={signMessageFn}
-      message={tokenDispenser?.generateAuthorizationPayload()}
-      solanaIdentity={tokenDispenser?.claimant.toBase58()}
-      ecosystem={Ecosystem.SOLANA}
-      ecosystemIdentity={tokenDispenser?.claimant.toBase58()}
     />
   )
 }

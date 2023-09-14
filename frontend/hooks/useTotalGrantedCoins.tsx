@@ -5,7 +5,7 @@ import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 
 // useTotalGrantedCoins returns the total granted coins
 // It includes only those ecosystem which the user has selected as active
-// and which are connected to the website.
+// which are connected to the website and which has tokens yet to be claimed
 export function useTotalGrantedCoins() {
   const { getEligibility } = useEligibility()
 

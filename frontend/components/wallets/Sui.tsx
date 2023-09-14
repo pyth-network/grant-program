@@ -1,11 +1,6 @@
 import { useWalletKit } from '@mysten/wallet-kit'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 import { useMemo } from 'react'
-import { useSuiSignMessage } from 'hooks/useSignMessage'
-import { SignButton } from './SignButton'
-import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
-import { useSuiAddress } from 'hooks/useAddress'
-import { Ecosystem } from '@components/Ecosystem'
 
 type SuiWalletButtonProps = {
   disableOnConnect?: boolean
@@ -68,24 +63,6 @@ export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
           disabled={disableOnConnect}
         />
       )}
-    />
-  )
-}
-
-// A Solana wallet must be connected before this component is rendered
-// If not this button will be disabled
-export function SuiSignButton() {
-  const signMessageFn = useSuiSignMessage()
-  const tokenDispenser = useTokenDispenserProvider()
-  const address = useSuiAddress()
-
-  return (
-    <SignButton
-      signMessageFn={signMessageFn}
-      message={tokenDispenser?.generateAuthorizationPayload()}
-      solanaIdentity={tokenDispenser?.claimant.toBase58()}
-      ecosystem={Ecosystem.SUI}
-      ecosystemIdentity={address}
     />
   )
 }

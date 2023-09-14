@@ -2,10 +2,6 @@ import { useWallet as useAptosWallet } from '@aptos-labs/wallet-adapter-react'
 import { useChainWallet } from '@cosmos-kit/react-lite'
 import { useWalletKit } from '@mysten/wallet-kit'
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
-import {
-  suiGetFullMessage,
-  splitSignatureAndPubkey,
-} from 'claim_sdk/ecosystems/sui'
 import { useCallback } from 'react'
 import { useAccount, useSignMessage as useWagmiSignMessage } from 'wagmi'
 import {
@@ -15,6 +11,9 @@ import {
   aptosBuildSignedMessage,
   suiBuildSignedMessage,
 } from 'claim_sdk/ecosystems/signatures'
+import { Ecosystem } from '@components/Ecosystem'
+import { fetchDiscordSignedMessage } from 'utils/api'
+import { useTokenDispenserProvider } from './useTokenDispenserProvider'
 
 // SignMessageFn signs the message and returns it.
 // It will return undefined:
@@ -171,4 +170,44 @@ export function useSuiSignMessage(): SignMessageFn {
   )
 
   return signMessageCb
+}
+
+export function useDiscordSignMessage(): SignMessageFn {
+  const tokenDispenser = useTokenDispenserProvider()
+
+  return useCallback(async () => {
+    if (tokenDispenser?.claimant === undefined) return
+    return await fetchDiscordSignedMessage(tokenDispenser.claimant)
+  }, [tokenDispenser?.claimant])
+}
+
+// A wrapper around all the sign message hooks
+export function useSignMessage(ecosystem: Ecosystem): SignMessageFn {
+  const aptosSignMessageFn = useAptosSignMessage()
+  const evmSignMessageFn = useEVMSignMessage()
+  const injectiveSignMessageFn = useCosmosSignMessage('injective')
+  const osmosisSignMessageFn = useCosmosSignMessage('osmosis')
+  const neutronSignMessageFn = useCosmosSignMessage('neutron')
+  const suiSignMessageFn = useSuiSignMessage()
+  const solanaSignMessageFn = useSolanaSignMessage()
+  const discordSignMessageFn = useDiscordSignMessage()
+
+  switch (ecosystem) {
+    case Ecosystem.APTOS:
+      return aptosSignMessageFn
+    case Ecosystem.EVM:
+      return evmSignMessageFn
+    case Ecosystem.INJECTIVE:
+      return injectiveSignMessageFn
+    case Ecosystem.NEUTRON:
+      return neutronSignMessageFn
+    case Ecosystem.OSMOSIS:
+      return osmosisSignMessageFn
+    case Ecosystem.SOLANA:
+      return solanaSignMessageFn
+    case Ecosystem.SUI:
+      return suiSignMessageFn
+    case Ecosystem.DISCORD:
+      return discordSignMessageFn
+  }
 }

@@ -6,11 +6,6 @@ import {
 import { PetraWallet } from 'petra-plugin-wallet-adapter'
 import { ReactElement, ReactNode, useCallback, useMemo } from 'react'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
-import { useAptosSignMessage } from 'hooks/useSignMessage'
-import { SignButton } from './SignButton'
-import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
-import { useAptosAddress } from 'hooks/useAddress'
-import { Ecosystem } from '@components/Ecosystem'
 
 type AptosWalletProviderProps = {
   children: ReactNode
@@ -74,23 +69,6 @@ export function AptosWalletButton({
           disabled={disableOnConnect}
         />
       )}
-    />
-  )
-}
-
-// A Solana wallet must be connected before this component is rendered
-// If not this button will be disabled
-export function AptosSignButton() {
-  const signMessageFn = useAptosSignMessage()
-  const tokenDispenser = useTokenDispenserProvider()
-  const address = useAptosAddress()
-  return (
-    <SignButton
-      signMessageFn={signMessageFn}
-      message={tokenDispenser?.generateAuthorizationPayload()}
-      solanaIdentity={tokenDispenser?.claimant.toBase58()}
-      ecosystem={Ecosystem.APTOS}
-      ecosystemIdentity={address}
     />
   )
 }

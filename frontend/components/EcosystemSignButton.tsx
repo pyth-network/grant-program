@@ -1,33 +1,87 @@
-import { DiscordSignButton } from './DiscordSignButton'
-import { Ecosystem } from './Ecosystem'
-import { AptosSignButton } from './wallets/Aptos'
-import { CosmosSignButton } from './wallets/Cosmos'
-import { EVMSignButton } from './wallets/EVM'
-import { SolanaSignButton } from './wallets/Solana'
-import { SuiSignButton } from './wallets/Sui'
+import { useSignMessage } from 'hooks/useSignMessage'
+import { useState, useCallback } from 'react'
+import Signed from '@images/signed.inline.svg'
+import { classNames } from 'utils/classNames'
+import { useSignature } from '@components/Ecosystem/SignatureProvider'
+import { Ecosystem } from '@components/Ecosystem'
+import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
+import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
 
-// A wrapper around all the ecosystem sign buttons.
-// It returns the relevant one based on the ecosystem prop.
 export type EcosystemSignButtonProps = {
   ecosystem: Ecosystem
 }
-export function EcosystemSignButton({ ecosystem }: EcosystemSignButtonProps) {
-  switch (ecosystem) {
-    case Ecosystem.APTOS:
-      return <AptosSignButton />
-    case Ecosystem.EVM:
-      return <EVMSignButton />
-    case Ecosystem.INJECTIVE:
-      return <CosmosSignButton chainName="injective" />
-    case Ecosystem.NEUTRON:
-      return <CosmosSignButton chainName="neutron" />
-    case Ecosystem.OSMOSIS:
-      return <CosmosSignButton chainName="osmosis" />
-    case Ecosystem.SOLANA:
-      return <SolanaSignButton />
-    case Ecosystem.SUI:
-      return <SuiSignButton />
-    case Ecosystem.DISCORD:
-      return <DiscordSignButton />
-  }
+
+// EcosystemSignButton will be disabled, if any of the message, solanaIdentity, or ecosystemIdentity
+// is undefined
+export function EcosystemSignButton({
+  ecosystem,
+}: EcosystemSignButtonProps): JSX.Element {
+  const { getSignature, setSignature } = useSignature()
+  const [isSigning, setIsSigning] = useState(false)
+  const getEcosystemIdentity = useGetEcosystemIdentity()
+  const signMessageFn = useSignMessage(ecosystem)
+  const tokenDispenser = useTokenDispenserProvider()
+
+  const solanaIdentity = getEcosystemIdentity(Ecosystem.SOLANA)
+  const ecosystemIdentity = getEcosystemIdentity(ecosystem)
+  const message = tokenDispenser?.generateAuthorizationPayload()
+
+  // It wraps the signMessageFn and additionally implement loading and storing
+  const signMessageWrapper = useCallback(async () => {
+    if (
+      message === undefined ||
+      solanaIdentity === undefined ||
+      ecosystemIdentity === undefined
+    )
+      return
+
+    // If we already have the signed message, we will not ask the user to sign it again
+    if (getSignature(ecosystem) !== undefined) return
+    setIsSigning(true)
+    const signedMessage = await signMessageFn(message)
+    // Storing the message in the context
+    if (signedMessage !== undefined)
+      setSignature(solanaIdentity, ecosystem, ecosystemIdentity, signedMessage)
+
+    setIsSigning(false)
+  }, [
+    ecosystem,
+    ecosystemIdentity,
+    getSignature,
+    message,
+    setSignature,
+    signMessageFn,
+    solanaIdentity,
+  ])
+
+  const isDisabled =
+    message === undefined ||
+    solanaIdentity === undefined ||
+    ecosystemIdentity === undefined
+
+  const isSigned = !isDisabled && getSignature(ecosystem) !== undefined
+
+  return (
+    <button
+      className={classNames(
+        'btn before:btn-bg btn--dark  before:bg-dark hover:text-dark hover:before:bg-light disabled:text-light disabled:before:bg-dark'
+      )}
+      onClick={signMessageWrapper}
+      disabled={isDisabled || isSigned}
+    >
+      <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+        <span className="flex items-center gap-3">
+          {isSigned ? (
+            <>
+              Signed <Signed />{' '}
+            </>
+          ) : isSigning ? (
+            'Signing'
+          ) : (
+            'Sign'
+          )}
+        </span>
+      </span>
+    </button>
+  )
 }

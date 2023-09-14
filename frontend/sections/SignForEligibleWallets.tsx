@@ -36,7 +36,7 @@ const Eligibility2 = ({
   const [isProceedDisabled, setIsProceedDisabled] = useState(true)
   const [proceedTooltipContent, setProceedTooltipContent] = useState<string>()
   const getEcosystemIdentity = useGetEcosystemIdentity()
-  const { signatureMap } = useSignature()
+  const { getSignature } = useSignature()
   const { getEligibility } = useEligibility()
 
   useEffect(() => {
@@ -67,7 +67,7 @@ const Eligibility2 = ({
         return
 
       // now we have an ecosystem which is active, connected and has some tokens unclaimed
-      const signature = signatureMap[solanaIdentity]?.[ecosystem]?.[identity]
+      const signature = getSignature(ecosystem)
       if (signature === undefined) {
         isSignPending = true
       }
@@ -80,7 +80,7 @@ const Eligibility2 = ({
       setIsProceedDisabled(false)
       setProceedTooltipContent(undefined)
     }
-  }, [activity, getEcosystemIdentity, getEligibility, signatureMap])
+  }, [activity, getEcosystemIdentity, getEligibility, getSignature])
 
   return (
     <div className=" overflow-auto border border-light-35 bg-dark">
