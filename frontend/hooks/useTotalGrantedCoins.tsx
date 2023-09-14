@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Ecosystem } from '@components/Ecosystem'
 import { BN } from '@coral-xyz/anchor'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
+import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 
 // useTotalGrantedCoins returns the total granted coins
 // It includes only those ecosystem which the user has selected as active
@@ -20,6 +21,6 @@ export function useTotalGrantedCoins() {
       if (amount !== undefined) totalAmount = totalAmount.add(amount)
     })
 
-    return totalAmount.toString()
+    return toStringWithDecimals(totalAmount)
   }, [getEligibility])
 }

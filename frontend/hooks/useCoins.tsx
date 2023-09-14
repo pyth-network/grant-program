@@ -2,6 +2,7 @@ import { Ecosystem } from '@components/Ecosystem'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { useCallback } from 'react'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
+import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 
 // useCoins return a function which can read the granted amount from the eligiblityMap
 // stored in the global context
@@ -20,7 +21,7 @@ export function useCoins() {
       const eligibility = getEligibility(ecosystem)
       if (eligibility === undefined) return '0'
 
-      return eligibility.claimInfo.amount.toString()
+      return toStringWithDecimals(eligibility.claimInfo.amount)
     },
     [activity, getEligibility]
   )
