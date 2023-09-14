@@ -258,9 +258,20 @@ export class TokenDispenserProvider {
         )
       )
     }
-    let signedTxs = await (
-      this.tokenDispenserProgram.provider as anchor.AnchorProvider
-    ).wallet.signAllTransactions(txs)
+
+    let signedTxs: VersionedTransaction[]
+    // We have to call signTransaction for backpack
+    if (txs.length === 1) {
+      signedTxs = [
+        await (
+          this.tokenDispenserProgram.provider as anchor.AnchorProvider
+        ).wallet.signTransaction(txs[0]),
+      ]
+    } else {
+      signedTxs = await (
+        this.tokenDispenserProgram.provider as anchor.AnchorProvider
+      ).wallet.signAllTransactions(txs)
+    }
 
     // send createAtaTxn first and then others. Others need a TokenAccount before
     // being able to be executed
