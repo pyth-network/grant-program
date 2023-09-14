@@ -16,6 +16,7 @@ export function useGetClaim() {
       const signature = getSignature(ecosystem)
 
       if (eligibility === undefined || signature === undefined) return undefined
+      if (eligibility.isClaimAlreadySubmitted === true) return undefined
 
       return {
         signedMessage: signature,
