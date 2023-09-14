@@ -18,7 +18,6 @@ type SignatureMap = {
   }
 }
 type SignatureContextType = {
-  signatureMap: SignatureMap
   setSignature: (
     solanaIdentity: string,
     ecosystem: Ecosystem,
@@ -116,7 +115,6 @@ export function SignatureProvider({ children }: ProviderProps) {
   return (
     <SignatureContext.Provider
       value={{
-        signatureMap,
         setSignature: setSignatureMapWrapper,
         getSignature,
       }}
