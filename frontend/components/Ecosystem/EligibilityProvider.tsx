@@ -141,19 +141,15 @@ export function EligibilityProvider({ children }: ProviderProps) {
 
             if (identity in eligibilityMap[ecosystem]) {
               if (eligibilityMap[ecosystem][identity] === undefined) return
-              // if (
-              //   eligibilityMap[ecosystem][identity]!.isClaimAlreadySubmitted ===
-              //   true
-              // )
-              //   return
-
-              // fetch the latest claim status
-              const isSubmitted = await isClaimAlreadySubmitted(
+              const prevSubmittedStatus =
+                eligibilityMap[ecosystem][identity]!.isClaimAlreadySubmitted
+              const newSubmittedStatus = await isClaimAlreadySubmitted(
                 eligibilityMap[ecosystem][identity]!.claimInfo
               )
-              // if (isSubmitted === true) {
-              changes.push([ecosystem, identity, isSubmitted])
-              // }
+
+              if (prevSubmittedStatus !== newSubmittedStatus) {
+                changes.push([ecosystem, identity, newSubmittedStatus])
+              }
             }
           }
         })
