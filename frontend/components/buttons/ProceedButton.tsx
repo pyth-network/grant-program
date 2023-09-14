@@ -1,14 +1,23 @@
 import Arrow from '@images/arrow.inline.svg'
 import { Button } from './Button'
+import Tooltip from '@components/Tooltip'
 
 export type ProceedButtonProps = {
   onProceed: () => void
   disabled?: boolean
+  tooltipContent?: string
+  placement?: string
 }
-export function ProceedButton({ onProceed, disabled }: ProceedButtonProps) {
+export function ProceedButton({
+  onProceed,
+  disabled,
+  tooltipContent,
+}: ProceedButtonProps) {
   return (
-    <Button onClick={onProceed} type={'primary'} disabled={disabled}>
-      proceed <Arrow />
-    </Button>
+    <Tooltip content={tooltipContent} placement={'bottom'}>
+      <Button onClick={onProceed} type={'primary'} disabled={disabled}>
+        proceed <Arrow />
+      </Button>
+    </Tooltip>
   )
 }

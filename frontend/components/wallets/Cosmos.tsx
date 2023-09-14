@@ -4,12 +4,6 @@ import { assets, chains } from 'chain-registry'
 import { wallets } from '@cosmos-kit/keplr-extension'
 import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
-import { fetchAmountAndProof } from 'utils/api'
-import { useCosmosSignMessage } from 'hooks/useSignMessage'
-import { SignButton } from './SignButton'
-import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
-import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
-import { useCosmosAddress } from 'hooks/useAddress'
 import { Ecosystem } from '@components/Ecosystem'
 
 export const WALLET_NAME = 'keplr-extension'
@@ -78,41 +72,17 @@ export function CosmosWalletButton({
     if (isWalletNotExist) window.open('https://www.keplr.app/download')
   }, [isWalletNotExist])
 
-  const { eligibility, setEligibility } = useEligibility()
-
   // fetch the eligibility and store it
   useEffect(() => {
     ;(async () => {
       if (isWalletConnected === true && address !== undefined) {
         // Here, store locally that the wallet was connected
         localStorage.setItem(getKeplrConnectionStatusKey(chainName), 'true')
-
-        // NOTE: we need to check if identity was previously stored
-        // We can't check it using eligibility[address] === undefined
-        // As, an undefined eligibility can be stored before.
-        // Hence, we are checking if the key exists in the object
-        if (address in eligibility[chainNametoEcosystem(chainName)]) return
-        else
-          setEligibility(
-            chainNametoEcosystem(chainName),
-            address,
-            await fetchAmountAndProof(
-              chainName === 'injective' ? 'injective' : 'cosmwasm',
-              address
-            )
-          )
       }
     })()
     if (isWalletDisconnected)
       localStorage.setItem(getKeplrConnectionStatusKey(chainName), 'false')
-  }, [
-    isWalletConnected,
-    address,
-    setEligibility,
-    chainName,
-    isWalletDisconnected,
-    eligibility,
-  ])
+  }, [isWalletConnected, address, chainName, isWalletDisconnected])
 
   return (
     <WalletButton
@@ -127,23 +97,6 @@ export function CosmosWalletButton({
           disabled={disableOnConnect}
         />
       )}
-    />
-  )
-}
-
-// A Solana wallet must be connected before this component is rendered
-// If not this button will be disabled
-export function CosmosSignButton({ chainName }: { chainName: ChainName }) {
-  const signMessageFn = useCosmosSignMessage(chainName)
-  const tokenDispenser = useTokenDispenserProvider()
-  const address = useCosmosAddress(chainName)
-  return (
-    <SignButton
-      signMessageFn={signMessageFn}
-      message={tokenDispenser?.generateAuthorizationPayload()}
-      solanaIdentity={tokenDispenser?.claimant.toBase58()}
-      ecosystem={chainNametoEcosystem(chainName)}
-      ecosystemIdentity={address}
     />
   )
 }

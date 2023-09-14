@@ -1,29 +1,30 @@
-import { SignMessageFn } from 'hooks/useSignMessage'
+import { useSignMessage } from 'hooks/useSignMessage'
 import { useState, useCallback } from 'react'
 import Signed from '@images/signed.inline.svg'
 import { classNames } from 'utils/classNames'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
 import { Ecosystem } from '@components/Ecosystem'
+import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
+import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
 
-export type SignButtonProps = {
-  signMessageFn: SignMessageFn
+export type EcosystemSignButtonProps = {
   ecosystem: Ecosystem
-  message?: string
-  solanaIdentity?: string
-  ecosystemIdentity?: string
 }
 
-// SignButton will be disabled, if any of the message, solanaIdentity, or ecosystemIdentity
+// EcosystemSignButton will be disabled, if any of the message, solanaIdentity, or ecosystemIdentity
 // is undefined
-export function SignButton({
-  signMessageFn,
-  message,
-  solanaIdentity,
-  ecosystemIdentity,
+export function EcosystemSignButton({
   ecosystem,
-}: SignButtonProps): JSX.Element {
-  const { signatureMap, setSignature } = useSignature()
+}: EcosystemSignButtonProps): JSX.Element {
+  const { getSignature, setSignature } = useSignature()
   const [isSigning, setIsSigning] = useState(false)
+  const getEcosystemIdentity = useGetEcosystemIdentity()
+  const signMessageFn = useSignMessage(ecosystem)
+  const tokenDispenser = useTokenDispenserProvider()
+
+  const solanaIdentity = getEcosystemIdentity(Ecosystem.SOLANA)
+  const ecosystemIdentity = getEcosystemIdentity(ecosystem)
+  const message = tokenDispenser?.generateAuthorizationPayload()
 
   // It wraps the signMessageFn and additionally implement loading and storing
   const signMessageWrapper = useCallback(async () => {
@@ -35,11 +36,7 @@ export function SignButton({
       return
 
     // If we already have the signed message, we will not ask the user to sign it again
-    if (
-      signatureMap[solanaIdentity]?.[ecosystem]?.[ecosystemIdentity] !==
-      undefined
-    )
-      return
+    if (getSignature(ecosystem) !== undefined) return
     setIsSigning(true)
     const signedMessage = await signMessageFn(message)
     // Storing the message in the context
@@ -50,10 +47,10 @@ export function SignButton({
   }, [
     ecosystem,
     ecosystemIdentity,
+    getSignature,
     message,
     setSignature,
     signMessageFn,
-    signatureMap,
     solanaIdentity,
   ])
 
@@ -62,9 +59,7 @@ export function SignButton({
     solanaIdentity === undefined ||
     ecosystemIdentity === undefined
 
-  const isSigned =
-    !isDisabled &&
-    signatureMap[solanaIdentity]?.[ecosystem]?.[ecosystemIdentity] !== undefined
+  const isSigned = !isDisabled && getSignature(ecosystem) !== undefined
 
   return (
     <button

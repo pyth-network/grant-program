@@ -7,6 +7,8 @@ import {
 } from 'react'
 import { Ecosystem, ProviderProps } from '.'
 import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
+import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
+import { useActivity } from './ActivityProvider'
 
 type SignatureMap = {
   [solanaIdentity: string]: {
@@ -16,13 +18,13 @@ type SignatureMap = {
   }
 }
 type SignatureContextType = {
-  signatureMap: SignatureMap
   setSignature: (
     solanaIdentity: string,
     ecosystem: Ecosystem,
     ecosystemIdentity: string,
     signedMsg: SignedMessage
   ) => void
+  getSignature: (ecosystem: Ecosystem) => SignedMessage | undefined
 }
 const SignatureContext = createContext<SignatureContextType | undefined>(
   undefined
@@ -93,9 +95,29 @@ export function SignatureProvider({ children }: ProviderProps) {
     []
   )
 
+  const { activity } = useActivity()
+  const getEcosystemIdentity = useGetEcosystemIdentity()
+  // It returns the signature for the currently connected solana wallet
+  // and current ecosystem auth connection if it is active
+  const getSignature = useCallback(
+    (ecosystem: Ecosystem) => {
+      if (activity[ecosystem] === false) return undefined
+      const solanaIdentity = getEcosystemIdentity(Ecosystem.SOLANA)
+      const ecosystemIdentity = getEcosystemIdentity(ecosystem)
+
+      if (solanaIdentity === undefined || ecosystemIdentity === undefined)
+        return undefined
+      return signatureMap[solanaIdentity]?.[ecosystem]?.[ecosystemIdentity]
+    },
+    [activity, getEcosystemIdentity, signatureMap]
+  )
+
   return (
     <SignatureContext.Provider
-      value={{ signatureMap, setSignature: setSignatureMapWrapper }}
+      value={{
+        setSignature: setSignatureMapWrapper,
+        getSignature,
+      }}
     >
       {children}
     </SignatureContext.Provider>

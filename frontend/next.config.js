@@ -15,7 +15,12 @@ module.exports = {
     CLUSTER: process.env.CLUSTER,
     PROGRAM_ID: process.env.PROGRAM_ID,
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        fs: false,
+      }
+    }
     config.experiments = { asyncWebAssembly: true, layers: true }
 
     const fileLoaderRule = config.module.rules.find(

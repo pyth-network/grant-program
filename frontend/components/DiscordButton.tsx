@@ -1,12 +1,9 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useMemo } from 'react'
 
 import Discord from '@images/discord.inline.svg'
 
 import { signIn, signOut, useSession } from 'next-auth/react'
 import Image from 'next/image'
-import { fetchAmountAndProof } from 'utils/api'
-import { useEligibility } from './Ecosystem/EligibilityProvider'
-import { Ecosystem } from './Ecosystem'
 
 type DiscordButtonProps = {
   disableOnAuth?: boolean
@@ -35,27 +32,6 @@ export function DiscordButton({ disableOnAuth }: DiscordButtonProps) {
       text: 'Sign In',
     }
   }, [status, data?.user])
-
-  const { eligibility, setEligibility } = useEligibility()
-
-  // fetch the eligibility and store it
-  useEffect(() => {
-    ;(async () => {
-      if (status === 'authenticated' && data?.user?.name) {
-        // NOTE: we need to check if identity was previously stored
-        // We can't check it using eligibility[account?.address] === undefined
-        // As, an undefined eligibility can be stored before.
-        // Hence, we are checking if the key exists in the object
-        if (data?.user?.name in eligibility[Ecosystem.DISCORD]) return
-        else
-          setEligibility(
-            Ecosystem.DISCORD,
-            data?.user?.name,
-            await fetchAmountAndProof('discord', data?.user?.name)
-          )
-      }
-    })()
-  }, [status, setEligibility, data?.user?.name, eligibility])
 
   return (
     <button

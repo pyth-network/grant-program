@@ -122,7 +122,10 @@ export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
       ) : (
         <Eligibility2
           onBack={() => setScreen(1)}
-          onProceed={() => openModal(true)}
+          onProceed={() => {
+            if (ecosystemsClaimState === undefined) openModal(true)
+            else onProceed()
+          }}
           ecosystemsClaimState={ecosystemsClaimState}
         />
       )}

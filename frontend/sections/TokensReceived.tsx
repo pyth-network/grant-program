@@ -5,8 +5,10 @@ import Twitter from '@images/twitter.inline.svg'
 import Telegram from '@images/telegram.inline.svg'
 import Discord from '@images/discord.inline.svg'
 import Linkedin from '@images/linkedin.inline.svg'
+import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 
 export const TokensReceived = () => {
+  const totalCoins = useTotalGrantedCoins()
   return (
     <>
       <div className=" border border-light-35 bg-dark">
@@ -15,7 +17,7 @@ export const TokensReceived = () => {
         </h4>
         <div className="px-10 py-8 text-base16">
           <h3 className="mb-8 flex items-center gap-2 font-header text-[36px] font-light">
-            You Received <span className="font-bold">2500</span>
+            You Received <span className="font-bold">{totalCoins}</span>
             <Pyth />
           </h3>
           <p className="mb-6">

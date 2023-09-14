@@ -1,13 +1,6 @@
 import { useWalletKit } from '@mysten/wallet-kit'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
-import { useEffect, useMemo } from 'react'
-import { fetchAmountAndProof } from 'utils/api'
-import { useSuiSignMessage } from 'hooks/useSignMessage'
-import { SignButton } from './SignButton'
-import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
-import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
-import { useSuiAddress } from 'hooks/useAddress'
-import { Ecosystem } from '@components/Ecosystem'
+import { useMemo } from 'react'
 
 type SuiWalletButtonProps = {
   disableOnConnect?: boolean
@@ -56,27 +49,6 @@ export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
       ]
   }, [connect, detectedWallets])
 
-  const { eligibility, setEligibility } = useEligibility()
-
-  // fetch the eligibility and store it
-  useEffect(() => {
-    ;(async () => {
-      if (isConnected === true && currentAccount?.address !== undefined) {
-        // NOTE: we need to check if identity was previously stored
-        // We can't check it using eligibility[address] === undefined
-        // As, an undefined eligibility can be stored before.
-        // Hence, we are checking if the key exists in the object
-        if (currentAccount?.address in eligibility[Ecosystem.SUI]) return
-        else
-          setEligibility(
-            Ecosystem.SUI,
-            currentAccount?.address,
-            await fetchAmountAndProof('sui', currentAccount?.address)
-          )
-      }
-    })()
-  }, [isConnected, currentAccount?.address, setEligibility, eligibility])
-
   return (
     <WalletButton
       address={currentAccount?.address}
@@ -91,24 +63,6 @@ export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
           disabled={disableOnConnect}
         />
       )}
-    />
-  )
-}
-
-// A Solana wallet must be connected before this component is rendered
-// If not this button will be disabled
-export function SuiSignButton() {
-  const signMessageFn = useSuiSignMessage()
-  const tokenDispenser = useTokenDispenserProvider()
-  const address = useSuiAddress()
-
-  return (
-    <SignButton
-      signMessageFn={signMessageFn}
-      message={tokenDispenser?.generateAuthorizationPayload()}
-      solanaIdentity={tokenDispenser?.claimant.toBase58()}
-      ecosystem={Ecosystem.SUI}
-      ecosystemIdentity={address}
     />
   )
 }
