@@ -131,7 +131,7 @@ export function EligibilityProvider({ children }: ProviderProps) {
   useEffect(() => {
     ;(async () => {
       // We are using changes array to make the setState call only once
-      let changes: [Ecosystem, string][] = []
+      let changes: [Ecosystem, string, boolean][] = []
       await Promise.all(
         Object.values(Ecosystem).map(async (ecosystem) => {
           {
@@ -141,19 +141,19 @@ export function EligibilityProvider({ children }: ProviderProps) {
 
             if (identity in eligibilityMap[ecosystem]) {
               if (eligibilityMap[ecosystem][identity] === undefined) return
-              if (
-                eligibilityMap[ecosystem][identity]!.isClaimAlreadySubmitted ===
-                true
-              )
-                return
+              // if (
+              //   eligibilityMap[ecosystem][identity]!.isClaimAlreadySubmitted ===
+              //   true
+              // )
+              //   return
 
               // fetch the latest claim status
               const isSubmitted = await isClaimAlreadySubmitted(
                 eligibilityMap[ecosystem][identity]!.claimInfo
               )
-              if (isSubmitted === true) {
-                changes.push([ecosystem, identity])
-              }
+              // if (isSubmitted === true) {
+              changes.push([ecosystem, identity, isSubmitted])
+              // }
             }
           }
         })
@@ -161,11 +161,11 @@ export function EligibilityProvider({ children }: ProviderProps) {
 
       if (changes.length !== 0) {
         setEligibilityMap((prev) => {
-          for (let [ecosystem, identity] of changes) {
+          for (let [ecosystem, identity, isSubmitted] of changes) {
             prev[ecosystem][identity] = {
               // store ecosystem, identity in array maybe
               ...prev[ecosystem][identity]!,
-              isClaimAlreadySubmitted: true,
+              isClaimAlreadySubmitted: isSubmitted,
             }
           }
           return { ...prev }
