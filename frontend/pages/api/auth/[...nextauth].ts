@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthOptions } from 'next-auth'
+import NextAuth, { NextAuthOptions, Session } from 'next-auth'
 import DiscordProvider from 'next-auth/providers/discord'
 
 export const authOptions: NextAuthOptions = {
@@ -27,6 +27,20 @@ export const authOptions: NextAuthOptions = {
     }),
     // ...add more providers here
   ],
+  callbacks: {
+    async session({
+      session,
+      token,
+    }: {
+      session: Session
+      token: any
+    }): Promise<Session> {
+      return {
+        user: { ...session.user, id: token.sub },
+        expires: session.expires,
+      }
+    },
+  },
 }
 
 export default NextAuth(authOptions)
