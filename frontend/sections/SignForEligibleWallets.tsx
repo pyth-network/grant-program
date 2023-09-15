@@ -1,15 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Coin from '@images/coin.inline.svg'
 
 import { classNames } from 'utils/classNames'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
 import { useCoins } from 'hooks/useCoins'
 import { Ecosystem } from '@components/Ecosystem'
-import { EcosystemClaimState } from './SignAndClaim'
-
-import Loader from '@images/loader.inline.svg'
-import Failed from '@images/not.inline.svg'
-import Success from '@images/verified.inline.svg'
 import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
@@ -21,15 +16,12 @@ import { useSignature } from '@components/Ecosystem/SignatureProvider'
 import { BackButton, ProceedButton } from '@components/buttons'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 
-const Eligibility2 = ({
+export const SignForEligibleWallets = ({
   onBack,
   onProceed,
-  ecosystemsClaimState,
 }: {
   onBack: () => void
   onProceed: () => void
-  // this will not be undefined only when some claim is in progress
-  ecosystemsClaimState: { [key in Ecosystem]?: EcosystemClaimState } | undefined
 }) => {
   const { activity } = useActivity()
   const totalGrantedCoins = useTotalGrantedCoins()
@@ -38,11 +30,6 @@ const Eligibility2 = ({
   const getEcosystemIdentity = useGetEcosystemIdentity()
   const { getSignature } = useSignature()
   const { getEligibility } = useEligibility()
-  const [backDisabled, setBackDisabled] = useState(true)
-  useEffect(() => {
-    if (ecosystemsClaimState !== undefined) setBackDisabled(true)
-    else setBackDisabled(false)
-  }, [ecosystemsClaimState])
 
   useEffect(() => {
     // If we are on this step, that means there is atleast one ecosystem
@@ -95,7 +82,7 @@ const Eligibility2 = ({
             Verify Eligibility
           </h4>
           <div className="flex gap-4">
-            <BackButton onBack={onBack} disabled={backDisabled} />
+            <BackButton onBack={onBack} />
             <ProceedButton
               onProceed={onProceed}
               disabled={isProceedDisabled}
@@ -107,11 +94,7 @@ const Eligibility2 = ({
         <table className="">
           <tbody>
             {Object.values(Ecosystem).map((ecosystem) => (
-              <TableRow
-                ecosystem={ecosystem}
-                ecosystemClaimState={ecosystemsClaimState?.[ecosystem]}
-                key={ecosystem}
-              />
+              <TableRow ecosystem={ecosystem} key={ecosystem} />
             ))}
             <tr className="border-b border-light-35 ">
               <td className="w-full bg-darkGray5 py-2 pl-10 pr-4">
@@ -136,9 +119,8 @@ const Eligibility2 = ({
 
 type TableRowProps = {
   ecosystem: Ecosystem
-  ecosystemClaimState: EcosystemClaimState | undefined
 }
-function TableRow({ ecosystem, ecosystemClaimState }: TableRowProps) {
+function TableRow({ ecosystem }: TableRowProps) {
   const getEligibleCoins = useCoins()
   const { activity } = useActivity()
   const getEcosystemIdentity = useGetEcosystemIdentity()
@@ -218,11 +200,7 @@ function TableRow({ ecosystem, ecosystemClaimState }: TableRowProps) {
                 ecosystem={ecosystem}
                 disableOnConnect={true}
               />
-              {ecosystemClaimState === undefined ? (
-                <EcosystemSignButton ecosystem={ecosystem} />
-              ) : (
-                <ClaimState ecosystemClaimState={ecosystemClaimState} />
-              )}
+              <EcosystemSignButton ecosystem={ecosystem} />
             </span>
           </div>
         </Tooltip>
@@ -240,34 +218,3 @@ function TableRow({ ecosystem, ecosystemClaimState }: TableRowProps) {
     </tr>
   )
 }
-
-function ClaimState({
-  ecosystemClaimState,
-}: {
-  ecosystemClaimState: EcosystemClaimState
-}) {
-  const { transactionSignature, loading, error } = ecosystemClaimState
-
-  const text = useMemo(() => {
-    if (loading === true) return 'claiming...'
-    if (transactionSignature !== undefined && transactionSignature !== null)
-      return 'claimed'
-    if (error !== undefined && error !== null) return 'failed'
-  }, [error, loading, transactionSignature])
-
-  const icon = useMemo(() => {
-    if (loading === true) return <Loader />
-    if (transactionSignature !== undefined && transactionSignature !== null)
-      return <Success />
-    if (error !== undefined && error !== null) return <Failed />
-  }, [error, loading, transactionSignature])
-
-  return (
-    <div className="flex items-center justify-between gap-4 text-base18">
-      {text}
-      {icon}
-    </div>
-  )
-}
-
-export default Eligibility2
