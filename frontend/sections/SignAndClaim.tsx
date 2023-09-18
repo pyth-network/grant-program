@@ -167,7 +167,7 @@ export const SignAndClaim = ({
         />
       )}
       {modal && (
-        <ClaimAirDropModal
+        <ClaimAirdropModal
           openModal={() => openModal(false)}
           onBack={() => openModal(false)}
           onProceed={async () => {
@@ -181,7 +181,7 @@ export const SignAndClaim = ({
   )
 }
 
-function ClaimAirDropModal({
+function ClaimAirdropModal({
   openModal,
   onBack,
   onProceed,
