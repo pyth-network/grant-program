@@ -20,7 +20,7 @@ export const ClaimStatus = ({
   ecosystemsClaimState,
 }: {
   onProceed: () => void
-  // this will not be undefined only when some claim is in progress
+  // This will be defined if the claims were submitted
   ecosystemsClaimState: { [key in Ecosystem]?: EcosystemClaimState } | undefined
 }) => {
   const totalGrantedCoins = useTotalGrantedCoins()
@@ -99,12 +99,9 @@ type TableRowProps = {
 function TableRow({ ecosystem, ecosystemClaimState }: TableRowProps) {
   const getEligibleCoins = useCoins()
   const [rowDisabled, setRowDisabled] = useState(true)
-  // if it is undefined, no tooltip will be shown
-  const [rowTooltipContent, setRowTooltipContent] = useState<string>()
 
   useEffect(() => {
-    // Rows is enabled if
-    // - ecosystemClaimState is not undefined else disabled
+    // Row is disabled if ecosystemClaimState is undefined
     if (ecosystemClaimState === undefined) {
       setRowDisabled(true)
     } else {
@@ -126,28 +123,26 @@ function TableRow({ ecosystem, ecosystemClaimState }: TableRowProps) {
           rowDisabled ? 'opacity-25' : ''
         )}
       >
-        <Tooltip content={rowTooltipContent} placement={'right'}>
-          <div
-            className={classNames(
-              'flex items-center justify-between',
-              rowDisabled ? 'pointer-events-none' : ''
-            )}
-          >
-            <span className="min-w-[150px] font-header text-base18 font-thin">
-              {getEcosystemTableLabel(ecosystem)}
-            </span>
+        <div
+          className={classNames(
+            'flex items-center justify-between',
+            rowDisabled ? 'pointer-events-none' : ''
+          )}
+        >
+          <span className="min-w-[150px] font-header text-base18 font-thin">
+            {getEcosystemTableLabel(ecosystem)}
+          </span>
 
-            <span className="flex flex-1  items-center justify-between gap-5">
-              <EcosystemConnectButton
-                ecosystem={ecosystem}
-                disableOnConnect={true}
-              />
-              {ecosystemClaimState !== undefined && (
-                <ClaimState ecosystemClaimState={ecosystemClaimState} />
-              )}
-            </span>
-          </div>
-        </Tooltip>
+          <span className="flex flex-1  items-center justify-between gap-5">
+            <EcosystemConnectButton
+              ecosystem={ecosystem}
+              disableOnConnect={true}
+            />
+            {ecosystemClaimState !== undefined && (
+              <ClaimState ecosystemClaimState={ecosystemClaimState} />
+            )}
+          </span>
+        </div>
       </td>
       <td className="min-w-[130px] border-l border-light-35 bg-darkGray5">
         <span className="flex items-center justify-center  gap-1 text-[20px]">
