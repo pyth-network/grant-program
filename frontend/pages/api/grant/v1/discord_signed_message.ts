@@ -31,9 +31,9 @@ export default async function handler(
   const claimant = new PublicKey(req.query.publicKey) // The claimant's public key, it will receive the tokens
   const session = await getServerSession(req, res, authOptions)
 
-  if (session && session.user && session.user.name) {
+  if (session && session.user && session.user.id) {
     const signedMessage = signDiscordMessage(
-      session.user.name,
+      session.user.id,
       claimant,
       dispenserGuard
     )

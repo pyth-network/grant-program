@@ -47,12 +47,12 @@ export function useGetEcosystemIdentity() {
           return suiAddress
 
         case Ecosystem.DISCORD:
-          return data?.user?.name ?? undefined
+          return data?.user?.id ?? undefined
       }
     },
     [
       aptosAddress,
-      data?.user?.name,
+      data?.user?.id,
       evmAddress,
       injectiveAddress,
       neutronAddress,
