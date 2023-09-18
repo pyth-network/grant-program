@@ -30,13 +30,13 @@ export const ClaimStatus = ({
   // disable proceed
   useEffect(() => {
     if (ecosystemsClaimState !== undefined) {
-      let isAnyProcessing = false
+      let isAnyProccessing = false
       // if a claim submission is still proceesing
       Object.values(ecosystemsClaimState).forEach((ecosystemClaimState) => {
-        if (ecosystemClaimState.loading === true) isAnyProcessing = true
+        if (ecosystemClaimState.loading === true) isAnyProccessing = true
       })
 
-      if (isAnyProcessing) {
+      if (isAnyProccessing) {
         setIsProceedDisabled(true)
         setProceedTooltipContent('proceesing')
       } else {
