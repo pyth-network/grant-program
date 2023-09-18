@@ -8,6 +8,7 @@ import { MerkleTree } from './merkleTree'
 import {
   AddressLookupTableAccount,
   AddressLookupTableProgram,
+  ComputeBudgetProgram,
   Connection,
   Ed25519Program,
   LAMPORTS_PER_SOL,
@@ -357,6 +358,7 @@ export class TokenDispenserProvider {
       ])
       .instruction()
     ixs.push(claim_ix)
+    ixs.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }))
 
     const claimTx = new VersionedTransaction(
       new TransactionMessage({
