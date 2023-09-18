@@ -15,8 +15,13 @@ const PROGRAM_ID = envOrErr('PROGRAM_ID')
 const DISPENSER_GUARD = Keypair.fromSecretKey(
   new Uint8Array(JSON.parse(envOrErr('DISPENSER_GUARD')))
 )
+const PGHOST = envOrErr('PGHOST')
 
 async function main() {
+  if (PGHOST != 'localhost') {
+    throw new Error('This script is only intended to be run on localhost')
+  }
+
   await clearDatabase(pool)
   const root = await addTestWalletsToDatabase(pool, await loadTestWallets())
 
