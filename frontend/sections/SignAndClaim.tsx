@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Modal from '@components/Modal'
-import Eligibility2 from './SignForEligibleWallets'
+import { SignForEligibleWallets } from './SignForEligibleWallets'
 import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
 import { useGetClaim } from 'hooks/useGetClaim'
 import { Ecosystem } from '@components/Ecosystem'
@@ -8,6 +8,10 @@ import { ProceedButton, BackButton } from '@components/buttons'
 import { StepProps } from './common'
 import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
 import { ClaimInfo } from 'claim_sdk/claim'
+import { ClaimStatus } from './ClaimStatus'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
+import { BN } from '@coral-xyz/anchor'
+import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 
 // Following the convention,
 // If undefined we still have to fetch
@@ -18,13 +22,45 @@ export type EcosystemClaimState = {
   error: any | undefined | null
 }
 
-export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
+type SignAndClaimProps = StepProps & {
+  setTotalCoinsClaimed: (coins: string) => void
+}
+export const SignAndClaim = ({
+  onBack,
+  onProceed,
+  setTotalCoinsClaimed,
+}: SignAndClaimProps) => {
   const [modal, openModal] = useState(false)
   const [screen, setScreen] = useState(1)
   const tokenDispenser = useTokenDispenserProvider()
   const [ecosystemsClaimState, setEcosystemsClaimState] =
     useState<{ [key in Ecosystem]?: EcosystemClaimState }>()
   const getClaim = useGetClaim()
+  const { getEligibility } = useEligibility()
+
+  // Calculating total tokens that has been claimed
+  // using the ecosystemsClaimState
+  useEffect(() => {
+    if (ecosystemsClaimState !== undefined) {
+      let totalCoinsClaimed = new BN(0)
+      Object.keys(ecosystemsClaimState).forEach((ecosystem) => {
+        if (ecosystemsClaimState[ecosystem as Ecosystem]?.loading === false) {
+          if (
+            ecosystemsClaimState[ecosystem as Ecosystem]
+              ?.transactionSignature !== null
+          ) {
+            const eligibility = getEligibility(ecosystem as Ecosystem)
+            if (eligibility?.claimInfo.amount !== undefined)
+              totalCoinsClaimed = totalCoinsClaimed.add(
+                eligibility?.claimInfo.amount
+              )
+          }
+        }
+      })
+
+      setTotalCoinsClaimed(toStringWithDecimals(totalCoinsClaimed))
+    }
+  }, [ecosystemsClaimState, getEligibility, setTotalCoinsClaimed])
 
   const submitTxs = useCallback(async () => {
     // This checks that the solana wallet is connected
@@ -119,37 +155,51 @@ export const SignAndClaim = ({ onBack, onProceed }: StepProps) => {
             </div>
           </div>
         </div>
-      ) : (
-        <Eligibility2
+      ) : screen === 2 ? (
+        <SignForEligibleWallets
           onBack={() => setScreen(1)}
-          onProceed={() => {
-            if (ecosystemsClaimState === undefined) openModal(true)
-            else onProceed()
-          }}
+          onProceed={() => openModal(true)}
+        />
+      ) : (
+        <ClaimStatus
+          onProceed={onProceed}
           ecosystemsClaimState={ecosystemsClaimState}
         />
       )}
       {modal && (
-        <Modal openModal={openModal}>
-          <h3 className="mb-8  font-header text-[36px] font-light">
-            Claim Airdrop
-          </h3>
-          <p className="mx-auto max-w-[454px] font-body text-base16">
-            Please ensure that you have connected all the necessary wallets and
-            the Discord account with your claim. Additionally, you can repeat
-            the Airdrop Claim process using a different set of wallets.
-          </p>
-          <div className="mt-12 flex justify-center gap-4">
-            <BackButton onBack={() => openModal(false)} />
-            <ProceedButton
-              onProceed={async () => {
-                openModal(false)
-                await submitTxs()
-              }}
-            />
-          </div>
-        </Modal>
+        <ClaimAirdropModal
+          openModal={() => openModal(false)}
+          onBack={() => openModal(false)}
+          onProceed={async () => {
+            openModal(false)
+            setScreen(3)
+            await submitTxs()
+          }}
+        />
       )}
     </>
+  )
+}
+
+function ClaimAirdropModal({
+  openModal,
+  onBack,
+  onProceed,
+}: StepProps & { openModal: () => void }) {
+  return (
+    <Modal openModal={openModal}>
+      <h3 className="mb-8  font-header text-[36px] font-light">
+        Claim Airdrop
+      </h3>
+      <p className="mx-auto max-w-[454px] font-body text-base16">
+        Please ensure that you have connected all the necessary wallets and the
+        Discord account with your claim. Additionally, you can repeat the
+        Airdrop Claim process using a different set of wallets.
+      </p>
+      <div className="mt-12 flex justify-center gap-4">
+        <BackButton onBack={onBack} />
+        <ProceedButton onProceed={onProceed} />
+      </div>
+    </Modal>
   )
 }

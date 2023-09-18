@@ -23,6 +23,8 @@ import {
 const Claim = () => {
   const [step, setStep] = useState(1)
 
+  const [totalCoinsClaimed, setTotalCoinsClaimed] = useState<string>('N/A')
+
   const renderStep = () => {
     switch (step) {
       case 1:
@@ -53,10 +55,11 @@ const Claim = () => {
           <SignAndClaim
             onBack={() => setStep(4)}
             onProceed={() => setStep(6)}
+            setTotalCoinsClaimed={setTotalCoinsClaimed}
           />
         )
       case 6:
-        return <TokensReceived />
+        return <TokensReceived totalCoinsClaimed={totalCoinsClaimed} />
     }
   }
 
