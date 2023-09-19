@@ -58,11 +58,15 @@ export const Layout = ({ children }: LayoutProps) => {
             )}
           >
             {urlMap.map(({ url, title }, index) => {
+              let isActive = false
+              if (url !== '/' && pathname.startsWith(url)) isActive = true
+              else if (url === '/' && pathname === url) isActive = true
+
               return (
                 <li
                   key={url}
                   className={`claim_li ${
-                    pathname == url
+                    isActive
                       ? 'bg-darkGray5 text-light'
                       : 'bg-dark text-light-50'
                   }`}
