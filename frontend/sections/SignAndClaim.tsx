@@ -22,14 +22,12 @@ export type EcosystemClaimState = {
   error: any | undefined | null
 }
 
-type SignAndClaimProps = StepProps & {
-  setTotalCoinsClaimed: (coins: string) => void
+type SignAndClaimProps = {
+  onBack: () => void
+  onProceed: (totalTokensClaimed: string) => void
 }
-export const SignAndClaim = ({
-  onBack,
-  onProceed,
-  setTotalCoinsClaimed,
-}: SignAndClaimProps) => {
+
+export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
   const [modal, openModal] = useState(false)
   const [screen, setScreen] = useState(1)
   const tokenDispenser = useTokenDispenserProvider()
@@ -40,7 +38,7 @@ export const SignAndClaim = ({
 
   // Calculating total tokens that has been claimed
   // using the ecosystemsClaimState
-  useEffect(() => {
+  const onProceedWrapper = useCallback(() => {
     if (ecosystemsClaimState !== undefined) {
       let totalCoinsClaimed = new BN(0)
       Object.keys(ecosystemsClaimState).forEach((ecosystem) => {
@@ -57,10 +55,9 @@ export const SignAndClaim = ({
           }
         }
       })
-
-      setTotalCoinsClaimed(toStringWithDecimals(totalCoinsClaimed))
-    }
-  }, [ecosystemsClaimState, getEligibility, setTotalCoinsClaimed])
+      onProceed(toStringWithDecimals(totalCoinsClaimed))
+    } else onProceed('N/A')
+  }, [ecosystemsClaimState, getEligibility, onProceed])
 
   const submitTxs = useCallback(async () => {
     // This checks that the solana wallet is connected
@@ -162,7 +159,7 @@ export const SignAndClaim = ({
         />
       ) : (
         <ClaimStatus
-          onProceed={onProceed}
+          onProceed={onProceedWrapper}
           ecosystemsClaimState={ecosystemsClaimState}
         />
       )}
