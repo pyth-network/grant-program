@@ -159,21 +159,19 @@ function ClaimState({
 }: {
   ecosystemClaimState: EcosystemClaimState
 }) {
-  const { transactionSignature, loading, error } = ecosystemClaimState
+  const { loading, error } = ecosystemClaimState
 
   const text = useMemo(() => {
     if (loading === true) return 'claiming...'
-    if (transactionSignature !== undefined && transactionSignature !== null)
-      return 'claimed'
-    if (error !== undefined && error !== null) return 'failed'
-  }, [error, loading, transactionSignature])
+    if (error === null) return 'claimed'
+    if (error) return 'failed'
+  }, [error, loading])
 
   const icon = useMemo(() => {
     if (loading === true) return <Loader />
-    if (transactionSignature !== undefined && transactionSignature !== null)
-      return <Success />
-    if (error !== undefined && error !== null) return <Failed />
-  }, [error, loading, transactionSignature])
+    if (error === null) return <Success />
+    if (error) return <Failed />
+  }, [error, loading])
 
   return (
     <div className="flex items-center justify-between gap-4 text-base18">

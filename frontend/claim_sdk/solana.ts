@@ -16,6 +16,7 @@ import {
   Secp256k1Program,
   SystemProgram,
   SYSVAR_INSTRUCTIONS_PUBKEY,
+  TransactionError,
   TransactionMessage,
   TransactionSignature,
   VersionedTransaction,
@@ -242,7 +243,7 @@ export class TokenDispenserProvider {
       proofOfInclusion: Uint8Array[]
       signedMessage: SignedMessage | undefined
     }[]
-  ): Promise<Promise<string>[]> {
+  ): Promise<Promise<TransactionError | null>[]> {
     let txs: VersionedTransaction[] = []
 
     const createAtaTxn = await this.createAssociatedTokenAccountTxnIfNeeded()
@@ -266,33 +267,12 @@ export class TokenDispenserProvider {
     // send createAtaTxn first and then others. Others need a TokenAccount before
     // being able to be executed
     if (createAtaTxn !== null) {
-      try {
-        const signature = await this.connection.sendTransaction(signedTxs[0])
+      const signature = await this.connection.sendTransaction(signedTxs[0], {
+        skipPreflight: true,
+      })
 
-        const latestBlockHash = await this.connection.getLatestBlockhash()
-        await this.connection.confirmTransaction(
-          {
-            signature,
-            blockhash: latestBlockHash.blockhash,
-            lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-          },
-          'confirmed'
-        )
-
-        // remove the executed tx
-        signedTxs = signedTxs.slice(1)
-      } catch (e) {
-        console.error(e)
-        // TODO: How to handle the error here?
-        throw Error('create account tx failed')
-      }
-    }
-
-    // send the remaining ones
-    const sendTxs = signedTxs.map(async (signedTx) => {
-      const signature = await this.connection.sendTransaction(signedTx)
       const latestBlockHash = await this.connection.getLatestBlockhash()
-      await this.connection.confirmTransaction(
+      const result = await this.connection.confirmTransaction(
         {
           signature,
           blockhash: latestBlockHash.blockhash,
@@ -301,7 +281,32 @@ export class TokenDispenserProvider {
         'confirmed'
       )
 
-      return signature
+      if (result.value.err) {
+        console.error(result.value.err)
+        // TODO: How to handle the error here?
+        throw Error('Create account tx failed')
+      }
+
+      // remove the executed tx
+      signedTxs = signedTxs.slice(1)
+    }
+
+    // send the remaining ones
+    const sendTxs = signedTxs.map(async (signedTx) => {
+      const signature = await this.connection.sendTransaction(signedTx, {
+        skipPreflight: true,
+      })
+      const latestBlockHash = await this.connection.getLatestBlockhash()
+      const result = await this.connection.confirmTransaction(
+        {
+          signature,
+          blockhash: latestBlockHash.blockhash,
+          lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+        },
+        'confirmed'
+      )
+
+      return result.value.err
     })
 
     return sendTxs
