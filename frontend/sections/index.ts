@@ -1,6 +1,5 @@
 export { Welcome } from './Welcome'
 export { LogInWithSolana } from './LogInWithSolana'
 export { PastActivity } from './PastActivity'
-export { VerifyEligibility } from './VerifyEligibility'
 export { SignAndClaim } from './SignAndClaim'
 export { TokensReceived } from './TokensReceived'

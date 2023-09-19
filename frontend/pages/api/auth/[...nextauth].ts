@@ -24,6 +24,10 @@ export const authOptions: NextAuthOptions = {
           image: profile.image_url,
         }
       },
+      httpOptions: {
+        // Receiving error on Discord when the default timeout - 3500ms is used
+        timeout: 5000,
+      },
     }),
     // ...add more providers here
   ],
