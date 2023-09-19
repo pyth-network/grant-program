@@ -11,8 +11,7 @@ import { SessionProvider } from 'next-auth/react'
 import { EcosystemProviders } from '@components/Ecosystem'
 
 import '../styles/globals.css'
-import { useRouter } from 'next/router'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 const LAST_STEP_STATUS_KEY = 'last-step-status-key'
 
@@ -32,14 +31,23 @@ function useRedirect() {
     // 2. there is a last state
     // 2a. If it is "/next-steps", user has claimed before, redirect to welcome page
     // 2b. Else redirect to that page.
+
     if (lastStep === null) router.replace('/')
-    if (lastStep === '/next-steps') router.replace('/')
+    // NOTE: lastStep will never be /next-steps as we are not storing it in the useEffect
+    // below.
+    // The reason is that the below replace method doesn't work. No clue why.
+    // This is a workaround for now.
+    // if (lastStep === '/next-steps') router.replace('/')
+
+    // lastStep will never be '/next-steps' for other redirect to them
     if (lastStep) router.replace(lastStep)
   }, [])
 
   const pathname = usePathname()
   useEffect(() => {
-    localStorage.setItem(LAST_STEP_STATUS_KEY, pathname)
+    if (pathname === '/next-steps')
+      localStorage.removeItem(LAST_STEP_STATUS_KEY)
+    else localStorage.setItem(LAST_STEP_STATUS_KEY, pathname)
   }, [pathname])
 }
 
