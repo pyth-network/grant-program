@@ -363,7 +363,7 @@ export class TokenDispenserProvider {
       ])
       .instruction()
     ixs.push(claim_ix)
-    // ixs.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }))
+    ixs.push(ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }))
 
     const claimTx = new VersionedTransaction(
       new TransactionMessage({
