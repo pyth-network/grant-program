@@ -12,12 +12,14 @@ import { LOGIN_SOLANA_METADATA } from 'pages/login-solana'
 import { CLAIM_TOKENS_METADATA } from 'pages/claim-tokens'
 import { NEXT_STEPS } from 'pages/next-steps'
 import { classNames } from 'utils/classNames'
+import { useRouter } from 'next/router'
 
 type LayoutProps = {
   children: ReactNode
 }
 export const Layout = ({ children }: LayoutProps) => {
   const pathname = usePathname()
+  const router = useRouter()
 
   const disableSideNav = process.env.NODE_ENV === 'production'
 
@@ -67,10 +69,9 @@ export const Layout = ({ children }: LayoutProps) => {
                       : 'bg-dark text-light-50'
                   }`}
                   role="button"
+                  onClick={() => router.push(url)}
                 >
-                  <Link href={url}>
-                    <span>{index + 1}</span> {title}
-                  </Link>
+                  <span>{index + 1}</span> {title}
                 </li>
               )
             })}
