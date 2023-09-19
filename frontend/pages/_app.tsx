@@ -1,7 +1,7 @@
 import { AptosWalletProvider } from '@components/wallets/Aptos'
 import { SolanaWalletProvider } from '@components/wallets/Solana'
 import type { AppProps } from 'next/app'
-import { FC, useEffect } from 'react'
+import { FC, useEffect, useMemo } from 'react'
 import { WalletKitProvider as SuiWalletProvider } from '@mysten/wallet-kit'
 
 import { Toaster } from 'react-hot-toast'
@@ -17,11 +17,16 @@ import { usePathname } from 'next/navigation'
 const LAST_STEP_STATUS_KEY = 'last-step-status-key'
 
 function useRedirect() {
+  // We are fetching it here and not in useEffect
+  // As we need this before it is being reset
+  const lastStep = useMemo(() => {
+    if (typeof window === 'undefined') return null
+    return localStorage.getItem(LAST_STEP_STATUS_KEY)
+  }, [])
+
   const router = useRouter()
   // We will only redirect on the first load
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    const lastStep = localStorage.getItem(LAST_STEP_STATUS_KEY)
     //RULES:
     // 1. no last state -> redirect to welcome page
     // 2. there is a last state
