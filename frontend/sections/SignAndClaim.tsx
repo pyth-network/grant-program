@@ -15,10 +15,10 @@ import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 import { TransactionError } from '@solana/web3.js'
 
 // Following the convention,
-// If error :
-// - is undefined the transaction hasn't landed
-// - is null the transaction has been successful
-// - is defined the transaction has failed
+// If error is:
+// - undefined, the transaction hasn't landed yet
+// - null, the transaction has been successful
+// - defined, the transaction has failed
 export type EcosystemClaimState = {
   error: TransactionError | undefined | null
 }
