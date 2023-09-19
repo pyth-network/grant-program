@@ -14,7 +14,7 @@ export default function NextStepsPage() {
   // User has claimed, clear everything stored locally
   useEffect(() => {
     localStorage.clear()
-  })
+  }, [])
 
   const params = useSearchParams()
   return (
