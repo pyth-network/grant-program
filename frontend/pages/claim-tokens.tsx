@@ -21,7 +21,10 @@ export default function ClaimTokensPage() {
           router.push(LOGIN_SOLANA_METADATA.url)
         }}
         onProceed={(totalTokensClaimed: string) => {
-          router.push(NEXT_STEPS.url, { query: { totalTokensClaimed } })
+          router.push({
+            pathname: NEXT_STEPS.url,
+            query: { totalTokensClaimed },
+          })
         }}
       />
     </Layout>
