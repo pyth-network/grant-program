@@ -17,11 +17,6 @@ import { usePathname } from 'next/navigation'
 const LAST_STEP_STATUS_KEY = 'last-step-status-key'
 
 function useRedirect() {
-  const pathname = usePathname()
-  useEffect(() => {
-    localStorage.setItem(LAST_STEP_STATUS_KEY, pathname)
-  }, [pathname])
-
   const router = useRouter()
   // We will only redirect on the first load
   useEffect(() => {
@@ -36,6 +31,11 @@ function useRedirect() {
     if (lastStep === '/next-steps') router.replace('/')
     if (lastStep) router.replace(lastStep)
   }, [])
+
+  const pathname = usePathname()
+  useEffect(() => {
+    localStorage.setItem(LAST_STEP_STATUS_KEY, pathname)
+  }, [pathname])
 }
 
 const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
