@@ -272,7 +272,7 @@ export class TokenDispenserProvider {
       })
 
       const latestBlockHash = await this.connection.getLatestBlockhash()
-      const result = await this.connection.confirmTransaction(
+      await this.connection.confirmTransaction(
         {
           signature,
           blockhash: latestBlockHash.blockhash,
@@ -280,12 +280,6 @@ export class TokenDispenserProvider {
         },
         'confirmed'
       )
-
-      if (result.value.err) {
-        console.error(result.value.err)
-        // TODO: How to handle the error here?
-        throw Error('Create account tx failed')
-      }
 
       // remove the executed tx
       signedTxs = signedTxs.slice(1)
