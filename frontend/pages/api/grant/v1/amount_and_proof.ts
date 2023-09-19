@@ -22,7 +22,7 @@ export default async function handlerAmountAndProof(
   try {
     const result = await pool.query(
       'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
-      ['evm', 'BTwXQZS3EzfxBkv2A54estmn9YbmcpmRWeFP4f3avLi4']
+      ['evm', '0xb80Eb09f118ca9Df95b2DF575F68E41aC7B9E2f8']
     )
     if (result.rows.length == 0) {
       res.status(404).json({
