@@ -58,15 +58,11 @@ export const Layout = ({ children }: LayoutProps) => {
             )}
           >
             {urlMap.map(({ url, title }, index) => {
-              let isActive = false
-              if (url !== '/' && pathname.startsWith(url)) isActive = true
-              else if (url === '/' && pathname === url) isActive = true
-
               return (
                 <li
                   key={url}
                   className={`claim_li ${
-                    isActive
+                    pathname == url
                       ? 'bg-darkGray5 text-light'
                       : 'bg-dark text-light-50'
                   }`}
@@ -102,11 +98,25 @@ export const Layout = ({ children }: LayoutProps) => {
           objectPosition="left bottom"
         />
         <span className="absolute left-0 bottom-0">
-          {urlMap.map(({ url, image }) => {
-            return <Image src={image} alt="" priority key={url} />
-          })}
+          <BgImage />
         </span>
       </span>
     </>
   )
+}
+
+function BgImage() {
+  const pathname = usePathname()
+
+  if (pathname === '/')
+    return <Image src={WELCOME_METADATA.image} alt="" priority />
+  else if (pathname === '/review-eligibility')
+    return <Image src={REVIEW_ELIGIBILITY_METADATA.image} alt="" priority />
+  else if (pathname.startsWith('/verify-eligibility'))
+    return <Image src={VERIFY_ELIGIBILITY_METADATA.image} alt="" priority />
+  else if (pathname === '/login-solana')
+    return <Image src={LOGIN_SOLANA_METADATA.image} alt="" priority />
+  else if (pathname === '/claim-tokens')
+    return <Image src={CLAIM_TOKENS_METADATA.image} alt="" priority />
+  else return <Image src={NEXT_STEPS.image} alt="" priority />
 }
