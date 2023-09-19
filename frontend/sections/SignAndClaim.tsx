@@ -18,7 +18,6 @@ import { TransactionError } from '@solana/web3.js'
 // If undefined we still have to fetch
 // If null we have fetched
 export type EcosystemClaimState = {
-  loading: boolean
   error: TransactionError | undefined | null
 }
 
@@ -42,14 +41,12 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
     if (ecosystemsClaimState !== undefined) {
       let totalCoinsClaimed = new BN(0)
       Object.keys(ecosystemsClaimState).forEach((ecosystem) => {
-        if (ecosystemsClaimState[ecosystem as Ecosystem]?.loading === false) {
-          if (ecosystemsClaimState[ecosystem as Ecosystem]?.error === null) {
-            const eligibility = getEligibility(ecosystem as Ecosystem)
-            if (eligibility?.claimInfo.amount !== undefined)
-              totalCoinsClaimed = totalCoinsClaimed.add(
-                eligibility?.claimInfo.amount
-              )
-          }
+        if (ecosystemsClaimState[ecosystem as Ecosystem]?.error === null) {
+          const eligibility = getEligibility(ecosystem as Ecosystem)
+          if (eligibility?.claimInfo.amount !== undefined)
+            totalCoinsClaimed = totalCoinsClaimed.add(
+              eligibility?.claimInfo.amount
+            )
         }
       })
       onProceed(toStringWithDecimals(totalCoinsClaimed))
@@ -80,7 +77,6 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
     const stateObj: { [key in Ecosystem]?: EcosystemClaimState } = {}
     ecosystems.forEach((ecosystem) => {
       stateObj[ecosystem] = {
-        loading: true,
         error: undefined,
       }
     })
@@ -93,7 +89,6 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
       setEcosystemsClaimState((ecosystemState) => ({
         ...ecosystemState,
         [ecosystems[index]]: {
-          loading: false,
           error: transactionError,
         },
       }))
