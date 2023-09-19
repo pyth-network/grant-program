@@ -19,6 +19,7 @@ import {
   SignAndClaim,
   TokensReceived,
 } from 'sections'
+import { classNames } from 'utils/classNames'
 
 const Claim = () => {
   const [step, setStep] = useState(1)
@@ -63,6 +64,8 @@ const Claim = () => {
     }
   }
 
+  const disableSideNav = process.env.NODE_ENV === 'production'
+
   return (
     <>
       <header className="absolute left-0 top-0 z-40 w-full px-1 transition-all lg:px-10">
@@ -82,7 +85,12 @@ const Claim = () => {
       </header>
       <div className="relative   px-4 pt-40 pb-32">
         <div className="mx-auto max-w-[997px] justify-between gap-2.5 lg:flex">
-          <ul className="mb-2.5 lg:mb-0 lg:max-w-[292px]">
+          <ul
+            className={classNames(
+              'mb-2.5 lg:mb-0 lg:max-w-[292px]',
+              disableSideNav ? 'pointer-events-none' : ''
+            )}
+          >
             <li
               className={`claim_li ${
                 step == 1 ? 'bg-darkGray5 text-light' : 'bg-dark text-light-50'
