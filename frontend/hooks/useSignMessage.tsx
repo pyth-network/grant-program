@@ -14,6 +14,7 @@ import {
 import { Ecosystem } from '@components/Ecosystem'
 import { fetchDiscordSignedMessage } from 'utils/api'
 import { useTokenDispenserProvider } from './useTokenDispenserProvider'
+import { ChainName } from '@components/wallets/Cosmos'
 
 // SignMessageFn signs the message and returns it.
 // It will return undefined:
@@ -60,7 +61,7 @@ export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
 
 // This hook returns a function to sign message for the Cosmos wallet.
 export function useCosmosSignMessage(
-  chainName: string,
+  chainName: ChainName,
   walletName: string = 'keplr-extension'
 ): SignMessageFn {
   const { signArbitrary, address, isWalletConnected } = useChainWallet(
@@ -90,7 +91,7 @@ export function useCosmosSignMessage(
         console.error(e)
       }
     },
-    [address, isWalletConnected, signArbitrary, chainName]
+    [address, isWalletConnected, signArbitrary]
   )
   return signMessageCb
 }
@@ -188,6 +189,7 @@ export function useSignMessage(ecosystem: Ecosystem): SignMessageFn {
   const injectiveSignMessageFn = useCosmosSignMessage('injective')
   const osmosisSignMessageFn = useCosmosSignMessage('osmosis')
   const neutronSignMessageFn = useCosmosSignMessage('neutron')
+  const seiSignMessageFn = useCosmosSignMessage('seitestnet2')
   const suiSignMessageFn = useSuiSignMessage()
   const solanaSignMessageFn = useSolanaSignMessage()
   const discordSignMessageFn = useDiscordSignMessage()
@@ -203,6 +205,8 @@ export function useSignMessage(ecosystem: Ecosystem): SignMessageFn {
       return neutronSignMessageFn
     case Ecosystem.OSMOSIS:
       return osmosisSignMessageFn
+    case Ecosystem.SEI:
+      return seiSignMessageFn
     case Ecosystem.SOLANA:
       return solanaSignMessageFn
     case Ecosystem.SUI:
