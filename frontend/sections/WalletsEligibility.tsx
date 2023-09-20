@@ -17,6 +17,7 @@ import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { CoinCell } from '@components/table/CoinCell'
 import { TotalAllocationRow } from '@components/table/TotalAllocationRow'
+import { EcosystemRowLabel } from '@components/table/EcosystemRowLabel'
 
 const Eligibility = ({
   onBack,
@@ -175,9 +176,7 @@ function TableRow({ ecosystem }: TableRowProps) {
             rowDisabled ? 'pointer-events-none' : ''
           )}
         >
-          <span className="font-header text-base18 font-thin">
-            {getEcosystemTableLabel(ecosystem)}
-          </span>
+          <EcosystemRowLabel ecosystem={ecosystem} />
           <span className={'flex items-center gap-5'}>
             <EcosystemConnectButton ecosystem={ecosystem} />
             <Tooltip content={tooltipContent}>
