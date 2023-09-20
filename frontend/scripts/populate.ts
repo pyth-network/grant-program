@@ -23,38 +23,38 @@ const DISPENSER_GUARD = Keypair.fromSecretKey(
 const PGHOST = envOrErr('PGHOST')
 
 async function main() {
-  // if (PGHOST != 'localhost') {
-  //   throw new Error('This script is only intended to be run on localhost')
-  // }
+  if (PGHOST != 'localhost') {
+    throw new Error('This script is only intended to be run on localhost')
+  }
 
-  // await clearDatabase(pool)
+  await clearDatabase(pool)
   const testWallets = await loadTestWallets()
-  // const root = await addTestWalletsToDatabase(pool, testWallets)
+  const root = await addTestWalletsToDatabase(pool, testWallets)
   await addTestEvmBreakdown(pool, testWallets.evm as TestEvmWallet[])
 
-  // // Intialize the token dispenser
-  // const tokenDispenserProvider = new TokenDispenserProvider(
-  //   ENDPOINT,
-  //   loadAnchorWallet(),
-  //   new PublicKey(PROGRAM_ID),
-  //   {
-  //     skipPreflight: true,
-  //     preflightCommitment: 'processed',
-  //     commitment: 'processed',
-  //   }
-  // )
-  // await airdrop(
-  //   tokenDispenserProvider.connection,
-  //   LAMPORTS_PER_SOL,
-  //   tokenDispenserProvider.claimant
-  // )
-  // const mintAndTreasury = await tokenDispenserProvider.setupMintAndTreasury()
-  // await tokenDispenserProvider.initialize(
-  //   root,
-  //   mintAndTreasury.mint.publicKey,
-  //   mintAndTreasury.treasury,
-  //   DISPENSER_GUARD.publicKey
-  // )
+  // Intialize the token dispenser
+  const tokenDispenserProvider = new TokenDispenserProvider(
+    ENDPOINT,
+    loadAnchorWallet(),
+    new PublicKey(PROGRAM_ID),
+    {
+      skipPreflight: true,
+      preflightCommitment: 'processed',
+      commitment: 'processed',
+    }
+  )
+  await airdrop(
+    tokenDispenserProvider.connection,
+    LAMPORTS_PER_SOL,
+    tokenDispenserProvider.claimant
+  )
+  const mintAndTreasury = await tokenDispenserProvider.setupMintAndTreasury()
+  await tokenDispenserProvider.initialize(
+    root,
+    mintAndTreasury.mint.publicKey,
+    mintAndTreasury.treasury,
+    DISPENSER_GUARD.publicKey
+  )
 }
 
 main()
