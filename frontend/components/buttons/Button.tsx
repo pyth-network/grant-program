@@ -18,10 +18,9 @@ export function Button({ onClick, type, disabled, children }: ButtonProps) {
   return (
     <button className={className} onClick={onClick} disabled={disabled}>
       <span
-        className={classNames(
-          'relative inline-flex items-center gap-2.5 whitespace-nowrap',
-          type === 'tertiary' ? 'underline' : ''
-        )}
+        className={
+          'relative inline-flex items-center gap-2.5 whitespace-nowrap'
+        }
       >
         {children}
       </span>
