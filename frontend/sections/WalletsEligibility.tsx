@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import Coin from '@images/coin.inline.svg'
 
 import TooltipIcon from '@images/tooltip.inline.svg'
 import Verified from '@images/verified.inline.svg'
@@ -16,6 +15,8 @@ import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
+import { CoinCell } from '@components/table/CoinCell'
+import { TotalAllocationRow } from '@components/table/TotalAllocationRow'
 
 const Eligibility = ({
   onBack,
@@ -89,20 +90,7 @@ const Eligibility = ({
           {Object.values(Ecosystem).map((ecosystem) => (
             <TableRow ecosystem={ecosystem} key={ecosystem} />
           ))}
-          <tr className="border-b border-light-35 ">
-            <td className="w-full bg-darkGray5 py-2 pl-10 pr-4">
-              <div className="flex items-center justify-between">
-                <span className="font-header text-base18 font-semibold">
-                  Eligible Token Allocation
-                </span>
-              </div>
-            </td>
-            <td className="min-w-[130px] border-l border-light-35 bg-dark-25">
-              <span className=" flex min-h-[60px]  items-center justify-center gap-1 text-[20px] font-semibold">
-                {totalGrantedCoins} <Coin />{' '}
-              </span>
-            </td>
-          </tr>
+          <TotalAllocationRow totalGrantedCoins={totalGrantedCoins} />
         </tbody>
       </table>
     </div>
@@ -199,18 +187,11 @@ function TableRow({ ecosystem }: TableRowProps) {
           </span>
         </div>
       </td>
-      <td className="min-w-[130px] border-l border-light-35 bg-dark-25">
-        <Tooltip content={rowTooltipContent} placement={'right'}>
-          <span className="flex items-center justify-center  gap-1 text-[20px]">
-            {eligibility?.isClaimAlreadySubmitted ? (
-              <s>{eligibleCoins}</s>
-            ) : (
-              <>{eligibleCoins}</>
-            )}{' '}
-            <Coin />
-          </span>
-        </Tooltip>
-      </td>
+      <CoinCell
+        coins={eligibleCoins}
+        isStriked={eligibility?.isClaimAlreadySubmitted}
+        rowTooltipContent={rowTooltipContent}
+      />
     </tr>
   )
 }
