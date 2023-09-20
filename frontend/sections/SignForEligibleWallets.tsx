@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import Coin from '@images/coin.inline.svg'
 
 import { classNames } from 'utils/classNames'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
@@ -9,12 +8,13 @@ import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { useIsClaimAlreadySubmitted } from 'hooks/useIsClaimAlreadySubmitted'
-import Tooltip from '@components/Tooltip'
 import { EcosystemSignButton } from '@components/EcosystemSignButton'
 import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
 import { BackButton, ProceedButton } from '@components/buttons'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
+import { CoinCell } from '@components/table/CoinCell'
+import { TotalAllocationRow } from '@components/table/TotalAllocationRow'
 
 export const SignForEligibleWallets = ({
   onBack,
@@ -96,20 +96,7 @@ export const SignForEligibleWallets = ({
             {Object.values(Ecosystem).map((ecosystem) => (
               <TableRow ecosystem={ecosystem} key={ecosystem} />
             ))}
-            <tr className="border-b border-light-35 ">
-              <td className="w-full bg-darkGray5 py-2 pl-10 pr-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-header text-base18 font-semibold">
-                    Eligible Token Allocation
-                  </span>
-                </div>
-              </td>
-              <td className="min-w-[130px] border-l border-light-35 bg-dark-25">
-                <span className=" flex min-h-[60px]  items-center justify-center gap-1 text-[20px] font-semibold">
-                  {totalGrantedCoins} <Coin />{' '}
-                </span>
-              </td>
-            </tr>
+            <TotalAllocationRow totalGrantedCoins={totalGrantedCoins} />
           </tbody>
         </table>
       </div>
@@ -184,37 +171,30 @@ function TableRow({ ecosystem }: TableRowProps) {
           rowDisabled ? 'opacity-25' : ''
         )}
       >
-        <Tooltip content={rowTooltipContent} placement={'right'}>
-          <div
-            className={classNames(
-              'flex items-center justify-between',
-              rowDisabled ? 'pointer-events-none' : ''
-            )}
-          >
-            <span className="min-w-[150px] font-header text-base18 font-thin">
-              {getEcosystemTableLabel(ecosystem)}
-            </span>
+        <div
+          className={classNames(
+            'flex items-center justify-between',
+            rowDisabled ? 'pointer-events-none' : ''
+          )}
+        >
+          <span className="min-w-[150px] font-header text-base18 font-thin">
+            {getEcosystemTableLabel(ecosystem)}
+          </span>
 
-            <span className="flex flex-1  items-center justify-between gap-5">
-              <EcosystemConnectButton
-                ecosystem={ecosystem}
-                disableOnConnect={true}
-              />
-              <EcosystemSignButton ecosystem={ecosystem} />
-            </span>
-          </div>
-        </Tooltip>
+          <span className="flex flex-1  items-center justify-between gap-5">
+            <EcosystemConnectButton
+              ecosystem={ecosystem}
+              disableOnConnect={true}
+            />
+            <EcosystemSignButton ecosystem={ecosystem} />
+          </span>
+        </div>
       </td>
-      <td className="min-w-[130px] border-l border-light-35 bg-darkGray5">
-        <span className="flex items-center justify-center  gap-1 text-[20px]">
-          {eligibility?.isClaimAlreadySubmitted ? (
-            <s>{eligibleCoins}</s>
-          ) : (
-            <>{eligibleCoins}</>
-          )}{' '}
-          <Coin />
-        </span>
-      </td>
+      <CoinCell
+        coins={eligibleCoins}
+        isStriked={eligibility?.isClaimAlreadySubmitted}
+        rowTooltipContent={rowTooltipContent}
+      />
     </tr>
   )
 }
