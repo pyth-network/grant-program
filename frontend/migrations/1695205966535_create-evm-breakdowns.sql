@@ -2,8 +2,8 @@
 -- TODO: add more chains
 CREATE TYPE evm_chain as ENUM ('optimism-mainnet', 'arbitrum-mainnet', 'cronos-mainnet',
        'zksync-mainnet', 'bsc-mainnet', 'base-mainnet', 'evmos-mainnet',
-       'sui', 'mantle-mainnet', 'linea-mainnet', 'polygon-zkevm-mainnet',
-       'avalanche-mainnet', 'matic-mainnet', 'aurora-mainnet', 'aptos',
+       'mantle-mainnet', 'linea-mainnet', 'polygon-zkevm-mainnet',
+       'avalanche-mainnet', 'matic-mainnet', 'aurora-mainnet',
        'eth-mainnet', 'confluxespace-mainnet', 'celo-mainnet',
        'meter-mainnet', 'gnosis-mainnet', 'kcc-mainnet', 'wemix-mainnet');
 
@@ -18,3 +18,5 @@ CREATE TABLE "evm_breakdowns" (
     PRIMARY KEY (chain, identity)
 );
 -- Down Migration
+DROP TABLE "evm_breakdowns";
+DROP TYPE evm_chain;
