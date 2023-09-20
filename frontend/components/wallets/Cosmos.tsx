@@ -4,7 +4,6 @@ import { assets, chains } from 'chain-registry'
 import { wallets } from '@cosmos-kit/keplr-extension'
 import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
-import { Ecosystem } from '@components/Ecosystem'
 
 export const WALLET_NAME = 'keplr-extension'
 

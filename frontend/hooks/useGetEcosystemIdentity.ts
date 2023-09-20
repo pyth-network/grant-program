@@ -18,6 +18,7 @@ export function useGetEcosystemIdentity() {
   const injectiveAddress = useCosmosAddress('injective')
   const osmosisAddress = useCosmosAddress('osmosis')
   const neutronAddress = useCosmosAddress('neutron')
+  const seiAddress = useCosmosAddress('seitestnet2')
   const solanaAddress = useSolanaAddress()
   const suiAddress = useSuiAddress()
   const { data } = useSession()
@@ -40,6 +41,9 @@ export function useGetEcosystemIdentity() {
         case Ecosystem.OSMOSIS:
           return osmosisAddress
 
+        case Ecosystem.SEI:
+          return seiAddress
+
         case Ecosystem.SOLANA:
           return solanaAddress
 
@@ -57,6 +61,7 @@ export function useGetEcosystemIdentity() {
       injectiveAddress,
       neutronAddress,
       osmosisAddress,
+      seiAddress,
       solanaAddress,
       suiAddress,
     ]
