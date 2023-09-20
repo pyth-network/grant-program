@@ -12,14 +12,15 @@ import { ClaimStatus } from './ClaimStatus'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { BN } from '@coral-xyz/anchor'
 import { toStringWithDecimals } from 'utils/toStringWithDecimals'
+import { TransactionError } from '@solana/web3.js'
 
 // Following the convention,
-// If undefined we still have to fetch
-// If null we have fetched
+// If error is:
+// - undefined, the transaction hasn't landed yet
+// - null, the transaction has been successful
+// - defined, the transaction has failed
 export type EcosystemClaimState = {
-  transactionSignature: string | undefined | null
-  loading: boolean
-  error: any | undefined | null
+  error: TransactionError | undefined | null
 }
 
 type SignAndClaimProps = {
@@ -42,17 +43,12 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
     if (ecosystemsClaimState !== undefined) {
       let totalCoinsClaimed = new BN(0)
       Object.keys(ecosystemsClaimState).forEach((ecosystem) => {
-        if (ecosystemsClaimState[ecosystem as Ecosystem]?.loading === false) {
-          if (
-            ecosystemsClaimState[ecosystem as Ecosystem]
-              ?.transactionSignature !== null
-          ) {
-            const eligibility = getEligibility(ecosystem as Ecosystem)
-            if (eligibility?.claimInfo.amount !== undefined)
-              totalCoinsClaimed = totalCoinsClaimed.add(
-                eligibility?.claimInfo.amount
-              )
-          }
+        if (ecosystemsClaimState[ecosystem as Ecosystem]?.error === null) {
+          const eligibility = getEligibility(ecosystem as Ecosystem)
+          if (eligibility?.claimInfo.amount !== undefined)
+            totalCoinsClaimed = totalCoinsClaimed.add(
+              eligibility?.claimInfo.amount
+            )
         }
       })
       onProceed(toStringWithDecimals(totalCoinsClaimed))
@@ -83,51 +79,22 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
     const stateObj: { [key in Ecosystem]?: EcosystemClaimState } = {}
     ecosystems.forEach((ecosystem) => {
       stateObj[ecosystem] = {
-        transactionSignature: undefined,
-        loading: true,
         error: undefined,
       }
     })
     setEcosystemsClaimState(stateObj)
-    try {
-      const broadcastPromises = await tokenDispenser?.submitClaims(claims)
-      broadcastPromises.forEach(async (broadcastPromise, index) => {
-        try {
-          const transactionSignature = await broadcastPromise
-          // NOTE: there is an implicit order restriction
-          // Transaction Order should be same as Ecosystems array order
-          setEcosystemsClaimState((ecosystemState) => ({
-            ...ecosystemState,
-            [ecosystems[index]]: {
-              transactionSignature,
-              loading: false,
-              error: null,
-            },
-          }))
-        } catch (error) {
-          setEcosystemsClaimState((ecosystemState) => ({
-            ...ecosystemState,
-            [ecosystems[index]]: {
-              transactionSignature: null,
-              loading: false,
-              error,
-            },
-          }))
-        }
-      })
-    } catch (e) {
-      console.error(e)
-      const newStateObj: { [key in Ecosystem]?: EcosystemClaimState } = {}
-      ecosystems.forEach((ecosystem) => {
-        newStateObj[ecosystem] = {
-          transactionSignature: null,
-          loading: false,
-          error: e,
-        }
-      })
-
-      setEcosystemsClaimState(newStateObj)
-    }
+    const broadcastPromises = await tokenDispenser?.submitClaims(claims)
+    broadcastPromises.forEach(async (broadcastPromise, index) => {
+      const transactionError = await broadcastPromise
+      // NOTE: there is an implicit order restriction
+      // Transaction Order should be same as Ecosystems array order
+      setEcosystemsClaimState((ecosystemState) => ({
+        ...ecosystemState,
+        [ecosystems[index]]: {
+          error: transactionError,
+        },
+      }))
+    })
   }, [getClaim, tokenDispenser])
 
   return (

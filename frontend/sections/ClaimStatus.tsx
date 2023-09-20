@@ -33,7 +33,7 @@ export const ClaimStatus = ({
       let isAnyProccessing = false
       // if a claim submission is still proceesing
       Object.values(ecosystemsClaimState).forEach((ecosystemClaimState) => {
-        if (ecosystemClaimState.loading === true) isAnyProccessing = true
+        if (ecosystemClaimState.error === undefined) isAnyProccessing = true
       })
 
       if (isAnyProccessing) {
@@ -159,21 +159,19 @@ function ClaimState({
 }: {
   ecosystemClaimState: EcosystemClaimState
 }) {
-  const { transactionSignature, loading, error } = ecosystemClaimState
+  const { error } = ecosystemClaimState
 
   const text = useMemo(() => {
-    if (loading === true) return 'claiming...'
-    if (transactionSignature !== undefined && transactionSignature !== null)
-      return 'claimed'
-    if (error !== undefined && error !== null) return 'failed'
-  }, [error, loading, transactionSignature])
+    if (error === undefined) return 'claiming...'
+    if (error === null) return 'claimed'
+    if (error) return 'failed'
+  }, [error])
 
   const icon = useMemo(() => {
-    if (loading === true) return <Loader />
-    if (transactionSignature !== undefined && transactionSignature !== null)
-      return <Success />
-    if (error !== undefined && error !== null) return <Failed />
-  }, [error, loading, transactionSignature])
+    if (error === undefined) return <Loader />
+    if (error === null) return <Success />
+    if (error) return <Failed />
+  }, [error])
 
   return (
     <div className="flex items-center justify-between gap-4 text-base18">
