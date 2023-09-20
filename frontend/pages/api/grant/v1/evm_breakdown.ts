@@ -5,7 +5,7 @@ import { Pool } from 'pg'
 const pool = new Pool()
 
 /**
- * This endpoint returns the amount of tokens allocated to a specific identity
+ * This endpoint returns the breakdown by chain for the evm allocation of a given evm identity.
  */
 export default async function handlerEvmBreakdown(
   req: NextApiRequest,

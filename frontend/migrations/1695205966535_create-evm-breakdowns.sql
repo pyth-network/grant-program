@@ -1,4 +1,5 @@
 -- Up Migration
+-- TODO: add more chains
 CREATE TYPE evm_chain as ENUM ('optimism', 'ethereum', 'arbitrum');
 
 -- Table for evm chain breakdowns
