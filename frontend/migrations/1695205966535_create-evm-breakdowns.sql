@@ -1,6 +1,11 @@
 -- Up Migration
 -- TODO: add more chains
-CREATE TYPE evm_chain as ENUM ('optimism', 'ethereum', 'arbitrum');
+CREATE TYPE evm_chain as ENUM ('optimism-mainnet', 'arbitrum-mainnet', 'cronos-mainnet',
+       'zksync-mainnet', 'bsc-mainnet', 'base-mainnet', 'evmos-mainnet',
+       'sui', 'mantle-mainnet', 'linea-mainnet', 'polygon-zkevm-mainnet',
+       'avalanche-mainnet', 'matic-mainnet', 'aurora-mainnet', 'aptos',
+       'eth-mainnet', 'confluxespace-mainnet', 'celo-mainnet',
+       'meter-mainnet', 'gnosis-mainnet', 'kcc-mainnet', 'wemix-mainnet');
 
 -- Table for evm chain breakdowns
 -- This table only exists to be displayed in the frontend, it has no corresponding on-chain data.

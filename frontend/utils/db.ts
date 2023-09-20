@@ -64,17 +64,17 @@ export async function addTestEvmBreakdown(
   for (let i = 0; i < testEvmWallets.length; i++) {
     const totalAmount = 1000000 * EVM_ECOSYSTEM_INDEX + 100000 * i
     rows.push({
-      chain: 'optimism',
+      chain: 'optimism-mainnet',
       identity: testEvmWallets[i].address(),
       amount: totalAmount / 3,
     })
     rows.push({
-      chain: 'ethereum',
+      chain: 'eth-mainnet',
       identity: testEvmWallets[i].address(),
       amount: totalAmount / 3,
     })
     rows.push({
-      chain: 'arbitrum',
+      chain: 'arbitrum-mainnet',
       identity: testEvmWallets[i].address(),
       amount: totalAmount / 3 + (totalAmount % 3),
     })
