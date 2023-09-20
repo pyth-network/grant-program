@@ -27,8 +27,6 @@ export const OTHER_WALLETS = [
   new GlowWalletAdapter(),
   new TorusWalletAdapter(),
   new LedgerWalletAdapter(),
-  new SolletWalletAdapter(),
-  new SolletExtensionWalletAdapter(),
 ]
 
 export function useSolanaWalletAdapters() {
