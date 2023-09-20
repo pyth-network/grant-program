@@ -1,10 +1,12 @@
 import { Pool } from 'pg'
 import dotenv from 'dotenv'
-import { TestWallet } from '../claim_sdk/testWallets'
+import { TestEvmWallet, TestWallet } from '../claim_sdk/testWallets'
 import { ClaimInfo, Ecosystem, Ecosystems } from '../claim_sdk/claim'
 import * as anchor from '@coral-xyz/anchor'
 import { MerkleTree } from '../claim_sdk/merkleTree'
 dotenv.config() // Load environment variables from .env file
+
+const EVM_ECOSYSTEM_INDEX = 3
 
 /** Get the database pool with the default configuration. */
 export function getDatabasePool(): Pool {
@@ -52,4 +54,35 @@ export async function addTestWalletsToDatabase(
     )
   }
   return merkleTree.root
+}
+
+export async function addTestEvmBreakdown(
+  pool: Pool,
+  testEvmWallets: TestEvmWallet[]
+): Promise<void> {
+  const rows: { chain: string; identity: string; amount: number }[] = []
+  for (let i = 0; i < testEvmWallets.length; i++) {
+    const totalAmount = 1000000 * EVM_ECOSYSTEM_INDEX + 100000 * i
+    rows.push({
+      chain: 'optimism',
+      identity: testEvmWallets[i].address(),
+      amount: totalAmount / 3,
+    })
+    rows.push({
+      chain: 'ethereum',
+      identity: testEvmWallets[i].address(),
+      amount: totalAmount / 3,
+    })
+    rows.push({
+      chain: 'arbitrum',
+      identity: testEvmWallets[i].address(),
+      amount: totalAmount / 3 + (totalAmount % 3),
+    })
+  }
+  for (const row of rows) {
+    await pool.query(
+      'INSERT INTO evm_breakdowns VALUES($1::evm_chain, $2, $3)',
+      [row.chain, row.identity, row.amount]
+    )
+  }
 }

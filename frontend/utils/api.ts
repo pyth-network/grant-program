@@ -86,3 +86,31 @@ export async function fetchDiscordSignedMessage(
     await response.json()
   )
 }
+
+export type EvmChainAllocation = { chain: string; amount: BN }
+
+export function getEvmBreakdownRoute(identity: string): string {
+  return `/api/grant/v1/evm_breakdown?identity=${identity}`
+}
+
+export function handleEvmBreakdown(
+  status: number,
+  data: any
+): EvmChainAllocation[] | undefined {
+  if (status == 404) return undefined
+  if (status == 200) {
+    return data.map((row: any) => {
+      return {
+        chain: row.chain,
+        amount: new BN(row.amount),
+      }
+    })
+  }
+}
+
+export async function fetchEvmBreakdown(
+  identity: string
+): Promise<EvmChainAllocation[] | undefined> {
+  const response = await fetch(getEvmBreakdownRoute(identity))
+  return handleEvmBreakdown(response.status, await response.json())
+}
