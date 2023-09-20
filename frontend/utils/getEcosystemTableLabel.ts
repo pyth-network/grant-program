@@ -13,6 +13,8 @@ export function getEcosystemTableLabel(ecosystem: Ecosystem) {
       return 'Neutron activity'
     case Ecosystem.OSMOSIS:
       return 'Osmosis activity'
+    case Ecosystem.SEI:
+      return 'Sei activity'
     case Ecosystem.SOLANA:
       return 'Solana activity'
     case Ecosystem.SUI:

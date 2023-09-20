@@ -39,6 +39,7 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
             <CheckBox ecosystem={Ecosystem.INJECTIVE} />
             <CheckBox ecosystem={Ecosystem.OSMOSIS} />
             <CheckBox ecosystem={Ecosystem.NEUTRON} />
+            <CheckBox ecosystem={Ecosystem.SEI} />
           </div>
           <p className="mb-6 font-light">I am an active member of…</p>
           <div>
