@@ -7,7 +7,11 @@ module.exports = {
     externalDir: true,
   },
   images: {
-    domains: ['cdn.martianwallet.xyz', 'cdn.discordapp.com'],
+    domains: [
+      'cdn.martianwallet.xyz',
+      'cdn.discordapp.com',
+      'raw.githubusercontent.com',
+    ],
   },
   swcMinify: false,
   env: {

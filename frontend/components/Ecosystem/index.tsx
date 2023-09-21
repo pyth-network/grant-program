@@ -11,6 +11,7 @@ export enum Ecosystem {
   INJECTIVE = 'Injective',
   OSMOSIS = 'Osmosis',
   NEUTRON = 'Neutron',
+  SEI = 'Sei',
   DISCORD = 'Pyth Discord',
 }
 

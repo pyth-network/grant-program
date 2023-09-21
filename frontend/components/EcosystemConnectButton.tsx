@@ -42,6 +42,13 @@ export function EcosystemConnectButton({
           disableOnConnect={disableOnConnect}
         />
       )
+    case Ecosystem.SEI:
+      return (
+        <CosmosWalletButton
+          chainName="seitestnet2"
+          disableOnConnect={disableOnConnect}
+        />
+      )
     case Ecosystem.SOLANA:
       return <SolanaWalletButton disableOnConnect={disableOnConnect} />
     case Ecosystem.SUI:

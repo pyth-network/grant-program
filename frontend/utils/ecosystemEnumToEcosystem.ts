@@ -13,6 +13,8 @@ export function enumToSdkEcosystem(ecosystem: EnumEcosystem): SdkEcosystem {
       return 'cosmwasm'
     case EnumEcosystem.OSMOSIS:
       return 'cosmwasm'
+    case EnumEcosystem.SEI:
+      return 'cosmwasm'
     case EnumEcosystem.SOLANA:
       return 'solana'
     case EnumEcosystem.SUI:

@@ -4,11 +4,10 @@ import { assets, chains } from 'chain-registry'
 import { wallets } from '@cosmos-kit/keplr-extension'
 import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
-import { Ecosystem } from '@components/Ecosystem'
 
 export const WALLET_NAME = 'keplr-extension'
 
-export type ChainName = 'injective' | 'osmosis' | 'neutron'
+export type ChainName = 'injective' | 'osmosis' | 'neutron' | 'seitestnet2'
 
 type CosmosWalletProviderProps = {
   children: ReactNode
@@ -29,7 +28,7 @@ export function CosmosWalletProvider({
 }
 
 type CosmosWalletButtonProps = {
-  chainName: 'injective' | 'osmosis' | 'neutron'
+  chainName: ChainName
   disableOnConnect?: boolean
 }
 export function CosmosWalletButton({
@@ -104,10 +103,4 @@ export function CosmosWalletButton({
 function getKeplrConnectionStatusKey(chainName: ChainName) {
   const KEPLR_CONNECTION_STATUS_KEY = 'keplr-local-storage-connection-key'
   return KEPLR_CONNECTION_STATUS_KEY + '-' + chainName
-}
-
-function chainNametoEcosystem(chainName: ChainName) {
-  if (chainName === 'injective') return Ecosystem.INJECTIVE
-  else if (chainName === 'osmosis') return Ecosystem.OSMOSIS
-  else return Ecosystem.NEUTRON
 }
