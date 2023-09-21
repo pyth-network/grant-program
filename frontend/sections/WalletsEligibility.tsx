@@ -114,32 +114,24 @@ function TableRow({ ecosystem }: TableRowProps) {
   const isActive = activity[ecosystem]
 
   useEffect(() => {
-    ;(async () => {
-      // Row is disabled when
-      // The ecosystem is inactive
-      if (isActive === false) {
-        setRowDisabled(true)
-        return
-      }
-
-      if (isActive === true) {
-        if (eligibility?.claimInfo !== undefined) {
-          if (eligibility?.isClaimAlreadySubmitted === true) {
-            setRowTooltipContent(
-              'The tokens for this ecosystem has already been claimed.'
-            )
-          } else {
-            setRowTooltipContent(undefined)
-          }
-        } else {
+    // Row is disabled when
+    // The ecosystem is inactive
+    if (isActive === false) {
+      setRowDisabled(true)
+    } else {
+      if (eligibility?.claimInfo !== undefined) {
+        if (eligibility?.isClaimAlreadySubmitted === true) {
           setRowTooltipContent(
-            'There are no tokens to claim for this ecosystem.'
+            'The tokens for this ecosystem has already been claimed.'
           )
+        } else {
+          setRowTooltipContent(undefined)
         }
+      } else {
+        setRowTooltipContent('There are no tokens to claim for this ecosystem.')
       }
-
       setRowDisabled(false)
-    })()
+    }
   }, [
     ecosystem,
     eligibility?.claimInfo,
