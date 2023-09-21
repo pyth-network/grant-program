@@ -128,6 +128,8 @@ function TableRow({ ecosystem }: TableRowProps) {
             setRowTooltipContent(
               'The tokens for this ecosystem has already been claimed.'
             )
+          } else {
+            setRowTooltipContent(undefined)
           }
         } else {
           setRowTooltipContent(
