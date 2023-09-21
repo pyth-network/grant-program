@@ -122,7 +122,7 @@ function TableRow({ ecosystem }: TableRowProps) {
       if (eligibility?.claimInfo !== undefined) {
         if (eligibility?.isClaimAlreadySubmitted === true) {
           setRowTooltipContent(
-            'The tokens for this ecosystem has already been claimed.'
+            'The tokens for this ecosystem have already been claimed.'
           )
         } else {
           setRowTooltipContent(undefined)
