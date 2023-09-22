@@ -101,7 +101,7 @@ export const Layout = ({ children }: LayoutProps) => {
           objectFit="cover"
           objectPosition="left bottom"
         />
-        <span className="absolute left-0 bottom-0">
+        <span className="absolute -left-[510px] -bottom-[120px] max-w-[1400px]">
           <BgImage />
         </span>
       </span>
@@ -115,12 +115,12 @@ function BgImage() {
   if (pathname === '/')
     return <Image src={WELCOME_METADATA.image} alt="" priority />
   else if (pathname === '/review-eligibility')
-    return <Image src={REVIEW_ELIGIBILITY_METADATA.image} alt="" priority />
+    return <Image src={WELCOME_METADATA.image} alt="" priority />
   else if (pathname.startsWith('/verify-eligibility'))
-    return <Image src={VERIFY_ELIGIBILITY_METADATA.image} alt="" priority />
+    return <Image src={WELCOME_METADATA.image} alt="" priority />
   else if (pathname === '/login-solana')
-    return <Image src={LOGIN_SOLANA_METADATA.image} alt="" priority />
+    return <Image src={WELCOME_METADATA.image} alt="" priority />
   else if (pathname === '/claim-tokens')
-    return <Image src={CLAIM_TOKENS_METADATA.image} alt="" priority />
+    return <Image src={WELCOME_METADATA.image} alt="" priority />
   else return <Image src={NEXT_STEPS.image} alt="" priority />
 }
