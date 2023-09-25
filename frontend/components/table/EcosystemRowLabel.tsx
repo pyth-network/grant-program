@@ -73,7 +73,7 @@ function EVMBreakdownModal({
   return (
     <Modal openModal={openModal}>
       <h3 className="mb-8  font-header text-[36px] font-light">
-        Evm Chains Breakdown
+        EVM Chains Breakdown
       </h3>
       <div className="mx-14 border-b border-b-light-35">
         {chainAllocations.map(({ chain, amount }) => {
