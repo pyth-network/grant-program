@@ -45,14 +45,11 @@ export function WalletConnectedButton({
   )
 }
 
-export type WalletLoadingButtonProps = {
-  icon?: string
-}
-export function WalletLoadingButton({ icon }: WalletLoadingButtonProps) {
+export function WalletLoadingButton() {
   return (
     <button className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light">
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-        <WalletIcon icon={icon} />
+        <WalletIcon />
         <span>Connecting...</span>
       </span>
     </button>
