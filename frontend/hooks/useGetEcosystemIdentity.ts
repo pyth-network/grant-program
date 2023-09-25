@@ -8,6 +8,7 @@ import {
 import { useSession } from 'next-auth/react'
 import { Ecosystem } from '@components/Ecosystem'
 import { useCallback } from 'react'
+import { getConnectedWalletName } from '@components/wallets/Sei'
 
 // It will return a function that can be used to get the identity of a given ecosystem
 // The function will return the identity if the ecosystem is connected
@@ -18,7 +19,7 @@ export function useGetEcosystemIdentity() {
   const injectiveAddress = useCosmosAddress('injective')
   const osmosisAddress = useCosmosAddress('osmosis')
   const neutronAddress = useCosmosAddress('neutron')
-  const seiAddress = useCosmosAddress('seitestnet2')
+  const seiAddress = useCosmosAddress('sei', getConnectedWalletName())
   const solanaAddress = useSolanaAddress()
   const suiAddress = useSuiAddress()
   const { data } = useSession()

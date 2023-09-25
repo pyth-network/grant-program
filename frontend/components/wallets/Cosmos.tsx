@@ -1,7 +1,8 @@
 import { ReactElement, ReactNode, useEffect } from 'react'
 import { ChainProvider, useChainWallet } from '@cosmos-kit/react-lite'
 import { assets, chains } from 'chain-registry'
-import { wallets } from '@cosmos-kit/keplr-extension'
+import { wallets as keplrWallets } from '@cosmos-kit/keplr-extension'
+import { wallets as compassWallets } from '@cosmos-kit/compass-extension'
 import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 
@@ -9,7 +10,7 @@ import keplr from '@images/keplr.svg'
 
 export const WALLET_NAME = 'keplr-extension'
 
-export type ChainName = 'injective' | 'osmosis' | 'neutron' | 'seitestnet2'
+export type ChainName = 'injective' | 'osmosis' | 'neutron'
 
 type CosmosWalletProviderProps = {
   children: ReactNode
@@ -22,7 +23,9 @@ export function CosmosWalletProvider({
     <ChainProvider
       chains={chains}
       assetLists={assets}
-      wallets={[...wallets] as unknown as MainWalletBase[]}
+      wallets={
+        [...keplrWallets, ...compassWallets] as unknown as MainWalletBase[]
+      }
     >
       {children}
     </ChainProvider>

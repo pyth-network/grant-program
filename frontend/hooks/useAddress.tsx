@@ -10,8 +10,11 @@ export function useAptosAddress(): string | undefined {
   return account?.address
 }
 
-export function useCosmosAddress(chainName: ChainName): string | undefined {
-  const { address } = useChainWallet(chainName, WALLET_NAME)
+export function useCosmosAddress(
+  chainName: ChainName | 'sei',
+  walletName = 'keplr-extension'
+): string | undefined {
+  const { address } = useChainWallet(chainName, walletName)
   return address
 }
 
