@@ -107,12 +107,14 @@ type StoredWallet = 'keplr' | 'compass' | null
 
 function setConnectedWallet(wallet: StoredWallet) {
   const key = getSeiConnectionStatusKey()
+  if (typeof window === 'undefined') return null
   if (wallet === null) localStorage.removeItem(key)
   else localStorage.setItem(key, wallet)
 }
 
 function getConnectedWallet(): StoredWallet {
   const key = getSeiConnectionStatusKey()
+  if (typeof window === 'undefined') return null
   return localStorage.getItem(key) as StoredWallet
 }
 
