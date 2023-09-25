@@ -5,6 +5,8 @@ import { wallets } from '@cosmos-kit/keplr-extension'
 import { MainWalletBase } from '@cosmos-kit/core'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 
+import keplr from '@images/keplr.svg'
+
 export const WALLET_NAME = 'keplr-extension'
 
 export type ChainName = 'injective' | 'osmosis' | 'neutron' | 'seitestnet2'
@@ -41,7 +43,6 @@ export function CosmosWalletButton({
     isWalletConnecting,
     isWalletConnected,
     connect,
-    logoUrl,
     isWalletNotExist,
     disconnect,
     isWalletDisconnected,
@@ -88,12 +89,13 @@ export function CosmosWalletButton({
       address={address}
       connected={isWalletConnected}
       isLoading={isWalletConnecting}
-      wallets={[{ name: 'keplr', icon: logoUrl, onSelect: connect }]}
+      wallets={[{ name: 'keplr', icon: keplr, onSelect: connect }]}
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton
           onClick={disconnect}
           address={address}
           disabled={disableOnConnect}
+          icon={keplr}
         />
       )}
     />
