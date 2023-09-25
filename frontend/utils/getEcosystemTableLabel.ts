@@ -6,7 +6,7 @@ export function getEcosystemTableLabel(ecosystem: Ecosystem) {
     case Ecosystem.APTOS:
       return 'Aptos activity'
     case Ecosystem.EVM:
-      return 'Evm activity'
+      return 'EVM activity'
     case Ecosystem.INJECTIVE:
       return 'Injective activity'
     case Ecosystem.NEUTRON:
