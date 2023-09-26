@@ -6,6 +6,7 @@ import Telegram from '@images/telegram.inline.svg'
 import Discord from '@images/discord.inline.svg'
 import Linkedin from '@images/linkedin.inline.svg'
 import { Box } from '@components/Box'
+import { Button } from '@components/buttons/Button'
 
 export type TokensReceivedProps = {
   totalCoinsClaimed: string
@@ -62,11 +63,10 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
                 </span>
               </button>
             </div>
-            <button className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark">
-              <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                explore governance
-              </span>
-            </button>
+            {/* TODO: link to governance later */}
+            <Button onClick={() => {}} type={'primary'}>
+              explore governance
+            </Button>
           </div>
         </div>
       </Box>
