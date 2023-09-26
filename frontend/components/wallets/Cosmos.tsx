@@ -19,6 +19,12 @@ type CosmosWalletProviderProps = {
 export function CosmosWalletProvider({
   children,
 }: CosmosWalletProviderProps): ReactElement {
+  assets.forEach((asset) => {
+    if (asset.chain_name === 'sei') {
+      asset.assets = [asset.assets[0]]
+    }
+  })
+
   return (
     <ChainProvider
       chains={chains}
