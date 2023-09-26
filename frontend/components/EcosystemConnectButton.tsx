@@ -3,6 +3,7 @@ import { Ecosystem } from './Ecosystem'
 import { AptosWalletButton } from './wallets/Aptos'
 import { CosmosWalletButton } from './wallets/Cosmos'
 import { EVMWalletButton } from './wallets/EVM'
+import { SeiWalletButton } from './wallets/Sei'
 import { SolanaWalletButton } from './wallets/Solana'
 import { SuiWalletButton } from './wallets/Sui'
 
@@ -43,12 +44,7 @@ export function EcosystemConnectButton({
         />
       )
     case Ecosystem.SEI:
-      return (
-        <CosmosWalletButton
-          chainName="seitestnet2"
-          disableOnConnect={disableOnConnect}
-        />
-      )
+      return <SeiWalletButton />
     case Ecosystem.SOLANA:
       return <SolanaWalletButton disableOnConnect={disableOnConnect} />
     case Ecosystem.SUI:
