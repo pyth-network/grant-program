@@ -192,7 +192,7 @@ export function useSignMessage(ecosystem: Ecosystem): SignMessageFn {
   const neutronSignMessageFn = useCosmosSignMessage('neutron')
   const seiSignMessageFn = useCosmosSignMessage(
     'sei',
-    getSeiConnectedWalletName()
+    getSeiConnectedWalletName() ?? undefined
   )
   const suiSignMessageFn = useSuiSignMessage()
   const solanaSignMessageFn = useSolanaSignMessage()

@@ -19,7 +19,10 @@ export function useGetEcosystemIdentity() {
   const injectiveAddress = useCosmosAddress('injective')
   const osmosisAddress = useCosmosAddress('osmosis')
   const neutronAddress = useCosmosAddress('neutron')
-  const seiAddress = useCosmosAddress('sei', getSeiConnectedWalletName())
+  const seiAddress = useCosmosAddress(
+    'sei',
+    getSeiConnectedWalletName() ?? undefined
+  )
   const solanaAddress = useSolanaAddress()
   const suiAddress = useSuiAddress()
   const { data } = useSession()

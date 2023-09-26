@@ -21,11 +21,10 @@ export function SeiWalletButton({ disableOnConnect }: SeiWalletButtonProps) {
   // We only have to do this check once the component renders.
   // See Line 84, 99 to know how we are storing the status locally
   useEffect(() => {
-    const key = getSeiConnectionStatusKey()
-    const connectedWallet = localStorage.getItem(key)
-    if (connectedWallet === 'keplr') {
+    const connectedWallet = getSeiConnectedWalletName()
+    if (connectedWallet === 'keplr-extension') {
       keplrChainWalletctx.connect()
-    } else if (connectedWallet === 'compass') {
+    } else if (connectedWallet === 'compass-extension') {
       compassChainWalletctx.connect()
     }
   }, [])
@@ -35,13 +34,13 @@ export function SeiWalletButton({ disableOnConnect }: SeiWalletButtonProps) {
       keplrChainWalletctx.isWalletConnected === true &&
       keplrChainWalletctx?.address !== undefined
     ) {
-      setConnectedWallet('keplr')
+      setSeiConnectedWalletName('keplr-extension')
       setIcon(keplr)
     } else if (
       compassChainWalletctx.isWalletConnected === true &&
       compassChainWalletctx?.address !== undefined
     ) {
-      setConnectedWallet('compass')
+      setSeiConnectedWalletName('compass-extension')
       setIcon(compass)
     }
 
@@ -49,7 +48,7 @@ export function SeiWalletButton({ disableOnConnect }: SeiWalletButtonProps) {
       keplrChainWalletctx.isWalletDisconnected &&
       compassChainWalletctx.isWalletDisconnected
     ) {
-      setConnectedWallet(null)
+      setSeiConnectedWalletName(null)
       setIcon(undefined)
     }
   }, [keplrChainWalletctx, compassChainWalletctx])
@@ -90,9 +89,10 @@ export function SeiWalletButton({ disableOnConnect }: SeiWalletButtonProps) {
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton
           onClick={() => {
-            const wallet = getConnectedWallet()
-            if (wallet === 'keplr') keplrChainWalletctx.disconnect()
-            else if (wallet === 'compass') compassChainWalletctx.disconnect()
+            const wallet = getSeiConnectedWalletName()
+            if (wallet === 'keplr-extension') keplrChainWalletctx.disconnect()
+            else if (wallet === 'compass-extension')
+              compassChainWalletctx.disconnect()
           }}
           address={address}
           disabled={disableOnConnect}
@@ -103,16 +103,18 @@ export function SeiWalletButton({ disableOnConnect }: SeiWalletButtonProps) {
   )
 }
 
-type StoredWallet = 'keplr' | 'compass' | null
+type StoredWallet = 'keplr-extension' | 'compass-extension' | null
 
-function setConnectedWallet(wallet: StoredWallet) {
+function setSeiConnectedWalletName(wallet: StoredWallet) {
   const key = getSeiConnectionStatusKey()
   if (typeof window === 'undefined') return null
   if (wallet === null) localStorage.removeItem(key)
   else localStorage.setItem(key, wallet)
 }
 
-function getConnectedWallet(): StoredWallet {
+// It returns the connected wallet name if connected
+// else null
+export function getSeiConnectedWalletName(): StoredWallet {
   const key = getSeiConnectionStatusKey()
   if (typeof window === 'undefined') return null
   return localStorage.getItem(key) as StoredWallet
@@ -120,13 +122,4 @@ function getConnectedWallet(): StoredWallet {
 
 function getSeiConnectionStatusKey() {
   return 'sei-local-storage-connection-key'
-}
-
-// This wallet assumes that a wallet is connected
-export function getSeiConnectedWalletName():
-  | 'keplr-extension'
-  | 'compass-extension' {
-  const wallet = getConnectedWallet()
-  if (wallet === 'keplr') return 'keplr-extension'
-  return 'compass-extension'
 }
