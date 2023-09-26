@@ -13,6 +13,7 @@ import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { BN } from '@coral-xyz/anchor'
 import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 import { TransactionError } from '@solana/web3.js'
+import { Box } from '@components/Box'
 
 // Following the convention,
 // If error is:
@@ -100,7 +101,7 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
   return (
     <>
       {screen == 1 ? (
-        <div className=" border border-light-35 bg-dark">
+        <Box>
           <h4 className="border-b border-light-35 bg-[#242339] py-8 px-10  font-header text-[28px] font-light leading-[1.2]">
             Sign Your Wallets and Claim
           </h4>
@@ -118,7 +119,7 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
               <ProceedButton onProceed={() => setScreen(2)} />
             </div>
           </div>
-        </div>
+        </Box>
       ) : screen === 2 ? (
         <SignForEligibleWallets
           onBack={() => setScreen(1)}

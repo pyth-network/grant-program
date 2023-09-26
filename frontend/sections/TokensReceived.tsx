@@ -5,6 +5,7 @@ import Twitter from '@images/twitter.inline.svg'
 import Telegram from '@images/telegram.inline.svg'
 import Discord from '@images/discord.inline.svg'
 import Linkedin from '@images/linkedin.inline.svg'
+import { Box } from '@components/Box'
 
 export type TokensReceivedProps = {
   totalCoinsClaimed: string
@@ -12,7 +13,7 @@ export type TokensReceivedProps = {
 export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
   return (
     <>
-      <div className=" border border-light-35 bg-dark">
+      <Box>
         <h4 className="border-b border-light-35 bg-[#242339] py-8 px-10  font-header text-[28px] font-light leading-[1.2] ">
           🔮 Congratulations!
         </h4>
@@ -68,7 +69,7 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
             </button>
           </div>
         </div>
-      </div>
+      </Box>
     </>
   )
 }

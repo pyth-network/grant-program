@@ -3,6 +3,7 @@ import { useActivity } from '@components/Ecosystem/ActivityProvider'
 import { Ecosystem } from '@components/Ecosystem'
 import { ProceedButton, BackButton } from '@components/buttons'
 import { StepProps } from './common'
+import { Box } from '@components/Box'
 
 export const PastActivity = ({ onBack, onProceed }: StepProps) => {
   const { activity } = useActivity()
@@ -20,7 +21,7 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
 
   return (
     <>
-      <div className=" border border-light-35 bg-dark">
+      <Box>
         <h4 className="border-b border-light-35 bg-[#242339] py-8 px-10  font-header text-[28px] font-light leading-[1.2]">
           Let’s Review Your Past Activity
         </h4>
@@ -51,7 +52,7 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
             <ProceedButton onProceed={onProceed} disabled={isProceedDisabled} />
           </div>
         </div>
-      </div>
+      </Box>
     </>
   )
 }
