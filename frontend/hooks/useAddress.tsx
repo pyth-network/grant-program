@@ -1,5 +1,5 @@
 import { useWallet as useAptosWallet } from '@aptos-labs/wallet-adapter-react'
-import { ChainName, WALLET_NAME } from '@components/wallets/Cosmos'
+import { ChainName } from '@components/wallets/Cosmos'
 import { useChainWallet } from '@cosmos-kit/react-lite'
 import { useWalletKit } from '@mysten/wallet-kit'
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
