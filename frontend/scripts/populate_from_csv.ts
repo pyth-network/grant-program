@@ -1,5 +1,5 @@
-import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
-import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
+import { Keypair, PublicKey } from '@solana/web3.js'
+import { TokenDispenserProvider } from '../claim_sdk/solana'
 import { envOrErr } from '../claim_sdk/index'
 import {
   EVM_CHAINS,
@@ -19,12 +19,12 @@ import assert from 'assert'
 
 const pool = getDatabasePool()
 
+// The config is read from these env variables
 const ENDPOINT = envOrErr('ENDPOINT')
 const PROGRAM_ID = envOrErr('PROGRAM_ID')
 const DISPENSER_GUARD = Keypair.fromSecretKey(
   new Uint8Array(JSON.parse(envOrErr('DISPENSER_GUARD')))
 )
-
 const CLUSTER = envOrErr('CLUSTER')
 const DEPLOYER_WALLET = Keypair.fromSecretKey(
   new Uint8Array(
@@ -66,15 +66,17 @@ function checkClaimsMatchEvmBreakdown(
 }
 
 // Requirements for this script :
-// - CSV file with headers ecosystem, identity, amount
+// - Two csv files : one for claims and one for evm breakdowns
 // - Program has been deployed
 // - DB has been migrated
 
 // Extra steps after running this script :
 // - Make sure the tokens are in the treasury account
-// - Make sure the treasury account has the config account as it's delegate
+// - Make sure the treasury account has the config account as its delegate
 async function main() {
   await clearDatabase(pool)
+
+  // Load claims from csv file
   const csvClaims = Papa.parse(fs.readFileSync(CSV_CLAIMS, 'utf-8'), {
     header: true,
   }) // Assumes ecosystem, identity, amount are the headers
@@ -110,6 +112,7 @@ async function main() {
       )
   ) // Cast for ecosystem ok because of assert above
 
+  // Load evmBreakdowns from csv file
   const csvEvmBreakdowns = Papa.parse(
     fs.readFileSync(CSV_EVM_BREAKDOWNS, 'utf-8'),
     { header: true }
@@ -130,10 +133,11 @@ async function main() {
       identity: row['identity'],
       amount: new BN(row['amount']),
     }
-  }) // Cast for ecosystem ok because of assert above
+  })
 
   checkClaimsMatchEvmBreakdown(claimInfos, evmBreakDowns)
 
+  // Add data to database
   const root = await addClaimInfosToDatabase(pool, claimInfos)
   await addEvmBreakdownsToDatabase(pool, evmBreakDowns)
 
@@ -148,17 +152,6 @@ async function main() {
       commitment: 'processed',
     }
   )
-
-  // Airdrop SOL addresses some SOL
-  if (CLUSTER != 'mainnet-beta') {
-    for (const claimInfo of claimInfos) {
-      if (claimInfo.ecosystem === 'solana') {
-        await tokenDispenserProvider.transferSol(
-          new PublicKey(claimInfo.identity)
-        )
-      }
-    }
-  }
   await tokenDispenserProvider.initialize(
     root,
     PYTH_MINT,
