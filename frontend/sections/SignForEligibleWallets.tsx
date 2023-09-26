@@ -7,7 +7,6 @@ import { Ecosystem } from '@components/Ecosystem'
 import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
-import { useIsClaimAlreadySubmitted } from 'hooks/useIsClaimAlreadySubmitted'
 import { EcosystemSignButton } from '@components/EcosystemSignButton'
 import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
@@ -112,7 +111,6 @@ function TableRow({ ecosystem }: TableRowProps) {
   const { activity } = useActivity()
   const getEcosystemIdentity = useGetEcosystemIdentity()
   const { getEligibility } = useEligibility()
-  const isClaimAlreadySubmitted = useIsClaimAlreadySubmitted()
   const [rowDisabled, setRowDisabled] = useState(true)
   // if it is undefined, no tooltip will be shown
   const [rowTooltipContent, setRowTooltipContent] = useState<string>()
@@ -152,13 +150,7 @@ function TableRow({ ecosystem }: TableRowProps) {
         }
       } else setRowDisabled(true)
     })()
-  }, [
-    activity,
-    ecosystem,
-    getEcosystemIdentity,
-    getEligibility,
-    isClaimAlreadySubmitted,
-  ])
+  }, [activity, ecosystem, getEcosystemIdentity, getEligibility])
 
   const eligibility = getEligibility(ecosystem)
   const eligibleCoins = getEligibleCoins(ecosystem)
