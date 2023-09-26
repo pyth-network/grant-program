@@ -7,6 +7,28 @@ import { MerkleTree } from '../claim_sdk/merkleTree'
 dotenv.config() // Load environment variables from .env file
 
 const EVM_ECOSYSTEM_INDEX = 3
+const EVM_CHAINS = [
+  'optimism-mainnet',
+  'arbitrum-mainnet',
+  'cronos-mainnet',
+  'zksync-mainnet',
+  'bsc-mainnet',
+  'base-mainnet',
+  'evmos-mainnet',
+  'mantle-mainnet',
+  'linea-mainnet',
+  'polygon-zkevm-mainnet',
+  'avalanche-mainnet',
+  'matic-mainnet',
+  'aurora-mainnet',
+  'eth-mainnet',
+  'confluxespace-mainnet',
+  'celo-mainnet',
+  'meter-mainnet',
+  'gnosis-mainnet',
+  'kcc-mainnet',
+  'wemix-mainnet',
+]
 
 /** Get the database pool with the default configuration. */
 export function getDatabasePool(): Pool {
@@ -16,6 +38,32 @@ export function getDatabasePool(): Pool {
 
 export async function clearDatabase(pool: Pool) {
   await pool.query('DELETE FROM claims', [])
+}
+
+export async function addClaimInfosToDatabase(
+  pool: Pool,
+  claimInfos: ClaimInfo[]
+): Promise<Buffer> {
+  const merkleTree = new MerkleTree(
+    claimInfos.map((claimInfo) => {
+      return claimInfo.toBuffer()
+    })
+  )
+
+  for (const claimInfo of claimInfos) {
+    const proof = merkleTree.prove(claimInfo.toBuffer())
+
+    await pool.query(
+      'INSERT INTO claims VALUES($1::ecosystem_type, $2, $3, $4)',
+      [
+        claimInfo.ecosystem,
+        claimInfo.identity,
+        claimInfo.amount.toString(), // TODO : Use Bigint
+        proof,
+      ]
+    )
+  }
+  return merkleTree.root
 }
 
 export async function addTestWalletsToDatabase(
@@ -34,55 +82,56 @@ export async function addTestWalletsToDatabase(
     }
   ).flat(1)
 
-  const merkleTree = new MerkleTree(
-    claimInfos.map((claimInfo) => {
-      return claimInfo.toBuffer()
+  return addClaimInfosToDatabase(pool, claimInfos)
+}
+
+export async function addClaimInfosToEvmBreakdown(
+  pool: Pool,
+  claimInfos: ClaimInfo[]
+) {
+  const rows: { chain: string; identity: string; amount: anchor.BN }[] = []
+  for (let claimInfo of claimInfos) {
+    const shuffled = EVM_CHAINS.map((value) => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value)
+
+    rows.push({
+      chain: shuffled[0],
+      identity: claimInfo.identity,
+      amount: claimInfo.amount.div(new anchor.BN(3)), // TODO : Use Bigint
     })
-  )
-
-  for (const claimInfo of claimInfos) {
-    const proof = merkleTree.prove(claimInfo.toBuffer())
-
+    rows.push({
+      chain: shuffled[1],
+      identity: claimInfo.identity,
+      amount: claimInfo.amount.div(new anchor.BN(3)),
+    })
+    rows.push({
+      chain: shuffled[2],
+      identity: claimInfo.identity,
+      amount: claimInfo.amount
+        .div(new anchor.BN(3))
+        .add(claimInfo.amount.mod(new anchor.BN(3))),
+    })
+  }
+  for (const row of rows) {
     await pool.query(
-      'INSERT INTO claims VALUES($1::ecosystem_type, $2, $3, $4)',
-      [
-        claimInfo.ecosystem,
-        claimInfo.identity,
-        claimInfo.amount.toNumber(),
-        proof,
-      ]
+      'INSERT INTO evm_breakdowns VALUES($1::evm_chain, $2, $3)',
+      [row.chain, row.identity, row.amount.toString()]
     )
   }
-  return merkleTree.root
 }
 
 export async function addTestEvmBreakdown(
   pool: Pool,
   testEvmWallets: TestEvmWallet[]
 ): Promise<void> {
-  const rows: { chain: string; identity: string; amount: number }[] = []
-  for (let i = 0; i < testEvmWallets.length; i++) {
-    const totalAmount = 1000000 * EVM_ECOSYSTEM_INDEX + 100000 * i
-    rows.push({
-      chain: 'optimism-mainnet',
-      identity: testEvmWallets[i].address(),
-      amount: totalAmount / 3,
-    })
-    rows.push({
-      chain: 'eth-mainnet',
-      identity: testEvmWallets[i].address(),
-      amount: totalAmount / 3,
-    })
-    rows.push({
-      chain: 'arbitrum-mainnet',
-      identity: testEvmWallets[i].address(),
-      amount: totalAmount / 3 + (totalAmount % 3),
-    })
-  }
-  for (const row of rows) {
-    await pool.query(
-      'INSERT INTO evm_breakdowns VALUES($1::evm_chain, $2, $3)',
-      [row.chain, row.identity, row.amount]
-    )
-  }
+  const claimInfos = testEvmWallets.map(
+    (testEvmWallet, index) =>
+      new ClaimInfo(
+        'evm',
+        testEvmWallet.address(),
+        new anchor.BN(1000000 * EVM_ECOSYSTEM_INDEX + 100000 * index)
+      )
+  )
+  await addClaimInfosToEvmBreakdown(pool, claimInfos)
 }
