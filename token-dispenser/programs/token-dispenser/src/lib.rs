@@ -159,6 +159,13 @@ pub mod token_dispenser {
             claim_info.amount,
         )?;
 
+            emit!(ClaimEvent {
+                remaining_balance: treasury.amount,
+                claim_amount:      claim_info.amount,
+                claimant:          *ctx.accounts.claimant.key,
+                leaf_buffer:       leaf_vector,
+            });
+
 
         Ok(())
     }
@@ -629,4 +636,17 @@ impl crate::accounts::Claim {
             associated_token_program: associated_token::ID,
         }
     }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Event
+////////////////////////////////////////////////////////////////////////////////
+
+#[event]
+pub struct ClaimEvent {
+    pub remaining_balance: u64,
+    pub claim_amount:      u64,
+    pub claimant:          Pubkey,
+    pub leaf_buffer:       Vec<u8>,
 }
