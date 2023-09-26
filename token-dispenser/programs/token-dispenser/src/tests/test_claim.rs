@@ -81,7 +81,7 @@ pub async fn test_claim_fails_with_wrong_accounts() {
                     .unwrap_err()
                     .unwrap(),
                 solana_sdk::instruction::InstructionError::MissingAccount
-                    .into_transaction_error(ix_index_error),
+                    .into_transaction_error(ix_index_error)
             );
         }
     }
