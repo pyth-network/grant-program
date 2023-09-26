@@ -62,7 +62,7 @@ export function useAptosSignMessage(nonce = 'nonce'): SignMessageFn {
 
 // This hook returns a function to sign message for the Cosmos wallet.
 export function useCosmosSignMessage(
-  chainName: ChainName | 'sei',
+  chainName: ChainName,
   walletName: string = 'keplr-extension'
 ): SignMessageFn {
   const { signArbitrary, address, isWalletConnected } = useChainWallet(
