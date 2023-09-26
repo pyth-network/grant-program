@@ -17,11 +17,17 @@ use {
         },
         system_program,
     },
-    anchor_spl::token::{
-        spl_token,
-        Mint,
-        Token,
-        TokenAccount,
+    anchor_spl::{
+        associated_token::{
+            self,
+            AssociatedToken,
+        },
+        token::{
+            spl_token,
+            Mint,
+            Token,
+            TokenAccount,
+        },
     },
     ecosystems::{
         aptos::{
@@ -185,24 +191,27 @@ pub struct Initialize<'info> {
 #[instruction(claim_certificates : Vec<ClaimCertificate>)]
 pub struct Claim<'info> {
     #[account(mut)]
-    pub claimant:           Signer<'info>,
+    pub claimant:                 Signer<'info>,
     /// Claimant's associated token account to receive the tokens
     /// Should be initialized outside of this program.
     #[account(
-        mut,
+        init_if_needed,
+        payer = claimant,
         associated_token::authority = claimant,
-        associated_token::mint = config.mint,
+        associated_token::mint = mint,
     )]
-    pub claimant_fund:      Account<'info, TokenAccount>,
-    #[account(seeds = [CONFIG_SEED], bump = config.bump, has_one = treasury)]
-    pub config:             Account<'info, Config>,
+    pub claimant_fund:            Account<'info, TokenAccount>,
+    #[account(seeds = [CONFIG_SEED], bump = config.bump, has_one = treasury, has_one = mint)]
+    pub config:                   Account<'info, Config>,
+    pub mint:                     Account<'info, Mint>,
     #[account(mut)]
-    pub treasury:           Account<'info, TokenAccount>,
-    pub token_program:      Program<'info, Token>,
-    pub system_program:     Program<'info, System>,
+    pub treasury:                 Account<'info, TokenAccount>,
+    pub token_program:            Program<'info, Token>,
+    pub system_program:           Program<'info, System>,
     /// CHECK : Anchor wants me to write this comment because I'm using AccountInfo which doesn't check for ownership and doesn't deserialize the account automatically. But it's fine because I check the address and I load it using load_instruction_at_checked.
     #[account(address = SYSVAR_IX_ID)]
-    pub sysvar_instruction: AccountInfo<'info>,
+    pub sysvar_instruction:       AccountInfo<'info>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 
@@ -598,15 +607,22 @@ impl crate::accounts::Initialize {
 }
 
 impl crate::accounts::Claim {
-    pub fn populate(claimant: Pubkey, claimant_fund: Pubkey, treasury: Pubkey) -> Self {
+    pub fn populate(
+        claimant: Pubkey,
+        mint: Pubkey,
+        claimant_fund: Pubkey,
+        treasury: Pubkey,
+    ) -> Self {
         crate::accounts::Claim {
             claimant,
             claimant_fund,
             config: get_config_pda().0,
+            mint,
             treasury,
             token_program: spl_token::id(),
             system_program: system_program::System::id(),
             sysvar_instruction: SYSVAR_IX_ID,
+            associated_token_program: associated_token::ID,
         }
     }
 }

@@ -108,7 +108,7 @@ describe('integration test', () => {
   describe('token dispenser e2e', () => {
     const wallet = loadAnchorWallet()
     const tokenDispenserProvider = new TokenDispenserProvider(
-      'http://localhost:8899',
+      'http://127.0.0.1:8899',
       wallet,
       new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'),
       {

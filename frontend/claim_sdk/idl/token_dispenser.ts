@@ -90,6 +90,11 @@ export type TokenDispenser =
           "isSigner": false
         },
         {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "treasury",
           "isMut": true,
           "isSigner": false
@@ -111,6 +116,11 @@ export type TokenDispenser =
           "docs": [
             "CHECK : Anchor wants me to write this comment because I'm using AccountInfo which doesn't check for ownership and doesn't deserialize the account automatically. But it's fine because I check the address and I load it using load_instruction_at_checked."
           ]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -699,6 +709,11 @@ export const IDL: TokenDispenser =
           "isSigner": false
         },
         {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "treasury",
           "isMut": true,
           "isSigner": false
@@ -720,6 +735,11 @@ export const IDL: TokenDispenser =
           "docs": [
             "CHECK : Anchor wants me to write this comment because I'm using AccountInfo which doesn't check for ownership and doesn't deserialize the account automatically. But it's fine because I check the address and I load it using load_instruction_at_checked."
           ]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
