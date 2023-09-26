@@ -124,7 +124,7 @@ function getSeiConnectionStatusKey() {
 }
 
 // This wallet assumes that a wallet is connected
-export function getConnectedWalletName():
+export function getSeiConnectedWalletName():
   | 'keplr-extension'
   | 'compass-extension' {
   const wallet = getConnectedWallet()
