@@ -119,8 +119,7 @@ function getConnectedWallet(): StoredWallet {
 }
 
 function getSeiConnectionStatusKey() {
-  const KEPLR_CONNECTION_STATUS_KEY = 'sei-local-storage-connection-key'
-  return KEPLR_CONNECTION_STATUS_KEY
+  return 'sei-local-storage-connection-key'
 }
 
 // This wallet assumes that a wallet is connected
