@@ -230,7 +230,7 @@ export class TokenDispenserProvider {
       this.tokenDispenserProgram.provider as anchor.AnchorProvider
     ).wallet.signAllTransactions(txs)
 
-    // send the txns ones. Associated token account will be created if needed.
+    // send the txns. Associated token account will be created if needed.
     const sendTxs = signedTxs.map(async (signedTx) => {
       const signature = await this.connection.sendTransaction(signedTx, {
         skipPreflight: true,
