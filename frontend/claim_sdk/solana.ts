@@ -138,7 +138,7 @@ export class TokenDispenserProvider {
     treasury: anchor.web3.PublicKey,
     dispenserGuard: anchor.web3.PublicKey
   ): Promise<TransactionSignature> {
-    const addressLookupTable = await this.initAddressLookupTable(treasury)
+    const addressLookupTable = await this.initAddressLookupTable(mint, treasury)
 
     return this.tokenDispenserProgram.methods
       .initialize(Array.from(root), dispenserGuard)
@@ -153,6 +153,7 @@ export class TokenDispenserProvider {
   }
 
   private async initAddressLookupTable(
+    mint: anchor.web3.PublicKey,
     treasury: anchor.web3.PublicKey
   ): Promise<anchor.web3.PublicKey> {
     const recentSlot = await this.provider.connection.getSlot()
@@ -168,10 +169,12 @@ export class TokenDispenserProvider {
       lookupTable: lookupTableAddress,
       addresses: [
         this.configPda[0],
+        mint,
         treasury,
         TOKEN_PROGRAM_ID,
         SystemProgram.programId,
         SYSVAR_INSTRUCTIONS_PUBKEY,
+        splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       ],
     })
     let createLookupTableTx = new VersionedTransaction(
@@ -205,38 +208,6 @@ export class TokenDispenserProvider {
     )
   }
 
-  public async createAssociatedTokenAccountTxnIfNeeded(): Promise<VersionedTransaction | null> {
-    const config = await this.getConfig()
-    const associatedTokenAccount = await this.getClaimantFundAddress()
-    if (
-      (await this.provider.connection.getAccountInfo(
-        associatedTokenAccount
-      )) === null
-    ) {
-      const createAssociatedTokenAccountIx =
-        splToken.Token.createAssociatedTokenAccountInstruction(
-          splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-          splToken.TOKEN_PROGRAM_ID,
-          config.mint,
-          associatedTokenAccount,
-          this.claimant,
-          this.claimant
-        )
-
-      const txn = new VersionedTransaction(
-        new TransactionMessage({
-          instructions: [createAssociatedTokenAccountIx],
-          payerKey: this.provider.publicKey!,
-          recentBlockhash: (await this.connection.getLatestBlockhash())
-            .blockhash,
-        }).compileToV0Message()
-      )
-
-      return txn
-    }
-    return null
-  }
-
   public async submitClaims(
     claims: {
       claimInfo: ClaimInfo
@@ -245,11 +216,6 @@ export class TokenDispenserProvider {
     }[]
   ): Promise<Promise<TransactionError | null>[]> {
     let txs: VersionedTransaction[] = []
-
-    const createAtaTxn = await this.createAssociatedTokenAccountTxnIfNeeded()
-    if (createAtaTxn) {
-      txs.push(createAtaTxn)
-    }
 
     for (const claim of claims) {
       txs.push(
@@ -264,28 +230,7 @@ export class TokenDispenserProvider {
       this.tokenDispenserProgram.provider as anchor.AnchorProvider
     ).wallet.signAllTransactions(txs)
 
-    // send createAtaTxn first and then others. Others need a TokenAccount before
-    // being able to be executed
-    if (createAtaTxn !== null) {
-      const signature = await this.connection.sendTransaction(signedTxs[0], {
-        skipPreflight: true,
-      })
-
-      const latestBlockHash = await this.connection.getLatestBlockhash()
-      await this.connection.confirmTransaction(
-        {
-          signature,
-          blockhash: latestBlockHash.blockhash,
-          lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-        },
-        'confirmed'
-      )
-
-      // remove the executed tx
-      signedTxs = signedTxs.slice(1)
-    }
-
-    // send the remaining ones
+    // send the txns ones. Associated token account will be created if needed.
     const sendTxs = signedTxs.map(async (signedTx) => {
       const signature = await this.connection.sendTransaction(signedTx, {
         skipPreflight: true,
@@ -343,10 +288,12 @@ export class TokenDispenserProvider {
         claimant: this.claimant,
         claimantFund: await this.getClaimantFundAddress(),
         config: this.getConfigPda()[0],
+        mint: (await this.getConfig()).mint,
         treasury: (await this.getConfig()).treasury,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
         sysvarInstruction: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+        associatedTokenProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       })
       .remainingAccounts([
         {

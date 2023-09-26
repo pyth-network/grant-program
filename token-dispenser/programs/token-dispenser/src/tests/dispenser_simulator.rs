@@ -261,9 +261,11 @@ impl DispenserSimulator {
             vec![
                 get_config_pda().0,
                 self.pyth_treasury,
+                self.mint_keypair.pubkey(),
                 spl_token::id(),
                 system_program::System::id(),
                 SYSVAR_IX_ID,
+                spl_associated_token_account::id(),
             ],
         );
 
@@ -312,12 +314,6 @@ impl DispenserSimulator {
         for claimant_keypair in &claimants {
             self.airdrop(claimant_keypair.pubkey(), LAMPORTS_PER_SOL)
                 .await?;
-            self.create_associated_token_account(
-                &claimant_keypair.pubkey(),
-                &self.mint_keypair.pubkey(),
-            )
-            .await
-            .unwrap();
         }
 
         let mock_offchain_certificates_and_claimants: Vec<(
@@ -428,6 +424,7 @@ impl DispenserSimulator {
             .unwrap();
         let mut accounts = accounts::Claim::populate(
             claimant.pubkey(),
+            config.mint,
             claimant_fund
                 .unwrap_or_else(|| get_associated_token_address(&claimant.pubkey(), &config.mint)),
             config.treasury,

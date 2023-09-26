@@ -26,7 +26,7 @@ import { blake2b } from '@noble/hashes/blake2b'
 
 describe('signature tests', () => {
   const solanaKeypair = anchor.web3.Keypair.generate()
-  const connection = new anchor.web3.Connection('http://localhost:8899')
+  const connection = new anchor.web3.Connection('http://127.0.0.1:8899')
   const provider = new anchor.AnchorProvider(
     connection,
     new NodeWallet(solanaKeypair),

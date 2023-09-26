@@ -80,8 +80,8 @@ pub async fn test_claim_fails_with_wrong_accounts() {
                     .await
                     .unwrap_err()
                     .unwrap(),
-                anchor_lang::error::ErrorCode::AccountNotInitialized
-                    .into_transaction_error(ix_index_error)
+                solana_sdk::instruction::InstructionError::MissingAccount
+                    .into_transaction_error(ix_index_error),
             );
         }
     }
@@ -166,7 +166,7 @@ pub async fn test_claim_fails_with_wrong_accounts() {
                     .await
                     .unwrap_err()
                     .unwrap(),
-                anchor_lang::error::ErrorCode::ConstraintAssociated
+                anchor_lang::error::ErrorCode::AccountNotAssociatedTokenAccount
                     .into_transaction_error(ix_index_error)
             );
         }
