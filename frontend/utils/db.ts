@@ -64,7 +64,7 @@ export async function addClaimInfosToDatabase(
       [
         claimInfo.ecosystem,
         claimInfo.identity,
-        claimInfo.amount.toString(), // TODO : Use Bigint
+        claimInfo.amount.toString(),
         proof,
       ]
     )
@@ -128,7 +128,7 @@ export async function addTestEvmBreakdown(
     rows.push({
       chain: shuffled[0],
       identity: claimInfo.identity,
-      amount: claimInfo.amount.div(new anchor.BN(3)), // TODO : Use Bigint
+      amount: claimInfo.amount.div(new anchor.BN(3)),
     })
     rows.push({
       chain: shuffled[1],
