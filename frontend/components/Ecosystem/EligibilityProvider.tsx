@@ -8,11 +8,11 @@ import {
 import { ProviderProps, Ecosystem } from '.'
 import { BN } from '@coral-xyz/anchor'
 import { ClaimInfo } from 'claim_sdk/claim'
-import { useIsClaimAlreadySubmitted } from 'hooks/useIsClaimAlreadySubmitted'
 import { useActivity } from './ActivityProvider'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { fetchAmountAndProof } from 'utils/api'
 import { enumToSdkEcosystem } from 'utils/ecosystemEnumToEcosystem'
+import { isClaimAlreadySubmitted } from 'utils/isClaimAlreadySubmitted'
 
 type Eligibility =
   | {
@@ -77,7 +77,6 @@ export function EligibilityProvider({ children }: ProviderProps) {
     getStoredEligibilityMap() ?? getDefaultEligibilityMap()
   )
 
-  const isClaimAlreadySubmitted = useIsClaimAlreadySubmitted()
   const getEcosystemIdentity = useGetEcosystemIdentity()
 
   // side effect: whenever the eligibilityMap changes sync the local storage
@@ -125,7 +124,7 @@ export function EligibilityProvider({ children }: ProviderProps) {
         })
       }
     })()
-  }, [eligibilityMap, getEcosystemIdentity, isClaimAlreadySubmitted])
+  }, [eligibilityMap, getEcosystemIdentity])
 
   // Fetch the latest claim status of ecosystem
   useEffect(() => {
