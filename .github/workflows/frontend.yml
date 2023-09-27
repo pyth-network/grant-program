@@ -15,6 +15,7 @@ jobs:
         PGDATABASE: ${{ env.PGDATABASE }}
         PROGRAM_ID: ${{ env.PROGRAM_ID }}
         PGHOST: postgres
+        ENDPOINT: http://localhost:8899
 
     env:
       PGUSER: myuser
