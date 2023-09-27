@@ -13,6 +13,7 @@ import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { BN } from '@coral-xyz/anchor'
 import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 import { TransactionError } from '@solana/web3.js'
+import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 
 // Following the convention,
 // If error is:
@@ -36,6 +37,7 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
     useState<{ [key in Ecosystem]?: EcosystemClaimState }>()
   const getClaim = useGetClaim()
   const { getEligibility } = useEligibility()
+  const getEcosystemIdentity = useGetEcosystemIdentity()
 
   // Calculating total tokens that has been claimed
   // using the ecosystemsClaimState
@@ -111,7 +113,10 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
               if you wish to sign the transaction. Confirm by clicking “sign” in
               your wallet’s pop-up window.
             </p>
-            <p>Your claimed PYTH tokens will go to this Solana wallet:</p>
+            <p>
+              Your claimed PYTH tokens will go to this Solana wallet:{' '}
+              <strong>{getEcosystemIdentity(Ecosystem.SOLANA)}</strong>
+            </p>
 
             <div className="mt-12 flex justify-end gap-4">
               <BackButton onBack={onBack} />
