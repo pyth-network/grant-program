@@ -167,7 +167,7 @@ export function EligibilityProvider({ children }: ProviderProps) {
         })
       }
     })()
-  }, [eligibilityMap, getEcosystemIdentity, isClaimAlreadySubmitted])
+  }, [eligibilityMap, getEcosystemIdentity])
 
   const { activity } = useActivity()
   // `getEligibility` will return the eligibility for the given ecosystem.
