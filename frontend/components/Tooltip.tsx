@@ -23,6 +23,7 @@ const Tooltip = ({
       appendTo={() => document.body}
       maxWidth="15rem"
       interactive
+      hideOnClick={false}
       content={
         <div
           className={`rounded border border-darkGray3 bg-darkGray p-3 text-xs leading-snug text-lavenderGray shadow-md ${className}`}
