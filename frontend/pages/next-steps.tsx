@@ -19,9 +19,7 @@ export default function NextStepsPage() {
   const params = useSearchParams()
   return (
     <Layout>
-      <TokensReceived
-        totalCoinsClaimed={params.get('totalTokensClaimed') ?? 'N/A'}
-      />
+      <TokensReceived totalCoinsClaimed={params.get('totalTokensClaimed')} />
     </Layout>
   )
 }

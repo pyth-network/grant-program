@@ -11,9 +11,9 @@ import Failed from '@images/not.inline.svg'
 import Success from '@images/verified.inline.svg'
 import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
-import Tooltip from '@components/Tooltip'
 import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { ProceedButton } from '@components/buttons'
+import { CoinCell } from '@components/table/CoinCell'
 
 export const ClaimStatus = ({
   onProceed,
@@ -111,7 +111,7 @@ function TableRow({ ecosystem, ecosystemClaimState }: TableRowProps) {
 
   // Showing coins only for ecosytem for which we submitted a claim.
   const coins = useMemo(() => {
-    if (ecosystemClaimState === undefined) return 'N/A'
+    if (ecosystemClaimState === undefined) return undefined
     return getEligibleCoins(ecosystem)
   }, [ecosystem, ecosystemClaimState, getEligibleCoins])
 
@@ -144,12 +144,7 @@ function TableRow({ ecosystem, ecosystemClaimState }: TableRowProps) {
           </span>
         </div>
       </td>
-      <td className="min-w-[130px] border-l border-light-35 bg-darkGray5">
-        <span className="flex items-center justify-center  gap-1 text-[20px]">
-          {coins}
-          <Coin />
-        </span>
-      </td>
+      <CoinCell coins={coins} />
     </tr>
   )
 }
