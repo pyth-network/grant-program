@@ -101,7 +101,7 @@ export const Layout = ({ children }: LayoutProps) => {
           objectFit="cover"
           objectPosition="left bottom"
         />
-        <span className="absolute -left-[510px] -bottom-[120px] max-w-[1400px]">
+        <span className="absolute -left-[430px] -bottom-24 max-h-[100vh] max-w-[1200px] ">
           <BgImage />
         </span>
       </span>
