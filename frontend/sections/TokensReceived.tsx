@@ -21,7 +21,7 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
           <h3 className="mb-8 flex items-center gap-2 font-header text-[36px] font-light">
             You Received{' '}
             <span className="flex items-center gap-2 font-bold">
-              <DisplayCoins coins={totalCoinsClaimed} />
+              <DisplayCoins coins={totalCoinsClaimed} icon={<Pyth />} />
             </span>
           </h3>
           <p className="mb-6">
