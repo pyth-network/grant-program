@@ -5,7 +5,6 @@ import Twitter from '@images/twitter.inline.svg'
 import Telegram from '@images/telegram.inline.svg'
 import Discord from '@images/discord.inline.svg'
 import Linkedin from '@images/linkedin.inline.svg'
-import { DisplayCoins } from '@components/Coins'
 
 export type TokensReceivedProps = {
   totalCoinsClaimed: string | null
@@ -21,7 +20,13 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
           <h3 className="mb-8 flex items-center gap-2 font-header text-[36px] font-light">
             You Received{' '}
             <span className="flex items-center gap-2 font-bold">
-              <DisplayCoins coins={totalCoinsClaimed} icon={<Pyth />} />
+              {totalCoinsClaimed === null ? (
+                'N/A'
+              ) : (
+                <>
+                  {totalCoinsClaimed} <Pyth />
+                </>
+              )}
             </span>
           </h3>
           <p className="mb-6">

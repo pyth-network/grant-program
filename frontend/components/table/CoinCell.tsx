@@ -1,6 +1,6 @@
 import Tooltip from '@components/Tooltip'
 import { classNames } from 'utils/classNames'
-import { DisplayCoins } from '@components/Coins'
+import Coin from '@images/coin.inline.svg'
 
 export type CoinCellProps = {
   coins?: string
@@ -22,7 +22,13 @@ export function CoinCell({
             isStriked ? 'line-through' : ''
           )}
         >
-          <DisplayCoins coins={coins} />
+          {coins === undefined || coins === null ? (
+            'N/A'
+          ) : (
+            <>
+              {coins} <Coin />
+            </>
+          )}
         </span>
       </Tooltip>
     </td>
