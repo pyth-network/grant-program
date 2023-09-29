@@ -23,12 +23,12 @@ export default function VerifyEligibilityPage() {
         <div className="px-10 py-8 text-base16">
           <p className="mb-6">
             Please connect your wallets and Discord account according to the
-            boxes you checked in <strong>Step 3</strong>. You can go back and
+            boxes you checked in <strong>Step 2</strong>. You can go back and
             change any of your selections.
           </p>
           <p>
-            You will be able to proceed to <strong>Step 5</strong> to claim your
-            tokens even if you do not successfully connect all of your wallets
+            You will not be able to proceed to <strong>Step 4</strong> to claim
+            your tokens if you do not successfully connect all of your wallets
             or Discord account.
           </p>
 

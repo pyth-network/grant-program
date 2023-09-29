@@ -4,6 +4,7 @@ import {
   useWallet,
 } from '@aptos-labs/wallet-adapter-react'
 import { PetraWallet } from 'petra-plugin-wallet-adapter'
+import { MartianWallet } from '@martianwallet/aptos-wallet-adapter'
 import { ReactElement, ReactNode, useCallback, useMemo } from 'react'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 
@@ -14,7 +15,10 @@ type AptosWalletProviderProps = {
 export function AptosWalletProvider({
   children,
 }: AptosWalletProviderProps): ReactElement {
-  const aptosWallets = useMemo(() => [new PetraWallet()], [])
+  const aptosWallets = useMemo(
+    () => [new PetraWallet(), new MartianWallet()],
+    []
+  )
 
   return (
     <AptosWalletAdapterProvider plugins={aptosWallets} autoConnect>

@@ -39,7 +39,7 @@ export const ClaimStatus = ({
 
       if (isAnyProccessing) {
         setIsProceedDisabled(true)
-        setProceedTooltipContent('proceesing')
+        setProceedTooltipContent('processing')
       } else {
         setIsProceedDisabled(false)
         setProceedTooltipContent(undefined)

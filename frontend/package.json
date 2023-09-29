@@ -21,6 +21,7 @@
     "@injectivelabs/sdk-ts": "^1.11.0",
     "@keplr-wallet/cosmos": "^0.12.20",
     "@keplr-wallet/crypto": "^0.12.20",
+    "@martianwallet/aptos-wallet-adapter": "^0.0.4",
     "@mysten/sui.js": "^0.40.0",
     "@mysten/wallet-kit": "^0.5.1",
     "@noble/curves": "^1.1.0",

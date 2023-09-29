@@ -60,7 +60,7 @@ const Eligibility = ({
     // if there is no tokens to claim
     if (isConnectionPending) {
       setIsProceedDisabled(true)
-      setProceedTooltipContent('Some ecosystem are not yet connected.')
+      setProceedTooltipContent('Some ecosystems are not yet connected.')
       return
     } else if (areAllTokensClaimed) {
       setIsProceedDisabled(true)

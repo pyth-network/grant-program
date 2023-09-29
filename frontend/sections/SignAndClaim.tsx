@@ -14,6 +14,7 @@ import { BN } from '@coral-xyz/anchor'
 import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 import { TransactionError } from '@solana/web3.js'
 import { Box } from '@components/Box'
+import { SolanaWalletCopyButton } from '@components/buttons/SolanaWalletCopyButton'
 
 // Following the convention,
 // If error is:
@@ -102,9 +103,12 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
     <>
       {screen == 1 ? (
         <Box>
-          <h4 className="border-b border-light-35 bg-[#242339] py-8 px-10  font-header text-[28px] font-light leading-[1.2]">
-            Sign Your Wallets and Claim
-          </h4>
+          <div className="flex items-center justify-between border-b border-light-35  bg-[#242339] py-8 px-10">
+            <h4 className="font-header text-[28px] font-light leading-[1.2]">
+              Sign Your Wallets and Claim
+            </h4>
+            <BackButton onBack={onBack} />
+          </div>
           <div className="px-10 py-8 text-base16">
             <p className="mb-6">
               Please sign your connected wallets. To sign, click the
@@ -112,11 +116,12 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
               if you wish to sign the transaction. Confirm by clicking “sign” in
               your wallet’s pop-up window.
             </p>
-            <p>Your claimed PYTH tokens will go to this Solana wallet:</p>
-
-            <div className="mt-12 flex justify-end gap-4">
-              <BackButton onBack={onBack} />
-              <ProceedButton onProceed={() => setScreen(2)} />
+            <p>Your claimed PYTH tokens will go to this Solana wallet: </p>
+            <div className="mt-4 flex justify-between gap-4">
+              <SolanaWalletCopyButton />
+              <div className="mt-8">
+                <ProceedButton onProceed={() => setScreen(2)} />
+              </div>
             </div>
           </div>
         </Box>
