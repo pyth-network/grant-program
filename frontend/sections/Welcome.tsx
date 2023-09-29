@@ -1,10 +1,11 @@
 import React from 'react'
 import { ProceedButton } from '@components/buttons'
+import { Box } from '@components/Box'
 
 export const Welcome = ({ onProceed }: { onProceed: () => void }) => {
   return (
     <>
-      <div className=" border border-light-35 bg-dark">
+      <Box>
         <h4 className="border-b border-light-35 bg-[#242339] py-8 px-10  font-header text-[28px] font-light leading-[1.2]">
           Welcome to the Pyth Airdrop Claim Process
         </h4>
@@ -39,7 +40,7 @@ export const Welcome = ({ onProceed }: { onProceed: () => void }) => {
             <ProceedButton onProceed={onProceed} />
           </div>
         </div>
-      </div>
+      </Box>
     </>
   )
 }

@@ -7,7 +7,6 @@ import { Ecosystem } from '@components/Ecosystem'
 import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
-import { useIsClaimAlreadySubmitted } from 'hooks/useIsClaimAlreadySubmitted'
 import { EcosystemSignButton } from '@components/EcosystemSignButton'
 import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
@@ -15,6 +14,7 @@ import { BackButton, ProceedButton } from '@components/buttons'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { CoinCell } from '@components/table/CoinCell'
 import { TotalAllocationRow } from '@components/table/TotalAllocationRow'
+import { Box } from '@components/Box'
 
 export const SignForEligibleWallets = ({
   onBack,
@@ -75,7 +75,7 @@ export const SignForEligibleWallets = ({
   }, [activity, getEcosystemIdentity, getEligibility, getSignature])
 
   return (
-    <div className=" overflow-auto border border-light-35 bg-dark">
+    <Box>
       <div className="min-w-[650px]">
         <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-8 px-10">
           <h4 className="   font-header text-[28px] font-light leading-[1.2]">
@@ -100,7 +100,7 @@ export const SignForEligibleWallets = ({
           </tbody>
         </table>
       </div>
-    </div>
+    </Box>
   )
 }
 
@@ -112,7 +112,6 @@ function TableRow({ ecosystem }: TableRowProps) {
   const { activity } = useActivity()
   const getEcosystemIdentity = useGetEcosystemIdentity()
   const { getEligibility } = useEligibility()
-  const isClaimAlreadySubmitted = useIsClaimAlreadySubmitted()
   const [rowDisabled, setRowDisabled] = useState(true)
   // if it is undefined, no tooltip will be shown
   const [rowTooltipContent, setRowTooltipContent] = useState<string>()
@@ -152,13 +151,7 @@ function TableRow({ ecosystem }: TableRowProps) {
         }
       } else setRowDisabled(true)
     })()
-  }, [
-    activity,
-    ecosystem,
-    getEcosystemIdentity,
-    getEligibility,
-    isClaimAlreadySubmitted,
-  ])
+  }, [activity, ecosystem, getEcosystemIdentity, getEligibility])
 
   const eligibility = getEligibility(ecosystem)
   const eligibleCoins = getEligibleCoins(ecosystem)
