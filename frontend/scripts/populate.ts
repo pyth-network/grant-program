@@ -26,6 +26,7 @@ async function main() {
   if (PGHOST != 'localhost') {
     throw new Error('This script is only intended to be run on localhost')
   }
+  console.log('This is the program id: ', PROGRAM_ID)
 
   await clearDatabase(pool)
   const testWallets = await loadTestWallets()
