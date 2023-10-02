@@ -60,10 +60,6 @@
         {
           "name": "dispenserGuard",
           "type": "publicKey"
-        },
-        {
-          "name": "funder",
-          "type": "publicKey"
         }
       ]
     },
@@ -176,10 +172,6 @@
           },
           {
             "name": "addressLookupTable",
-            "type": "publicKey"
-          },
-          {
-            "name": "funder",
             "type": "publicKey"
           }
         ]

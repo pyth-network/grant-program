@@ -61,10 +61,6 @@ export type TokenDispenser =
         {
           "name": "dispenserGuard",
           "type": "publicKey"
-        },
-        {
-          "name": "funder",
-          "type": "publicKey"
         }
       ]
     },
@@ -177,10 +173,6 @@ export type TokenDispenser =
           },
           {
             "name": "addressLookupTable",
-            "type": "publicKey"
-          },
-          {
-            "name": "funder",
             "type": "publicKey"
           }
         ]
@@ -693,10 +685,6 @@ export const IDL: TokenDispenser =
         {
           "name": "dispenserGuard",
           "type": "publicKey"
-        },
-        {
-          "name": "funder",
-          "type": "publicKey"
         }
       ]
     },
@@ -809,10 +797,6 @@ export const IDL: TokenDispenser =
           },
           {
             "name": "addressLookupTable",
-            "type": "publicKey"
-          },
-          {
-            "name": "funder",
             "type": "publicKey"
           }
         ]
