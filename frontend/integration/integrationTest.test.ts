@@ -19,6 +19,7 @@ import {
   DiscordTestWallet,
   TestWallet,
   loadAnchorWallet,
+  loadFunderWallet,
 } from '../claim_sdk/testWallets'
 import { loadTestWallets } from '../claim_sdk/testWallets'
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -107,6 +108,7 @@ describe('integration test', () => {
 
   describe('token dispenser e2e', () => {
     const wallet = loadAnchorWallet()
+    const funderWallet = loadFunderWallet()
     const tokenDispenserProvider = new TokenDispenserProvider(
       'http://127.0.0.1:8899',
       wallet,
@@ -133,7 +135,8 @@ describe('integration test', () => {
         root,
         mint.publicKey,
         treasury,
-        dispenserGuard
+        dispenserGuard,
+        funderWallet.publicKey
       )
 
       const configAccount = await tokenDispenserProvider.getConfig()
