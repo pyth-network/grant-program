@@ -71,8 +71,13 @@ export type TokenDispenser =
       ],
       "accounts": [
         {
-          "name": "claimant",
+          "name": "payer",
           "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "claimant",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -690,8 +695,13 @@ export const IDL: TokenDispenser =
       ],
       "accounts": [
         {
-          "name": "claimant",
+          "name": "payer",
           "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "claimant",
+          "isMut": false,
           "isSigner": true
         },
         {

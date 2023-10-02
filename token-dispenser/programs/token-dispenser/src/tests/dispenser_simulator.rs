@@ -68,7 +68,6 @@ use {
             ReadableAccount,
         },
         instruction::InstructionError,
-        native_token::LAMPORTS_PER_SOL,
         signature::Keypair,
         signer::Signer,
         slot_hashes::SlotHashes,
@@ -311,11 +310,6 @@ impl DispenserSimulator {
         ),
         BanksClientError,
     > {
-        for claimant_keypair in &claimants {
-            self.airdrop(claimant_keypair.pubkey(), LAMPORTS_PER_SOL)
-                .await?;
-        }
-
         let mock_offchain_certificates_and_claimants: Vec<(
             Keypair,
             Vec<TestClaimCertificate>,
@@ -423,6 +417,7 @@ impl DispenserSimulator {
             .await
             .unwrap();
         let mut accounts = accounts::Claim::populate(
+            self.genesis_keypair.pubkey(),
             claimant.pubkey(),
             config.mint,
             claimant_fund
