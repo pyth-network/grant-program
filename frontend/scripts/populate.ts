@@ -51,6 +51,11 @@ async function main() {
     LAMPORTS_PER_SOL,
     tokenDispenserProvider.claimant
   )
+  await airdrop(
+    tokenDispenserProvider.connection,
+    LAMPORTS_PER_SOL,
+    FUNDER.publicKey
+  )
   const mintAndTreasury = await tokenDispenserProvider.setupMintAndTreasury()
   await tokenDispenserProvider.initialize(
     root,

@@ -139,7 +139,11 @@ export class TokenDispenserProvider {
     dispenserGuard: anchor.web3.PublicKey,
     funder: anchor.web3.PublicKey
   ): Promise<TransactionSignature> {
-    const addressLookupTable = await this.initAddressLookupTable(mint, treasury)
+    const addressLookupTable = await this.initAddressLookupTable(
+      mint,
+      treasury,
+      funder
+    )
 
     return this.tokenDispenserProgram.methods
       .initialize(Array.from(root), dispenserGuard, funder)
@@ -155,7 +159,8 @@ export class TokenDispenserProvider {
 
   private async initAddressLookupTable(
     mint: anchor.web3.PublicKey,
-    treasury: anchor.web3.PublicKey
+    treasury: anchor.web3.PublicKey,
+    funder: anchor.web3.PublicKey
   ): Promise<anchor.web3.PublicKey> {
     const recentSlot = await this.provider.connection.getSlot()
     const [loookupTableInstruction, lookupTableAddress] =
@@ -176,6 +181,7 @@ export class TokenDispenserProvider {
         SystemProgram.programId,
         SYSVAR_INSTRUCTIONS_PUBKEY,
         splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+        funder,
       ],
     })
     let createLookupTableTx = new VersionedTransaction(
@@ -231,8 +237,27 @@ export class TokenDispenserProvider {
       this.tokenDispenserProgram.provider as anchor.AnchorProvider
     ).wallet.signAllTransactions(txs)
 
+    const response = await fetch('/api/grant/v1/fund_transaction', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(
+        signedTxs.map((signedTx) => Buffer.from(signedTx.serialize()))
+      ),
+    })
+
+    const fundedSignedTransactions: VersionedTransaction[] = (
+      await response.json()
+    ).map((serializedTx: any) => {
+      return VersionedTransaction.deserialize(
+        Buffer.from(serializedTx, 'base64')
+      )
+    })
+    console.log(fundedSignedTransactions)
+
     // send the txns. Associated token account will be created if needed.
-    const sendTxs = signedTxs.map(async (signedTx) => {
+    const sendTxs = fundedSignedTransactions.map(async (signedTx) => {
       const signature = await this.connection.sendTransaction(signedTx, {
         skipPreflight: true,
       })
@@ -286,6 +311,7 @@ export class TokenDispenserProvider {
     const claim_ix = await this.tokenDispenserProgram.methods
       .claim([claimCert])
       .accounts({
+        payer: (await this.getConfig()).funder,
         claimant: this.claimant,
         claimantFund: await this.getClaimantFundAddress(),
         config: this.getConfigPda()[0],
@@ -310,7 +336,7 @@ export class TokenDispenserProvider {
     const claimTx = new VersionedTransaction(
       new TransactionMessage({
         instructions: ixs,
-        payerKey: this.provider.publicKey!,
+        payerKey: (await this.getConfig()).funder,
         recentBlockhash: (await this.connection.getLatestBlockhash()).blockhash,
       }).compileToV0Message([lookupTableAccount!])
     )
