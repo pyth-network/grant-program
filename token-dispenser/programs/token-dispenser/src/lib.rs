@@ -142,7 +142,7 @@ pub mod token_dispenser {
             checked_create_claim_receipt(
                 index,
                 &leaf_vector,
-                &ctx.accounts.payer,
+                &ctx.accounts.funder,
                 &ctx.accounts.system_program,
                 ctx.remaining_accounts,
             )?;
@@ -193,13 +193,13 @@ pub struct Initialize<'info> {
 #[instruction(claim_certificates : Vec<ClaimCertificate>)]
 pub struct Claim<'info> {
     #[account(mut)]
-    pub payer:                    Signer<'info>,
+    pub funder:                   Signer<'info>, // Funds the claimant_fund and the claim receipt account
     pub claimant:                 Signer<'info>,
     /// Claimant's associated token account to receive the tokens
     /// Should be initialized outside of this program.
     #[account(
         init_if_needed,
-        payer = payer,
+        payer = funder,
         associated_token::authority = claimant,
         associated_token::mint = mint,
     )]
@@ -612,14 +612,14 @@ impl crate::accounts::Initialize {
 
 impl crate::accounts::Claim {
     pub fn populate(
-        payer: Pubkey,
+        funder: Pubkey,
         claimant: Pubkey,
         mint: Pubkey,
         claimant_fund: Pubkey,
         treasury: Pubkey,
     ) -> Self {
         crate::accounts::Claim {
-            payer,
+            funder,
             claimant,
             claimant_fund,
             config: get_config_pda().0,
