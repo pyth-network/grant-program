@@ -70,8 +70,13 @@
       ],
       "accounts": [
         {
-          "name": "claimant",
+          "name": "payer",
           "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "claimant",
+          "isMut": false,
           "isSigner": true
         },
         {
