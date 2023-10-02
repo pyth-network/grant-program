@@ -534,17 +534,18 @@ pub async fn test_claim_works_if_receipt_has_balance() {
         assert_eq!(receipt_account.lamports, LAMPORTS_PER_SOL);
         assert_eq!(receipt_account.owner, system_program::ID);
 
-        assert!(simulator
+        simulator
             .claim(
                 &copy_keypair(claimant),
                 offchain_claim_certificate,
                 &merkle_tree,
                 None,
                 None,
-                None
+                None,
             )
             .await
-            .is_ok());
+            .unwrap();
+
 
         let receipt_account: Account = simulator.get_account(receipt_pda).await.unwrap();
 
