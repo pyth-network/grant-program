@@ -288,6 +288,7 @@ pub async fn test_happy_path() {
         mint: simulator.mint_keypair.pubkey(),
         treasury,
         address_lookup_table,
+        funder: simulator.genesis_keypair.pubkey(),
     };
 
 

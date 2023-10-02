@@ -88,15 +88,17 @@ pub mod token_dispenser {
         ctx: Context<Initialize>,
         merkle_root: MerkleRoot<SolanaHasher>,
         dispenser_guard: Pubkey,
+        funder: Pubkey,
     ) -> Result<()> {
         require_keys_neq!(dispenser_guard, Pubkey::default());
-        let config = &mut ctx.accounts.config;
+        let config: &mut Account<'_, Config> = &mut ctx.accounts.config;
         config.bump = *ctx.bumps.get("config").unwrap();
         config.merkle_root = merkle_root;
         config.dispenser_guard = dispenser_guard;
         config.mint = ctx.accounts.mint.key();
         config.treasury = ctx.accounts.treasury.key();
         config.address_lookup_table = ctx.accounts.address_lookup_table.key();
+        config.funder = funder;
         Ok(())
     }
 
@@ -310,10 +312,11 @@ pub struct Config {
     pub mint:                 Pubkey,
     pub treasury:             Pubkey,
     pub address_lookup_table: Pubkey,
+    pub funder:               Pubkey,
 }
 
 impl Config {
-    pub const LEN: usize = 8 + 1 + 20 + 32 + 32 + 32 + 32;
+    pub const LEN: usize = 8 + 1 + 20 + 32 + 32 + 32 + 32 + 32;
 }
 
 #[account]

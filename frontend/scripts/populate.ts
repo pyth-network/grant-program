@@ -20,6 +20,9 @@ const PROGRAM_ID = envOrErr('PROGRAM_ID')
 const DISPENSER_GUARD = Keypair.fromSecretKey(
   new Uint8Array(JSON.parse(envOrErr('DISPENSER_GUARD')))
 )
+const FUNDER = Keypair.fromSecretKey(
+  new Uint8Array(JSON.parse(envOrErr('FUNDER_KEYPAIR')))
+)
 const PGHOST = envOrErr('PGHOST')
 
 async function main() {
@@ -48,12 +51,18 @@ async function main() {
     LAMPORTS_PER_SOL,
     tokenDispenserProvider.claimant
   )
+  await airdrop(
+    tokenDispenserProvider.connection,
+    LAMPORTS_PER_SOL,
+    FUNDER.publicKey
+  )
   const mintAndTreasury = await tokenDispenserProvider.setupMintAndTreasury()
   await tokenDispenserProvider.initialize(
     root,
     mintAndTreasury.mint.publicKey,
     mintAndTreasury.treasury,
-    DISPENSER_GUARD.publicKey
+    DISPENSER_GUARD.publicKey,
+    FUNDER.publicKey
   )
 }
 
