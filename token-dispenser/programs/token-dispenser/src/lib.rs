@@ -527,7 +527,7 @@ impl ClaimCertificate {
 pub fn checked_create_claim_receipt<'info>(
     index: usize,
     leaf: &[u8],
-    payer: &AccountInfo<'info>,
+    funder: &AccountInfo<'info>,
     system_program: &AccountInfo<'info>,
     remaining_accounts: &[AccountInfo<'info>],
 ) -> Result<()> {
@@ -546,12 +546,12 @@ pub fn checked_create_claim_receipt<'info>(
 
     let account_infos = vec![
         claim_receipt_account.clone(),
-        payer.to_account_info(),
+        funder.to_account_info(),
         system_program.to_account_info(),
     ];
     // Pay rent for the receipt account
     let transfer_instruction = system_instruction::transfer(
-        &payer.key(),
+        &funder.key(),
         &claim_receipt_account.key(),
         Rent::get()?
             .minimum_balance(0)
