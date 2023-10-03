@@ -148,7 +148,6 @@ export class TokenDispenserProvider {
     return this.tokenDispenserProgram.methods
       .initialize(Array.from(root), dispenserGuard, funder)
       .accounts({
-        payer: funder,
         config: this.getConfigPda()[0],
         mint,
         treasury,
