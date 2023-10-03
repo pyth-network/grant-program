@@ -49,7 +49,7 @@ async function main() {
   await airdrop(
     tokenDispenserProvider.connection,
     LAMPORTS_PER_SOL,
-    tokenDispenserProvider.claimant
+    FUNDER_KEYPAIR.publicKey
   )
   const mintAndTreasury = await tokenDispenserProvider.setupMintAndTreasury()
   await tokenDispenserProvider.initialize(
