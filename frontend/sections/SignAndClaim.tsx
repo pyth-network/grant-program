@@ -58,6 +58,10 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
   }, [ecosystemsClaimState, getEligibility, onProceed])
 
   const submitTxs = useCallback(async () => {
+    window.onbeforeunload = (e) => {
+      e.preventDefault()
+      return ''
+    }
     // This checks that the solana wallet is connected
     if (tokenDispenser === undefined) return
     const ecosystems: Ecosystem[] = []
@@ -97,6 +101,8 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
         },
       }))
     })
+
+    window.onbeforeunload = null
   }, [getClaim, tokenDispenser])
 
   return (
