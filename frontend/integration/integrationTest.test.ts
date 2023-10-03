@@ -109,6 +109,17 @@ describe('integration test', () => {
   describe('token dispenser e2e', () => {
     const wallet = loadAnchorWallet()
     const funderWallet = loadFunderWallet()
+    const deployerTokenDispenserProvider = new TokenDispenserProvider(
+      'http://127.0.0.1:8899',
+      funderWallet,
+      new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'),
+      {
+        skipPreflight: true,
+        preflightCommitment: 'processed',
+        commitment: 'processed',
+      }
+    )
+
     const tokenDispenserProvider = new TokenDispenserProvider(
       'http://127.0.0.1:8899',
       wallet,
@@ -124,14 +135,14 @@ describe('integration test', () => {
     let treasury: PublicKey
     beforeAll(async () => {
       const mintAndTreasury =
-        await tokenDispenserProvider.setupMintAndTreasury()
+        await deployerTokenDispenserProvider.setupMintAndTreasury()
       mint = mintAndTreasury.mint
       treasury = mintAndTreasury.treasury
     }, 10000)
 
     it('initializes the token dispenser', async () => {
-      const [_, configBump] = tokenDispenserProvider.getConfigPda()
-      await tokenDispenserProvider.initialize(
+      const [_, configBump] = deployerTokenDispenserProvider.getConfigPda()
+      await deployerTokenDispenserProvider.initialize(
         root,
         mint.publicKey,
         treasury,
@@ -139,7 +150,7 @@ describe('integration test', () => {
         funderWallet.publicKey
       )
 
-      const configAccount = await tokenDispenserProvider.getConfig()
+      const configAccount = await deployerTokenDispenserProvider.getConfig()
 
       expect(configAccount.bump).toEqual(configBump)
       expect(configAccount.merkleRoot).toEqual(Array.from(root))
@@ -148,7 +159,7 @@ describe('integration test', () => {
       expect(configAccount.dispenserGuard).toEqual(dispenserGuard)
       const lookupTableAddress = configAccount.addressLookupTable
       const lookupTableResp =
-        await tokenDispenserProvider.connection.getAddressLookupTable(
+        await deployerTokenDispenserProvider.connection.getAddressLookupTable(
           lookupTableAddress
         )
       expect(lookupTableResp.value).toBeDefined()
@@ -157,7 +168,7 @@ describe('integration test', () => {
       )
       expect(
         lookupTableAddresses.includes(
-          tokenDispenserProvider.getConfigPda()[0].toBase58()
+          deployerTokenDispenserProvider.getConfigPda()[0].toBase58()
         )
       ).toBeTruthy()
       expect(lookupTableAddresses.includes(treasury.toBase58())).toBeTruthy()
