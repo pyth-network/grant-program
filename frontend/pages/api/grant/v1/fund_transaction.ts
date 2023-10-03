@@ -22,13 +22,11 @@ export default async function handlerFundTransaction(
 
   try {
     transactions = data.map((serializedTx: any) => {
-      return VersionedTransaction.deserialize(
-        Buffer.from(serializedTx, 'base64')
-      )
+      return VersionedTransaction.deserialize(Buffer.from(serializedTx))
     })
   } catch {
     res.status(400).json({
-      error: 'Failed to deserialize transaction',
+      error: 'Failed to deserialize transactions',
     })
   }
 
@@ -39,7 +37,7 @@ export default async function handlerFundTransaction(
   } catch {
     res.status(400).json({
       error:
-        'Failed to sign transactions, make sure the transactions has the right funder',
+        'Failed to sign transactions, make sure the transactions have the right funder',
     })
   }
   res.status(200).json(

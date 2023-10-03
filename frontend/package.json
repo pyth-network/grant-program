@@ -3,7 +3,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "test": "jest integrationTest.test.ts",
+    "test": "jest",
     "test:api": "jest --testPathIgnorePatterns=integrationTest",
     "test:ci": "./scripts/setup.sh --test --no-postgres",
     "serve": "serve out",

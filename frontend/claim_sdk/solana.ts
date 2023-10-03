@@ -257,9 +257,7 @@ export class TokenDispenserProvider {
 
       fundedSignedTransactions = (await response.json()).map(
         (serializedTx: any) => {
-          return VersionedTransaction.deserialize(
-            Buffer.from(serializedTx, 'base64')
-          )
+          return VersionedTransaction.deserialize(Buffer.from(serializedTx))
         }
       )
     }
