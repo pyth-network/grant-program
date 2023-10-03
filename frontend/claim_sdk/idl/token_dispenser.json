@@ -129,11 +129,9 @@
       ],
       "args": [
         {
-          "name": "claimCertificates",
+          "name": "claimCertificate",
           "type": {
-            "vec": {
-              "defined": "ClaimCertificate"
-            }
+            "defined": "ClaimCertificate"
           }
         }
       ]

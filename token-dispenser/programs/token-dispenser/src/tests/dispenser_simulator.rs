@@ -441,7 +441,7 @@ impl DispenserSimulator {
 
 
         let instruction_data: instruction::Claim = instruction::Claim {
-            claim_certificates: vec![claim_certificate],
+            claim_certificate: claim_certificate.clone(),
         };
 
         let mut instructions = vec![];

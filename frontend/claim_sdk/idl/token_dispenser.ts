@@ -130,11 +130,9 @@ export type TokenDispenser =
       ],
       "args": [
         {
-          "name": "claimCertificates",
+          "name": "claimCertificate",
           "type": {
-            "vec": {
-              "defined": "ClaimCertificate"
-            }
+            "defined": "ClaimCertificate"
           }
         }
       ]
@@ -754,11 +752,9 @@ export const IDL: TokenDispenser =
       ],
       "args": [
         {
-          "name": "claimCertificates",
+          "name": "claimCertificate",
           "type": {
-            "vec": {
-              "defined": "ClaimCertificate"
-            }
+            "defined": "ClaimCertificate"
           }
         }
       ]
