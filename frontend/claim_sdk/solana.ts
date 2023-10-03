@@ -136,12 +136,13 @@ export class TokenDispenserProvider {
     root: Buffer,
     mint: anchor.web3.PublicKey,
     treasury: anchor.web3.PublicKey,
-    dispenserGuard: anchor.web3.PublicKey
+    dispenserGuard: anchor.web3.PublicKey,
+    funder: anchor.web3.PublicKey
   ): Promise<TransactionSignature> {
     const addressLookupTable = await this.initAddressLookupTable(mint, treasury)
 
     return this.tokenDispenserProgram.methods
-      .initialize(Array.from(root), dispenserGuard)
+      .initialize(Array.from(root), dispenserGuard, funder)
       .accounts({
         config: this.getConfigPda()[0],
         mint,

@@ -292,6 +292,7 @@ impl DispenserSimulator {
         let instruction_data = instruction::Initialize {
             merkle_root,
             dispenser_guard,
+            funder: self.genesis_keypair.pubkey(),
         };
         let instruction =
             Instruction::new_with_bytes(crate::id(), &instruction_data.data(), accounts);
