@@ -31,7 +31,7 @@ type bump = number
 // NOTE: This must be kept in sync with the on-chain program
 const AUTHORIZATION_PAYLOAD = [
   'Pyth Grant PID:\n',
-  '\nI authorize wallet\n',
+  '\nI authorize Solana wallet\n',
   '\nto claim my token grant.\n',
 ]
 
