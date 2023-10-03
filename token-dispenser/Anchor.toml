@@ -9,7 +9,7 @@ url = "https://api.apr.dev"
 
 [provider]
 cluster = "Localnet"
-wallet = "../frontend/integration/keys/solana_private_key.json"
+wallet = "../frontend/integration/keys/funder_private_key.json"
 
 [scripts]
 test = "cargo test-bpf"
