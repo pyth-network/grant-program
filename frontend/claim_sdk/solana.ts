@@ -242,6 +242,7 @@ export class TokenDispenserProvider {
     let fundedSignedTransactions: VersionedTransaction[] = []
 
     if (funderWallet) {
+      // This is defined only in testing, where we can't use the API
       fundedSignedTransactions = await funderWallet.signAllTransactions(txs)
     } else {
       const response = await fetch('/api/grant/v1/fund_transaction', {
