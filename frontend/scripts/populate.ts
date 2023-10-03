@@ -3,6 +3,7 @@ import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
 import {
   TestEvmWallet,
   loadAnchorWallet,
+  loadFunderWallet,
   loadTestWallets,
 } from '../claim_sdk/testWallets'
 import { envOrErr } from '../claim_sdk/index'
@@ -38,18 +39,13 @@ async function main() {
   // Intialize the token dispenser
   const tokenDispenserProvider = new TokenDispenserProvider(
     ENDPOINT,
-    loadAnchorWallet(),
+    loadFunderWallet(),
     new PublicKey(PROGRAM_ID),
     {
       skipPreflight: true,
       preflightCommitment: 'processed',
       commitment: 'processed',
     }
-  )
-  await airdrop(
-    tokenDispenserProvider.connection,
-    LAMPORTS_PER_SOL,
-    FUNDER_KEYPAIR.publicKey
   )
   const mintAndTreasury = await tokenDispenserProvider.setupMintAndTreasury()
   await tokenDispenserProvider.initialize(
