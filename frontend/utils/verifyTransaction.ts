@@ -9,8 +9,8 @@ function checkAllProgramsWhitelisted(
 ): boolean {
   for (const ix of transaction.message.compiledInstructions) {
     if (
-      !whitelist.includes(
-        transaction.message.staticAccountKeys[ix.programIdIndex]
+      !whitelist.some((program) =>
+        transaction.message.staticAccountKeys[ix.programIdIndex].equals(program)
       )
     ) {
       return false
@@ -72,5 +72,11 @@ export function checkTransactions(
   tokenDispenser: PublicKey,
   whitelist: PublicKey[]
 ): boolean {
+<<<<<<< HEAD
   return transactions.every((tx) => checkTransaction(tx, tokenDispenser, whitelist))
+=======
+  return transactions.every((tx) =>
+    checkTransaction(tx, tokenDispenser, whitelist)
+  )
+>>>>>>> 7f12577 (Check again)
 }
