@@ -1,7 +1,16 @@
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
-import { Keypair, VersionedTransaction } from '@solana/web3.js'
 import { loadFunderWallet } from '../../../../claim_sdk/testWallets'
+import {
+  ComputeBudgetProgram,
+  Ed25519Program,
+  Keypair,
+  PublicKey,
+  Secp256k1Program,
+  Version,
+  VersionedTransaction,
+} from '@solana/web3.js'
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { checkTransactions } from 'utils/verifyTransaction'
 
 const wallet = process.env.FUNDER_KEYPAIR
   ? new NodeWallet(
@@ -10,6 +19,15 @@ const wallet = process.env.FUNDER_KEYPAIR
       )
     )
   : loadFunderWallet()
+
+const PROGRAM_ID = new PublicKey(process.env.PROGRAM_ID!)
+
+const WHITELISTED_PROGRAMS: PublicKey[] = [
+  PROGRAM_ID,
+  Secp256k1Program.programId,
+  Ed25519Program.programId,
+  ComputeBudgetProgram.programId,
+]
 
 export default async function handlerFundTransaction(
   req: NextApiRequest,
@@ -33,7 +51,9 @@ export default async function handlerFundTransaction(
     })
   }
 
-  // TODO : SOME VALIDATION HERE
+  if (!checkTransactions(transactions, PROGRAM_ID, WHITELISTED_PROGRAMS)) {
+    res.status(403).json({ error: 'Unauthorized transaction' })
+  }
 
   try {
     signedTransactions = await wallet.signAllTransactions(transactions)
