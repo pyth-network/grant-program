@@ -54,18 +54,18 @@ export default async function handlerFundTransaction(
     try {
       await wallet.signAllTransactions(transactions)
     } catch {
-      res.status(400).json({
+      return res.status(400).json({
         error:
           'Failed to sign transactions, make sure the transactions have the right funder',
       })
     }
 
-    res.status(200).json(
+    return res.status(200).json(
       transactions.map((tx) => {
         return Buffer.from(tx.serialize())
       })
     )
   } else {
-    res.status(403).json({ error: 'Unauthorized transaction' })
+    return res.status(403).json({ error: 'Unauthorized transaction' })
   }
 }
