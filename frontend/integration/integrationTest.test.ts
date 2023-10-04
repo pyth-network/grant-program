@@ -194,16 +194,13 @@ describe('integration test', () => {
       )
 
       await Promise.all(
-        await tokenDispenserProvider.submitClaims(
-          [
-            {
-              claimInfo,
-              proofOfInclusion,
-              signedMessage,
-            },
-          ],
-          funderWallet
-        )
+        await tokenDispenserProvider.submitClaims([
+          {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage,
+          },
+        ])
       )
 
       expect(
@@ -229,16 +226,13 @@ describe('integration test', () => {
       )
 
       await Promise.all(
-        await tokenDispenserProvider.submitClaims(
-          [
-            {
-              claimInfo,
-              proofOfInclusion,
-              signedMessage,
-            },
-          ],
-          funderWallet
-        )
+        await tokenDispenserProvider.submitClaims([
+          {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage,
+          },
+        ])
       )
 
       expect(
@@ -287,9 +281,7 @@ describe('integration test', () => {
         )
       ).toBeFalsy()
 
-      await Promise.all(
-        await tokenDispenserProvider.submitClaims(claims, funderWallet)
-      )
+      await Promise.all(await tokenDispenserProvider.submitClaims(claims))
 
       expect(
         await tokenDispenserProvider.isClaimAlreadySubmitted(
@@ -326,16 +318,13 @@ describe('integration test', () => {
       )
 
       await Promise.all(
-        await tokenDispenserProvider.submitClaims(
-          [
-            {
-              claimInfo,
-              proofOfInclusion,
-              signedMessage,
-            },
-          ],
-          funderWallet
-        )
+        await tokenDispenserProvider.submitClaims([
+          {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage,
+          },
+        ])
       )
 
       expect(
@@ -365,16 +354,13 @@ describe('integration test', () => {
       )
 
       await Promise.all(
-        await tokenDispenserProvider.submitClaims(
-          [
-            {
-              claimInfo,
-              proofOfInclusion,
-              signedMessage,
-            },
-          ],
-          funderWallet
-        )
+        await tokenDispenserProvider.submitClaims([
+          {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage,
+          },
+        ])
       )
 
       expect(
@@ -410,16 +396,13 @@ describe('integration test', () => {
         )
 
         await Promise.all(
-          await tokenDispenserProvider.submitClaims(
-            [
-              {
-                claimInfo,
-                proofOfInclusion,
-                signedMessage,
-              },
-            ],
-            funderWallet
-          )
+          await tokenDispenserProvider.submitClaims([
+            {
+              claimInfo,
+              proofOfInclusion,
+              signedMessage,
+            },
+          ])
         )
 
         expect(
@@ -456,16 +439,13 @@ describe('integration test', () => {
       // No signing since claimant will sign the transaction
 
       await Promise.all(
-        await tokenDispenserProvider.submitClaims(
-          [
-            {
-              claimInfo,
-              proofOfInclusion,
-              signedMessage: undefined,
-            },
-          ],
-          funderWallet
-        )
+        await tokenDispenserProvider.submitClaims([
+          {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage: undefined,
+          },
+        ])
       )
 
       expect(
@@ -504,16 +484,13 @@ describe('integration test', () => {
       )
 
       await Promise.all(
-        await tokenDispenserProvider.submitClaims(
-          [
-            {
-              claimInfo,
-              proofOfInclusion,
-              signedMessage,
-            },
-          ],
-          funderWallet
-        )
+        await tokenDispenserProvider.submitClaims([
+          {
+            claimInfo,
+            proofOfInclusion,
+            signedMessage,
+          },
+        ])
       )
 
       expect(

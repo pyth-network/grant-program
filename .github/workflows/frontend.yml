@@ -16,6 +16,7 @@ jobs:
         PROGRAM_ID: ${{ env.PROGRAM_ID }}
         PGHOST: postgres
         ENDPOINT: http://localhost:8899
+        MOCK_APIS: true
 
     env:
       PGUSER: myuser

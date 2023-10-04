@@ -1,5 +1,5 @@
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
-import { Keypair, Version, VersionedTransaction } from '@solana/web3.js'
+import { Keypair, VersionedTransaction } from '@solana/web3.js'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 const wallet = new NodeWallet(
