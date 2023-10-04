@@ -1,21 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import Coin from '@images/coin.inline.svg'
 
-import { classNames } from 'utils/classNames'
-import { useCoins } from 'hooks/useCoins'
 import { Ecosystem } from '@components/Ecosystem'
 import { EcosystemClaimState } from './SignAndClaim'
 
 import Loader from '@images/loader.inline.svg'
 import Failed from '@images/not.inline.svg'
 import Success from '@images/verified.inline.svg'
-import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
-import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { ProceedButton } from '@components/buttons'
-import { CoinCell } from '@components/table/CoinCell'
-import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
-import { useSignAndClaimRowState } from 'hooks/useSignAndClaimRowState'
+import { SignAndClaimRowLayout } from '@components/table/SignAndClaimRowLayout'
 
 export const ClaimStatus = ({
   onProceed,
@@ -67,11 +61,13 @@ export const ClaimStatus = ({
         <table className="">
           <tbody>
             {Object.values(Ecosystem).map((ecosystem) => (
-              <TableRow
-                ecosystem={ecosystem}
-                ecosystemClaimState={ecosystemsClaimState?.[ecosystem]}
-                key={ecosystem}
-              />
+              <SignAndClaimRowLayout ecosystem={ecosystem} key={ecosystem}>
+                {ecosystemsClaimState?.[ecosystem] !== undefined && (
+                  <ClaimState
+                    ecosystemClaimState={ecosystemsClaimState?.[ecosystem]!}
+                  />
+                )}
+              </SignAndClaimRowLayout>
             ))}
             <tr className="border-b border-light-35 ">
               <td className="w-full bg-darkGray5 py-2 pl-10 pr-4">
@@ -91,58 +87,6 @@ export const ClaimStatus = ({
         </table>
       </div>
     </div>
-  )
-}
-
-type TableRowProps = {
-  ecosystem: Ecosystem
-  ecosystemClaimState: EcosystemClaimState | undefined
-}
-function TableRow({ ecosystem, ecosystemClaimState }: TableRowProps) {
-  const getEligibleCoins = useCoins()
-  const { getEligibility } = useEligibility()
-
-  const { disabled: rowDisabled, tooltipContent: rowTooltipContent } =
-    useSignAndClaimRowState(ecosystem)
-
-  const eligibility = getEligibility(ecosystem)
-  const eligibleCoins = getEligibleCoins(ecosystem)
-
-  return (
-    <tr className={classNames('border-b border-light-35 ')}>
-      <td
-        className={classNames(
-          'w-full py-2 pl-10 pr-4',
-          rowDisabled ? 'opacity-25' : ''
-        )}
-      >
-        <div
-          className={classNames(
-            'flex items-center justify-between',
-            rowDisabled ? 'pointer-events-none' : ''
-          )}
-        >
-          <span className="min-w-[150px] font-header text-base18 font-thin">
-            {getEcosystemTableLabel(ecosystem)}
-          </span>
-
-          <span className="flex flex-1  items-center justify-between gap-5">
-            <EcosystemConnectButton
-              ecosystem={ecosystem}
-              disableOnConnect={true}
-            />
-            {ecosystemClaimState !== undefined && (
-              <ClaimState ecosystemClaimState={ecosystemClaimState} />
-            )}
-          </span>
-        </div>
-      </td>
-      <CoinCell
-        coins={eligibleCoins}
-        isStriked={eligibility?.isClaimAlreadySubmitted}
-        rowTooltipContent={rowTooltipContent}
-      />
-    </tr>
   )
 }
 
