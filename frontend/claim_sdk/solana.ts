@@ -234,35 +234,29 @@ export class TokenDispenserProvider {
         )
       )
     }
-    let signedTxs = await (
+    await (
       this.tokenDispenserProgram.provider as anchor.AnchorProvider
     ).wallet.signAllTransactions(txs)
 
-    let fundedSignedTransactions: VersionedTransaction[] = []
-
     if (funderWallet) {
       // This is defined only in testing, where we can't use the API
-      fundedSignedTransactions = await funderWallet.signAllTransactions(txs)
+      await funderWallet.signAllTransactions(txs)
     } else {
       const response = await fetch('/api/grant/v1/fund_transaction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(
-          signedTxs.map((signedTx) => Buffer.from(signedTx.serialize()))
-        ),
+        body: JSON.stringify(txs.map((txs) => Buffer.from(txs.serialize()))),
       })
 
-      fundedSignedTransactions = (await response.json()).map(
-        (serializedTx: any) => {
-          return VersionedTransaction.deserialize(Buffer.from(serializedTx))
-        }
-      )
+      txs = (await response.json()).map((serializedTx: any) => {
+        return VersionedTransaction.deserialize(Buffer.from(serializedTx))
+      })
     }
 
     // send the txns. Associated token account will be created if needed.
-    const sendTxs = fundedSignedTransactions.map(async (signedTx) => {
+    const sendTxs = txs.map(async (signedTx) => {
       const signature = await this.connection.sendTransaction(signedTx, {
         skipPreflight: true,
       })

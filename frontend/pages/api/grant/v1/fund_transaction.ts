@@ -18,7 +18,6 @@ export default async function handlerFundTransaction(
 
   const data = req.body
   let transactions: VersionedTransaction[] = []
-  let resultingTransactions: VersionedTransaction[] = []
 
   try {
     transactions = data.map((serializedTx: any) => {
@@ -33,7 +32,7 @@ export default async function handlerFundTransaction(
   // TODO : SOME VALIDATION HERE
 
   try {
-    resultingTransactions = await wallet.signAllTransactions(transactions)
+    await wallet.signAllTransactions(transactions)
   } catch {
     res.status(400).json({
       error:
@@ -41,7 +40,7 @@ export default async function handlerFundTransaction(
     })
   }
   res.status(200).json(
-    resultingTransactions.map((tx) => {
+    transactions.map((tx) => {
       return Buffer.from(tx.serialize())
     })
   )
