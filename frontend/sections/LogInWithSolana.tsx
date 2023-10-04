@@ -18,6 +18,7 @@ import {
 import { truncateAddress } from 'utils/truncateAddress'
 import { ProceedButton, BackButton } from '@components/buttons'
 import { StepProps } from './common'
+import { Box } from '@components/Box'
 
 export const LogInWithSolana = ({ onBack, onProceed }: StepProps) => {
   const { publicKey, wallet, disconnect, connecting, connected, connect } =
@@ -33,48 +34,46 @@ export const LogInWithSolana = ({ onBack, onProceed }: StepProps) => {
   }, [base58, connecting, connected, wallet])
 
   return (
-    <>
-      <div className="border border-light-35 bg-dark">
-        <div className="flex items-center justify-between border-b border-light-35  bg-[#242339] py-8 px-10">
-          <h4 className="font-header text-[28px] font-light leading-[1.2]">
-            Log in with Solana
-          </h4>
-          <BackButton onBack={onBack} />
-        </div>
-        <div className="px-10 py-8 text-base16">
-          <p className="mb-6">
-            PYTH tokens are native to Solana. You will need a Solana wallet to
-            receive your tokens and to resume progress on this page if you leave
-            before claiming. Your claimed PYTH tokens will go to the Solana
-            wallet you connect in this step.
-          </p>
-          <p className="">
-            You can find a list of popular wallets that support Solana (SPL)
-            tokens below.
-          </p>
-          {wallet === null ? (
-            <SelectWallets />
-          ) : (
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <WalletConnectedButton
-                  onClick={disconnect}
-                  address={buttonText!}
-                  icon={wallet?.adapter.icon}
-                />
-                <span
-                  className="mt-4 block text-center font-body font-normal underline hover:cursor-pointer"
-                  onClick={disconnect}
-                >
-                  Change wallet
-                </span>
-              </div>
-              <ProceedButton onProceed={onProceed} />
-            </div>
-          )}
-        </div>
+    <Box>
+      <div className="flex items-center justify-between border-b border-light-35  bg-[#242339] py-8 px-10">
+        <h4 className="font-header text-[28px] font-light leading-[1.2]">
+          Log in with Solana
+        </h4>
+        <BackButton onBack={onBack} />
       </div>
-    </>
+      <div className="px-10 py-8 text-base16">
+        <p className="mb-6">
+          PYTH tokens are native to Solana. You will need a Solana wallet to
+          receive your tokens and to resume progress on this page if you leave
+          before claiming. Your claimed PYTH tokens will go to the Solana wallet
+          you connect in this step.
+        </p>
+        <p className="">
+          You can find a list of popular wallets that support Solana (SPL)
+          tokens below.
+        </p>
+        {wallet === null ? (
+          <SelectWallets />
+        ) : (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <WalletConnectedButton
+                onClick={disconnect}
+                address={buttonText!}
+                icon={wallet?.adapter.icon}
+              />
+              <span
+                className="mt-4 block text-center font-body font-normal underline hover:cursor-pointer"
+                onClick={disconnect}
+              >
+                Change wallet
+              </span>
+            </div>
+            <ProceedButton onProceed={onProceed} />
+          </div>
+        )}
+      </div>
+    </Box>
   )
 }
 

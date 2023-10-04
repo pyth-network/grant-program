@@ -62,7 +62,7 @@ export function SignatureProvider({ children }: ProviderProps) {
     getStoredSignatureMap() ?? {}
   )
 
-  // side effect: whenever the eligibility map changes sync the local storage
+  // side effect: whenever the signature map changes sync the local storage
   useEffect(() => {
     if (typeof window === 'undefined') return
     localStorage.setItem(SIGNATURE_KEY, JSON.stringify(signatureMap))

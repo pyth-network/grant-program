@@ -5,6 +5,8 @@ import Twitter from '@images/twitter.inline.svg'
 import Telegram from '@images/telegram.inline.svg'
 import Discord from '@images/discord.inline.svg'
 import Linkedin from '@images/linkedin.inline.svg'
+import { Box } from '@components/Box'
+import { Button } from '@components/buttons/Button'
 
 export type TokensReceivedProps = {
   totalCoinsClaimed: string | null
@@ -12,7 +14,7 @@ export type TokensReceivedProps = {
 export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
   return (
     <>
-      <div className=" border border-light-35 bg-dark">
+      <Box>
         <h4 className="border-b border-light-35 bg-[#242339] py-8 px-10  font-header text-[28px] font-light leading-[1.2] ">
           🔮 Congratulations!
         </h4>
@@ -69,14 +71,13 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
                 </span>
               </button>
             </div>
-            <button className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark">
-              <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-                explore governance
-              </span>
-            </button>
+            {/* TODO: link to governance later */}
+            <Button onClick={() => {}} type={'primary'}>
+              explore governance
+            </Button>
           </div>
         </div>
-      </div>
+      </Box>
     </>
   )
 }

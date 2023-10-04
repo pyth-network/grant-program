@@ -10,6 +10,7 @@ import Success from '@images/verified.inline.svg'
 import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { ProceedButton } from '@components/buttons'
 import { SignAndClaimRowLayout } from '@components/table/SignAndClaimRowLayout'
+import { Box } from '@components/Box'
 
 export const ClaimStatus = ({
   onProceed,
@@ -34,7 +35,7 @@ export const ClaimStatus = ({
 
       if (isAnyProccessing) {
         setIsProceedDisabled(true)
-        setProceedTooltipContent('proceesing')
+        setProceedTooltipContent('processing')
       } else {
         setIsProceedDisabled(false)
         setProceedTooltipContent(undefined)
@@ -43,7 +44,7 @@ export const ClaimStatus = ({
   }, [ecosystemsClaimState])
 
   return (
-    <div className=" overflow-auto border border-light-35 bg-dark">
+    <Box>
       <div className="min-w-[650px]">
         <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-8 px-10">
           <h4 className="   font-header text-[28px] font-light leading-[1.2]">
@@ -86,7 +87,7 @@ export const ClaimStatus = ({
           </tbody>
         </table>
       </div>
-    </div>
+    </Box>
   )
 }
 

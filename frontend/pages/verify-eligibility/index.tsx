@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import step3 from '@images/step3.png'
 import { REVIEW_ELIGIBILITY_METADATA } from '../review-eligibility'
 import { BackButton, ProceedButton } from '@components/buttons'
+import { Box } from '@components/Box'
 
 export const VERIFY_ELIGIBILITY_METADATA = {
   url: '/verify-eligibility',
@@ -15,7 +16,7 @@ export default function VerifyEligibilityPage() {
 
   return (
     <Layout>
-      <div className=" border border-light-35 bg-dark">
+      <Box>
         <h4 className="border-b border-light-35 bg-[#242339] py-8 px-10  font-header text-[28px] font-light leading-[1.2]">
           Verify Eligibility
         </h4>
@@ -44,7 +45,7 @@ export default function VerifyEligibilityPage() {
             />
           </div>
         </div>
-      </div>
+      </Box>
     </Layout>
   )
 }

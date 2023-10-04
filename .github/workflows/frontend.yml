@@ -13,12 +13,15 @@ jobs:
         PGUSER: ${{ env.PGUSER }}
         PGPASSWORD: ${{ env.PGPASSWORD }}
         PGDATABASE: ${{ env.PGDATABASE }}
+        PROGRAM_ID: ${{ env.PROGRAM_ID }}
         PGHOST: postgres
+        ENDPOINT: http://localhost:8899
 
     env:
       PGUSER: myuser
       PGPASSWORD: mypass
       PGDATABASE: mydb
+      PROGRAM_ID: Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS
 
     services:
       postgres:

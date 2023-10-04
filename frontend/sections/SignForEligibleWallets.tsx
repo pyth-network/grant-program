@@ -10,6 +10,7 @@ import { BackButton, ProceedButton } from '@components/buttons'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { TotalAllocationRow } from '@components/table/TotalAllocationRow'
 import { SignAndClaimRowLayout } from '@components/table/SignAndClaimRowLayout'
+import { Box } from '@components/Box'
 
 export const SignForEligibleWallets = ({
   onBack,
@@ -70,7 +71,7 @@ export const SignForEligibleWallets = ({
   }, [activity, getEcosystemIdentity, getEligibility, getSignature])
 
   return (
-    <div className=" overflow-auto border border-light-35 bg-dark">
+    <Box>
       <div className="min-w-[650px]">
         <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-8 px-10">
           <h4 className="   font-header text-[28px] font-light leading-[1.2]">
@@ -98,6 +99,6 @@ export const SignForEligibleWallets = ({
           </tbody>
         </table>
       </div>
-    </div>
+    </Box>
   )
 }

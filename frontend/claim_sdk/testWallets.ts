@@ -41,6 +41,20 @@ export function loadAnchorWallet(): NodeWallet {
   return new NodeWallet(keypair)
 }
 
+export function loadFunderWallet(): NodeWallet {
+  const keypair = Keypair.fromSecretKey(
+    new Uint8Array(
+      JSON.parse(
+        fs.readFileSync(
+          path.resolve(KEY_DIR, 'funder_private_key.json'),
+          'utf-8'
+        )
+      )
+    )
+  )
+  return new NodeWallet(keypair)
+}
+
 export async function loadTestWallets(): Promise<
   Record<Ecosystem, TestWallet[]>
 > {

@@ -60,6 +60,10 @@
         {
           "name": "dispenserGuard",
           "type": "publicKey"
+        },
+        {
+          "name": "funder",
+          "type": "publicKey"
         }
       ]
     },
@@ -70,8 +74,13 @@
       ],
       "accounts": [
         {
-          "name": "claimant",
+          "name": "funder",
           "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "claimant",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -167,6 +176,10 @@
           },
           {
             "name": "addressLookupTable",
+            "type": "publicKey"
+          },
+          {
+            "name": "funder",
             "type": "publicKey"
           }
         ]

@@ -18,6 +18,7 @@ import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { CoinCell } from '@components/table/CoinCell'
 import { TotalAllocationRow } from '@components/table/TotalAllocationRow'
 import { EcosystemRowLabel } from '@components/table/EcosystemRowLabel'
+import { Box } from '@components/Box'
 
 const Eligibility = ({
   onBack,
@@ -59,7 +60,7 @@ const Eligibility = ({
     // if there is no tokens to claim
     if (isConnectionPending) {
       setIsProceedDisabled(true)
-      setProceedTooltipContent('Some ecosystem are not yet connected.')
+      setProceedTooltipContent('Some ecosystems are not yet connected.')
       return
     } else if (areAllTokensClaimed) {
       setIsProceedDisabled(true)
@@ -72,7 +73,7 @@ const Eligibility = ({
   }, [activity, getEcosystemIdentity, getEligibility])
 
   return (
-    <div className=" border border-light-35 bg-dark">
+    <Box>
       <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-8 px-10">
         <h4 className="   font-header text-[28px] font-light leading-[1.2]">
           Verify Eligibility
@@ -94,7 +95,7 @@ const Eligibility = ({
           <TotalAllocationRow totalGrantedCoins={totalGrantedCoins} />
         </tbody>
       </table>
-    </div>
+    </Box>
   )
 }
 
