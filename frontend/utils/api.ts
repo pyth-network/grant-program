@@ -3,11 +3,6 @@ import { ClaimInfo, Ecosystem } from '../claim_sdk/claim'
 import { HASH_SIZE } from '../claim_sdk/merkleTree'
 import { PublicKey, VersionedTransaction } from '@solana/web3.js'
 import { SignedMessage } from '../claim_sdk/ecosystems/signatures'
-import { NextApiRequest, NextApiResponse } from 'next'
-import handlerFundTransaction from '../pages/api/grant/v1/fund_transaction'
-import handlerAmountAndProof from '../pages/api/grant/v1/amount_and_proof'
-
-const MOCK_APIS = process.env.MOCK_APIS ?? undefined
 
 function parseProof(proof: string) {
   const buffer = Buffer.from(proof, 'hex')
@@ -55,28 +50,13 @@ export async function fetchAmountAndProof(
   ecosystem: Ecosystem,
   identity: string
 ): Promise<Eligibility> {
-  if (MOCK_APIS) {
-    const req: NextApiRequest = {
-      url: getAmountAndProofRoute(ecosystem, identity),
-      query: { ecosystem, identity },
-    } as unknown as NextApiRequest
-    const res = new NextApiResponseMock()
-    await handlerAmountAndProof(req, res as unknown as NextApiResponse)
-    return handleAmountAndProofResponse(
-      ecosystem,
-      identity,
-      res.statusCode,
-      res.jsonBody
-    )
-  } else {
-    const response = await fetch(getAmountAndProofRoute(ecosystem, identity))
-    return handleAmountAndProofResponse(
-      ecosystem,
-      identity,
-      response.status,
-      await response.json()
-    )
-  }
+  const response = await fetch(getAmountAndProofRoute(ecosystem, identity))
+  return handleAmountAndProofResponse(
+    ecosystem,
+    identity,
+    response.status,
+    await response.json()
+  )
 }
 
 export function getDiscordSignedMessageRoute(claimant: PublicKey) {
@@ -155,38 +135,15 @@ export function handleFundTransaction(
 export async function fetchFundTransaction(
   transactions: VersionedTransaction[]
 ): Promise<VersionedTransaction[]> {
-  let status: number, data
+  const response = await fetch(getFundTransactionRoute(), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(transactions.map((tx) => Buffer.from(tx.serialize()))),
+  })
 
-  if (MOCK_APIS) {
-    const req: NextApiRequest = {
-      url: getFundTransactionRoute,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(
-        transactions.map((tx) => Buffer.from(tx.serialize()))
-      ),
-    } as unknown as NextApiRequest
-    const res = new NextApiResponseMock()
-
-    await handlerFundTransaction(req, res as unknown as NextApiResponse)
-    status = res.statusCode
-    data = res.jsonBody
-  } else {
-    const response = await fetch(getFundTransactionRoute(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(
-        transactions.map((tx) => Buffer.from(tx.serialize()))
-      ),
-    })
-    status = response.status
-    data = await response.json()
-  }
-  return handleFundTransaction(status, data)
+  return handleFundTransaction(response.status, await response.json())
 }
 
 export class NextApiResponseMock {

@@ -27,6 +27,7 @@ import { TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import { SignedMessage } from './ecosystems/signatures'
 import { extractChainId } from './ecosystems/cosmos'
 import { fetchFundTransaction } from '../utils/api'
+import { mockfetchFundTransaction } from 'integration/api'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -35,6 +36,8 @@ const AUTHORIZATION_PAYLOAD = [
   '\nI authorize Solana wallet\n',
   '\nto claim my token grant.\n',
 ]
+
+const MOCK_APIS = process.env.MOCK_APIS ?? undefined
 
 /**
  * This class wraps the interaction with the TokenDispenser
@@ -238,9 +241,12 @@ export class TokenDispenserProvider {
       this.tokenDispenserProgram.provider as anchor.AnchorProvider
     ).wallet.signAllTransactions(txs)
 
-    const txsSignedTwice: VersionedTransaction[] = await fetchFundTransaction(
-      txsSignedOnce
-    )
+    let txsSignedTwice: VersionedTransaction[] = []
+    if (MOCK_APIS) {
+      txsSignedTwice = await mockfetchFundTransaction(txsSignedOnce)
+    } else {
+      txsSignedTwice = await fetchFundTransaction(txsSignedOnce)
+    }
 
     // send the txns. Associated token account will be created if needed.
     const sendTxs = txsSignedTwice.map(async (signedTx) => {
