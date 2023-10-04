@@ -20,7 +20,6 @@ export default async function handlerFundTransaction(
   }
 
   const data = req.body
-  console.log(typeof data)
   let transactions: VersionedTransaction[] = []
   let signedTransactions: VersionedTransaction[] = []
 
