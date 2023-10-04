@@ -18,13 +18,14 @@ export default async function handlerFundTransaction(
 
   const data = req.body
   let transactions: VersionedTransaction[] = []
+  let signedTransactions: VersionedTransaction[] = []
 
   try {
     transactions = data.map((serializedTx: any) => {
       return VersionedTransaction.deserialize(Buffer.from(serializedTx))
     })
   } catch {
-    res.status(400).json({
+    return res.status(400).json({
       error: 'Failed to deserialize transactions',
     })
   }
@@ -32,15 +33,15 @@ export default async function handlerFundTransaction(
   // TODO : SOME VALIDATION HERE
 
   try {
-    await wallet.signAllTransactions(transactions)
+    signedTransactions = await wallet.signAllTransactions(transactions)
   } catch {
-    res.status(400).json({
+    return res.status(400).json({
       error:
         'Failed to sign transactions, make sure the transactions have the right funder',
     })
   }
-  res.status(200).json(
-    transactions.map((tx) => {
+  return res.status(200).json(
+    signedTransactions.map((tx) => {
       return Buffer.from(tx.serialize())
     })
   )
