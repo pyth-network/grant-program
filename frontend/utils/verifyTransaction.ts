@@ -60,10 +60,10 @@ function checkTransaction(
   whitelist: PublicKey[]
 ): boolean {
   return (
-    checkProgramAppears(transaction, tokenDispenser) &&
-    checkSetComputeBudgetInstructionsAreSetComputeUnitLimit(transaction) &&
-    checkAllProgramsWhitelisted(transaction, whitelist) &&
-    checkV0(transaction)
+    checkProgramAppears(transaction, tokenDispenser) && // Make sure at least one instruction is for the token dispenser
+    checkSetComputeBudgetInstructionsAreSetComputeUnitLimit(transaction) && // Make sure all compute budget instructions are set compute unit limit
+    checkAllProgramsWhitelisted(transaction, whitelist) && // Make sure all programs are either signature precompiles, token dispenser, or compute budget
+    checkV0(transaction) // Check the transaction is V0
   )
 }
 
