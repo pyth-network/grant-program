@@ -239,13 +239,9 @@ export class TokenDispenserProvider {
       this.tokenDispenserProgram.provider as anchor.AnchorProvider
     ).wallet.signAllTransactions(txs)
 
-    let txsSignedTwice: VersionedTransaction[] = []
-    if (mockApi) {
-      // In tests we mock the api call
-      txsSignedTwice = await funderWallet.signAllTransactions(txsSignedOnce)
-    } else {
-      txsSignedTwice = await fetchFundTransaction(txsSignedOnce)
-    }
+    const txsSignedTwice: VersionedTransaction[] = await fetchFundTransaction(
+      txsSignedOnce
+    )
 
     // send the txns. Associated token account will be created if needed.
     const sendTxs = txsSignedTwice.map(async (signedTx) => {
