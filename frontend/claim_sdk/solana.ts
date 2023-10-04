@@ -224,7 +224,7 @@ export class TokenDispenserProvider {
     }[],
     fetchFundTransactionFunction: (
       transactions: VersionedTransaction[]
-    ) => Promise<VersionedTransaction[]> = fetchFundTransaction
+    ) => Promise<VersionedTransaction[]> = fetchFundTransaction // This argument is only used for testing where we can't call the API
   ): Promise<Promise<TransactionError | null>[]> {
     const txs: VersionedTransaction[] = []
 
