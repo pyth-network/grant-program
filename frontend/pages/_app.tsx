@@ -23,9 +23,14 @@ function useRedirect() {
     return localStorage.getItem(LAST_STEP_STATUS_KEY)
   }, [])
 
+  const pathname = usePathname()
+
   const router = useRouter()
   // We will only redirect on the first load
   useEffect(() => {
+    // These pathnames are being loaded when we have to oauth with Discord
+    // We shouldn't be redirecting the user from these pages
+    if (pathname === '/discord-login' || pathname === '/discord-logout') return
     //RULES:
     // 1. no last state -> redirect to welcome page
     // 2. there is a last state
@@ -33,6 +38,7 @@ function useRedirect() {
     // 2b. Else redirect to that page.
 
     if (lastStep === null) router.replace('/')
+
     // NOTE: lastStep will never be /next-steps as we are not storing it in the useEffect
     // below.
     // The reason is that the below replace method doesn't work. No clue why.
@@ -43,8 +49,10 @@ function useRedirect() {
     if (lastStep) router.replace(lastStep)
   }, [])
 
-  const pathname = usePathname()
   useEffect(() => {
+    // If the pathname for the current page is the once used for discord oauth,
+    // don't store it.
+    if (pathname === '/discord-login' || pathname === '/discord-logout') return
     if (pathname === '/next-steps')
       localStorage.removeItem(LAST_STEP_STATUS_KEY)
     else localStorage.setItem(LAST_STEP_STATUS_KEY, pathname)
