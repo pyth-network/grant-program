@@ -123,8 +123,6 @@ export function handleFundTransaction(
   status: number,
   data: any
 ): VersionedTransaction[] {
-  console.log(status)
-  console.log(data)
   if (status == 200) {
     return data.map((serializedTx: any) => {
       return VersionedTransaction.deserialize(Buffer.from(serializedTx))
