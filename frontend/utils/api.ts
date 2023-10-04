@@ -3,6 +3,12 @@ import { ClaimInfo, Ecosystem } from '../claim_sdk/claim'
 import { HASH_SIZE } from '../claim_sdk/merkleTree'
 import { PublicKey, VersionedTransaction } from '@solana/web3.js'
 import { SignedMessage } from '../claim_sdk/ecosystems/signatures'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { NextApiResponseMock } from 'integration/integrationTest.test'
+import handlerFundTransaction from 'pages/api/grant/v1/fund_transaction'
+import handlerAmountAndProof from 'pages/api/grant/v1/amount_and_proof'
+
+const MOCK_APIS = process.env.MOCK_APIS ?? undefined
 
 function parseProof(proof: string) {
   const buffer = Buffer.from(proof, 'hex')
@@ -50,13 +56,28 @@ export async function fetchAmountAndProof(
   ecosystem: Ecosystem,
   identity: string
 ): Promise<Eligibility> {
-  const response = await fetch(getAmountAndProofRoute(ecosystem, identity))
-  return handleAmountAndProofResponse(
-    ecosystem,
-    identity,
-    response.status,
-    await response.json()
-  )
+  if (MOCK_APIS) {
+    const req: NextApiRequest = {
+      url: getAmountAndProofRoute(ecosystem, identity),
+      query: { ecosystem, identity },
+    } as unknown as NextApiRequest
+    const res = new NextApiResponseMock()
+    await handlerAmountAndProof(req, res as unknown as NextApiResponse)
+    return handleAmountAndProofResponse(
+      ecosystem,
+      identity,
+      res.statusCode,
+      res.jsonBody
+    )
+  } else {
+    const response = await fetch(getAmountAndProofRoute(ecosystem, identity))
+    return handleAmountAndProofResponse(
+      ecosystem,
+      identity,
+      response.status,
+      await response.json()
+    )
+  }
 }
 
 export function getDiscordSignedMessageRoute(claimant: PublicKey) {
