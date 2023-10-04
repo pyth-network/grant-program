@@ -58,6 +58,10 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
   }, [ecosystemsClaimState, getEligibility, onProceed])
 
   const submitTxs = useCallback(async () => {
+    window.onbeforeunload = (e) => {
+      e.preventDefault()
+      return ''
+    }
     // This checks that the solana wallet is connected
     if (tokenDispenser === undefined) return
     const ecosystems: Ecosystem[] = []
@@ -85,18 +89,25 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
       }
     })
     setEcosystemsClaimState(stateObj)
+
     const broadcastPromises = await tokenDispenser?.submitClaims(claims)
-    broadcastPromises.forEach(async (broadcastPromise, index) => {
-      const transactionError = await broadcastPromise
-      // NOTE: there is an implicit order restriction
-      // Transaction Order should be same as Ecosystems array order
-      setEcosystemsClaimState((ecosystemState) => ({
-        ...ecosystemState,
-        [ecosystems[index]]: {
-          error: transactionError,
-        },
-      }))
-    })
+    const allPromises = broadcastPromises.map(
+      async (broadcastPromise, index) => {
+        const transactionError = await broadcastPromise
+        // NOTE: there is an implicit order restriction
+        // Transaction Order should be same as Ecosystems array order
+        setEcosystemsClaimState((ecosystemState) => ({
+          ...ecosystemState,
+          [ecosystems[index]]: {
+            error: transactionError,
+          },
+        }))
+      }
+    )
+
+    // wait for all the promises before removing event handler
+    await Promise.allSettled(allPromises)
+    window.onbeforeunload = null
   }, [getClaim, tokenDispenser])
 
   return (
