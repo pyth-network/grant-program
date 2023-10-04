@@ -221,8 +221,7 @@ export class TokenDispenserProvider {
       claimInfo: ClaimInfo
       proofOfInclusion: Uint8Array[]
       signedMessage: SignedMessage | undefined
-    }[],
-    mockApi: boolean = false
+    }[]
   ): Promise<Promise<TransactionError | null>[]> {
     const txs: VersionedTransaction[] = []
 
