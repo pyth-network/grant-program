@@ -157,6 +157,7 @@ export async function fetchFundTransaction(
   transactions: VersionedTransaction[]
 ): Promise<VersionedTransaction[]> {
   let status: number, data
+
   if (MOCK_APIS) {
     const req: NextApiRequest = {
       url: getFundTransactionRoute,
@@ -166,6 +167,7 @@ export async function fetchFundTransaction(
       ),
     } as unknown as NextApiRequest
     const res = new NextApiResponseMock()
+
     await handlerFundTransaction(req, res as unknown as NextApiResponse)
     status = res.statusCode
     data = res.jsonBody
@@ -183,10 +185,4 @@ export async function fetchFundTransaction(
     data = await response.json()
   }
   return handleFundTransaction(status, data)
-}
-
-export async function mockFetchFundTransaction(
-  transactions: VersionedTransaction[]
-): Promise<VersionedTransaction[]> {
-  return transactions
 }
