@@ -4,8 +4,6 @@ import { HASH_SIZE } from '../claim_sdk/merkleTree'
 import { PublicKey, VersionedTransaction } from '@solana/web3.js'
 import { SignedMessage } from '../claim_sdk/ecosystems/signatures'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { NextApiResponseMock } from 'integration/integrationTest.test'
-import handlerFundTransaction from 'pages/api/grant/v1/fund_transaction'
 import handlerAmountAndProof from 'pages/api/grant/v1/amount_and_proof'
 
 const MOCK_APIS = process.env.MOCK_APIS ?? undefined
