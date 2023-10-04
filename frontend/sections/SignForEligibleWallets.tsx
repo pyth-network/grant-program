@@ -1,19 +1,15 @@
 import React, { useEffect, useState } from 'react'
 
-import { classNames } from 'utils/classNames'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
-import { useCoins } from 'hooks/useCoins'
 import { Ecosystem } from '@components/Ecosystem'
-import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
-import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { EcosystemSignButton } from '@components/EcosystemSignButton'
 import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
 import { BackButton, ProceedButton } from '@components/buttons'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
-import { CoinCell } from '@components/table/CoinCell'
 import { TotalAllocationRow } from '@components/table/TotalAllocationRow'
+import { SignAndClaimRowLayout } from '@components/table/SignAndClaimRowLayout'
 import { Box } from '@components/Box'
 
 export const SignForEligibleWallets = ({
@@ -94,100 +90,14 @@ export const SignForEligibleWallets = ({
         <table className="">
           <tbody>
             {Object.values(Ecosystem).map((ecosystem) => (
-              <TableRow ecosystem={ecosystem} key={ecosystem} />
+              <SignAndClaimRowLayout ecosystem={ecosystem} key={ecosystem}>
+                <EcosystemSignButton ecosystem={ecosystem} />
+              </SignAndClaimRowLayout>
             ))}
             <TotalAllocationRow totalGrantedCoins={totalGrantedCoins} />
           </tbody>
         </table>
       </div>
     </Box>
-  )
-}
-
-type TableRowProps = {
-  ecosystem: Ecosystem
-}
-function TableRow({ ecosystem }: TableRowProps) {
-  const getEligibleCoins = useCoins()
-  const { activity } = useActivity()
-  const getEcosystemIdentity = useGetEcosystemIdentity()
-  const { getEligibility } = useEligibility()
-  const [rowDisabled, setRowDisabled] = useState(true)
-  // if it is undefined, no tooltip will be shown
-  const [rowTooltipContent, setRowTooltipContent] = useState<string>()
-
-  useEffect(() => {
-    ;(async () => {
-      // Row is disabled when
-      // - Ecosystem is inactive or
-      // - Ecosystem is active but
-      // - - No Claim Info found or
-      // - - Claim already submitted
-
-      // Rows is enabled if
-      // - Ecosystem is active and
-      // - Ecosystem has a claim info and
-      // - Claim has not been submitted
-
-      const isActive = activity[ecosystem]
-      // (NOTE: ecosystem will have a claim info only if the connected identity has a claim info)
-      const eligibility = getEligibility(ecosystem)
-      if (isActive === true) {
-        if (eligibility?.claimInfo !== undefined) {
-          if (eligibility?.isClaimAlreadySubmitted) {
-            setRowDisabled(true)
-            setRowTooltipContent(
-              'The tokens for this ecosystem has already been claimed.'
-            )
-          } else {
-            setRowDisabled(false)
-            setRowTooltipContent(undefined)
-          }
-        } else {
-          setRowDisabled(true)
-          setRowTooltipContent(
-            'There are no tokens to claim for this ecosystem.'
-          )
-        }
-      } else setRowDisabled(true)
-    })()
-  }, [activity, ecosystem, getEcosystemIdentity, getEligibility])
-
-  const eligibility = getEligibility(ecosystem)
-  const eligibleCoins = getEligibleCoins(ecosystem)
-
-  return (
-    <tr className={classNames('border-b border-light-35 ')}>
-      <td
-        className={classNames(
-          'w-full py-2 pl-10 pr-4',
-          rowDisabled ? 'opacity-25' : ''
-        )}
-      >
-        <div
-          className={classNames(
-            'flex items-center justify-between',
-            rowDisabled ? 'pointer-events-none' : ''
-          )}
-        >
-          <span className="min-w-[150px] font-header text-base18 font-thin">
-            {getEcosystemTableLabel(ecosystem)}
-          </span>
-
-          <span className="flex flex-1  items-center justify-between gap-5">
-            <EcosystemConnectButton
-              ecosystem={ecosystem}
-              disableOnConnect={true}
-            />
-            <EcosystemSignButton ecosystem={ecosystem} />
-          </span>
-        </div>
-      </td>
-      <CoinCell
-        coins={eligibleCoins}
-        isStriked={eligibility?.isClaimAlreadySubmitted}
-        rowTooltipContent={rowTooltipContent}
-      />
-    </tr>
   )
 }

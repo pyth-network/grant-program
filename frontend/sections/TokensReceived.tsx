@@ -9,7 +9,7 @@ import { Box } from '@components/Box'
 import { Button } from '@components/buttons/Button'
 
 export type TokensReceivedProps = {
-  totalCoinsClaimed: string
+  totalCoinsClaimed: string | null
 }
 export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
   return (
@@ -20,8 +20,16 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
         </h4>
         <div className="px-10 py-8 text-base16">
           <h3 className="mb-8 flex items-center gap-2 font-header text-[36px] font-light">
-            You Received <span className="font-bold">{totalCoinsClaimed}</span>
-            <Pyth />
+            You Received{' '}
+            <span className="flex items-center gap-2 font-bold">
+              {totalCoinsClaimed === null ? (
+                'N/A'
+              ) : (
+                <>
+                  {totalCoinsClaimed} <Pyth />
+                </>
+              )}
+            </span>
           </h3>
           <p className="mb-6">
             We look forward to our journey together! This is just the beginning
