@@ -90,7 +90,6 @@ export const SignForEligibleWallets = ({
         <table className="">
           <tbody>
             {Object.values(Ecosystem).map((ecosystem) => (
-              // <TableRow ecosystem={ecosystem} key={ecosystem} />
               <SignAndClaimRowLayout ecosystem={ecosystem} key={ecosystem}>
                 <EcosystemSignButton ecosystem={ecosystem} />
               </SignAndClaimRowLayout>
