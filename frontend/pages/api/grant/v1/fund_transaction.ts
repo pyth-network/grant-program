@@ -1,5 +1,5 @@
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
-import { Keypair, VersionedTransaction } from '@solana/web3.js'
+import { Keypair, Version, VersionedTransaction } from '@solana/web3.js'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 const wallet = new NodeWallet(
@@ -17,7 +17,6 @@ export default async function handlerFundTransaction(
   }
 
   const data = req.body
-  console.log(typeof data)
   let transactions: VersionedTransaction[] = []
   let signedTransactions: VersionedTransaction[] = []
 
