@@ -14,6 +14,8 @@ import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { ProceedButton } from '@components/buttons'
 import { CoinCell } from '@components/table/CoinCell'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
+import { useSignAndClaimRowState } from 'hooks/useSignAndClaimRowState'
 
 export const ClaimStatus = ({
   onProceed,
@@ -98,22 +100,13 @@ type TableRowProps = {
 }
 function TableRow({ ecosystem, ecosystemClaimState }: TableRowProps) {
   const getEligibleCoins = useCoins()
-  const [rowDisabled, setRowDisabled] = useState(true)
+  const { getEligibility } = useEligibility()
 
-  useEffect(() => {
-    // Row is disabled if ecosystemClaimState is undefined
-    if (ecosystemClaimState === undefined) {
-      setRowDisabled(true)
-    } else {
-      setRowDisabled(false)
-    }
-  }, [ecosystemClaimState])
+  const { disabled: rowDisabled, tooltipContent: rowTooltipContent } =
+    useSignAndClaimRowState(ecosystem)
 
-  // Showing coins only for ecosytem for which we submitted a claim.
-  const coins = useMemo(() => {
-    if (ecosystemClaimState === undefined) return undefined
-    return getEligibleCoins(ecosystem)
-  }, [ecosystem, ecosystemClaimState, getEligibleCoins])
+  const eligibility = getEligibility(ecosystem)
+  const eligibleCoins = getEligibleCoins(ecosystem)
 
   return (
     <tr className={classNames('border-b border-light-35 ')}>
@@ -144,7 +137,11 @@ function TableRow({ ecosystem, ecosystemClaimState }: TableRowProps) {
           </span>
         </div>
       </td>
-      <CoinCell coins={coins} />
+      <CoinCell
+        coins={eligibleCoins}
+        isStriked={eligibility?.isClaimAlreadySubmitted}
+        rowTooltipContent={rowTooltipContent}
+      />
     </tr>
   )
 }

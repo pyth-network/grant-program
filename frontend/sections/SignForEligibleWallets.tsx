@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import { classNames } from 'utils/classNames'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
@@ -7,7 +7,6 @@ import { Ecosystem } from '@components/Ecosystem'
 import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
-import { useIsClaimAlreadySubmitted } from 'hooks/useIsClaimAlreadySubmitted'
 import { EcosystemSignButton } from '@components/EcosystemSignButton'
 import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { useSignature } from '@components/Ecosystem/SignatureProvider'
@@ -15,6 +14,7 @@ import { BackButton, ProceedButton } from '@components/buttons'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { CoinCell } from '@components/table/CoinCell'
 import { TotalAllocationRow } from '@components/table/TotalAllocationRow'
+import { useSignAndClaimRowState } from 'hooks/useSignAndClaimRowState'
 
 export const SignForEligibleWallets = ({
   onBack,
@@ -109,59 +109,13 @@ type TableRowProps = {
 }
 function TableRow({ ecosystem }: TableRowProps) {
   const getEligibleCoins = useCoins()
-  const { activity } = useActivity()
-  const getEcosystemIdentity = useGetEcosystemIdentity()
   const { getEligibility } = useEligibility()
-  const isClaimAlreadySubmitted = useIsClaimAlreadySubmitted()
-  const [rowDisabled, setRowDisabled] = useState(true)
-  // if it is undefined, no tooltip will be shown
-  const [rowTooltipContent, setRowTooltipContent] = useState<string>()
-
-  useEffect(() => {
-    ;(async () => {
-      // Row is disabled when
-      // - Ecosystem is inactive or
-      // - Ecosystem is active but
-      // - - No Claim Info found or
-      // - - Claim already submitted
-
-      // Rows is enabled if
-      // - Ecosystem is active and
-      // - Ecosystem has a claim info and
-      // - Claim has not been submitted
-
-      const isActive = activity[ecosystem]
-      // (NOTE: ecosystem will have a claim info only if the connected identity has a claim info)
-      const eligibility = getEligibility(ecosystem)
-      if (isActive === true) {
-        if (eligibility?.claimInfo !== undefined) {
-          if (eligibility?.isClaimAlreadySubmitted) {
-            setRowDisabled(true)
-            setRowTooltipContent(
-              'The tokens for this ecosystem has already been claimed.'
-            )
-          } else {
-            setRowDisabled(false)
-            setRowTooltipContent(undefined)
-          }
-        } else {
-          setRowDisabled(true)
-          setRowTooltipContent(
-            'There are no tokens to claim for this ecosystem.'
-          )
-        }
-      } else setRowDisabled(true)
-    })()
-  }, [
-    activity,
-    ecosystem,
-    getEcosystemIdentity,
-    getEligibility,
-    isClaimAlreadySubmitted,
-  ])
 
   const eligibility = getEligibility(ecosystem)
   const eligibleCoins = getEligibleCoins(ecosystem)
+
+  const { disabled: rowDisabled, tooltipContent: rowTooltipContent } =
+    useSignAndClaimRowState(ecosystem)
 
   return (
     <tr className={classNames('border-b border-light-35 ')}>
