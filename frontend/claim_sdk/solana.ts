@@ -223,7 +223,7 @@ export class TokenDispenserProvider {
     }[],
     funderWallet: Wallet | undefined = undefined
   ): Promise<Promise<TransactionError | null>[]> {
-    let txs: VersionedTransaction[] = []
+    const txs: VersionedTransaction[] = []
 
     for (const claim of claims) {
       txs.push(
@@ -234,29 +234,32 @@ export class TokenDispenserProvider {
         )
       )
     }
-    await (
+    const txsSignedOnce = await (
       this.tokenDispenserProgram.provider as anchor.AnchorProvider
     ).wallet.signAllTransactions(txs)
 
+    let txsSignedTwice: VersionedTransaction[] = []
     if (funderWallet) {
       // This is defined only in testing, where we can't use the API
-      await funderWallet.signAllTransactions(txs)
+      txsSignedTwice = await funderWallet.signAllTransactions(txsSignedOnce)
     } else {
       const response = await fetch('/api/grant/v1/fund_transaction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(txs.map((txs) => Buffer.from(txs.serialize()))),
+        body: JSON.stringify(
+          txsSignedOnce.map((tx) => Buffer.from(tx.serialize()))
+        ),
       })
 
-      txs = (await response.json()).map((serializedTx: any) => {
+      txsSignedTwice = (await response.json()).map((serializedTx: any) => {
         return VersionedTransaction.deserialize(Buffer.from(serializedTx))
       })
     }
 
     // send the txns. Associated token account will be created if needed.
-    const sendTxs = txs.map(async (signedTx) => {
+    const sendTxs = txsSignedTwice.map(async (signedTx) => {
       const signature = await this.connection.sendTransaction(signedTx, {
         skipPreflight: true,
       })
