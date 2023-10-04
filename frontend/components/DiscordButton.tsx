@@ -13,7 +13,7 @@ type DiscordButtonProps = {
 // We are opening a popup ourselves with specific pages. These pages
 // do the signIn and signOut action on load.
 // Please see the page - /discord-login and /discord-logout for more.
-const popupCenter = (url: string, title: string) => {
+const newTab = (url: string, title: string) => {
   const newWindow = window.open(url, title)
   newWindow?.focus()
 }
@@ -50,9 +50,9 @@ export function DiscordButton({ disableOnAuth }: DiscordButtonProps) {
       }
       onClick={() => {
         if (status === 'unauthenticated')
-          popupCenter('/discord-login', 'Pyth | Discord')
+          newTab('/discord-login', 'Pyth | Discord')
         if (status === 'authenticated')
-          popupCenter('/discord-logout', 'Pyth | Discord')
+          newTab('/discord-logout', 'Pyth | Discord')
       }}
       disabled={disableOnAuth}
     >
