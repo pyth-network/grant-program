@@ -4,7 +4,6 @@ import { HASH_SIZE } from '../claim_sdk/merkleTree'
 import { PublicKey, VersionedTransaction } from '@solana/web3.js'
 import { SignedMessage } from '../claim_sdk/ecosystems/signatures'
 import { NextApiRequest, NextApiResponse } from 'next'
-import handlerAmountAndProof from 'pages/api/grant/v1/amount_and_proof'
 
 const MOCK_APIS = process.env.MOCK_APIS ?? undefined
 
@@ -163,4 +162,18 @@ export async function fetchFundTransaction(
   })
 
   return handleFundTransaction(response.status, await response.json())
+}
+
+export class NextApiResponseMock {
+  public jsonBody: any
+  public statusCode: number = 0
+
+  json(jsonBody: any) {
+    this.jsonBody = jsonBody
+  }
+
+  status(statusCode: number): NextApiResponseMock {
+    this.statusCode = statusCode
+    return this
+  }
 }
