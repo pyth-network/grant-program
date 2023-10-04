@@ -22,7 +22,7 @@ export function CoinCell({
             isStriked ? 'line-through' : ''
           )}
         >
-          {coins === undefined || coins === null ? (
+          {!coins ? (
             'N/A'
           ) : (
             <>
