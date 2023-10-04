@@ -14,7 +14,7 @@ import {
   SYSVAR_INSTRUCTIONS_PUBKEY,
 } from '@solana/web3.js'
 import { Buffer } from 'buffer'
-import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
+import { TokenDispenserProvider } from '../claim_sdk/solana'
 import {
   DiscordTestWallet,
   TestWallet,
