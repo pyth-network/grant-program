@@ -72,11 +72,7 @@ export function checkTransactions(
   tokenDispenser: PublicKey,
   whitelist: PublicKey[]
 ): boolean {
-<<<<<<< HEAD
-  return transactions.every((tx) => checkTransaction(tx, tokenDispenser, whitelist))
-=======
   return transactions.every((tx) =>
     checkTransaction(tx, tokenDispenser, whitelist)
   )
->>>>>>> 7f12577 (Check again)
 }
