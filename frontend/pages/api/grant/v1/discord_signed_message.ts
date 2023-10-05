@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../auth/[...nextauth]'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { signDiscordMessage } from '../../../../claim_sdk/ecosystems/solana'
+import { hashDiscordUserId } from 'utils/hashDiscord'
+import { DISCORD_HASH_SALT } from 'claim_sdk/testWallets'
 
 const dispenserGuard = Keypair.fromSecretKey(
   Uint8Array.from(JSON.parse(process.env.DISPENSER_GUARD!))
@@ -33,7 +35,7 @@ export default async function handler(
 
   if (session && session.user && session.user.id) {
     const signedMessage = signDiscordMessage(
-      session.user.id,
+      hashDiscordUserId(DISCORD_HASH_SALT, session.user.id),
       claimant,
       dispenserGuard
     )
