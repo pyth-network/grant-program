@@ -128,7 +128,7 @@ export function handleFundTransaction(
       return VersionedTransaction.deserialize(Buffer.from(serializedTx))
     })
   } else {
-    throw new Error('Failed to fund transaction')
+    throw new Error(data.error)
   }
 }
 
