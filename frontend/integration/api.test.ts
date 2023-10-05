@@ -233,14 +233,10 @@ describe('test fund transaction api', () => {
     ).toBe(false)
 
     await expect(
-      mockfetchFundTransaction([transactionBadTransfer3]).catch((e) => e)
+      mockfetchFundTransaction([transactionLegacy]).catch((e) => e)
     ).resolves.toThrow('Unauthorized transaction')
     expect(
-      checkTransactions(
-        [transactionBadTransfer3],
-        PROGRAM_ID,
-        WHITELISTED_PROGRAMS
-      )
+      checkTransactions([transactionLegacy], PROGRAM_ID, WHITELISTED_PROGRAMS)
     ).toBe(false)
 
     // More granular tests
