@@ -434,4 +434,53 @@ describe('test fund transaction api', () => {
       )
     ).toBe(false)
   })
+
+  it('tests counting signatures', async () => {
+    const secp256k1ProgramInstruction =
+      Secp256k1Program.createInstructionWithPrivateKey({
+        privateKey: Buffer.from(
+          ethers.Wallet.createRandom().privateKey.slice(2),
+          'hex'
+        ),
+        message: Buffer.from('hello'),
+      })
+
+    const secp256k1ProgramInstruction2Sigs =
+      Secp256k1Program.createInstructionWithPrivateKey({
+        privateKey: Buffer.from(
+          ethers.Wallet.createRandom().privateKey.slice(2),
+          'hex'
+        ),
+        message: Buffer.from('hello'),
+      })
+    secp256k1ProgramInstruction2Sigs.data[0] = 2
+
+    const secp256k1ProgramInstruction3Sigs =
+      Secp256k1Program.createInstructionWithPrivateKey({
+        privateKey: Buffer.from(
+          ethers.Wallet.createRandom().privateKey.slice(2),
+          'hex'
+        ),
+        message: Buffer.from('hello'),
+      })
+    secp256k1ProgramInstruction3Sigs.data[0] = 3
+
+    expect(
+      countTotalSignatures(
+        createTestTransactionFromInstructions([
+          secp256k1ProgramInstruction,
+          secp256k1ProgramInstruction2Sigs,
+          secp256k1ProgramInstruction3Sigs,
+        ])
+      )
+    ).toBe(7)
+    expect(
+      countTotalSignatures(
+        createTestTransactionFromInstructions([
+          secp256k1ProgramInstruction2Sigs,
+          secp256k1ProgramInstruction,
+        ])
+      )
+    ).toBe(4)
+  })
 })
