@@ -243,7 +243,6 @@ export class TokenDispenserProvider {
 
 
     const txsSignedTwice = await fetchFundTransactionFunction(txsSignedOnce)
-
     // send the txns. Associated token account will be created if needed.
     const sendTxs = txsSignedTwice.map(async (signedTx) => {
       const signature = await this.connection.sendTransaction(signedTx, {
