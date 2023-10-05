@@ -24,7 +24,6 @@ import {
   checkTransaction,
   checkTransactions,
   checkV0,
-  countPrecompiledSignatures,
   countTotalSignatures,
 } from '../utils/verifyTransaction'
 
