@@ -7,7 +7,7 @@ import {
 } from './useAddress'
 import { useSession } from 'next-auth/react'
 import { Ecosystem } from '@components/Ecosystem'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { getSeiConnectedWalletName } from '@components/wallets/Sei'
 
 // It will return a function that can be used to get the identity of a given ecosystem
