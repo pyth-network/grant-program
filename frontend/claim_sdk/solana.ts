@@ -2,7 +2,13 @@ import * as anchor from '@coral-xyz/anchor'
 import { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
 import tokenDispenser from './idl/token_dispenser.json'
 import type { TokenDispenser } from './idl/token_dispenser'
-import { Idl, IdlAccounts, IdlTypes, Program } from '@coral-xyz/anchor'
+import {
+  BorshCoder,
+  Idl,
+  IdlAccounts,
+  IdlTypes,
+  Program,
+} from '@coral-xyz/anchor'
 import { Buffer } from 'buffer'
 import { MerkleTree } from './merkleTree'
 import {
@@ -27,6 +33,7 @@ import { TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import { SignedMessage } from './ecosystems/signatures'
 import { extractChainId } from './ecosystems/cosmos'
 import { fetchFundTransaction } from '../utils/api'
+import { IdlEvent } from '@coral-xyz/anchor/dist/cjs/idl'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -478,4 +485,82 @@ export async function airdrop(
     signature: airdropTxn,
     ...(await connection.getLatestBlockhash()),
   })
+}
+
+export class TokenDispenserEventSubscriber {
+  eventParser: anchor.EventParser
+  connection: anchor.web3.Connection
+  programId: anchor.web3.PublicKey
+  lastSignature: TransactionSignature | undefined
+
+  constructor(
+    endpoint: string,
+    programId: anchor.web3.PublicKey,
+    confirmOpts?: anchor.web3.ConfirmOptions
+  ) {
+    const coder = new BorshCoder(tokenDispenser as Idl)
+    this.programId = programId
+    this.eventParser = new anchor.EventParser(this.programId, coder)
+    confirmOpts = confirmOpts ?? anchor.AnchorProvider.defaultOptions()
+    this.connection = new anchor.web3.Connection(
+      endpoint,
+      confirmOpts.preflightCommitment
+    )
+  }
+
+  public async parseTransactionLogs(): Promise<
+    {
+      signature: string
+      events: anchor.Event<IdlEvent, Record<string, never>>[]
+    }[]
+  > {
+    let signatures = await this.connection.getConfirmedSignaturesForAddress2(
+      this.programId,
+      this.lastSignature
+        ? {
+            until: this.lastSignature,
+          }
+        : {},
+      'confirmed'
+    )
+    if (signatures[signatures.length - 1]?.signature === this.lastSignature) {
+      signatures = signatures.slice(0, signatures.length - 1)
+    }
+    this.lastSignature = signatures[signatures.length - 1]?.signature
+
+    const validTxns = []
+    const errorTxns = []
+    for (const signature of signatures) {
+      if (signature.err) {
+        errorTxns.push(signature.signature)
+      } else {
+        validTxns.push(signature.signature)
+      }
+    }
+    const txns = await this.connection.getTransactions(validTxns, {
+      commitment: 'confirmed',
+      maxSupportedTransactionVersion: 0,
+    })
+    const txnLogs = txns.map((txLog) => {
+      console.log(txLog)
+      return {
+        signature: txLog?.transaction.signatures[0] ?? '',
+        logs: txLog?.meta?.logMessages ?? [],
+      }
+    })
+
+    const txnEvents = txnLogs.map((txnLog) => {
+      const eventGen = this.eventParser.parseLogs(txnLog.logs)
+      const events = []
+      for (const event of eventGen) {
+        events.push(event)
+      }
+      return {
+        signature: txnLog.signature,
+        events,
+      }
+    })
+
+    return txnEvents
+  }
 }

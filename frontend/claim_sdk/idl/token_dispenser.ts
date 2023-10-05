@@ -606,11 +606,6 @@ export type TokenDispenser =
           "name": "claimant",
           "type": "publicKey",
           "index": false
-        },
-        {
-          "name": "leafBuffer",
-          "type": "bytes",
-          "index": false
         }
       ]
     }
@@ -1262,11 +1257,6 @@ export const IDL: TokenDispenser =
         {
           "name": "claimant",
           "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "leafBuffer",
-          "type": "bytes",
           "index": false
         }
       ]

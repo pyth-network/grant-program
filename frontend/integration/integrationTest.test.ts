@@ -14,7 +14,11 @@ import {
   SYSVAR_INSTRUCTIONS_PUBKEY,
 } from '@solana/web3.js'
 import { Buffer } from 'buffer'
-import { TokenDispenserProvider } from '../claim_sdk/solana'
+import {
+  TokenDispenserProvider,
+  airdrop,
+  TokenDispenserEventSubscriber,
+} from '../claim_sdk/solana'
 import {
   DiscordTestWallet,
   TestWallet,
@@ -23,6 +27,13 @@ import {
 } from '../claim_sdk/testWallets'
 import { loadTestWallets } from '../claim_sdk/testWallets'
 import { mockFetchAmountAndProof, mockfetchFundTransaction } from './api'
+import { NextApiRequest, NextApiResponse } from 'next'
+import {
+  getAmountAndProofRoute,
+  handleAmountAndProofResponse,
+} from '../utils/api'
+import handlerAmountAndProof from '../pages/api/grant/v1/amount_and_proof'
+import { MerkleTree } from '../claim_sdk/merkleTree'
 
 const pool = getDatabasePool()
 
@@ -79,14 +90,28 @@ describe('integration test', () => {
       }
     )
 
+    const endpoint = 'http://127.0.0.1:8899'
+    const tokenDispenserPid = new PublicKey(
+      'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'
+    )
     const tokenDispenserProvider = new TokenDispenserProvider(
-      'http://127.0.0.1:8899',
+      endpoint,
       wallet,
-      new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'),
+      tokenDispenserPid,
       {
         skipPreflight: true,
-        preflightCommitment: 'processed',
-        commitment: 'processed',
+        preflightCommitment: 'confirmed',
+        commitment: 'confirmed',
+      }
+    )
+
+    const tokenDispenserEventSubscriber = new TokenDispenserEventSubscriber(
+      endpoint,
+      tokenDispenserPid,
+      {
+        skipPreflight: true,
+        preflightCommitment: 'confirmed',
+        commitment: 'confirmed',
       }
     )
 
@@ -140,6 +165,11 @@ describe('integration test', () => {
       expect(
         lookupTableAddresses.includes(SYSVAR_INSTRUCTIONS_PUBKEY.toBase58())
       ).toBeTruthy()
+      const txnEvents =
+        await tokenDispenserEventSubscriber.parseTransactionLogs()
+      expect(txnEvents.length).toEqual(1)
+      // no events emitted in initialize
+      expect(txnEvents[0].events.length).toEqual(0)
     })
 
     it('submits an evm claim', async () => {
@@ -175,6 +205,35 @@ describe('integration test', () => {
       const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
 
       expect(claimantFund.amount.eq(new anchor.BN(3000000))).toBeTruthy()
+
+      // check event
+      const txnEvents =
+        await tokenDispenserEventSubscriber.parseTransactionLogs()
+      expect(txnEvents.length).toEqual(1)
+      expect(txnEvents[0].events.length).toEqual(1)
+      const evmClaimEvent = txnEvents[0].events[0]
+      expect(evmClaimEvent.name).toEqual('ClaimEvent')
+      expect(evmClaimEvent.data.claimant.toBase58()).toEqual(
+        wallet.publicKey.toBase58()
+      )
+      expect(
+        new anchor.BN(evmClaimEvent.data.claimAmount.toString()).eq(
+          claimInfo.amount
+        )
+      ).toBeTruthy()
+      const expectedTreasuryBalance = new anchor.BN(1000000000).sub(
+        claimInfo.amount
+      )
+      const eventRemainingBalance = new anchor.BN(
+        evmClaimEvent.data.remainingBalance.toString()
+      )
+      expect(
+        new anchor.BN(evmClaimEvent.data.remainingBalance.toString()).eq(
+          expectedTreasuryBalance
+        )
+      ).toBeTruthy()
+      const expectedLeafBuffer = claimInfo.toBuffer()
+      expect(evmClaimEvent.data.leafBuffer).toEqual(expectedLeafBuffer)
     }, 40000)
 
     it('submits a cosmwasm claim', async () => {
