@@ -26,6 +26,7 @@ import { ClaimInfo, Ecosystem } from './claim'
 import { TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import { SignedMessage } from './ecosystems/signatures'
 import { extractChainId } from './ecosystems/cosmos'
+import { fetchFundTransaction } from '../utils/api'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -221,7 +222,9 @@ export class TokenDispenserProvider {
       proofOfInclusion: Uint8Array[]
       signedMessage: SignedMessage | undefined
     }[],
-    funderWallet: Wallet | undefined = undefined
+    fetchFundTransactionFunction: (
+      transactions: VersionedTransaction[]
+    ) => Promise<VersionedTransaction[]> = fetchFundTransaction // This argument is only used for testing where we can't call the API
   ): Promise<Promise<TransactionError | null>[]> {
     const txs: VersionedTransaction[] = []
 
@@ -238,26 +241,7 @@ export class TokenDispenserProvider {
       this.tokenDispenserProgram.provider as anchor.AnchorProvider
     ).wallet.signAllTransactions(txs)
 
-    let txsSignedTwice: VersionedTransaction[] = []
-    if (funderWallet) {
-      // This is defined only in testing, where we can't use the API
-      txsSignedTwice = await funderWallet.signAllTransactions(txsSignedOnce)
-    } else {
-      const response = await fetch('/api/grant/v1/fund_transaction', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(
-          txsSignedOnce.map((tx) => Buffer.from(tx.serialize()))
-        ),
-      })
-
-      txsSignedTwice = (await response.json()).map((serializedTx: any) => {
-        return VersionedTransaction.deserialize(Buffer.from(serializedTx))
-      })
-    }
-
+    const txsSignedTwice = await fetchFundTransactionFunction(txsSignedOnce)
     // send the txns. Associated token account will be created if needed.
     const sendTxs = txsSignedTwice.map(async (signedTx) => {
       const signature = await this.connection.sendTransaction(signedTx, {

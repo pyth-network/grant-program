@@ -1,7 +1,7 @@
 import BN from 'bn.js'
 import { ClaimInfo, Ecosystem } from '../claim_sdk/claim'
 import { HASH_SIZE } from '../claim_sdk/merkleTree'
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey, VersionedTransaction } from '@solana/web3.js'
 import { SignedMessage } from '../claim_sdk/ecosystems/signatures'
 
 function parseProof(proof: string) {
@@ -113,4 +113,35 @@ export async function fetchEvmBreakdown(
 ): Promise<EvmChainAllocation[] | undefined> {
   const response = await fetch(getEvmBreakdownRoute(identity))
   return handleEvmBreakdown(response.status, await response.json())
+}
+
+export function getFundTransactionRoute(): string {
+  return `/api/grant/v1/fund_transaction`
+}
+
+export function handleFundTransaction(
+  status: number,
+  data: any
+): VersionedTransaction[] {
+  if (status == 200) {
+    return data.map((serializedTx: any) => {
+      return VersionedTransaction.deserialize(Buffer.from(serializedTx))
+    })
+  } else {
+    throw new Error('Failed to fund transaction')
+  }
+}
+
+export async function fetchFundTransaction(
+  transactions: VersionedTransaction[]
+): Promise<VersionedTransaction[]> {
+  const response = await fetch(getFundTransactionRoute(), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(transactions.map((tx) => Buffer.from(tx.serialize()))),
+  })
+
+  return handleFundTransaction(response.status, await response.json())
 }

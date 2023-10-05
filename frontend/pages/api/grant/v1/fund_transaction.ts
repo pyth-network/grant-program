@@ -1,12 +1,15 @@
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
-import { Keypair, Version, VersionedTransaction } from '@solana/web3.js'
+import { Keypair, VersionedTransaction } from '@solana/web3.js'
+import { loadFunderWallet } from '../../../../claim_sdk/testWallets'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-const wallet = new NodeWallet(
-  Keypair.fromSecretKey(
-    Uint8Array.from(JSON.parse(process.env.FUNDER_KEYPAIR!))
-  )
-)
+const wallet = process.env.FUNDER_KEYPAIR
+  ? new NodeWallet(
+      Keypair.fromSecretKey(
+        Uint8Array.from(JSON.parse(process.env.FUNDER_KEYPAIR))
+      )
+    )
+  : loadFunderWallet()
 
 export default async function handlerFundTransaction(
   req: NextApiRequest,
