@@ -22,7 +22,7 @@ pub mod sui;
  * */
 pub const AUTHORIZATION_PAYLOAD: [&str; 3] = [
     "Pyth Grant PID:\n",
-    "\nI authorize wallet\n",
+    "\nI authorize Solana wallet\n",
     "\nto claim my token grant.\n",
 ];
 

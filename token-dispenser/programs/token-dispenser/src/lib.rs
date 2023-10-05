@@ -88,15 +88,17 @@ pub mod token_dispenser {
         ctx: Context<Initialize>,
         merkle_root: MerkleRoot<SolanaHasher>,
         dispenser_guard: Pubkey,
+        funder: Pubkey,
     ) -> Result<()> {
         require_keys_neq!(dispenser_guard, Pubkey::default());
-        let config = &mut ctx.accounts.config;
+        let config: &mut Account<'_, Config> = &mut ctx.accounts.config;
         config.bump = *ctx.bumps.get("config").unwrap();
         config.merkle_root = merkle_root;
         config.dispenser_guard = dispenser_guard;
         config.mint = ctx.accounts.mint.key();
         config.treasury = ctx.accounts.treasury.key();
         config.address_lookup_table = ctx.accounts.address_lookup_table.key();
+        config.funder = funder;
         Ok(())
     }
 
@@ -138,7 +140,7 @@ pub mod token_dispenser {
         checked_create_claim_receipt(
             0,
             &leaf_vector,
-            &ctx.accounts.payer,
+            &ctx.accounts.funder,
             &ctx.accounts.system_program,
             ctx.remaining_accounts,
         )?;
@@ -189,13 +191,13 @@ pub struct Initialize<'info> {
 #[instruction(claim_certificate : ClaimCertificate)]
 pub struct Claim<'info> {
     #[account(mut)]
-    pub payer:                    Signer<'info>,
+    pub funder:                   Signer<'info>, // Funds the claimant_fund and the claim receipt account
     pub claimant:                 Signer<'info>,
     /// Claimant's associated token account to receive the tokens
     /// Should be initialized outside of this program.
     #[account(
         init_if_needed,
-        payer = payer,
+        payer = funder,
         associated_token::authority = claimant,
         associated_token::mint = mint,
     )]
@@ -308,10 +310,11 @@ pub struct Config {
     pub mint:                 Pubkey,
     pub treasury:             Pubkey,
     pub address_lookup_table: Pubkey,
+    pub funder:               Pubkey,
 }
 
 impl Config {
-    pub const LEN: usize = 8 + 1 + 20 + 32 + 32 + 32 + 32;
+    pub const LEN: usize = 8 + 1 + 20 + 32 + 32 + 32 + 32 + 32;
 }
 
 #[account]
@@ -522,7 +525,7 @@ impl ClaimCertificate {
 pub fn checked_create_claim_receipt<'info>(
     index: usize,
     leaf: &[u8],
-    payer: &AccountInfo<'info>,
+    funder: &AccountInfo<'info>,
     system_program: &AccountInfo<'info>,
     remaining_accounts: &[AccountInfo<'info>],
 ) -> Result<()> {
@@ -541,12 +544,12 @@ pub fn checked_create_claim_receipt<'info>(
 
     let account_infos = vec![
         claim_receipt_account.clone(),
-        payer.to_account_info(),
+        funder.to_account_info(),
         system_program.to_account_info(),
     ];
     // Pay rent for the receipt account
     let transfer_instruction = system_instruction::transfer(
-        &payer.key(),
+        &funder.key(),
         &claim_receipt_account.key(),
         Rent::get()?
             .minimum_balance(0)
@@ -607,14 +610,14 @@ impl crate::accounts::Initialize {
 
 impl crate::accounts::Claim {
     pub fn populate(
-        payer: Pubkey,
+        funder: Pubkey,
         claimant: Pubkey,
         mint: Pubkey,
         claimant_fund: Pubkey,
         treasury: Pubkey,
     ) -> Self {
         crate::accounts::Claim {
-            payer,
+            funder,
             claimant,
             claimant_fund,
             config: get_config_pda().0,
