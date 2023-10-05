@@ -18,31 +18,9 @@ import Meter from '@images/evm-chains/meter.inline.svg'
 import Gnosis from '@images/evm-chains/gnosis.inline.svg'
 import Kcc from '@images/evm-chains/kcc.inline.svg'
 import Wemix from '@images/evm-chains/wemix.inline.svg'
+import { EvmChains } from 'utils/db'
 
-export type Chain =
-  | 'optimism-mainnet'
-  | 'arbitrum-mainnet'
-  | 'cronos-mainnet'
-  | 'zksync-mainnet'
-  | 'bsc-mainnet'
-  | 'base-mainnet'
-  | 'evmos-mainnet'
-  | 'mantle-mainnet'
-  | 'linea-mainnet'
-  | 'polygon-zkevm-mainnet'
-  | 'avalanche-mainnet'
-  | 'matic-mainnet'
-  | 'aurora-mainnet'
-  | 'eth-mainnet'
-  | 'confluxespace-mainnet'
-  | 'celo-mainnet'
-  | 'meter-mainnet'
-  | 'gnosis-mainnet'
-  | 'kcc-mainnet'
-  | 'wemix-mainnet'
-
-export function EvmBreakdownLabel({ chain }: { chain: Chain }) {
-  console.log(chain)
+export function EvmBreakdownLabel({ chain }: { chain: EvmChains }) {
   return (
     <span className="flex w-[148px] items-center justify-start gap-2">
       {getLogo(chain)}
@@ -51,7 +29,7 @@ export function EvmBreakdownLabel({ chain }: { chain: Chain }) {
   )
 }
 
-function getLogo(chain: Chain) {
+function getLogo(chain: EvmChains) {
   switch (chain) {
     case 'optimism-mainnet':
       return <Optimism />
@@ -96,7 +74,7 @@ function getLogo(chain: Chain) {
   }
 }
 
-function getName(chain: Chain) {
+function getName(chain: EvmChains) {
   switch (chain) {
     case 'optimism-mainnet':
       return 'Optimism'

@@ -4,7 +4,8 @@ import BN from 'bn.js'
 import { EvmChainAllocation } from 'utils/api'
 import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 import Pyth from '@images/coin.inline.svg'
-import { Chain, EvmBreakdownLabel } from './EvmBreakdownLabel'
+import { EvmBreakdownLabel } from './EvmBreakdownLabel'
+import { EvmChains } from 'utils/db'
 
 type EVMBreakdownModalProps = {
   openModal: Function
@@ -27,7 +28,7 @@ export function EVMBreakdownModal({
               return (
                 <tr key={chain}>
                   <td className="w-full max-w-[440px] border-collapse border border-light-35 py-4 px-10">
-                    <EvmBreakdownLabel chain={chain as Chain} />
+                    <EvmBreakdownLabel chain={chain as EvmChains} />
                   </td>
                   <td className="border-collapse border border-light-35 py-4">
                     <span className="flex w-[148px] items-center justify-end gap-1 px-10">
