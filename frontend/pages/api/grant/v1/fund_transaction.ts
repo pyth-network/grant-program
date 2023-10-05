@@ -9,7 +9,7 @@ import {
   VersionedTransaction,
 } from '@solana/web3.js'
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { checkTransactions } from 'utils/verifyTransaction'
+import { checkTransactions } from '../../../../utils/verifyTransaction'
 
 const wallet = process.env.FUNDER_KEYPAIR
   ? new NodeWallet(
