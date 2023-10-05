@@ -79,21 +79,22 @@ describe('integration test', () => {
   describe('token dispenser e2e', () => {
     const wallet = loadAnchorWallet()
     const funderWallet = loadFunderWallet()
-    const deployerTokenDispenserProvider = new TokenDispenserProvider(
-      'http://127.0.0.1:8899',
-      funderWallet,
-      new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'),
-      {
-        skipPreflight: true,
-        preflightCommitment: 'processed',
-        commitment: 'processed',
-      }
-    )
-
     const endpoint = 'http://127.0.0.1:8899'
     const tokenDispenserPid = new PublicKey(
       'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'
     )
+
+    const deployerTokenDispenserProvider = new TokenDispenserProvider(
+      endpoint,
+      funderWallet,
+      tokenDispenserPid,
+      {
+        skipPreflight: true,
+        preflightCommitment: 'confirmed',
+        commitment: 'confirmed',
+      }
+    )
+
     const tokenDispenserProvider = new TokenDispenserProvider(
       endpoint,
       wallet,

@@ -523,9 +523,14 @@ export class TokenDispenserEventSubscriber {
         : {},
       'confirmed'
     )
-    if (signatures[signatures.length - 1]?.signature === this.lastSignature) {
+    // deduplicate last signature
+    if (
+      this.lastSignature &&
+      signatures[signatures.length - 1]?.signature === this.lastSignature
+    ) {
       signatures = signatures.slice(0, signatures.length - 1)
     }
+
     this.lastSignature = signatures[signatures.length - 1]?.signature
 
     const validTxns = []
