@@ -114,53 +114,51 @@ pub mod token_dispenser {
      */
     pub fn claim<'info>(
         ctx: Context<'_, '_, '_, 'info, Claim<'info>>,
-        claim_certificates: Vec<ClaimCertificate>,
+        claim_certificate: ClaimCertificate,
     ) -> Result<()> {
         let config = &ctx.accounts.config;
         let treasury = &ctx.accounts.treasury;
         let claimant_fund = &ctx.accounts.claimant_fund;
 
+        // Check that the identity corresponding to the leaf has authorized the claimant
+        let claim_info = claim_certificate.checked_into_claim_info(
+            &ctx.accounts.sysvar_instruction,
+            ctx.accounts.claimant.key,
+            &ctx.accounts.config.dispenser_guard,
+        )?;
+        // Each leaf of the tree is a hash of the serialized claim info
+        let leaf_vector = claim_info.try_to_vec()?;
 
-        for (index, claim_certificate) in claim_certificates.iter().enumerate() {
-            // Check that the identity corresponding to the leaf has authorized the claimant
-            let claim_info = claim_certificate.checked_into_claim_info(
-                &ctx.accounts.sysvar_instruction,
-                ctx.accounts.claimant.key,
-                &ctx.accounts.config.dispenser_guard,
-            )?;
-            // Each leaf of the tree is a hash of the serialized claim info
-            let leaf_vector = claim_info.try_to_vec()?;
-
-            if !config
-                .merkle_root
-                .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)
-            {
-                return err!(ErrorCode::InvalidInclusionProof);
-            };
+        if !config
+            .merkle_root
+            .check(claim_certificate.proof_of_inclusion.clone(), &leaf_vector)
+        {
+            return err!(ErrorCode::InvalidInclusionProof);
+        };
 
 
-            checked_create_claim_receipt(
-                index,
-                &leaf_vector,
-                &ctx.accounts.funder,
-                &ctx.accounts.system_program,
-                ctx.remaining_accounts,
-            )?;
+        checked_create_claim_receipt(
+            0,
+            &leaf_vector,
+            &ctx.accounts.funder,
+            &ctx.accounts.system_program,
+            ctx.remaining_accounts,
+        )?;
 
 
-            token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    token::Transfer {
-                        from:      treasury.to_account_info(),
-                        to:        claimant_fund.to_account_info(),
-                        authority: config.to_account_info(),
-                    },
-                    &[&[CONFIG_SEED, &[config.bump]]],
-                ),
-                claim_info.amount,
-            )?;
-        }
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                token::Transfer {
+                    from:      treasury.to_account_info(),
+                    to:        claimant_fund.to_account_info(),
+                    authority: config.to_account_info(),
+                },
+                &[&[CONFIG_SEED, &[config.bump]]],
+            ),
+            claim_info.amount,
+        )?;
+
 
         Ok(())
     }
@@ -190,7 +188,7 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(claim_certificates : Vec<ClaimCertificate>)]
+#[instruction(claim_certificate : ClaimCertificate)]
 pub struct Claim<'info> {
     #[account(mut)]
     pub funder:                   Signer<'info>, // Funds the claimant_fund and the claim receipt account

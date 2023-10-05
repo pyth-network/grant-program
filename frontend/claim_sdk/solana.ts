@@ -295,7 +295,7 @@ export class TokenDispenserProvider {
 
     const ixs = signatureVerificationIx ? [signatureVerificationIx] : []
     const claim_ix = await this.tokenDispenserProgram.methods
-      .claim([claimCert])
+      .claim(claimCert)
       .accounts({
         funder: (await this.getConfig()).funder,
         claimant: this.claimant,
