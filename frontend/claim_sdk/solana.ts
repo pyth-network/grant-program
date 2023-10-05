@@ -241,7 +241,6 @@ export class TokenDispenserProvider {
       this.tokenDispenserProgram.provider as anchor.AnchorProvider
     ).wallet.signAllTransactions(txs)
 
-
     const txsSignedTwice = await fetchFundTransactionFunction(txsSignedOnce)
     // send the txns. Associated token account will be created if needed.
     const sendTxs = txsSignedTwice.map(async (signedTx) => {

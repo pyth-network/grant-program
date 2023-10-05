@@ -40,6 +40,12 @@ export default async function handlerFundTransaction(
   let transactions: VersionedTransaction[] = []
   let signedTransactions: VersionedTransaction[] = []
 
+  if (data.length >= 10) {
+    return res.status(400).json({
+      error: 'Too many transactions',
+    })
+  }
+
   try {
     transactions = data.map((serializedTx: any) => {
       return VersionedTransaction.deserialize(Buffer.from(serializedTx))
