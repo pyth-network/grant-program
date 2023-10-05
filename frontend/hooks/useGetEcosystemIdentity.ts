@@ -37,7 +37,7 @@ export function useGetEcosystemIdentity() {
     async function fetchHashedUserId() {
       if (data?.user?.id) {
         const resp = await (
-          await fetch(`/api/grant/v1/hash_discord_uid?uid=${data?.user?.id}`)
+          await fetch(`/api/grant/v1/hash_discord_uid`)
         ).json()
         setDiscordHashedUserId(resp.hash)
       } else {
