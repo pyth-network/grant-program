@@ -52,7 +52,7 @@ export default async function handlerFundTransaction(
 
   if (checkTransactions(transactions, PROGRAM_ID, WHITELISTED_PROGRAMS)) {
     try {
-      await wallet.signAllTransactions(transactions)
+      signedTransactions = await wallet.signAllTransactions(transactions)
     } catch {
       return res.status(400).json({
         error:
@@ -61,7 +61,7 @@ export default async function handlerFundTransaction(
     }
 
     return res.status(200).json(
-      transactions.map((tx) => {
+      signedTransactions.map((tx) => {
         return Buffer.from(tx.serialize())
       })
     )
