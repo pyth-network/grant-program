@@ -6,6 +6,9 @@ import {
   TestWallet,
 } from '../claim_sdk/testWallets'
 import { ClaimInfo, Ecosystem, Ecosystems } from '../claim_sdk/claim'
+import {
+  getMaxAmount,
+} from '../claim_sdk/claim'
 import * as anchor from '@coral-xyz/anchor'
 import { MerkleTree } from '../claim_sdk/merkleTree'
 import { BN } from 'bn.js'
@@ -105,10 +108,7 @@ export async function addTestWalletsToDatabase(
     }
   ).flat(1)
 
-  const maxAmount = claimInfos.reduce((prev, curr) => {
-    return BN.max(prev, curr.amount)
-  }, new BN(0))
-  console.log('MAX AMOUNT', maxAmount.toString())
+  const maxAmount = getMaxAmount(claimInfos)
 
   return [await addClaimInfosToDatabase(pool, claimInfos), maxAmount]
 }

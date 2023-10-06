@@ -95,3 +95,9 @@ export class ClaimInfo {
     }) as Buffer
   }
 }
+
+export function getMaxAmount(claimInfos: ClaimInfo[]): anchor.BN {
+  return claimInfos.reduce((prev, curr) => {
+    return anchor.BN.max(prev, curr.amount)
+  }, new anchor.BN(0))
+}

@@ -12,7 +12,7 @@ import {
 import fs from 'fs'
 import Papa from 'papaparse'
 
-import { ClaimInfo, Ecosystem } from '../claim_sdk/claim'
+import { ClaimInfo, Ecosystem, getMaxAmount } from '../claim_sdk/claim'
 import BN from 'bn.js'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { EvmBreakdownRow } from '../utils/db'
@@ -115,9 +115,7 @@ async function main() {
         new BN(row['amount'])
       )
   ) // Cast for ecosystem ok because of assert above
-  const maxAmount = claimInfos.reduce((prev, curr) => {
-    return BN.max(prev, curr.amount)
-  }, new BN(0))
+  const maxAmount = getMaxAmount(claimInfos)
   // Load evmBreakdowns from csv file
   const csvEvmBreakdowns = Papa.parse(
     fs.readFileSync(CSV_EVM_BREAKDOWNS, 'utf-8'),
