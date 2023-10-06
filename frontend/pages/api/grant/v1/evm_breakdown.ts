@@ -33,7 +33,7 @@ export default async function handlerEvmBreakdown(
     }
   } catch (error) {
     res.status(500).json({
-      error: `An unexpected error occurred. Error details\n${error.toString()}`,
+      error: `An unexpected error occurred.`,
     })
   }
 }
