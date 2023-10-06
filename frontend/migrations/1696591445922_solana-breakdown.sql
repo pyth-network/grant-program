@@ -5,7 +5,7 @@ CREATE TYPE source as ENUM ('nft','defi');
 -- This table only exists to be displayed in the frontend, it has no corresponding on-chain data.
 CREATE TABLE "solana_breakdowns" (
     source source NOT NULL,
-    -- Evm public key
+    -- Solana public key
     identity TEXT NOT NULL,
     -- Amount in lamports (minimum denomination of SPL tokens)
     amount BIGINT NOT NULL,
