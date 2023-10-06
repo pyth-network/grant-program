@@ -7,6 +7,7 @@ import Discord from '@images/discord.inline.svg'
 import Linkedin from '@images/linkedin.inline.svg'
 import { Box } from '@components/Box'
 import { Button } from '@components/buttons/Button'
+import Link from 'next/link'
 
 export type TokensReceivedProps = {
   totalCoinsClaimed: string | null
@@ -50,26 +51,42 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
            gap-4"
           >
             <div className="flex gap-2">
-              <button className="btn-square ">
+              <Link
+                className="btn-square "
+                href={'https://x.com/PythNetwork'}
+                target="_blank"
+              >
                 <span className="relative inline-flex items-center whitespace-nowrap">
                   <Twitter />
                 </span>
-              </button>
-              <button className="btn-square ">
+              </Link>
+              <Link
+                className="btn-square "
+                href={'https://t.me/Pyth_Network'}
+                target="_blank"
+              >
                 <span className="relative inline-flex items-center whitespace-nowrap">
                   <Telegram />
                 </span>
-              </button>
-              <button className="btn-square ">
+              </Link>
+              <Link
+                className="btn-square "
+                href={'https://discord.gg/PythNetwork'}
+                target="_blank"
+              >
                 <span className="relative inline-flex items-center whitespace-nowrap">
                   <Discord />
                 </span>
-              </button>
-              <button className="btn-square ">
+              </Link>
+              <Link
+                className="btn-square "
+                href={'https://www.linkedin.com/company/pyth-network'}
+                target="_blank"
+              >
                 <span className="relative inline-flex items-center whitespace-nowrap">
                   <Linkedin />
                 </span>
-              </button>
+              </Link>
             </div>
             {/* TODO: link to governance later */}
             <Button onClick={() => {}} type={'primary'}>
