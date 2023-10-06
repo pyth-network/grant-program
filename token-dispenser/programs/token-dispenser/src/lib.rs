@@ -159,15 +159,15 @@ pub mod token_dispenser {
             claim_info.amount,
         )?;
 
-            // reload treasury account from storage to get the updated balance
-            treasury.reload()?;
+        // reload treasury account from storage to get the updated balance
+        treasury.reload()?;
 
-            emit!(ClaimEvent {
-                remaining_balance: treasury.amount,
-                claim_amount:      claim_info.amount,
-                claimant:          *ctx.accounts.claimant.key,
-                leaf_buffer:       leaf_vector,
-            });
+        emit!(ClaimEvent {
+            remaining_balance: treasury.amount,
+            claim_amount:      claim_info.amount,
+            claimant:          *ctx.accounts.claimant.key,
+            leaf_buffer:       leaf_vector,
+        });
 
 
         Ok(())
