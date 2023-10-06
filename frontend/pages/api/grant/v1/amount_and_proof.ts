@@ -12,6 +12,8 @@ export default async function handlerAmountAndProof(
   res: NextApiResponse
 ) {
   const { ecosystem, identity } = req.query
+  console.log(typeof identity)
+  console.log(typeof ecosystem)
   if (ecosystem === undefined || identity === undefined) {
     res.status(400).json({
       error: "Must provide the 'ecosystem' and 'identity' query parameters",

@@ -1,11 +1,17 @@
 import { Pool } from 'pg'
 import dotenv from 'dotenv'
-import { TestEvmWallet, TestWallet } from '../claim_sdk/testWallets'
+import {
+  TestEvmWallet,
+  TestSolanaWallet,
+  TestWallet,
+} from '../claim_sdk/testWallets'
 import { ClaimInfo, Ecosystem, Ecosystems } from '../claim_sdk/claim'
 import * as anchor from '@coral-xyz/anchor'
 import { MerkleTree } from '../claim_sdk/merkleTree'
+import { type } from 'os'
 dotenv.config() // Load environment variables from .env file
 
+const SOLANA_ECOSYSTEM_INDEX = 2
 const EVM_ECOSYSTEM_INDEX = 3
 export const EVM_CHAINS = [
   'optimism-mainnet',
@@ -30,10 +36,18 @@ export const EVM_CHAINS = [
   'wemix-mainnet',
 ]
 
+export type SOLANA_SOURCES = 'nft' | 'defi'
+
 export type EvmChains = typeof EVM_CHAINS[number]
 
 export type EvmBreakdownRow = {
   chain: string
+  identity: string
+  amount: anchor.BN
+}
+
+export type SolanaBreakdownRow = {
+  source: SOLANA_SOURCES
   identity: string
   amount: anchor.BN
 }
@@ -147,4 +161,51 @@ export async function addTestEvmBreakdown(
     })
   }
   await addEvmBreakdownsToDatabase(pool, rows)
+}
+
+export async function addSolanaBreakdownsToDatabase(
+  pool: Pool,
+  solanaBreakdowns: SolanaBreakdownRow[]
+) {
+  for (const solanaBreakdown of solanaBreakdowns) {
+    await pool.query(
+      'INSERT INTO solana_breakdowns VALUES($1::source, $2, $3)',
+      [
+        solanaBreakdown.source,
+        solanaBreakdown.identity,
+        solanaBreakdown.amount.toString(),
+      ]
+    )
+  }
+}
+
+export async function addTestSolanaBreakdown(
+  pool: Pool,
+  testSolanaWallets: TestSolanaWallet[]
+): Promise<void> {
+  const claimInfos = testSolanaWallets.map(
+    (testSolanaWallet, index) =>
+      new ClaimInfo(
+        'solana',
+        testSolanaWallet.address(),
+        new anchor.BN(1000000 * SOLANA_ECOSYSTEM_INDEX + 100000 * index)
+      )
+  )
+  const rows: SolanaBreakdownRow[] = []
+  for (let claimInfo of claimInfos) {
+    rows.push({
+      source: 'nft',
+      identity: claimInfo.identity,
+      amount: claimInfo.amount.div(new anchor.BN(2)),
+    })
+
+    rows.push({
+      source: 'defi',
+      identity: claimInfo.identity,
+      amount: claimInfo.amount
+        .div(new anchor.BN(2))
+        .add(claimInfo.amount.mod(new anchor.BN(2))),
+    })
+  }
+  await addSolanaBreakdownsToDatabase(pool, rows)
 }
