@@ -2,6 +2,7 @@ import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
 import {
   TestEvmWallet,
+  TestSolanaWallet,
   loadAnchorWallet,
   loadFunderWallet,
   loadTestWallets,
@@ -9,6 +10,7 @@ import {
 import { envOrErr } from '../claim_sdk/index'
 import {
   addTestEvmBreakdown,
+  addTestSolanaBreakdown,
   addTestWalletsToDatabase,
   clearDatabase,
   getDatabasePool,
@@ -35,6 +37,7 @@ async function main() {
   const testWallets = await loadTestWallets()
   const root = await addTestWalletsToDatabase(pool, testWallets)
   await addTestEvmBreakdown(pool, testWallets.evm as TestEvmWallet[])
+  await addTestSolanaBreakdown(pool, testWallets.solana as TestSolanaWallet[])
 
   // Intialize the token dispenser
   const tokenDispenserProvider = new TokenDispenserProvider(
