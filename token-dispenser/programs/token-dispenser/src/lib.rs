@@ -336,6 +336,7 @@ pub enum ErrorCode {
     SignatureVerificationWrongPayload,
     SignatureVerificationWrongPayloadMetadata,
     SignatureVerificationWrongSigner,
+    UnauthorizedCosmosChainId,
 }
 
 pub fn check_claim_receipt_is_uninitialized(claim_receipt_account: &AccountInfo) -> Result<()> {
@@ -409,7 +410,7 @@ impl IdentityCertificate {
                 message,
             } => {
                 secp256k1_sha256_verify_signer(signature, recovery_id, pubkey, message)?;
-                let cosmos_bech32 = pubkey.into_bech32(chain_id);
+                let cosmos_bech32 = pubkey.into_bech32(chain_id)?;
                 check_payload(
                     CosmosMessage::parse(message, &cosmos_bech32)?.get_payload(),
                     claimant,
