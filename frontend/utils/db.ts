@@ -34,11 +34,11 @@ export const EVM_CHAINS = [
   'gnosis-mainnet',
   'kcc-mainnet',
   'wemix-mainnet',
-]
+] as const
 
 export type SOLANA_SOURCES = 'nft' | 'defi'
 
-export type EvmChains = typeof EVM_CHAINS[number]
+export type EvmChains = (typeof EVM_CHAINS)[number]
 
 export type EvmBreakdownRow = {
   chain: string
