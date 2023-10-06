@@ -8,7 +8,7 @@ import {
 import { ClaimInfo, Ecosystem, Ecosystems } from '../claim_sdk/claim'
 import * as anchor from '@coral-xyz/anchor'
 import { MerkleTree } from '../claim_sdk/merkleTree'
-import { type } from 'os'
+import { BN } from 'bn.js'
 dotenv.config() // Load environment variables from .env file
 
 const SOLANA_ECOSYSTEM_INDEX = 2
@@ -92,20 +92,25 @@ export async function addClaimInfosToDatabase(
 export async function addTestWalletsToDatabase(
   pool: Pool,
   testWallets: Record<Ecosystem, TestWallet[]>
-): Promise<Buffer> {
+): Promise<[Buffer, anchor.BN]> {
+  let maxClaim = new BN(0)
   const claimInfos: ClaimInfo[] = Ecosystems.map(
     (ecosystem, ecosystemIndex) => {
       return testWallets[ecosystem].map((testWallet, index) => {
+        const claimAmount = new anchor.BN(
+          1000000 * (ecosystemIndex + 1) + 100000 * index
+        )
+        maxClaim = BN.max(maxClaim, claimAmount)
         return new ClaimInfo(
           ecosystem,
           testWallet.address(),
-          new anchor.BN(1000000 * (ecosystemIndex + 1) + 100000 * index) // The amount of tokens is deterministic based on the order of the test wallets
+          claimAmount // The amount of tokens is deterministic based on the order of the test wallets
         )
       })
     }
   ).flat(1)
 
-  return addClaimInfosToDatabase(pool, claimInfos)
+  return [await addClaimInfosToDatabase(pool, claimInfos), maxClaim]
 }
 
 export async function addEvmBreakdownsToDatabase(

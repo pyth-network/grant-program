@@ -23,6 +23,7 @@ import {
 } from '../claim_sdk/testWallets'
 import { loadTestWallets } from '../claim_sdk/testWallets'
 import { mockFetchAmountAndProof, mockfetchFundTransaction } from './api'
+import { BN } from 'bn.js'
 
 const pool = getDatabasePool()
 
@@ -106,7 +107,8 @@ describe('integration test', () => {
         mint.publicKey,
         treasury,
         dispenserGuard,
-        funderWallet.publicKey
+        funderWallet.publicKey,
+        new BN(2).pow(new BN(64)).sub(new BN(1)) // u64::MAX
       )
 
       const configAccount = await deployerTokenDispenserProvider.getConfig()

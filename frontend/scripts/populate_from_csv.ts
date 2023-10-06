@@ -115,7 +115,9 @@ async function main() {
         new BN(row['amount'])
       )
   ) // Cast for ecosystem ok because of assert above
-
+  const maxAmount = claimInfos.reduce((prev, curr) => {
+    return BN.max(prev, curr.amount)
+  }, new BN(0))
   // Load evmBreakdowns from csv file
   const csvEvmBreakdowns = Papa.parse(
     fs.readFileSync(CSV_EVM_BREAKDOWNS, 'utf-8'),
@@ -161,7 +163,8 @@ async function main() {
     PYTH_MINT,
     PYTH_TREASURY,
     DISPENSER_GUARD.publicKey,
-    FUNDER_KEYPAIR.publicKey
+    FUNDER_KEYPAIR.publicKey,
+    maxAmount
   )
 }
 
