@@ -55,6 +55,7 @@ pub async fn test_claim_fails_with_wrong_accounts() {
                 copy_keypair(&claimant_1),
             ],
             &dispenser_guard,
+            None,
         )
         .await
         .unwrap();
@@ -187,6 +188,7 @@ pub async fn test_claim_fails_with_insufficient_funds() {
                 copy_keypair(&claimant_1),
             ],
             &dispenser_guard,
+            None,
         )
         .await
         .unwrap();
@@ -322,6 +324,7 @@ pub async fn test_claim_fails_if_delegate_revoked() {
                 copy_keypair(&claimant_1),
             ],
             &dispenser_guard,
+            None,
         )
         .await
         .unwrap();
@@ -431,6 +434,7 @@ pub async fn test_claim_fails_with_wrong_merkle_proof() {
                 copy_keypair(&claimant_1),
             ],
             &dispenser_guard,
+            None,
         )
         .await
         .unwrap();
@@ -475,6 +479,7 @@ pub async fn test_claim_fails_with_wrong_receipt_pubkey() {
                 copy_keypair(&claimant_1),
             ],
             &dispenser_guard,
+            None,
         )
         .await
         .unwrap();
@@ -510,7 +515,7 @@ pub async fn test_claim_works_if_receipt_has_balance() {
     let claimant_1 = Keypair::new();
 
     let (merkle_tree, mock_offchain_certificates_and_claimants) = simulator
-        .initialize_with_claimants(vec![copy_keypair(&claimant_1)], &dispenser_guard)
+        .initialize_with_claimants(vec![copy_keypair(&claimant_1)], &dispenser_guard, None)
         .await
         .unwrap();
 
@@ -569,5 +574,49 @@ pub async fn test_claim_works_if_receipt_has_balance() {
                 .unwrap(),
             ErrorCode::AlreadyClaimed.into_transaction_error(ix_index_error)
         );
+    }
+}
+
+
+#[tokio::test]
+pub async fn test_claim_fails_if_exceeds_max_transfer() {
+    let dispenser_guard: Keypair = Keypair::new();
+
+    let mut simulator = DispenserSimulator::new().await;
+    let claimant = Keypair::new();
+
+    let (merkle_tree, mock_offchain_certificates_and_claimants) = simulator
+        .initialize_with_claimants(vec![copy_keypair(&claimant)], &dispenser_guard, Some(0))
+        .await
+        .unwrap();
+
+    let (_, offchain_claim_certificates, _) = &mock_offchain_certificates_and_claimants[0];
+    for offchain_claim_certificate in offchain_claim_certificates {
+        let receipt_pda = get_receipt_pda(
+            &<TestClaimCertificate as Into<ClaimInfo>>::into(offchain_claim_certificate.clone())
+                .try_to_vec()
+                .unwrap(),
+        )
+        .0;
+        assert!(simulator.get_account(receipt_pda).await.is_none());
+
+        let ix_index_error = offchain_claim_certificate.as_instruction_error_index(&merkle_tree);
+        assert_eq!(
+            simulator
+                .claim(
+                    &claimant,
+                    offchain_claim_certificate,
+                    &merkle_tree,
+                    None,
+                    None,
+                    None
+                )
+                .await
+                .unwrap_err()
+                .unwrap(),
+            ErrorCode::TransferExceedsMax.into_transaction_error(ix_index_error)
+        );
+
+        assert!(simulator.get_account(receipt_pda).await.is_none());
     }
 }
