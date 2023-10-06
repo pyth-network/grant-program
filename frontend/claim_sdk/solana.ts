@@ -572,8 +572,10 @@ export class TokenDispenserEventSubscriber {
     const txnEvents = txnLogs.map((txnLog) => {
       const eventGen = this.eventParser.parseLogs(txnLog.logs)
       const events = []
-      for (const event of eventGen) {
-        events.push(event)
+      let event = eventGen.next()
+      while (!event.done) {
+        events.push(event.value)
+        event = eventGen.next()
       }
       return {
         signature: txnLog.signature,
