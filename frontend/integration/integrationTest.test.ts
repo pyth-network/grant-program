@@ -118,6 +118,7 @@ describe('integration test', () => {
 
     let mint: Token
     let treasury: PublicKey
+    let expectedTreasuryBalance = new anchor.BN(1000000000)
     beforeAll(async () => {
       const mintAndTreasury =
         await deployerTokenDispenserProvider.setupMintAndTreasury()
@@ -222,9 +223,7 @@ describe('integration test', () => {
           claimInfo.amount
         )
       ).toBeTruthy()
-      const expectedTreasuryBalance = new anchor.BN(1000000000).sub(
-        claimInfo.amount
-      )
+      expectedTreasuryBalance = expectedTreasuryBalance.sub(claimInfo.amount)
       const eventRemainingBalance = new anchor.BN(
         evmClaimEvent.data.remainingBalance.toString()
       )
@@ -272,6 +271,32 @@ describe('integration test', () => {
       expect(
         claimantFund.amount.eq(new anchor.BN(3000000 + 6000000))
       ).toBeTruthy()
+
+      const txnEvents =
+        await tokenDispenserEventSubscriber.parseTransactionLogs()
+      expect(txnEvents.length).toEqual(1)
+      expect(txnEvents[0].events.length).toEqual(1)
+      const cosmClaimEvent = txnEvents[0].events[0]
+      expect(cosmClaimEvent.name).toEqual('ClaimEvent')
+      expect(cosmClaimEvent.data.claimant.toBase58()).toEqual(
+        wallet.publicKey.toBase58()
+      )
+      expect(
+        new anchor.BN(cosmClaimEvent.data.claimAmount.toString()).eq(
+          claimInfo.amount
+        )
+      ).toBeTruthy()
+      expectedTreasuryBalance = expectedTreasuryBalance.sub(claimInfo.amount)
+      const eventRemainingBalance = new anchor.BN(
+        cosmClaimEvent.data.remainingBalance.toString()
+      )
+      expect(
+        new anchor.BN(cosmClaimEvent.data.remainingBalance.toString()).eq(
+          expectedTreasuryBalance
+        )
+      ).toBeTruthy()
+      const expectedLeafBuffer = claimInfo.toBuffer()
+      expect(cosmClaimEvent.data.leafBuffer).toEqual(expectedLeafBuffer)
     }, 40000)
 
     it('submits multiple claims at once', async () => {

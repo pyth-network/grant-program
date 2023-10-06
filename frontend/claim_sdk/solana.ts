@@ -15,6 +15,7 @@ import {
   AddressLookupTableAccount,
   AddressLookupTableProgram,
   ComputeBudgetProgram,
+  ConfirmedSignatureInfo,
   Connection,
   Ed25519Program,
   LAMPORTS_PER_SOL,
@@ -514,26 +515,41 @@ export class TokenDispenserEventSubscriber {
       events: anchor.Event<IdlEvent, Record<string, never>>[]
     }[]
   > {
-    let signatures = await this.connection.getConfirmedSignaturesForAddress2(
-      this.programId,
-      this.lastSignature
-        ? {
+    let signatures: Array<ConfirmedSignatureInfo> = []
+    if (!this.lastSignature) {
+      signatures = await this.connection.getConfirmedSignaturesForAddress2(
+        this.programId,
+        {},
+        'confirmed'
+      )
+    } else {
+      let beforeSig: TransactionSignature | undefined = undefined
+      let currentBatch =
+        await this.connection.getConfirmedSignaturesForAddress2(
+          this.programId,
+          {
+            before: beforeSig,
             until: this.lastSignature,
-          }
-        : {},
-      'confirmed'
-    )
-    // deduplicate last signature
-    if (
-      this.lastSignature &&
-      signatures[signatures.length - 1]?.signature === this.lastSignature
-    ) {
-      signatures = signatures.slice(0, signatures.length - 1)
+          },
+          'confirmed'
+        )
+      while (currentBatch.length > 0) {
+        beforeSig = currentBatch[currentBatch.length - 1]?.signature
+        signatures = signatures.concat(currentBatch)
+        currentBatch = await this.connection.getConfirmedSignaturesForAddress2(
+          this.programId,
+          {
+            before: beforeSig,
+            until: this.lastSignature,
+          },
+          'confirmed'
+        )
+      }
     }
-
     this.lastSignature = signatures[signatures.length - 1]?.signature
 
     const validTxns = []
+    // TODO: figure out what to do with error txns
     const errorTxns = []
     for (const signature of signatures) {
       if (signature.err) {
@@ -547,7 +563,6 @@ export class TokenDispenserEventSubscriber {
       maxSupportedTransactionVersion: 0,
     })
     const txnLogs = txns.map((txLog) => {
-      console.log(txLog)
       return {
         signature: txLog?.transaction.signatures[0] ?? '',
         logs: txLog?.meta?.logMessages ?? [],
