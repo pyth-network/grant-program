@@ -5,7 +5,7 @@ import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 import Pyth from '@images/coin.inline.svg'
 import { ReactNode } from 'react'
 
-type RowInfo = {
+export type BreakdownModalRowInfo = {
   label: string
   icon?: ReactNode
   amount: BN
@@ -14,7 +14,7 @@ type RowInfo = {
 type BreakdownModalProps = {
   title: string
   openModal: Function
-  info: RowInfo[]
+  info: BreakdownModalRowInfo[]
 }
 export function BreakdownModal({
   title,
@@ -34,7 +34,7 @@ export function BreakdownModal({
               return (
                 <tr key={label}>
                   <td className="w-full max-w-[440px] border-collapse border border-light-35 py-4 px-10">
-                    <span className="flex w-[148px] items-center justify-start gap-2">
+                    <span className="flex items-center justify-start gap-2">
                       {icon}
                       {label}
                     </span>
