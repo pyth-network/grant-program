@@ -93,24 +93,24 @@ export async function addTestWalletsToDatabase(
   pool: Pool,
   testWallets: Record<Ecosystem, TestWallet[]>
 ): Promise<[Buffer, anchor.BN]> {
-  let maxClaim = new BN(0)
   const claimInfos: ClaimInfo[] = Ecosystems.map(
     (ecosystem, ecosystemIndex) => {
       return testWallets[ecosystem].map((testWallet, index) => {
-        const claimAmount = new anchor.BN(
-          1000000 * (ecosystemIndex + 1) + 100000 * index
-        )
-        maxClaim = BN.max(maxClaim, claimAmount)
         return new ClaimInfo(
           ecosystem,
           testWallet.address(),
-          claimAmount // The amount of tokens is deterministic based on the order of the test wallets
+          new anchor.BN(1000000 * (ecosystemIndex + 1) + 100000 * index) // The amount of tokens is deterministic based on the order of the test wallets
         )
       })
     }
   ).flat(1)
 
-  return [await addClaimInfosToDatabase(pool, claimInfos), maxClaim]
+  const maxAmount = claimInfos.reduce((prev, curr) => {
+    return BN.max(prev, curr.amount)
+  }, new BN(0))
+  console.log('MAX AMOUNT', maxAmount.toString())
+
+  return [await addClaimInfosToDatabase(pool, claimInfos), maxAmount]
 }
 
 export async function addEvmBreakdownsToDatabase(
