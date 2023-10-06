@@ -30,7 +30,7 @@ export const EVM_CHAINS = [
   'wemix-mainnet',
 ]
 
-export type EvmChains = (typeof EVM_CHAINS)[number]
+export type EvmChains = typeof EVM_CHAINS[number]
 
 export type EvmBreakdownRow = {
   chain: string
