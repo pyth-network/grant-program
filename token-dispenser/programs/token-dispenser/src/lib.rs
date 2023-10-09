@@ -147,9 +147,11 @@ pub mod token_dispenser {
             ctx.remaining_accounts,
         )?;
 
-        if claim_info.amount > config.max_transfer {
-            return err!(ErrorCode::TransferExceedsMax);
-        }
+        require_gte!(
+            config.max_transfer,
+            claim_info.amount,
+            ErrorCode::TransferExceedsMax
+        );
 
         token::transfer(
             CpiContext::new_with_signer(
