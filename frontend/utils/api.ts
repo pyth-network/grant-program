@@ -3,7 +3,7 @@ import { ClaimInfo, Ecosystem } from '../claim_sdk/claim'
 import { HASH_SIZE } from '../claim_sdk/merkleTree'
 import { PublicKey, VersionedTransaction } from '@solana/web3.js'
 import { SignedMessage } from '../claim_sdk/ecosystems/signatures'
-import { SOLANA_SOURCES } from './db'
+import { EvmChains, SOLANA_SOURCES } from './db'
 
 function parseProof(proof: string) {
   const buffer = Buffer.from(proof, 'hex')
@@ -88,7 +88,7 @@ export async function fetchDiscordSignedMessage(
   )
 }
 
-export type EvmChainAllocation = { chain: string; amount: BN }
+export type EvmChainAllocation = { chain: EvmChains; amount: BN }
 
 export function getEvmBreakdownRoute(identity: string): string {
   return `/api/grant/v1/evm_breakdown?identity=${identity}`

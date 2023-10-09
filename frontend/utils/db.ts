@@ -34,7 +34,7 @@ export const EVM_CHAINS = [
   'gnosis-mainnet',
   'kcc-mainnet',
   'wemix-mainnet',
-]
+] as const
 
 export type SOLANA_SOURCES = 'nft' | 'defi'
 

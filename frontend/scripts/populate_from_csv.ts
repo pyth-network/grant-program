@@ -3,6 +3,7 @@ import { TokenDispenserProvider } from '../claim_sdk/solana'
 import { envOrErr } from '../claim_sdk/index'
 import {
   EVM_CHAINS,
+  EvmChains,
   addClaimInfosToDatabase,
   addEvmBreakdownsToDatabase,
   clearDatabase,
@@ -127,7 +128,7 @@ async function main() {
   }[]
   assert(
     evmBreakdownsData.every((row) => {
-      return EVM_CHAINS.includes(row['chain'])
+      return EVM_CHAINS.includes(row['chain'] as EvmChains)
     })
   )
   const evmBreakDowns: EvmBreakdownRow[] = evmBreakdownsData.map((row) => {
