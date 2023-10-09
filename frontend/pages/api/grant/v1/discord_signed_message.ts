@@ -4,10 +4,13 @@ import { authOptions } from '../../auth/[...nextauth]'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { signDiscordMessage } from '../../../../claim_sdk/ecosystems/solana'
 import { hashDiscordUserId } from 'utils/hashDiscord'
-import { DISCORD_HASH_SALT } from 'claim_sdk/testWallets'
 
 const dispenserGuard = Keypair.fromSecretKey(
   Uint8Array.from(JSON.parse(process.env.DISPENSER_GUARD!))
+)
+
+const DISCORD_HASH_SALT = Buffer.from(
+  new Uint8Array(JSON.parse(process.env.DISCORD_HASH_SALT!))
 )
 
 export default async function handler(
