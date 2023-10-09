@@ -3,7 +3,7 @@ import { classNames } from 'utils/classNames'
 
 export type ButtonProps = {
   onClick: () => void
-  type: 'primary' | 'secondary'
+  type: 'primary' | 'secondary' | 'tertiary'
   disabled?: boolean
   children: ReactNode
 }
@@ -11,12 +11,14 @@ export type ButtonProps = {
 export function Button({ onClick, type, disabled, children }: ButtonProps) {
   const className =
     type === 'primary'
-      ? 'btn--light before:bg-light hover:text-light hover:before:bg-dark disabled:text-dark disabled:before:bg-light'
-      : 'btn--dark before:bg-dark hover:text-dark hover:before:bg-light disabled:text-light disabled:before:bg-dark'
+      ? 'btn before:btn-bg btn--light before:bg-light hover:text-light hover:before:bg-dark disabled:text-dark disabled:before:bg-light'
+      : type === 'secondary'
+      ? 'btn before:btn-bg btn--dark before:bg-dark hover:text-dark hover:before:bg-light disabled:text-light disabled:before:bg-dark'
+      : 'hover:cursor-pointer hover:font-bold'
 
   return (
     <button
-      className={`btn before:btn-bg ${className} disabled:cursor-not-allowed disabled:opacity-40`}
+      className={`${className} disabled:cursor-not-allowed disabled:opacity-40`}
       onClick={onClick}
       disabled={disabled}
     >
