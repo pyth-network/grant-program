@@ -8,7 +8,6 @@ import {
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { useState, useEffect } from 'react'
 import { EvmChainAllocation, fetchEvmBreakdown } from 'utils/api'
-import { EvmChains } from 'utils/db'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { getEvmName } from 'utils/getEvmName'
 
@@ -29,8 +28,8 @@ export function EVMRowLabelWrapper() {
         await fetchEvmBreakdown(identity)
       setBreakdownModalRowInfo(
         evmChainAllocations?.map(({ chain, amount }) => ({
-          label: getEvmName(chain as EvmChains),
-          icon: <EvmLogo chain={chain as EvmChains} />,
+          label: getEvmName(chain),
+          icon: <EvmLogo chain={chain} />,
           amount,
         }))
       )
