@@ -2,7 +2,6 @@ import { Layout } from '@components/Layout'
 import step6 from '@images/step6.png'
 import { TokensReceived } from '@sections/TokensReceived'
 import { useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
 
 export const NEXT_STEPS = {
   url: '/next-steps',
@@ -11,11 +10,6 @@ export const NEXT_STEPS = {
 }
 
 export default function NextStepsPage() {
-  // User has claimed, clear everything stored locally
-  useEffect(() => {
-    localStorage.clear()
-  }, [])
-
   const params = useSearchParams()
   return (
     <Layout>
