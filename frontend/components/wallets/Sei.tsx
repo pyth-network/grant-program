@@ -1,9 +1,63 @@
-import { useEffect, useState } from 'react'
+import {
+  ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 import { useChainWallet } from '@cosmos-kit/react-lite'
 import { WalletButton, WalletConnectedButton } from './WalletButton'
 
 import keplr from '@images/keplr.svg'
 import compass from '@images/compass.svg'
+
+type StoredWallet = 'keplr-extension' | 'compass-extension' | null
+
+type SeiContextType = {
+  connectedSeiWallet: StoredWallet
+  setConnectedSeiWallet: (wallet: StoredWallet) => void
+}
+const SeiContext = createContext<SeiContextType | undefined>(undefined)
+
+const LOCAL_STORAGE_SEI_WALLET_KEY = 'sei-local-storage-connection-key'
+// we need a provider to be able to sync with local storage
+export function SeiProvider({ children }: { children: ReactNode }) {
+  const [connectedWallet, setConnectedWallet] = useState<StoredWallet>(null)
+
+  // On first render read the connected wallet name
+  useEffect(() => {
+    setConnectedWallet(
+      localStorage.getItem(LOCAL_STORAGE_SEI_WALLET_KEY) as StoredWallet
+    )
+  }, [])
+
+  const setConnectedSeiWallet = useCallback((wallet: StoredWallet) => {
+    if (typeof window === 'undefined') return null
+    if (wallet === null) {
+      localStorage.removeItem(LOCAL_STORAGE_SEI_WALLET_KEY)
+      return
+    }
+    localStorage.setItem(LOCAL_STORAGE_SEI_WALLET_KEY, wallet)
+    setConnectedWallet(wallet)
+  }, [])
+
+  return (
+    <SeiContext.Provider
+      value={{ connectedSeiWallet: connectedWallet, setConnectedSeiWallet }}
+    >
+      {children}
+    </SeiContext.Provider>
+  )
+}
+
+export function useSeiWalletContext() {
+  const ctx = useContext(SeiContext)
+  if (ctx === undefined)
+    throw new Error('Hook should be called under the provider')
+
+  return ctx
+}
 
 type SeiWalletButtonProps = {
   disableOnConnect?: boolean
@@ -12,6 +66,7 @@ export function SeiWalletButton({ disableOnConnect }: SeiWalletButtonProps) {
   const compassChainWalletctx = useChainWallet('sei', 'compass-extension')
   const keplrChainWalletctx = useChainWallet('sei', 'keplr-extension')
   const [icon, setIcon] = useState<string>()
+  const { connectedSeiWallet, setConnectedSeiWallet } = useSeiWalletContext()
 
   // Cosmos wallets doesn't provide any autoconnect feature
   // Implementing it here
@@ -21,10 +76,9 @@ export function SeiWalletButton({ disableOnConnect }: SeiWalletButtonProps) {
   // We only have to do this check once the component renders.
   // See Line 84, 99 to know how we are storing the status locally
   useEffect(() => {
-    const connectedWallet = getSeiConnectedWalletName()
-    if (connectedWallet === 'keplr-extension') {
+    if (connectedSeiWallet === 'keplr-extension') {
       keplrChainWalletctx.connect()
-    } else if (connectedWallet === 'compass-extension') {
+    } else if (connectedSeiWallet === 'compass-extension') {
       compassChainWalletctx.connect()
     }
   }, [])
@@ -34,13 +88,13 @@ export function SeiWalletButton({ disableOnConnect }: SeiWalletButtonProps) {
       keplrChainWalletctx.isWalletConnected === true &&
       keplrChainWalletctx?.address !== undefined
     ) {
-      setSeiConnectedWalletName('keplr-extension')
+      setConnectedSeiWallet('keplr-extension')
       setIcon(keplr)
     } else if (
       compassChainWalletctx.isWalletConnected === true &&
       compassChainWalletctx?.address !== undefined
     ) {
-      setSeiConnectedWalletName('compass-extension')
+      setConnectedSeiWallet('compass-extension')
       setIcon(compass)
     }
 
@@ -48,10 +102,10 @@ export function SeiWalletButton({ disableOnConnect }: SeiWalletButtonProps) {
       keplrChainWalletctx.isWalletDisconnected &&
       compassChainWalletctx.isWalletDisconnected
     ) {
-      setSeiConnectedWalletName(null)
+      setConnectedSeiWallet(null)
       setIcon(undefined)
     }
-  }, [keplrChainWalletctx, compassChainWalletctx])
+  }, [keplrChainWalletctx, compassChainWalletctx, setConnectedSeiWallet])
 
   return (
     <WalletButton
@@ -89,9 +143,9 @@ export function SeiWalletButton({ disableOnConnect }: SeiWalletButtonProps) {
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton
           onClick={() => {
-            const wallet = getSeiConnectedWalletName()
-            if (wallet === 'keplr-extension') keplrChainWalletctx.disconnect()
-            else if (wallet === 'compass-extension')
+            if (connectedSeiWallet === 'keplr-extension')
+              keplrChainWalletctx.disconnect()
+            else if (connectedSeiWallet === 'compass-extension')
               compassChainWalletctx.disconnect()
           }}
           address={address}
@@ -101,25 +155,4 @@ export function SeiWalletButton({ disableOnConnect }: SeiWalletButtonProps) {
       )}
     />
   )
-}
-
-type StoredWallet = 'keplr-extension' | 'compass-extension' | null
-
-function setSeiConnectedWalletName(wallet: StoredWallet) {
-  const key = getSeiConnectionStatusKey()
-  if (typeof window === 'undefined') return null
-  if (wallet === null) localStorage.removeItem(key)
-  else localStorage.setItem(key, wallet)
-}
-
-// It returns the connected wallet name if connected
-// else null
-export function getSeiConnectedWalletName(): StoredWallet {
-  const key = getSeiConnectionStatusKey()
-  if (typeof window === 'undefined') return null
-  return localStorage.getItem(key) as StoredWallet
-}
-
-function getSeiConnectionStatusKey() {
-  return 'sei-local-storage-connection-key'
 }
