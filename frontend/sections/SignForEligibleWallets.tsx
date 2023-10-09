@@ -11,6 +11,7 @@ import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { TotalAllocationRow } from '@components/table/TotalAllocationRow'
 import { SignAndClaimRowLayout } from '@components/table/SignAndClaimRowLayout'
 import { Box } from '@components/Box'
+import { useDiscordSignMessage } from 'hooks/useDiscordSignMessage'
 
 export const SignForEligibleWallets = ({
   onBack,
@@ -26,6 +27,11 @@ export const SignForEligibleWallets = ({
   const getEcosystemIdentity = useGetEcosystemIdentity()
   const { getSignature } = useSignature()
   const { getEligibility } = useEligibility()
+
+  // It is a side effect that runs when the component mounts.
+  // It auto fetches a signed message to be submit with others.
+  // It also checks for the eligibility
+  useDiscordSignMessage()
 
   useEffect(() => {
     // If we are on this step, that means there is atleast one ecosystem
@@ -89,11 +95,20 @@ export const SignForEligibleWallets = ({
 
         <table className="">
           <tbody>
-            {Object.values(Ecosystem).map((ecosystem) => (
-              <SignAndClaimRowLayout ecosystem={ecosystem} key={ecosystem}>
-                <EcosystemSignButton ecosystem={ecosystem} />
-              </SignAndClaimRowLayout>
-            ))}
+            {Object.values(Ecosystem).map((ecosystem) => {
+              if (ecosystem === Ecosystem.DISCORD)
+                return (
+                  <SignAndClaimRowLayout
+                    ecosystem={ecosystem}
+                    key={ecosystem}
+                  />
+                )
+              return (
+                <SignAndClaimRowLayout ecosystem={ecosystem} key={ecosystem}>
+                  <EcosystemSignButton ecosystem={ecosystem} />
+                </SignAndClaimRowLayout>
+              )
+            })}
             <TotalAllocationRow totalGrantedCoins={totalGrantedCoins} />
           </tbody>
         </table>

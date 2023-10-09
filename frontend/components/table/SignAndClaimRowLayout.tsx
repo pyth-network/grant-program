@@ -10,7 +10,7 @@ import { ReactNode } from 'react'
 
 type SignAndClaimRowLayoutProps = {
   ecosystem: Ecosystem
-  children: ReactNode
+  children?: ReactNode
 }
 export function SignAndClaimRowLayout({
   ecosystem,
