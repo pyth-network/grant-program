@@ -150,9 +150,10 @@ impl UncompressedSecp256k1Pubkey {
         hasher.update(hash1);
         let hash2 = hasher.finalize();
 
-        if !ADMISSIBLE_CHAIN_IDS.contains(&chain_id) {
-            return err!(ErrorCode::UnauthorizedCosmosChainId);
-        }
+        require!(
+            ADMISSIBLE_CHAIN_IDS.contains(&chain_id),
+            ErrorCode::UnauthorizedCosmosChainId
+        );
 
         Ok(CosmosBech32Address(
             bech32::encode(chain_id, hash2.to_base32(), bech32::Variant::Bech32).unwrap(),
