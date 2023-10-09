@@ -20,12 +20,17 @@ import { hardDriveSignMessage, signDiscordMessage } from './ecosystems/solana'
 import { AptosAccount } from 'aptos'
 import { aptosGetFullMessage } from './ecosystems/aptos'
 import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519'
+import { hashDiscordUserId } from '../utils/hashDiscord'
 
 dotenv.config() // Load environment variables from .env file
 
 const KEY_DIR = './integration/keys/'
 export const TEST_DISCORD_USERNAME =
   process.env.DISCORD_USER_ID ?? 'a_discord_user' // For development add your discord username to .env
+
+const DISCORD_HASH_SALT: Buffer = process.env.DISCORD_HASH_SALT
+  ? Buffer.from(new Uint8Array(JSON.parse(process.env.DISCORD_HASH_SALT)))
+  : Buffer.alloc(64)
 
 export function loadAnchorWallet(): NodeWallet {
   const keypair = Keypair.fromSecretKey(
@@ -208,7 +213,7 @@ export class DiscordTestWallet implements TestWallet {
   }
 
   public address(): string {
-    return this.username
+    return hashDiscordUserId(DISCORD_HASH_SALT, this.username)
   }
 }
 

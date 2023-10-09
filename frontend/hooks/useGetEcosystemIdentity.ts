@@ -7,7 +7,7 @@ import {
 } from './useAddress'
 import { useSession } from 'next-auth/react'
 import { Ecosystem } from '@components/Ecosystem'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { getSeiConnectedWalletName } from '@components/wallets/Sei'
 
 // It will return a function that can be used to get the identity of a given ecosystem
@@ -26,6 +26,25 @@ export function useGetEcosystemIdentity() {
   const solanaAddress = useSolanaAddress()
   const suiAddress = useSuiAddress()
   const { data } = useSession()
+
+  const [discordHashedUserId, setDiscordHashedUserId] = useState<
+    string | undefined
+  >(undefined)
+
+  useEffect(() => {
+    fetchHashedUserId()
+
+    async function fetchHashedUserId() {
+      if (data?.user?.id) {
+        const resp = await (
+          await fetch(`/api/grant/v1/hash_discord_uid`)
+        ).json()
+        setDiscordHashedUserId(resp.hash)
+      } else {
+        setDiscordHashedUserId(undefined)
+      }
+    }
+  }, [data?.user?.id])
 
   return useCallback(
     (ecosystem: Ecosystem) => {
@@ -55,12 +74,12 @@ export function useGetEcosystemIdentity() {
           return suiAddress
 
         case Ecosystem.DISCORD:
-          return data?.user?.id ?? undefined
+          return discordHashedUserId
       }
     },
     [
       aptosAddress,
-      data?.user?.id,
+      discordHashedUserId,
       evmAddress,
       injectiveAddress,
       neutronAddress,
