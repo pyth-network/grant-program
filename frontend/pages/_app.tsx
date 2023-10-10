@@ -1,7 +1,7 @@
 import { AptosWalletProvider } from '@components/wallets/Aptos'
 import { SolanaWalletProvider } from '@components/wallets/Solana'
 import type { AppProps } from 'next/app'
-import { FC, useEffect, useMemo } from 'react'
+import { FC, useEffect, useLayoutEffect, useMemo } from 'react'
 import { WalletKitProvider as SuiWalletProvider } from '@mysten/wallet-kit'
 
 import { Toaster } from 'react-hot-toast'
@@ -11,10 +11,14 @@ import { SessionProvider } from 'next-auth/react'
 import { EcosystemProviders } from '@components/Ecosystem'
 
 import '../styles/globals.css'
-import { usePathname, useRouter } from 'next/navigation'
 import { SeiProvider } from '@components/wallets/Sei'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 const LAST_STEP_STATUS_KEY = 'last-step-status-key'
+
+export function setLastStepStatus(pathname: string) {
+  localStorage.setItem(LAST_STEP_STATUS_KEY, pathname)
+}
 
 function useRedirect() {
   // We are fetching it here and not in useEffect
@@ -25,28 +29,18 @@ function useRedirect() {
   }, [])
 
   const pathname = usePathname()
+  const params = useSearchParams()
 
   const router = useRouter()
   // We will only redirect on the first load
-  useEffect(() => {
+  useLayoutEffect(() => {
     // These pathnames are being loaded when we have to oauth with Discord
     // We shouldn't be redirecting the user from these pages
     if (pathname === '/discord-login' || pathname === '/discord-logout') return
     //RULES:
     // 1. no last state -> redirect to welcome page
-    // 2. there is a last state
-    // 2a. If it is "/next-steps", user has claimed before, redirect to welcome page
-    // 2b. Else redirect to that page.
-
+    // 2. there is a last state -> redirect to that page
     if (lastStep === null) router.replace('/')
-
-    // NOTE: lastStep will never be /next-steps as we are not storing it in the useEffect
-    // below.
-    // The reason is that the below replace method doesn't work. No clue why.
-    // This is a workaround for now.
-    // if (lastStep === '/next-steps') router.replace('/')
-
-    // lastStep will never be '/next-steps' for other redirect to them
     if (lastStep) router.replace(lastStep)
   }, [])
 
@@ -54,10 +48,8 @@ function useRedirect() {
     // If the pathname for the current page is the once used for discord oauth,
     // don't store it.
     if (pathname === '/discord-login' || pathname === '/discord-logout') return
-    if (pathname === '/next-steps')
-      localStorage.removeItem(LAST_STEP_STATUS_KEY)
-    else localStorage.setItem(LAST_STEP_STATUS_KEY, pathname)
-  }, [pathname])
+    else setLastStepStatus(`${pathname}?${params.toString()}`)
+  }, [params, pathname])
 }
 
 const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {

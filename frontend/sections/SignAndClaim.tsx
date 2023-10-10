@@ -15,6 +15,7 @@ import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 import { TransactionError } from '@solana/web3.js'
 import { Box } from '@components/Box'
 import { SolanaWalletCopyButton } from '@components/buttons/SolanaWalletCopyButton'
+import { setLastStepStatus } from 'pages/_app'
 
 // Following the convention,
 // If error is:
@@ -39,9 +40,7 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
   const getClaim = useGetClaim()
   const { getEligibility } = useEligibility()
 
-  // Calculating total tokens that has been claimed
-  // using the ecosystemsClaimState
-  const onProceedWrapper = useCallback(() => {
+  const totalCoinsClaimed = useCallback(() => {
     if (ecosystemsClaimState !== undefined) {
       let totalCoinsClaimed = new BN(0)
       Object.keys(ecosystemsClaimState).forEach((ecosystem) => {
@@ -53,9 +52,15 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
             )
         }
       })
-      onProceed(toStringWithDecimals(totalCoinsClaimed))
-    } else onProceed('N/A')
-  }, [ecosystemsClaimState, getEligibility, onProceed])
+      return toStringWithDecimals(totalCoinsClaimed)
+    } else return 'N/A'
+  }, [ecosystemsClaimState, getEligibility])
+
+  // Calculating total tokens that has been claimed
+  // using the ecosystemsClaimState
+  const onProceedWrapper = useCallback(() => {
+    onProceed(totalCoinsClaimed())
+  }, [onProceed, totalCoinsClaimed])
 
   const submitTxs = useCallback(async () => {
     window.onbeforeunload = (e) => {
@@ -90,10 +95,20 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
     })
     setEcosystemsClaimState(stateObj)
 
+    let totalCoinsClaimed = new BN(0)
     const broadcastPromises = await tokenDispenser?.submitClaims(claims)
     const allPromises = broadcastPromises.map(
       async (broadcastPromise, index) => {
         const transactionError = await broadcastPromise
+
+        // calculate the total coins claimed
+        if (transactionError === null) {
+          const eligibility = getEligibility(ecosystems[index])
+          if (eligibility?.claimInfo.amount !== undefined)
+            totalCoinsClaimed = totalCoinsClaimed.add(
+              eligibility?.claimInfo.amount
+            )
+        }
         // NOTE: there is an implicit order restriction
         // Transaction Order should be same as Ecosystems array order
         setEcosystemsClaimState((ecosystemState) => ({
@@ -108,7 +123,13 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
     // wait for all the promises before removing event handler
     await Promise.allSettled(allPromises)
     window.onbeforeunload = null
-  }, [getClaim, tokenDispenser])
+    // once the transaction has been submitted set the local storage with the path
+    setLastStepStatus(
+      `/next-steps?totalTokensClaimed=${toStringWithDecimals(
+        totalCoinsClaimed
+      )}`
+    )
+  }, [getClaim, tokenDispenser, getEligibility])
 
   return (
     <>

@@ -5,14 +5,19 @@ use {
             cosmos::{
                 CosmosMessage,
                 UncompressedSecp256k1Pubkey,
+                ADMISSIBLE_CHAIN_IDS,
             },
             get_expected_payload,
             secp256k1::Secp256k1TestMessage,
         },
+        ErrorCode,
         Identity,
         IdentityCertificate,
     },
-    anchor_lang::prelude::Pubkey,
+    anchor_lang::{
+        error,
+        prelude::Pubkey,
+    },
     pythnet_sdk::hashers::Hasher,
     rand::seq::SliceRandom,
     solana_sdk::hash::hashv,
@@ -57,7 +62,7 @@ impl Secp256k1TestIdentityCertificate<CosmosMessage, Sha256> {
     pub fn random(claimant: &Pubkey) -> Self {
         let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
         let public_key = libsecp256k1::PublicKey::from_secret_key(&secret);
-        let chain_id = ["osmo", "cosmos", "neutron"]
+        let chain_id = ADMISSIBLE_CHAIN_IDS
             .choose(&mut rand::thread_rng())
             .unwrap()
             .to_string();
@@ -65,7 +70,8 @@ impl Secp256k1TestIdentityCertificate<CosmosMessage, Sha256> {
         let message = CosmosMessage::from((
             get_expected_payload(claimant).as_bytes(),
             &UncompressedSecp256k1Pubkey::from(public_key.serialize())
-                .into_bech32(chain_id.as_str()),
+                .into_bech32(chain_id.as_str())
+                .unwrap(),
         ));
         let (signature, recovery_id) = libsecp256k1::sign(&Self::hash_message(&message), &secret);
         Self {
@@ -75,4 +81,20 @@ impl Secp256k1TestIdentityCertificate<CosmosMessage, Sha256> {
             _hasher: PhantomData,
         }
     }
+}
+
+
+#[test]
+pub fn test_authorized_cosmos_chain_ids() {
+    let secret = libsecp256k1::SecretKey::random(&mut rand::thread_rng());
+    let public_key = libsecp256k1::PublicKey::from_secret_key(&secret);
+    assert!(UncompressedSecp256k1Pubkey::from(public_key.serialize())
+        .into_bech32("neutron")
+        .is_ok());
+    assert_eq!(
+        UncompressedSecp256k1Pubkey::from(public_key.serialize())
+            .into_bech32("cosmos")
+            .unwrap_err(),
+        error!(ErrorCode::UnauthorizedCosmosChainId)
+    );
 }

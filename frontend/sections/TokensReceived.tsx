@@ -16,9 +16,20 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
   return (
     <>
       <Box>
-        <h4 className="border-b border-light-35 bg-[#242339] py-8 px-10  font-header text-[28px] font-light leading-[1.2] ">
-          🔮 Congratulations!
-        </h4>
+        <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-8 px-10">
+          <h4 className="font-header text-[28px] font-light leading-[1.2] ">
+            🔮 Congratulations!
+          </h4>
+          <Button
+            onClick={() => {
+              localStorage.clear()
+              location.replace('/')
+            }}
+            type={'secondary'}
+          >
+            Re Claim
+          </Button>
+        </div>
         <div className="px-10 py-8 text-base16">
           <h3 className="mb-8 flex items-center gap-2 font-header text-[36px] font-light">
             You Received{' '}

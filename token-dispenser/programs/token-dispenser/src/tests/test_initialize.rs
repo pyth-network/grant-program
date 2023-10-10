@@ -46,6 +46,7 @@ pub async fn test_initialize_fails_with_incorrect_accounts() {
                 Pubkey::default(), // invalid lookup table
                 None,
                 None,
+                None
             )
             .await
             .unwrap_err()
@@ -63,6 +64,7 @@ pub async fn test_initialize_fails_with_incorrect_accounts() {
                 address_lookup_table,
                 Some(Keypair::new().pubkey()), //invalid mint
                 None,
+                None
             )
             .await
             .unwrap_err()
@@ -94,6 +96,7 @@ pub async fn test_initialize_fails_with_incorrect_accounts() {
                 address_lookup_table,
                 None,
                 Some(invalid_treasury.pubkey()),
+                None
             )
             .await
             .unwrap_err()

@@ -8,7 +8,6 @@ import {
 import { Ecosystem } from '../claim_sdk/claim'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
-  LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
   SYSVAR_INSTRUCTIONS_PUBKEY,
@@ -28,13 +27,16 @@ const pool = getDatabasePool()
 
 describe('integration test', () => {
   let root: Buffer
+  let maxAmount: anchor.BN
   let testWallets: Record<Ecosystem, TestWallet[]>
   let dispenserGuard: PublicKey
 
   beforeAll(async () => {
     await clearDatabase(pool)
     testWallets = await loadTestWallets()
-    root = await addTestWalletsToDatabase(pool, testWallets)
+    let result = await addTestWalletsToDatabase(pool, testWallets)
+    root = result[0]
+    maxAmount = result[1]
     dispenserGuard = (testWallets.discord[0] as unknown as DiscordTestWallet)
       .dispenserGuardPublicKey
   })
@@ -106,7 +108,8 @@ describe('integration test', () => {
         mint.publicKey,
         treasury,
         dispenserGuard,
-        funderWallet.publicKey
+        funderWallet.publicKey,
+        maxAmount
       )
 
       const configAccount = await deployerTokenDispenserProvider.getConfig()
