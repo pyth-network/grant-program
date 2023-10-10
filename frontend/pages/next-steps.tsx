@@ -1,5 +1,5 @@
 import { Layout } from '@components/Layout'
-import step6 from '@images/step6.png'
+import step6 from '@images/next.png'
 import { TokensReceived } from '@sections/TokensReceived'
 import { useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'

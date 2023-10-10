@@ -1,6 +1,6 @@
 import { Layout } from '@components/Layout'
 import { useRouter } from 'next/router'
-import step5 from '../images/step5.png'
+import step5 from '../images/next.png'
 import { SignAndClaim } from '@sections/SignAndClaim'
 import { LOGIN_SOLANA_METADATA } from './login-solana'
 import { NEXT_STEPS } from './next-steps'
