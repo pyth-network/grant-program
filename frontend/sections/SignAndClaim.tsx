@@ -129,7 +129,6 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
         totalCoinsClaimed
       )}`
     )
-    // })()
   }, [getClaim, tokenDispenser, getEligibility])
 
   return (
