@@ -281,6 +281,7 @@ impl DispenserSimulator {
         address_lookup_table: Pubkey,
         mint_pubkey_override: Option<Pubkey>,
         treasury_pubkey_override: Option<Pubkey>,
+        max_transfer_override: Option<u64>,
     ) -> Result<(), BanksClientError> {
         let accounts = accounts::Initialize::populate(
             self.genesis_keypair.pubkey(),
@@ -293,6 +294,7 @@ impl DispenserSimulator {
             merkle_root,
             dispenser_guard,
             funder: self.genesis_keypair.pubkey(),
+            max_transfer: max_transfer_override.unwrap_or(u64::MAX),
         };
         let instruction =
             Instruction::new_with_bytes(crate::id(), &instruction_data.data(), accounts);
@@ -304,6 +306,7 @@ impl DispenserSimulator {
         &mut self,
         claimants: Vec<Keypair>,
         dispenser_guard: &Keypair,
+        max_transfer_override: Option<u64>,
     ) -> Result<
         (
             MerkleTree<SolanaHasher>,
@@ -345,6 +348,7 @@ impl DispenserSimulator {
             address_lookup_table,
             None,
             None,
+            max_transfer_override,
         )
         .await?;
 

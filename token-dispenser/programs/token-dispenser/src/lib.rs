@@ -89,6 +89,7 @@ pub mod token_dispenser {
         merkle_root: MerkleRoot<SolanaHasher>,
         dispenser_guard: Pubkey,
         funder: Pubkey,
+        max_transfer: u64,
     ) -> Result<()> {
         require_keys_neq!(dispenser_guard, Pubkey::default());
         let config: &mut Account<'_, Config> = &mut ctx.accounts.config;
@@ -99,6 +100,7 @@ pub mod token_dispenser {
         config.treasury = ctx.accounts.treasury.key();
         config.address_lookup_table = ctx.accounts.address_lookup_table.key();
         config.funder = funder;
+        config.max_transfer = max_transfer;
         Ok(())
     }
 
@@ -145,6 +147,11 @@ pub mod token_dispenser {
             ctx.remaining_accounts,
         )?;
 
+        require_gte!(
+            config.max_transfer,
+            claim_info.amount,
+            ErrorCode::TransferExceedsMax
+        );
 
         token::transfer(
             CpiContext::new_with_signer(
@@ -311,10 +318,11 @@ pub struct Config {
     pub treasury:             Pubkey,
     pub address_lookup_table: Pubkey,
     pub funder:               Pubkey,
+    pub max_transfer:         u64, // This is an extra safeguard to prevent the dispenser from being drained
 }
 
 impl Config {
-    pub const LEN: usize = 8 + 1 + 20 + 32 + 32 + 32 + 32 + 32;
+    pub const LEN: usize = 8 + 1 + 20 + 32 + 32 + 32 + 32 + 32 + 8;
 }
 
 #[account]
@@ -337,6 +345,7 @@ pub enum ErrorCode {
     SignatureVerificationWrongPayloadMetadata,
     SignatureVerificationWrongSigner,
     UnauthorizedCosmosChainId,
+    TransferExceedsMax,
 }
 
 pub fn check_claim_receipt_is_uninitialized(claim_receipt_account: &AccountInfo) -> Result<()> {

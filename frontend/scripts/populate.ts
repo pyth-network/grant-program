@@ -35,7 +35,7 @@ async function main() {
 
   await clearDatabase(pool)
   const testWallets = await loadTestWallets()
-  const root = await addTestWalletsToDatabase(pool, testWallets)
+  const [root, maxAmount] = await addTestWalletsToDatabase(pool, testWallets)
   await addTestEvmBreakdown(pool, testWallets.evm as TestEvmWallet[])
   await addTestSolanaBreakdown(pool, testWallets.solana as TestSolanaWallet[])
 
@@ -56,7 +56,8 @@ async function main() {
     mintAndTreasury.mint.publicKey,
     mintAndTreasury.treasury,
     DISPENSER_GUARD.publicKey,
-    FUNDER_KEYPAIR.publicKey
+    FUNDER_KEYPAIR.publicKey,
+    maxAmount
   )
 }
 

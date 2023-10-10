@@ -65,6 +65,10 @@ export type TokenDispenser =
         {
           "name": "funder",
           "type": "publicKey"
+        },
+        {
+          "name": "maxTransfer",
+          "type": "u64"
         }
       ]
     },
@@ -180,6 +184,10 @@ export type TokenDispenser =
           {
             "name": "funder",
             "type": "publicKey"
+          },
+          {
+            "name": "maxTransfer",
+            "type": "u64"
           }
         ]
       }
@@ -624,6 +632,10 @@ export type TokenDispenser =
     {
       "code": 6008,
       "name": "SignatureVerificationWrongSigner"
+    },
+    {
+      "code": 6009,
+      "name": "TransferExceedsMax"
     }
   ]
 }
@@ -695,6 +707,10 @@ export const IDL: TokenDispenser =
         {
           "name": "funder",
           "type": "publicKey"
+        },
+        {
+          "name": "maxTransfer",
+          "type": "u64"
         }
       ]
     },
@@ -810,6 +826,10 @@ export const IDL: TokenDispenser =
           {
             "name": "funder",
             "type": "publicKey"
+          },
+          {
+            "name": "maxTransfer",
+            "type": "u64"
           }
         ]
       }
@@ -1254,6 +1274,10 @@ export const IDL: TokenDispenser =
     {
       "code": 6008,
       "name": "SignatureVerificationWrongSigner"
+    },
+    {
+      "code": 6009,
+      "name": "TransferExceedsMax"
     }
   ]
 }
