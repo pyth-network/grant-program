@@ -28,7 +28,7 @@ use {
 
 pub const EXPECTED_COSMOS_MESSAGE_TYPE: &str = "sign/MsgSignData";
 pub const INJECTIVE_CHAIN_ID: &str = "inj";
-
+pub const ADMISSIBLE_CHAIN_IDS: [&str; 3] = ["sei", "neutron", "osmo"];
 
 /**
 * An ADR036 message used in Cosmos. ADR036 is a standard for signing arbitrary data.
@@ -130,14 +130,13 @@ struct CosmosCoin {
     denom:  String,
 }
 
-
 impl UncompressedSecp256k1Pubkey {
     /** Cosmos public addresses are different than the public key.
      * This one way algorithm converts the public key to the public address.
      * Note that the claimant needs to submit the public key to the program
      * to verify the signature.
      */
-    pub fn into_bech32(self, chain_id: &str) -> CosmosBech32Address {
+    pub fn into_bech32(self, chain_id: &str) -> Result<CosmosBech32Address> {
         let mut compressed: [u8; SECP256K1_COMPRESSED_PUBKEY_LENGTH] =
             [0; SECP256K1_COMPRESSED_PUBKEY_LENGTH];
         compressed[1..].copy_from_slice(&self.0[1..SECP256K1_COMPRESSED_PUBKEY_LENGTH]);
@@ -150,9 +149,15 @@ impl UncompressedSecp256k1Pubkey {
         let mut hasher: ripemd::Ripemd160 = ripemd::Ripemd160::new();
         hasher.update(hash1);
         let hash2 = hasher.finalize();
-        CosmosBech32Address(
+
+        require!(
+            ADMISSIBLE_CHAIN_IDS.contains(&chain_id),
+            ErrorCode::UnauthorizedCosmosChainId
+        );
+
+        Ok(CosmosBech32Address(
             bech32::encode(chain_id, hash2.to_base32(), bech32::Variant::Bech32).unwrap(),
-        )
+        ))
     }
 
     pub fn as_bytes(&self) -> [u8; Self::LEN] {
@@ -179,7 +184,7 @@ impl From<[u8; Self::LEN]> for UncompressedSecp256k1Pubkey {
 }
 
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
 pub struct CosmosBech32Address(String);
 
 impl From<EvmPubkey> for CosmosBech32Address {
