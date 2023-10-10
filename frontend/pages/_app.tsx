@@ -11,6 +11,7 @@ import { SessionProvider } from 'next-auth/react'
 import { EcosystemProviders } from '@components/Ecosystem'
 
 import '../styles/globals.css'
+import { SeiProvider } from '@components/wallets/Sei'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 const LAST_STEP_STATUS_KEY = 'last-step-status-key'
@@ -60,20 +61,22 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
           <SuiWalletProvider>
             <EVMWalletProvider>
               <CosmosWalletProvider>
-                {/* WARN: EcosystemProviders might use wallet provider addresses and hence
+                <SeiProvider>
+                  {/* WARN: EcosystemProviders might use wallet provider addresses and hence
                  They should be inside all those providers. */}
-                <EcosystemProviders>
-                  <Component {...pageProps} />
-                  <Toaster
-                    position="bottom-left"
-                    toastOptions={{
-                      style: {
-                        wordBreak: 'break-word',
-                      },
-                    }}
-                    reverseOrder={false}
-                  />
-                </EcosystemProviders>
+                  <EcosystemProviders>
+                    <Component {...pageProps} />
+                    <Toaster
+                      position="bottom-left"
+                      toastOptions={{
+                        style: {
+                          wordBreak: 'break-word',
+                        },
+                      }}
+                      reverseOrder={false}
+                    />
+                  </EcosystemProviders>
+                </SeiProvider>
               </CosmosWalletProvider>
             </EVMWalletProvider>
           </SuiWalletProvider>
