@@ -6,9 +6,7 @@ import {
   TestWallet,
 } from '../claim_sdk/testWallets'
 import { ClaimInfo, Ecosystem, Ecosystems } from '../claim_sdk/claim'
-import {
-  getMaxAmount,
-} from '../claim_sdk/claim'
+import { getMaxAmount } from '../claim_sdk/claim'
 import * as anchor from '@coral-xyz/anchor'
 import { MerkleTree } from '../claim_sdk/merkleTree'
 import { BN } from 'bn.js'
