@@ -19,10 +19,7 @@ export class TokenDispenserEventSubscriber {
     this.programId = programId
     this.eventParser = new anchor.EventParser(this.programId, coder)
     confirmOpts = confirmOpts ?? anchor.AnchorProvider.defaultOptions()
-    this.connection = new anchor.web3.Connection(
-      endpoint,
-      confirmOpts.commitment
-    )
+    this.connection = new anchor.web3.Connection(endpoint, confirmOpts)
   }
 
   public async parseTransactionLogs(): Promise<
