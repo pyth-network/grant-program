@@ -13,6 +13,7 @@ import { EcosystemProviders } from '@components/Ecosystem'
 import '../styles/globals.css'
 import { SeiProvider } from '@components/wallets/Sei'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { Layout } from '@components/Layout'
 
 const LAST_STEP_STATUS_KEY = 'last-step-status-key'
 
@@ -65,7 +66,9 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
                   {/* WARN: EcosystemProviders might use wallet provider addresses and hence
                  They should be inside all those providers. */}
                   <EcosystemProviders>
-                    <Component {...pageProps} />
+                    <Layout>
+                      <Component {...pageProps} />
+                    </Layout>
                     <Toaster
                       position="bottom-left"
                       toastOptions={{

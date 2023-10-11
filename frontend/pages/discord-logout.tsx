@@ -1,4 +1,6 @@
+import { Box } from '@components/Box'
 import { signOut, useSession } from 'next-auth/react'
+import Loader from '@images/loader.inline.svg'
 import { useEffect } from 'react'
 
 const DiscordLogin = () => {
@@ -9,7 +11,13 @@ const DiscordLogin = () => {
     if (session === null) window.close()
   }, [session, status])
 
-  return <></>
+  return (
+    <Box>
+      <div className="flex h-128 items-center justify-center">
+        <Loader />
+      </div>
+    </Box>
+  )
 }
 
 export default DiscordLogin

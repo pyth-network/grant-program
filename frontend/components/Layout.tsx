@@ -14,6 +14,9 @@ import { NEXT_STEPS } from 'pages/next-steps'
 import { classNames } from 'utils/classNames'
 import { useRouter } from 'next/router'
 
+import statue from '@images/bg-statue.png'
+import statueWithCoins from '@images/bg-statue-with-coins.png'
+
 type LayoutProps = {
   children: ReactNode
 }
@@ -101,26 +104,18 @@ export const Layout = ({ children }: LayoutProps) => {
           objectFit="cover"
           objectPosition="left bottom"
         />
-        <span className="absolute left-0 bottom-0">
-          <BgImage />
+        <span className="absolute -left-[430px] -bottom-24 max-h-[100vh] max-w-[1200px]">
+          <Image src={statue} alt="" priority />
+        </span>
+        <span
+          className={classNames(
+            'absolute -left-[430px] -bottom-24 max-h-[100vh] max-w-[1200px] opacity-0 transition duration-1000 ease-out',
+            pathname === NEXT_STEPS.url ? 'opacity-100' : ''
+          )}
+        >
+          <Image src={statueWithCoins} alt="" priority />
         </span>
       </span>
     </>
   )
-}
-
-function BgImage() {
-  const pathname = usePathname()
-
-  if (pathname === '/')
-    return <Image src={WELCOME_METADATA.image} alt="" priority />
-  else if (pathname === '/review-eligibility')
-    return <Image src={REVIEW_ELIGIBILITY_METADATA.image} alt="" priority />
-  else if (pathname.startsWith('/verify-eligibility'))
-    return <Image src={VERIFY_ELIGIBILITY_METADATA.image} alt="" priority />
-  else if (pathname === '/login-solana')
-    return <Image src={LOGIN_SOLANA_METADATA.image} alt="" priority />
-  else if (pathname === '/claim-tokens')
-    return <Image src={CLAIM_TOKENS_METADATA.image} alt="" priority />
-  else return <Image src={NEXT_STEPS.image} alt="" priority />
 }
