@@ -1,8 +1,9 @@
 import * as anchor from '@coral-xyz/anchor'
 import tokenDispenser from './idl/token_dispenser.json'
-import { BorshCoder, Idl } from '@coral-xyz/anchor'
+import { BorshCoder, Idl, AnchorProvider, IdlEvents } from '@coral-xyz/anchor'
 import { ConfirmedSignatureInfo, TransactionSignature } from '@solana/web3.js'
 import { IdlEvent } from '@coral-xyz/anchor/dist/cjs/idl'
+import { TokenDispenser } from './idl/token_dispenser'
 
 export class TokenDispenserEventSubscriber {
   eventParser: anchor.EventParser
@@ -19,35 +20,44 @@ export class TokenDispenserEventSubscriber {
     this.programId = programId
     this.eventParser = new anchor.EventParser(this.programId, coder)
     confirmOpts = confirmOpts ?? anchor.AnchorProvider.defaultOptions()
+    if (
+      !confirmOpts.commitment ||
+      !['confirmed', 'finalized'].includes(confirmOpts.commitment)
+    ) {
+      throw new Error(
+        "commitment must be 'confirmed' or 'finalized' for event subscriber"
+      )
+    }
     this.connection = new anchor.web3.Connection(endpoint, confirmOpts)
   }
 
   public async parseTransactionLogs(): Promise<
     {
       signature: string
-      events: anchor.Event<IdlEvent, Record<string, never>>[]
+      events: IdlEvents<TokenDispenser>['ClaimEvent'][]
     }[]
   > {
     let signatures: Array<ConfirmedSignatureInfo> = []
     let beforeSig: TransactionSignature | undefined = undefined
-    let currentBatch = await this.connection.getConfirmedSignaturesForAddress2(
+    let currentBatch = await this.connection.getSignaturesForAddress(
       this.programId,
       {
         before: beforeSig,
         until: this.lastSignature,
       },
-      'confirmed'
+      this.connection.commitment as anchor.web3.Finality
+      // 'confirmed'
     )
     while (currentBatch.length > 0) {
       beforeSig = currentBatch[currentBatch.length - 1]?.signature
       signatures = signatures.concat(currentBatch)
-      currentBatch = await this.connection.getConfirmedSignaturesForAddress2(
+      currentBatch = await this.connection.getSignaturesForAddress(
         this.programId,
         {
           before: beforeSig,
           until: this.lastSignature,
         },
-        'confirmed'
+        this.connection.commitment as anchor.web3.Finality
       )
     }
     this.lastSignature = signatures[signatures.length - 1]?.signature
@@ -78,7 +88,9 @@ export class TokenDispenserEventSubscriber {
       const events = []
       let event = eventGen.next()
       while (!event.done) {
-        events.push(event.value)
+        events.push(
+          event.value.data as any as IdlEvents<TokenDispenser>['ClaimEvent']
+        )
         event = eventGen.next()
       }
       return {

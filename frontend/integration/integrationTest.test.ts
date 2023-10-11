@@ -8,7 +8,6 @@ import {
 import { Ecosystem } from '../claim_sdk/claim'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
-  LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
   SYSVAR_INSTRUCTIONS_PUBKEY,
@@ -24,13 +23,6 @@ import {
 } from '../claim_sdk/testWallets'
 import { loadTestWallets } from '../claim_sdk/testWallets'
 import { mockFetchAmountAndProof, mockfetchFundTransaction } from './api'
-import { NextApiRequest, NextApiResponse } from 'next'
-import {
-  getAmountAndProofRoute,
-  handleAmountAndProofResponse,
-} from '../utils/api'
-import handlerAmountAndProof from '../pages/api/grant/v1/amount_and_proof'
-import { MerkleTree } from '../claim_sdk/merkleTree'
 
 const pool = getDatabasePool()
 
@@ -81,36 +73,30 @@ describe('integration test', () => {
       'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'
     )
 
+    const confirmOpts: anchor.web3.ConfirmOptions = {
+      skipPreflight: true,
+      preflightCommitment: 'confirmed',
+      commitment: 'confirmed',
+    }
+
     const deployerTokenDispenserProvider = new TokenDispenserProvider(
       endpoint,
       funderWallet,
       tokenDispenserPid,
-      {
-        skipPreflight: true,
-        preflightCommitment: 'confirmed',
-        commitment: 'confirmed',
-      }
+      confirmOpts
     )
 
     const tokenDispenserProvider = new TokenDispenserProvider(
       endpoint,
       wallet,
       tokenDispenserPid,
-      {
-        skipPreflight: true,
-        preflightCommitment: 'confirmed',
-        commitment: 'confirmed',
-      }
+      confirmOpts
     )
 
     const tokenDispenserEventSubscriber = new TokenDispenserEventSubscriber(
       endpoint,
       tokenDispenserPid,
-      {
-        skipPreflight: true,
-        preflightCommitment: 'confirmed',
-        commitment: 'confirmed',
-      }
+      confirmOpts
     )
 
     let mint: Token
@@ -211,26 +197,21 @@ describe('integration test', () => {
       expect(txnEvents.length).toEqual(1)
       expect(txnEvents[0].events.length).toEqual(1)
       const evmClaimEvent = txnEvents[0].events[0]
-      expect(evmClaimEvent.name).toEqual('ClaimEvent')
-      expect(evmClaimEvent.data.claimant.toBase58()).toEqual(
-        wallet.publicKey.toBase58()
-      )
+      expect(evmClaimEvent.claimant.equals(wallet.publicKey)).toBeTruthy()
       expect(
-        new anchor.BN(evmClaimEvent.data.claimAmount.toString()).eq(
-          claimInfo.amount
-        )
+        new anchor.BN(evmClaimEvent.claimAmount.toString()).eq(claimInfo.amount)
       ).toBeTruthy()
       expectedTreasuryBalance = expectedTreasuryBalance.sub(claimInfo.amount)
       const eventRemainingBalance = new anchor.BN(
-        evmClaimEvent.data.remainingBalance.toString()
+        evmClaimEvent.remainingBalance.toString()
       )
       expect(
-        new anchor.BN(evmClaimEvent.data.remainingBalance.toString()).eq(
+        new anchor.BN(evmClaimEvent.remainingBalance.toString()).eq(
           expectedTreasuryBalance
         )
       ).toBeTruthy()
       const expectedLeafBuffer = claimInfo.toBuffer()
-      expect(evmClaimEvent.data.leafBuffer).toEqual(expectedLeafBuffer)
+      expect(evmClaimEvent.leafBuffer).toEqual(expectedLeafBuffer)
     }, 40000)
 
     it('submits a cosmwasm claim', async () => {
@@ -274,26 +255,23 @@ describe('integration test', () => {
       expect(txnEvents.length).toEqual(1)
       expect(txnEvents[0].events.length).toEqual(1)
       const cosmClaimEvent = txnEvents[0].events[0]
-      expect(cosmClaimEvent.name).toEqual('ClaimEvent')
-      expect(cosmClaimEvent.data.claimant.toBase58()).toEqual(
-        wallet.publicKey.toBase58()
-      )
+      expect(cosmClaimEvent.claimant.equals(wallet.publicKey)).toBeTruthy()
       expect(
-        new anchor.BN(cosmClaimEvent.data.claimAmount.toString()).eq(
+        new anchor.BN(cosmClaimEvent.claimAmount.toString()).eq(
           claimInfo.amount
         )
       ).toBeTruthy()
       expectedTreasuryBalance = expectedTreasuryBalance.sub(claimInfo.amount)
       const eventRemainingBalance = new anchor.BN(
-        cosmClaimEvent.data.remainingBalance.toString()
+        cosmClaimEvent.remainingBalance.toString()
       )
       expect(
-        new anchor.BN(cosmClaimEvent.data.remainingBalance.toString()).eq(
+        new anchor.BN(cosmClaimEvent.remainingBalance.toString()).eq(
           expectedTreasuryBalance
         )
       ).toBeTruthy()
       const expectedLeafBuffer = claimInfo.toBuffer()
-      expect(cosmClaimEvent.data.leafBuffer).toEqual(expectedLeafBuffer)
+      expect(cosmClaimEvent.leafBuffer).toEqual(expectedLeafBuffer)
     }, 40000)
 
     it('submits multiple claims at once', async () => {
