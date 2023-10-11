@@ -3,8 +3,6 @@ import { truncateAddress } from 'utils/truncateAddress'
 import Wallet from '@images/wallet.inline.svg'
 import Image from 'next/image'
 import Modal from '@components/Modal'
-import { Listbox, Transition } from '@headlessui/react'
-import Down from '@images/down2.inline.svg'
 
 export type WalletConnectedButtonProps = {
   onClick: () => void
@@ -115,18 +113,16 @@ export function WalletModal({ openModal, wallets }: WalletModalProps) {
       <h3 className="mb-16  font-header text-[36px] font-light">
         Connect Your Wallet
       </h3>
-      <div className="mx-auto max-w-[200px]">
-        {wallets.length === 1 ? (
-          <SingleWalletView
-            wallet={wallets[0]}
-            onSelect={() => openModal(false)}
-          />
-        ) : (
-          <MultiWalletView
-            wallets={wallets}
-            onSelect={() => openModal(false)}
-          />
-        )}
+      <div className="mx-auto flex max-w-[200px] flex-col justify-around gap-y-4">
+        {wallets.map((wallet) => {
+          return (
+            <SingleWalletView
+              wallet={wallet}
+              onSelect={() => openModal(false)}
+              key={wallet.icon}
+            />
+          )
+        })}
       </div>
     </Modal>
   )
@@ -150,52 +146,6 @@ export function SingleWalletView({ wallet, onSelect }: SingleWalletViewProps) {
         <span>{wallet.name}</span>
       </span>
     </button>
-  )
-}
-
-export type MultiWalletViewProps = WalletModalButtonProps & {
-  onSelect: () => void
-}
-
-export function MultiWalletView({ wallets, onSelect }: MultiWalletViewProps) {
-  return (
-    <Listbox>
-      {({ open }) => (
-        <>
-          <Listbox.Button className="block w-full border border-light-35 py-3 px-8">
-            <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
-              <span>explore options</span>
-              <Down className={`${open ? 'rotate-0' : 'rotate-180'}`} />
-            </span>
-          </Listbox.Button>
-          <Transition
-            enter="transition duration-100 ease-out"
-            enterFrom="transform scale-95 opacity-0"
-            enterTo="transform scale-100 opacity-100"
-            leave="transition duration-75 ease-out"
-            leaveFrom="transform scale-100 opacity-100"
-            leaveTo="transform scale-95 opacity-0"
-          >
-            <Listbox.Options className="absolute -mt-[1px] w-full divide-y divide-light-35 border border-light-35 bg-darkGray1">
-              {wallets.map((wallet) => (
-                <Listbox.Option
-                  key={wallet.name}
-                  value={wallet.name}
-                  className="flex cursor-pointer items-center justify-center gap-2.5 py-3 px-8 hover:bg-darkGray3"
-                  onClick={() => {
-                    wallet.onSelect()
-                    onSelect()
-                  }}
-                >
-                  <WalletIcon icon={wallet.icon} />
-                  {wallet.name}
-                </Listbox.Option>
-              ))}
-            </Listbox.Options>
-          </Transition>
-        </>
-      )}
-    </Listbox>
   )
 }
 
