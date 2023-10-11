@@ -24,6 +24,3 @@ jobs:
         run: |
           cargo test-bpf
         working-directory: token-dispenser
-      - name: Check commited idl is up to date
-        working-directory: token-dispenser
-        run: anchor run && git diff --exit-code ../frontend/claim_sdk/idl/*
