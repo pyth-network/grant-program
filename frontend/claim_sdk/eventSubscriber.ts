@@ -46,7 +46,6 @@ export class TokenDispenserEventSubscriber {
         until: this.lastSignature,
       },
       this.connection.commitment as anchor.web3.Finality
-      // 'confirmed'
     )
     while (currentBatch.length > 0) {
       beforeSig = currentBatch[currentBatch.length - 1]?.signature
@@ -73,7 +72,7 @@ export class TokenDispenserEventSubscriber {
       }
     }
     const txns = await this.connection.getTransactions(validTxns, {
-      commitment: 'confirmed',
+      commitment: this.connection.commitment as anchor.web3.Finality,
       maxSupportedTransactionVersion: 0,
     })
     const txnLogs = txns.map((txLog) => {
