@@ -367,7 +367,7 @@ pub fn check_claim_receipt_is_uninitialized(claim_receipt_account: &AccountInfo)
 
 /**
  * Checks that a proof of identity is valid and returns the underlying identity.
- * For some ecosystem like EVM we use a signature verification program,
+ * For some ecosystems like EVM we use a signature verification program,
  * for others like cosmos the signature is included in the ClaimCertificate.
  */
 impl IdentityCertificate {
