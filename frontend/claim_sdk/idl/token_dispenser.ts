@@ -596,6 +596,33 @@ export type TokenDispenser =
       }
     }
   ],
+  "events": [
+    {
+      "name": "ClaimEvent",
+      "fields": [
+        {
+          "name": "remainingBalance",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "claimAmount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "claimant",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "leafBuffer",
+          "type": "bytes",
+          "index": false
+        }
+      ]
+    }
+  ],
   "errors": [
     {
       "code": 6000,
@@ -1236,6 +1263,33 @@ export const IDL: TokenDispenser =
           }
         ]
       }
+    }
+  ],
+  "events": [
+    {
+      "name": "ClaimEvent",
+      "fields": [
+        {
+          "name": "remainingBalance",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "claimAmount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "claimant",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "leafBuffer",
+          "type": "bytes",
+          "index": false
+        }
+      ]
     }
   ],
   "errors": [

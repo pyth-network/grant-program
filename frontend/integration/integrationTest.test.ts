@@ -13,7 +13,8 @@ import {
   SYSVAR_INSTRUCTIONS_PUBKEY,
 } from '@solana/web3.js'
 import { Buffer } from 'buffer'
-import { TokenDispenserProvider } from '../claim_sdk/solana'
+import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
+import { TokenDispenserEventSubscriber } from '../claim_sdk/eventSubscriber'
 import {
   DiscordTestWallet,
   TestWallet,
@@ -70,30 +71,40 @@ describe('integration test', () => {
   describe('token dispenser e2e', () => {
     const wallet = loadAnchorWallet()
     const funderWallet = loadFunderWallet()
+    const endpoint = 'http://127.0.0.1:8899'
+    const tokenDispenserPid = new PublicKey(
+      'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'
+    )
+
+    const confirmOpts: anchor.web3.ConfirmOptions = {
+      skipPreflight: true,
+      preflightCommitment: 'confirmed',
+      commitment: 'confirmed',
+    }
+
     const deployerTokenDispenserProvider = new TokenDispenserProvider(
-      'http://127.0.0.1:8899',
+      endpoint,
       funderWallet,
-      new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'),
-      {
-        skipPreflight: true,
-        preflightCommitment: 'processed',
-        commitment: 'processed',
-      }
+      tokenDispenserPid,
+      confirmOpts
     )
 
     const tokenDispenserProvider = new TokenDispenserProvider(
-      'http://127.0.0.1:8899',
+      endpoint,
       wallet,
-      new PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS'),
-      {
-        skipPreflight: true,
-        preflightCommitment: 'processed',
-        commitment: 'processed',
-      }
+      tokenDispenserPid,
+      confirmOpts
+    )
+
+    const tokenDispenserEventSubscriber = new TokenDispenserEventSubscriber(
+      endpoint,
+      tokenDispenserPid,
+      confirmOpts
     )
 
     let mint: Token
     let treasury: PublicKey
+    let expectedTreasuryBalance = new anchor.BN(1000000000)
     beforeAll(async () => {
       const mintAndTreasury =
         await deployerTokenDispenserProvider.setupMintAndTreasury()
@@ -143,6 +154,11 @@ describe('integration test', () => {
       expect(
         lookupTableAddresses.includes(SYSVAR_INSTRUCTIONS_PUBKEY.toBase58())
       ).toBeTruthy()
+      const txnEvents =
+        await tokenDispenserEventSubscriber.parseTransactionLogs()
+      expect(txnEvents.length).toEqual(1)
+      // no events emitted in initialize
+      expect(txnEvents[0].events.length).toEqual(0)
     })
 
     it('submits an evm claim', async () => {
@@ -178,6 +194,28 @@ describe('integration test', () => {
       const claimantFund = await mint.getAccountInfo(claimantFundPubkey)
 
       expect(claimantFund.amount.eq(new anchor.BN(3000000))).toBeTruthy()
+
+      // check event
+      const txnEvents =
+        await tokenDispenserEventSubscriber.parseTransactionLogs()
+      expect(txnEvents.length).toEqual(1)
+      expect(txnEvents[0].events.length).toEqual(1)
+      const evmClaimEvent = txnEvents[0].events[0]
+      expect(evmClaimEvent.claimant.equals(wallet.publicKey)).toBeTruthy()
+      expect(
+        new anchor.BN(evmClaimEvent.claimAmount.toString()).eq(claimInfo.amount)
+      ).toBeTruthy()
+      expectedTreasuryBalance = expectedTreasuryBalance.sub(claimInfo.amount)
+      const eventRemainingBalance = new anchor.BN(
+        evmClaimEvent.remainingBalance.toString()
+      )
+      expect(
+        new anchor.BN(evmClaimEvent.remainingBalance.toString()).eq(
+          expectedTreasuryBalance
+        )
+      ).toBeTruthy()
+      const expectedLeafBuffer = claimInfo.toBuffer()
+      expect(evmClaimEvent.leafBuffer).toEqual(expectedLeafBuffer)
     }, 40000)
 
     it('submits a cosmwasm claim', async () => {
@@ -215,6 +253,29 @@ describe('integration test', () => {
       expect(
         claimantFund.amount.eq(new anchor.BN(3000000 + 6000000))
       ).toBeTruthy()
+
+      const txnEvents =
+        await tokenDispenserEventSubscriber.parseTransactionLogs()
+      expect(txnEvents.length).toEqual(1)
+      expect(txnEvents[0].events.length).toEqual(1)
+      const cosmClaimEvent = txnEvents[0].events[0]
+      expect(cosmClaimEvent.claimant.equals(wallet.publicKey)).toBeTruthy()
+      expect(
+        new anchor.BN(cosmClaimEvent.claimAmount.toString()).eq(
+          claimInfo.amount
+        )
+      ).toBeTruthy()
+      expectedTreasuryBalance = expectedTreasuryBalance.sub(claimInfo.amount)
+      const eventRemainingBalance = new anchor.BN(
+        cosmClaimEvent.remainingBalance.toString()
+      )
+      expect(
+        new anchor.BN(cosmClaimEvent.remainingBalance.toString()).eq(
+          expectedTreasuryBalance
+        )
+      ).toBeTruthy()
+      const expectedLeafBuffer = claimInfo.toBuffer()
+      expect(cosmClaimEvent.leafBuffer).toEqual(expectedLeafBuffer)
     }, 40000)
 
     it('submits multiple claims at once', async () => {

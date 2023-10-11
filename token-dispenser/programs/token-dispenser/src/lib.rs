@@ -119,7 +119,7 @@ pub mod token_dispenser {
         claim_certificate: ClaimCertificate,
     ) -> Result<()> {
         let config = &ctx.accounts.config;
-        let treasury = &ctx.accounts.treasury;
+        let treasury = &mut ctx.accounts.treasury;
         let claimant_fund = &ctx.accounts.claimant_fund;
 
         // Check that the identity corresponding to the leaf has authorized the claimant
@@ -165,6 +165,16 @@ pub mod token_dispenser {
             ),
             claim_info.amount,
         )?;
+
+        // reload treasury account from storage to get the updated balance
+        treasury.reload()?;
+
+        emit!(ClaimEvent {
+            remaining_balance: treasury.amount,
+            claim_amount:      claim_info.amount,
+            claimant:          *ctx.accounts.claimant.key,
+            leaf_buffer:       leaf_vector,
+        });
 
 
         Ok(())
@@ -639,4 +649,17 @@ impl crate::accounts::Claim {
             associated_token_program: associated_token::ID,
         }
     }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Event
+////////////////////////////////////////////////////////////////////////////////
+
+#[event]
+pub struct ClaimEvent {
+    pub remaining_balance: u64,
+    pub claim_amount:      u64,
+    pub claimant:          Pubkey,
+    pub leaf_buffer:       Vec<u8>,
 }
