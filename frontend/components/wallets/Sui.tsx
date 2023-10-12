@@ -1,6 +1,6 @@
 import { useWalletKit } from '@mysten/wallet-kit'
 import { WalletButton, WalletConnectedButton, WalletIcon } from './WalletButton'
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { Dropdown } from '@components/Dropdown'
 import { truncateAddress } from 'utils/truncateAddress'
 import Disconnect from '@images/disconect.inline.svg'
@@ -21,22 +21,6 @@ export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
     currentWallet,
     selectAccount,
   } = useWalletKit()
-
-  useEffect(() => {
-    ;(async () => {
-      // @ts-ignore
-      if (window.martian !== undefined && window.martian.sui !== undefined) {
-        // @ts-ignore
-        window.martian.sui.onAccountChange((address) => {
-          console.log('Changed address', address)
-          console.log(accounts)
-        })
-      }
-
-      // @ts-ignore
-      console.log(await window.martian.sui.getAccounts())
-    })()
-  }, [])
 
   // Sui sdk automatically detects any installed wallets.
   // If none is installed the detectedWallets array will be empty, and hence
