@@ -15,7 +15,7 @@ export default function LogInWithSolanaPage() {
   const router = useRouter()
   const { activity } = useActivity()
 
-  if (activity[Ecosystem.SOLANA] === false)
+  if (activity[Ecosystem.SOLANA] === true)
     return (
       <LoggedInSolana
         onBack={() => {

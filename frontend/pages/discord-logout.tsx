@@ -3,7 +3,7 @@ import { signOut, useSession } from 'next-auth/react'
 import Loader from '@images/loader.inline.svg'
 import { useEffect } from 'react'
 
-const DiscordLogin = () => {
+const DiscordLogout = () => {
   const { data: session, status } = useSession()
 
   useEffect(() => {
@@ -20,4 +20,4 @@ const DiscordLogin = () => {
   )
 }
 
-export default DiscordLogin
+export default DiscordLogout
