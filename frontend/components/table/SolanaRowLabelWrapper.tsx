@@ -7,8 +7,9 @@ import {
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { useState, useEffect } from 'react'
 import { SolanaBreakdown, fetchSolanaBreakdown } from 'utils/api'
-import { capitalizeFirstLetter } from 'utils/capitalizeFirstLetter'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
+import Croc from '@images/croc.inline.svg'
+import Defi from '@images/defi.inline.svg'
 
 export function SolanaRowLabelWrapper() {
   const label = getEcosystemTableLabel(Ecosystem.SOLANA)
@@ -28,7 +29,8 @@ export function SolanaRowLabelWrapper() {
 
       setBreakdownModalRowInfo(
         solanaChainAllocations?.map(({ source, amount }) => ({
-          label: capitalizeFirstLetter(source),
+          label: source === 'defi' ? 'DeFi Activity' : 'NFTs Held',
+          icon: source === 'defi' ? <Defi /> : <Croc />,
           amount,
         }))
       )
