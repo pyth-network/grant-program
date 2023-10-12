@@ -1,12 +1,17 @@
 import { useWalletKit } from '@mysten/wallet-kit'
-import { WalletButton, WalletConnectedButton } from './WalletButton'
+import { WalletButton, WalletConnectedButton, WalletIcon } from './WalletButton'
 import { useMemo } from 'react'
+import { Dropdown } from '@components/Dropdown'
+import { truncateAddress } from 'utils/truncateAddress'
+import Disconnect from '@images/disconect.inline.svg'
+import Change from '@images/change.inline.svg'
 
 type SuiWalletButtonProps = {
   disableOnConnect?: boolean
 }
 export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
   const {
+    accounts,
     currentAccount,
     disconnect,
     isConnected,
@@ -14,6 +19,7 @@ export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
     connect,
     isConnecting,
     currentWallet,
+    selectAccount,
   } = useWalletKit()
 
   // Sui sdk automatically detects any installed wallets.
@@ -55,14 +61,41 @@ export function SuiWalletButton({ disableOnConnect }: SuiWalletButtonProps) {
       connected={isConnected}
       isLoading={isConnecting}
       wallets={wallets}
-      walletConnectedButton={(address: string) => (
-        <WalletConnectedButton
-          onClick={disconnect}
-          address={address}
-          icon={currentWallet?.icon}
-          disabled={disableOnConnect}
-        />
-      )}
+      walletConnectedButton={(address: string) => {
+        if (disableOnConnect || accounts.length === 1) {
+          return (
+            <WalletConnectedButton
+              onClick={disconnect}
+              address={address}
+              icon={currentWallet?.icon}
+              disabled={disableOnConnect}
+            />
+          )
+        }
+        return (
+          <Dropdown
+            title={truncateAddress(address)!}
+            icon={<WalletIcon icon={currentWallet?.icon} />}
+            items={[
+              ...accounts
+                .filter((account) => account.address !== address)
+                .map((account) => ({
+                  label: (
+                    <span className="flex items-center gap-2.5">
+                      <Change /> {truncateAddress(account.address)!}
+                    </span>
+                  ),
+                  onClick: () => selectAccount(account),
+                })),
+              {
+                label: 'disconnect',
+                icon: <Disconnect />,
+                onClick: disconnect,
+              },
+            ]}
+          />
+        )
+      }}
     />
   )
 }
