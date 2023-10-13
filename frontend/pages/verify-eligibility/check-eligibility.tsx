@@ -1,4 +1,3 @@
-import { Layout } from '@components/Layout'
 import { useRouter } from 'next/navigation'
 import { LOGIN_SOLANA_METADATA } from '../login-solana'
 import dynamic from 'next/dynamic'
@@ -14,11 +13,9 @@ export default function VerifyEligibilityPage() {
   const router = useRouter()
 
   return (
-    <Layout>
-      <NoSSREligibility
-        onBack={() => router.push('/verify-eligibility')}
-        onProceed={() => router.push(LOGIN_SOLANA_METADATA.url)}
-      />
-    </Layout>
+    <NoSSREligibility
+      onBack={() => router.push('/verify-eligibility')}
+      onProceed={() => router.push(LOGIN_SOLANA_METADATA.url)}
+    />
   )
 }
