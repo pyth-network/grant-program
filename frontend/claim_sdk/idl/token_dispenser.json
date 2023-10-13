@@ -661,6 +661,10 @@
     },
     {
       "code": 6009,
+      "name": "UnauthorizedCosmosChainId"
+    },
+    {
+      "code": 6010,
       "name": "TransferExceedsMax"
     }
   ]

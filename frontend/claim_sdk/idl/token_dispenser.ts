@@ -662,6 +662,10 @@ export type TokenDispenser =
     },
     {
       "code": 6009,
+      "name": "UnauthorizedCosmosChainId"
+    },
+    {
+      "code": 6010,
       "name": "TransferExceedsMax"
     }
   ]
@@ -1331,6 +1335,10 @@ export const IDL: TokenDispenser =
     },
     {
       "code": 6009,
+      "name": "UnauthorizedCosmosChainId"
+    },
+    {
+      "code": 6010,
       "name": "TransferExceedsMax"
     }
   ]
