@@ -174,10 +174,7 @@ function TableRow({ ecosystem }: TableRowProps) {
           <EcosystemRowLabel ecosystem={ecosystem} />
           <span className={'flex items-center gap-5'}>
             <EcosystemConnectButton ecosystem={ecosystem} />
-            <Tooltip content={tooltipContent}>
-              <TooltipIcon />
-            </Tooltip>
-            {icon}
+            <Tooltip content={tooltipContent}>{icon}</Tooltip>
           </span>
         </div>
       </td>
