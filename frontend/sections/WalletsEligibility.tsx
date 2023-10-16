@@ -130,7 +130,7 @@ function TableRow({ ecosystem }: TableRowProps) {
       } else {
         if (eligibility.isClaimAlreadySubmitted === true) {
           return [
-            'The allocated tokens for this wallet has already been claimed. You can click on the wallet address to disconnect and connect to another wallet.',
+            'The allocated tokens for this wallet have already been claimed. You can click on the wallet address to disconnect and connect to another wallet.',
             <NotVerified key={null} />,
           ]
         } else {
