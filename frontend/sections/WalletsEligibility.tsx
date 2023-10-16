@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
 
-import TooltipIcon from '@images/tooltip.inline.svg'
 import Verified from '@images/verified.inline.svg'
 import NotVerified from '@images/not.inline.svg'
 import Tooltip from '@components/Tooltip'
@@ -13,7 +12,6 @@ import { BackButton, ProceedButton } from '@components/buttons'
 import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
-import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { CoinCell } from '@components/table/CoinCell'
 import { TotalAllocationRow } from '@components/table/TotalAllocationRow'
@@ -107,55 +105,48 @@ function TableRow({ ecosystem }: TableRowProps) {
   const getEcosystemIdentity = useGetEcosystemIdentity()
   const getEligibleCoins = useCoins()
   const { getEligibility } = useEligibility()
-  const [rowDisabled, setRowDisabled] = useState(true)
-  // if it is undefined, no tooltip will be shown
-  const [rowTooltipContent, setRowTooltipContent] = useState<string>()
 
   const eligibility = getEligibility(ecosystem)
   const isActive = activity[ecosystem]
-
-  useEffect(() => {
-    // Row is disabled when
-    // The ecosystem is inactive
-    if (isActive === false) {
-      setRowDisabled(true)
-    } else {
-      if (eligibility?.claimInfo !== undefined) {
-        if (eligibility?.isClaimAlreadySubmitted === true) {
-          setRowTooltipContent(
-            'The tokens for this ecosystem have already been claimed.'
-          )
-        } else {
-          setRowTooltipContent(undefined)
-        }
-      } else {
-        setRowTooltipContent('There are no tokens to claim for this ecosystem.')
-      }
-      setRowDisabled(false)
-    }
-  }, [
-    ecosystem,
-    eligibility?.claimInfo,
-    eligibility?.isClaimAlreadySubmitted,
-    getEcosystemIdentity,
-    getEligibility,
-    isActive,
-  ])
+  const rowDisabled = isActive === false
 
   const identity = getEcosystemIdentity(ecosystem)
   const eligibleCoins = getEligibleCoins(ecosystem)
 
-  const tooltipContent = useMemo(() => {
-    if (identity !== undefined)
-      return 'Congratulations! This ecosystem is successfully connected. Click on the button to disconnect.'
-    else
-      return 'Please connect the ecosystem to check for the granted Pyth tokens.'
-  }, [identity])
+  const [tooltipContent, tooltipIcon] = useMemo(() => {
+    if (isActive === false) return [undefined, <Verified key={null} />]
 
-  const icon = useMemo(() => {
-    if (isActive && identity !== undefined) return <Verified />
-    else return <NotVerified />
-  }, [identity, isActive])
+    if (identity === undefined) {
+      return [
+        'Please connect the ecosystem to check for the granted Pyth tokens.',
+        <NotVerified key={null} />,
+      ]
+    } else {
+      if (eligibility?.claimInfo === undefined) {
+        return [
+          'This wallet is unfortunately not eligible for an allocation. You can click on the wallet address to disconnect and connect to another wallet.',
+          <NotVerified key={null} />,
+        ]
+      } else {
+        if (eligibility.isClaimAlreadySubmitted === true) {
+          return [
+            'The allocated tokens for this wallet have already been claimed. You can click on the wallet address to disconnect and connect to another wallet.',
+            <NotVerified key={null} />,
+          ]
+        } else {
+          return [
+            'Congratulations! This wallet is successfully connected. Click on the wallet address to disconnect to connect to another wallet.',
+            <Verified key={null} />,
+          ]
+        }
+      }
+    }
+  }, [
+    eligibility?.claimInfo,
+    eligibility?.isClaimAlreadySubmitted,
+    identity,
+    isActive,
+  ])
 
   return (
     <tr className={'border-b border-light-35 '}>
@@ -174,17 +165,13 @@ function TableRow({ ecosystem }: TableRowProps) {
           <EcosystemRowLabel ecosystem={ecosystem} />
           <span className={'flex items-center gap-5'}>
             <EcosystemConnectButton ecosystem={ecosystem} />
-            <Tooltip content={tooltipContent}>
-              <TooltipIcon />
-            </Tooltip>
-            {icon}
+            <Tooltip content={tooltipContent}>{tooltipIcon}</Tooltip>
           </span>
         </div>
       </td>
       <CoinCell
         coins={eligibleCoins}
         isStriked={eligibility?.isClaimAlreadySubmitted}
-        rowTooltipContent={rowTooltipContent}
       />
     </tr>
   )
