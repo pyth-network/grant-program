@@ -5,12 +5,13 @@ import { Ecosystem } from '@components/Ecosystem'
 import { EcosystemClaimState } from './SignAndClaim'
 
 import Loader from '@images/loader.inline.svg'
-import Failed from '@images/not.inline.svg'
-import Success from '@images/verified.inline.svg'
+import Failed from '@images/unsuccessful.inline.svg'
+import Success from '@images/successful.inline.svg'
 import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { ProceedButton } from '@components/buttons'
 import { SignAndClaimRowLayout } from '@components/table/SignAndClaimRowLayout'
 import { Box } from '@components/Box'
+import Tooltip from '@components/Tooltip'
 
 export const ClaimStatus = ({
   onProceed,
@@ -99,9 +100,9 @@ function ClaimState({
   const { error } = ecosystemClaimState
 
   const text = useMemo(() => {
-    if (error === undefined) return 'claiming...'
-    if (error === null) return 'claimed'
-    if (error) return 'failed'
+    if (error === undefined) return 'Claiming...'
+    if (error === null) return 'Claimed'
+    if (error) return 'Unsuccessful'
   }, [error])
 
   const icon = useMemo(() => {
@@ -110,10 +111,22 @@ function ClaimState({
     if (error) return <Failed />
   }, [error])
 
+  const tooltipContent = useMemo(() => {
+    if (error === undefined) return undefined
+    if (error === null) return 'Successfully claimed'
+    if (error)
+      return 'There was some error while claiming. Please refresh the page and try again.'
+  }, [error])
+
+  const lowOpacity = error === undefined ? 'opacity-50' : ''
+
   return (
-    <div className="flex items-center justify-between gap-4 text-base18">
-      {text}
-      {icon}
-    </div>
+    <Tooltip content={tooltipContent}>
+      <span
+        className={`flex items-center justify-between gap-1 text-base ${lowOpacity}`}
+      >
+        {text} {icon}
+      </span>
+    </Tooltip>
   )
 }

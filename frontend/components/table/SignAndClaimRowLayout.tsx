@@ -43,7 +43,7 @@ export function SignAndClaimRowLayout({
             {getEcosystemTableLabel(ecosystem)}
           </span>
 
-          <span className="flex flex-1  items-center justify-between gap-5">
+          <span className="flex flex-1  items-center justify-around gap-5">
             <EcosystemConnectButton
               ecosystem={ecosystem}
               disableOnConnect={true}
