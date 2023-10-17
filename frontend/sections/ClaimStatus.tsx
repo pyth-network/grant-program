@@ -121,11 +121,12 @@ function ClaimState({
   const lowOpacity = error === undefined ? 'opacity-50' : ''
 
   return (
-    <span
-      className={`flex items-center justify-between gap-1 text-base ${lowOpacity}`}
-    >
-      {text}
-      <Tooltip content={tooltipContent}>{icon}</Tooltip>
-    </span>
+    <Tooltip content={tooltipContent}>
+      <span
+        className={`flex items-center justify-between gap-1 text-base ${lowOpacity}`}
+      >
+        {text} {icon}
+      </span>
+    </Tooltip>
   )
 }
