@@ -43,6 +43,9 @@ export const SignForEligibleWallets = ({
     let isSignPending: boolean = false
     const solanaIdentity = getEcosystemIdentity(Ecosystem.SOLANA)
     Object.values(Ecosystem).forEach((ecosystem) => {
+      // We don't need to get a signed message from Solana.
+      if (ecosystem === Ecosystem.SOLANA) return
+
       if (activity[ecosystem] === false) return
       if (solanaIdentity === undefined) return
 
@@ -96,7 +99,10 @@ export const SignForEligibleWallets = ({
         <table className="">
           <tbody>
             {Object.values(Ecosystem).map((ecosystem) => {
-              if (ecosystem === Ecosystem.DISCORD)
+              if (
+                ecosystem === Ecosystem.DISCORD ||
+                ecosystem === Ecosystem.SOLANA
+              )
                 return (
                   <SignAndClaimRowLayout
                     ecosystem={ecosystem}
