@@ -287,9 +287,6 @@ export class TokenDispenserProvider {
       )
 
     // 3. derive receipt pda
-    if (await this.isClaimAlreadySubmitted(claimInfo)) {
-      throw new Error('Claim already submitted')
-    }
     const receiptPda = this.getReceiptPda(claimInfo)[0]
 
     const lookupTableAccount = await this.getLookupTableAccount()
