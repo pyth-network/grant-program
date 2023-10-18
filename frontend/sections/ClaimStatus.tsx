@@ -115,7 +115,10 @@ function ClaimState({
     if (error === undefined) return undefined
     if (error === null) return 'Successfully claimed'
     if (error)
-      return 'There was some error while claiming. Please refresh the page and try again.'
+      return (
+        error.message ??
+        'There was some error while claiming. Please refresh the page and try again.'
+      )
   }, [error])
 
   const lowOpacity = error === undefined ? 'opacity-50' : ''
