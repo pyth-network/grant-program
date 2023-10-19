@@ -147,11 +147,10 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
               ...ecosystemState,
               [ecosystems[index]]: {
                 error:
-                  transactionError === null
-                    ? null
-                    : new Error(
-                        'There was an error with the transaction. Please refresh and try again.'
-                      ),
+                  transactionError
+                    ? new Error(
+                      'There was an error with the transaction. Please refresh and try again.'
+                    ) : null,
               },
             }))
           })
