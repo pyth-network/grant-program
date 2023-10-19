@@ -72,7 +72,7 @@ mod tests;
 
 mod ecosystems;
 
-declare_id!("a1rSe3J2hF37aS3neKgVujePuz9bqBcpySxrP1xTGbX");
+declare_id!("dev6Lt5XcDfe8CW7A7FpCMSms3VcsVKg2HeLbMjtis6");
 
 const CONFIG_SEED: &[u8] = b"config";
 const RECEIPT_SEED: &[u8] = b"receipt";
@@ -139,13 +139,13 @@ pub mod token_dispenser {
         };
 
 
-        checked_create_claim_receipt(
-            0,
-            &leaf_vector,
-            &ctx.accounts.funder,
-            &ctx.accounts.system_program,
-            ctx.remaining_accounts,
-        )?;
+        // checked_create_claim_receipt(
+        //     0,
+        //     &leaf_vector,
+        //     &ctx.accounts.funder,
+        //     &ctx.accounts.system_program,
+        //     ctx.remaining_accounts,
+        // )?;
 
         require_gte!(
             config.max_transfer,
