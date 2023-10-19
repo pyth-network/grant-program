@@ -4,8 +4,11 @@ import { envOrErr } from '../claim_sdk/index'
 import {
   EVM_CHAINS,
   EvmChains,
+  SOLANA_SOURCES,
+  SolanaBreakdownRow,
   addClaimInfosToDatabase,
   addEvmBreakdownsToDatabase,
+  addSolanaBreakdownsToDatabase,
   clearDatabase,
   getDatabasePool,
 } from '../utils/db'
@@ -14,9 +17,10 @@ import Papa from 'papaparse'
 
 import { ClaimInfo, Ecosystem, getMaxAmount } from '../claim_sdk/claim'
 import BN from 'bn.js'
-import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { EvmBreakdownRow } from '../utils/db'
 import assert from 'assert'
+import { hashDiscordUserId } from '../utils/hashDiscord'
+import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 
 const pool = getDatabasePool()
 
@@ -35,10 +39,16 @@ const DEPLOYER_WALLET = Keypair.fromSecretKey(
     JSON.parse(fs.readFileSync(envOrErr('DEPLOYER_WALLET'), 'utf-8'))
   )
 )
+
+const DISCORD_HASH_SALT = Buffer.from(
+  new Uint8Array(JSON.parse(process.env.DISCORD_HASH_SALT!))
+)
+
 const PYTH_MINT = new PublicKey(envOrErr('PYTH_MINT'))
 const PYTH_TREASURY = new PublicKey(envOrErr('PYTH_TREASURY'))
 const CSV_CLAIMS = envOrErr('CSV_CLAIMS')
 const CSV_EVM_BREAKDOWNS = envOrErr('CSV_EVM_BREAKDOWNS')
+const CSV_SOLANA_BREAKDOWNS = envOrErr('CSV_SOLANA_BREAKDOWNS')
 
 function checkClaimsMatchEvmBreakdown(
   claimInfos: ClaimInfo[],
@@ -65,6 +75,35 @@ function checkClaimsMatchEvmBreakdown(
     assert(
       sum[evmClaim.identity].eq(evmClaim.amount),
       `Breakdown for ${evmClaim.identity} does not match total amount`
+    )
+  }
+}
+
+function checkClaimsMatchSolanaBreakdown(
+  claimInfos: ClaimInfo[],
+  solanaBreakdowns: SolanaBreakdownRow[]
+) {
+  const sum: { [identity: string]: BN } = {}
+  for (const solanaBreakdownRow of solanaBreakdowns) {
+    if (sum[solanaBreakdownRow.identity] == undefined) {
+      sum[solanaBreakdownRow.identity] = new BN(0)
+    }
+    sum[solanaBreakdownRow.identity] = sum[solanaBreakdownRow.identity].add(
+      solanaBreakdownRow.amount
+    )
+  }
+  const solanaClaims = claimInfos.filter((claimInfo) => {
+    return claimInfo.ecosystem === 'solana'
+  })
+  assert(
+    Object.keys(sum).length === solanaClaims.length,
+    'Number of evm identities in CSV file does not match number of identities in evm_breakdowns table'
+  )
+
+  for (const solanaClaim of solanaClaims) {
+    assert(
+      sum[solanaClaim.identity].eq(solanaClaim.amount),
+      `Breakdown for ${solanaClaim.identity} does not match total amount`
     )
   }
 }
@@ -111,7 +150,9 @@ async function main() {
     (row) =>
       new ClaimInfo(
         row['ecosystem'] as Ecosystem,
-        row['identity'],
+        row['ecosystem'] === 'discord'
+          ? hashDiscordUserId(DISCORD_HASH_SALT, row['identity'])
+          : row['identity'],
         new BN(row['amount'])
       )
   ) // Cast for ecosystem ok because of assert above
@@ -126,6 +167,7 @@ async function main() {
     identity: string
     amount: string
   }[]
+
   assert(
     evmBreakdownsData.every((row) => {
       return EVM_CHAINS.includes(row['chain'] as EvmChains)
@@ -139,11 +181,39 @@ async function main() {
     }
   })
 
+  // Load solanaBreakdowns from csv file
+  const csvSolanaBreakdowns = Papa.parse(
+    fs.readFileSync(CSV_SOLANA_BREAKDOWNS, 'utf-8'),
+    { header: true }
+  ) // Assumes chain, identity, amount are the headers
+  const solanaBreakdownsData = csvSolanaBreakdowns.data as {
+    source: string
+    identity: string
+    amount: string
+  }[]
+
+  assert(
+    solanaBreakdownsData.every((row) => {
+      return ['nft', 'defi'].includes(row['source'])
+    })
+  )
+  const solanaBreakDowns: SolanaBreakdownRow[] = solanaBreakdownsData.map(
+    (row) => {
+      return {
+        source: row['source'] as SOLANA_SOURCES,
+        identity: row['identity'],
+        amount: new BN(row['amount']),
+      }
+    }
+  )
+
   checkClaimsMatchEvmBreakdown(claimInfos, evmBreakDowns)
+  checkClaimsMatchSolanaBreakdown(claimInfos, solanaBreakDowns)
 
   // Add data to database
   const root = await addClaimInfosToDatabase(pool, claimInfos)
   await addEvmBreakdownsToDatabase(pool, evmBreakDowns)
+  await addSolanaBreakdownsToDatabase(pool, solanaBreakDowns)
 
   // Intialize the token dispenser
   const tokenDispenserProvider = new TokenDispenserProvider(

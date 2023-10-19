@@ -62,6 +62,7 @@ export function getDatabasePool(): Pool {
 export async function clearDatabase(pool: Pool) {
   await pool.query('DELETE FROM claims', [])
   await pool.query('DELETE FROM evm_breakdowns', [])
+  await pool.query('DELETE FROM solana_breakdowns', [])
 }
 
 export async function addClaimInfosToDatabase(
