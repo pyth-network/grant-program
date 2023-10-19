@@ -162,7 +162,7 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
               ...ecosystemState,
               [ecosystems[index]]: {
                 error: new Error(
-                  'There is some issue with the connection. We cannot confirmed this claim transaction.'
+                  'The connection is taking too long to respond. We cannot confirm this claim transaction.'
                 ),
               },
             }))
