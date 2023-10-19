@@ -15,7 +15,11 @@ export function useGetClaim() {
       const eligibility = getEligibility(ecosystem)
       const signature = getSignature(ecosystem)
 
-      if (eligibility === undefined || signature === undefined) return undefined
+      if (
+        eligibility === undefined ||
+        (signature === undefined && ecosystem !== Ecosystem.SOLANA)
+      )
+        return undefined
       if (eligibility.isClaimAlreadySubmitted === true) return undefined
 
       return {

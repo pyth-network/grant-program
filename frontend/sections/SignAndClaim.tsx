@@ -71,7 +71,7 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
     if (tokenDispenser === undefined) return
     const ecosystems: Ecosystem[] = []
     const claims: {
-      signedMessage: SignedMessage
+      signedMessage: SignedMessage | undefined
       claimInfo: ClaimInfo
       proofOfInclusion: Uint8Array[]
     }[] = []
