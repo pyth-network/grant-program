@@ -15,7 +15,11 @@ import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 import { Box } from '@components/Box'
 import { SolanaWalletCopyButton } from '@components/buttons/SolanaWalletCopyButton'
 import { setLastStepStatus } from 'pages/_app'
-import { ERROR_FUNDING_TX, ERROR_SIGNING_TX } from 'claim_sdk/solana'
+import {
+  ERROR_FUNDING_TX,
+  ERROR_RPC_CONNECTION,
+  ERROR_SIGNING_TX,
+} from 'claim_sdk/solana'
 
 // Following the convention,
 // If error is:
@@ -123,6 +127,8 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
       return
     }
 
+    // NOTE: there is an implicit order restriction
+    // Transaction Order should be same as Ecosystems array order
     const allPromises = broadcastPromises.map(
       async (broadcastPromise, index) => {
         await Promise.race([
@@ -146,23 +152,28 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
             setEcosystemsClaimState((ecosystemState) => ({
               ...ecosystemState,
               [ecosystems[index]]: {
-                error:
-                  transactionError
-                    ? new Error(
+                error: transactionError
+                  ? new Error(
                       'There was an error with the transaction. Please refresh and try again.'
-                    ) : null,
+                    )
+                  : null,
               },
             }))
           })
-          .catch(() => {
-            // NOTE: there is an implicit order restriction
-            // Transaction Order should be same as Ecosystems array order
+          .catch((e) => {
+            // If the timeout triggers error.
+            let message =
+              'The connection is taking too long to respond. We cannot confirm this claim transaction.'
+            // If the error was with the connection edit the message to.
+            if (((e as Error).message = ERROR_RPC_CONNECTION)) {
+              message =
+                'There seems to be some issue with the RPC connection. Please try again after some time.'
+            }
+
             setEcosystemsClaimState((ecosystemState) => ({
               ...ecosystemState,
               [ecosystems[index]]: {
-                error: new Error(
-                  'The connection is taking too long to respond. We cannot confirm this claim transaction.'
-                ),
+                error: new Error(message),
               },
             }))
           })

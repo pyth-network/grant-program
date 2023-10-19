@@ -30,6 +30,7 @@ import { fetchFundTransaction } from '../utils/api'
 
 export const ERROR_SIGNING_TX = 'error: signing transaction'
 export const ERROR_FUNDING_TX = 'error: funding transaction'
+export const ERROR_RPC_CONNECTION = 'error: rpc connection'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -260,20 +261,24 @@ export class TokenDispenserProvider {
 
     // send the txns. Associated token account will be created if needed.
     const sendTxs = txsSignedTwice.map(async (signedTx) => {
-      const signature = await this.connection.sendTransaction(signedTx, {
-        skipPreflight: true,
-      })
-      const latestBlockHash = await this.connection.getLatestBlockhash()
-      const result = await this.connection.confirmTransaction(
-        {
-          signature,
-          blockhash: latestBlockHash.blockhash,
-          lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-        },
-        'confirmed'
-      )
-
-      return result.value.err
+      try {
+        const signature = await this.connection.sendTransaction(signedTx, {
+          skipPreflight: true,
+        })
+        const latestBlockHash = await this.connection.getLatestBlockhash()
+        const result = await this.connection.confirmTransaction(
+          {
+            signature,
+            blockhash: latestBlockHash.blockhash,
+            lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+          },
+          'confirmed'
+        )
+  
+        return result.value.err
+      } catch {
+        throw new Error(ERROR_RPC_CONNECTION)
+      }
     })
 
     return sendTxs
