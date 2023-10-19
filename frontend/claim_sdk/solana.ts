@@ -274,7 +274,7 @@ export class TokenDispenserProvider {
           },
           'confirmed'
         )
-  
+
         return result.value.err
       } catch {
         throw new Error(ERROR_RPC_CONNECTION)
