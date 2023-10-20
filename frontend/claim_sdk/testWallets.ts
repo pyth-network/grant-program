@@ -28,7 +28,7 @@ const KEY_DIR = './integration/keys/'
 export const TEST_DISCORD_USERNAME =
   process.env.DISCORD_USER_ID ?? 'a_discord_user' // For development add your discord username to .env
 
-const DISCORD_HASH_SALT: Buffer = process.env.DISCORD_HASH_SALT
+export const DISCORD_HASH_SALT: Buffer = process.env.DISCORD_HASH_SALT
   ? Buffer.from(new Uint8Array(JSON.parse(process.env.DISCORD_HASH_SALT)))
   : Buffer.alloc(64)
 

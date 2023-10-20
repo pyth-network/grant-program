@@ -5,6 +5,7 @@ command -v shellcheck >/dev/null && shellcheck "$0"
 # initialize variables
 dev=0
 test=0
+csv=0
 verbose=0
 postgres=1;
 
@@ -14,10 +15,11 @@ TOKEN_DISPENSER_DIR="$DIR/../../token-dispenser";
 
 usage() {
   cat <<EOF
-  Usage: $0 -d[--dev]|-t[--test] -v[--verbose] --no-postgres -h[--help]
+  Usage: $0 -d[--dev]|-t[--test]|-c[--csv] -v[--verbose] --no-postgres -h[--help]
   where:
     -d | --dev  : start up test validator, deploy programs, run postgres docker and migrate
     -t | --test : run tests
+    -c | --csv  : run populate_from_csv script
     --no-postgres : run without starting up postgres docker
     -h | --help : print this usage message
 
@@ -30,7 +32,7 @@ for i in "$@"
 do
 case $i in
     -d|--dev)
-    if [ "$test" -eq 1 ]; then
+    if [ "$test" -eq 1 ] || [ "$csv" -eq 1 ]; then
       usage
       exit
     else
@@ -39,11 +41,20 @@ case $i in
     shift
     ;;
     -t|--test)
-    if [ "$dev" -eq 1 ]; then
+    if [ "$dev" -eq 1 ] || [ "$csv" -eq 1 ]; then
       usage
       exit
     else
       test=1
+    fi
+    shift
+    ;;
+    -c|--csv)
+    if [ "$dev" -eq 1 ] || [ "$test" -eq 1 ]; then
+      usage
+      exit
+    else
+      csv=1
     fi
     shift
     ;;
@@ -65,8 +76,8 @@ case $i in
 esac
 done
 
-if [ "$dev" -eq 0 ] && [ "$test" -eq 0 ]; then
-  printf "No mode selected. Please select either -d[--dev] or -t[--test]\n\n"
+if [ "$dev" -eq 0 ] && [ "$test" -eq 0 ] && [ "$csv" -eq 0 ]; then
+  printf "No mode selected. Please select either -d[--dev] or -t[--test] or -c[--csv]\n\n"
   usage
   exit 1
 fi
@@ -103,6 +114,11 @@ function setup_postgres_docker() {
 function populate() {
   cd "$DIR";
   npm run populate;
+}
+
+function populate_from_csv() {
+  cd "$DIR";
+  npm run populate:csv;
 }
 
 function build_program() {
@@ -167,6 +183,9 @@ function main() {
         echo "running frontend tests"
       fi
       run_integration_tests;
+  elif [ "$csv" -eq 1 ]; then
+    populate_from_csv;
+    ( trap exit SIGINT ; read -r -d '' _ </dev/tty )
   else
       echo "no mode selected"
       usage;

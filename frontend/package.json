@@ -9,7 +9,8 @@
     "serve": "serve out",
     "start": "next start",
     "migrate": "node-pg-migrate up",
-    "populate": "ts-node ./scripts/populate.ts"
+    "populate": "ts-node ./scripts/populate.ts",
+    "populate:csv": "ts-node ./scripts/populate_from_csv.ts"
   },
   "dependencies": {
     "@aptos-labs/wallet-adapter-react": "^1.2.2",

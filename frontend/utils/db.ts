@@ -62,6 +62,7 @@ export function getDatabasePool(): Pool {
 export async function clearDatabase(pool: Pool) {
   await pool.query('DELETE FROM claims', [])
   await pool.query('DELETE FROM evm_breakdowns', [])
+  await pool.query('DELETE FROM solana_breakdowns', [])
 }
 
 export async function addClaimInfosToDatabase(
@@ -74,6 +75,9 @@ export async function addClaimInfosToDatabase(
     })
   )
 
+  console.log(`\n\nbuilt merkle tree\n\n`)
+
+  let claimInfoCnt = 0
   for (const claimInfo of claimInfos) {
     const proof = merkleTree.prove(claimInfo.toBuffer())
 
@@ -86,6 +90,10 @@ export async function addClaimInfosToDatabase(
         proof,
       ]
     )
+    claimInfoCnt++
+    if (claimInfoCnt % 10 === 0) {
+      console.log(`\n\nclaimInfoCnt: ${claimInfoCnt}\n\n`)
+    }
   }
   return merkleTree.root
 }
