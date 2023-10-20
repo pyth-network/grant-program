@@ -65,7 +65,6 @@ const ECOSYSTEM_LIST = [
   'injective',
 ]
 
-// // don't need a separate cosmwasm list since all the addresses are unique?
 const COSMWASM_CHAIN_LIST = ['neutron', 'osmosis', 'sei']
 
 function checkClaimsMatchEvmBreakdown(
@@ -136,100 +135,8 @@ function checkClaimsMatchSolanaBreakdown(
   }
 }
 
-// function parseCsvClaims() {
-//   const csvClaims = Papa.parse(fs.readFileSync(path.resolve(CSV_DIR, CSV_CLAIMS), 'utf-8'), {
-//     header: true,
-//   }) // Assumes ecosystem, identity, amount are the headers
-//   const claimsData = csvClaims.data as {
-//     ecosystem: string
-//     identity: string
-//     amount: string
-//   }[]
-//   assert(
-//     new Set(claimsData.map((row) => row['identity'])).size == claimsData.length,
-//     'Duplicate addresses in CSV file'
-//   )
-//   assert(
-//     claimsData.every((row) => {
-//       return [
-//         'solana',
-//         'evm',
-//         'discord',
-//         'cosmwasm',
-//         'aptos',
-//         'sui',
-//         'injective',
-//       ].includes(row['ecosystem'])
-//     }),
-//     'A row has an unexisting ecosystem'
-//   )
-//   const claimInfos = claimsData.map(
-//     (row) =>
-//       new ClaimInfo(
-//         row['ecosystem'] as Ecosystem,
-//         row['identity'],
-//         new BN(row['amount'])
-//       )
-//   ) // Cast for ecosystem ok because of assert above
-//   return claimInfos;
-// }
-
 function parseCsvs() {
-  // const defiCsvClaims = Papa.parse(fs.readFileSync(DEFI_CLAIMS, 'utf-8'), {
-  //   header: true,
-  // });
-
-  // assert(defiCsvClaims.meta.fields?.includes('address'), "CSV file does not have required 'address' column");
-  // assert(defiCsvClaims.meta.fields?.includes('alloc'), "CSV file does not have required 'alloc' column");
-
-  // const claimsData = defiCsvClaims.data as {
-  //   address: string
-  //   chain: string
-  //   alloc: string
-  // }[];
-  // // const addressList = group by Map<address, (chain, alloc)[]>
-  // // map to <address, (ecosystem, alloc_sum)>
-  // const chainList = [
-  //   "optimism-mainnet",
-  //   "arbitrum-mainnet",
-  //   "cronos-mainnet",
-  //   "zksync-mainnet",
-  //   "bsc-mainnet",
-  //   "base-mainnet",
-  //   "evmos-mainnet",
-  //   "sui",
-  //   "mantle-mainnet",
-  //   "linea-mainnet",
-  //   "polygon-zkevm-mainnet",
-  //   "avalanche-mainnet",
-  //   "matic-mainnet",
-  //   "aurora-mainnet",
-  //   "aptos",
-  //   "eth-mainnet",
-  //   "confluxespace-mainnet",
-  //   "celo-mainnet",
-  //   "meter-mainnet",
-  //   "gnosis-mainnet",
-  //   "kcc-mainnet",
-  //   "wemix-mainnet",
-  //   "solana",
-  //   "injective",
-  //   "neutron",
-  //   "osmosis",
-  //   "sei"
-  // ];
-
-  // // group by address
-  // // only evm addresses should have multiple values
-  // const groupedDefiAddresses = claimsData.reduce((acc, row) => {
-  //   const curValues = acc.get(row.address);
-  //   if(curValues){
-  //     acc.set(row.address, [...curValues, [row.chain, row.alloc]]);
-  //   } else {
-  //     acc.set(row.address, [[row.chain, row.alloc]]);
-  //   }
-  //   return acc;
-  // }, new Map<string, [string, string][]>());
+  // parse defi csvs
   const groupedDefiAddresses = parseDefiCsv(DEFI_CLAIMS)
   const groupedDefiDevAddresses = parseDefiCsv(DEFI_DEV_CLAIMS)
 
@@ -257,6 +164,7 @@ function parseCsvs() {
   const solanaBreakdownData: Map<string, SolanaBreakdownRow[]> = new Map()
 
   groupedDefiAddresses.forEach((chainsAndAllocs, key) => {
+    // only evm chains should have multiple values from defi csv files
     if (chainsAndAllocs.length > 1) {
       assert(
         chainsAndAllocs.every(([chain, alloc]) =>
@@ -375,7 +283,6 @@ function parseCsvs() {
 }
 
 function parseDefiCsv(defi_csv: string) {
-  const DEFI_CLAIMS = ''
   const defiCsvClaims = Papa.parse(
     fs.readFileSync(path.resolve(CSV_DIR, defi_csv), 'utf-8'),
     {
@@ -398,107 +305,6 @@ function parseDefiCsv(defi_csv: string) {
     chain: string
     alloc: string
   }[]
-  // const addressList = group by Map<address, (chain, alloc)[]>
-  // map to <address, (ecosystem, alloc_sum)>
-  const chainList = [
-    'optimism-mainnet',
-    'arbitrum-mainnet',
-    'cronos-mainnet',
-    'zksync-mainnet',
-    'bsc-mainnet',
-    'base-mainnet',
-    'evmos-mainnet',
-    'sui',
-    'mantle-mainnet',
-    'linea-mainnet',
-    'polygon-zkevm-mainnet',
-    'avalanche-mainnet',
-    'matic-mainnet',
-    'aurora-mainnet',
-    'aptos',
-    'eth-mainnet',
-    'confluxespace-mainnet',
-    'celo-mainnet',
-    'meter-mainnet',
-    'gnosis-mainnet',
-    'kcc-mainnet',
-    'wemix-mainnet',
-    'solana',
-    'injective',
-    'neutron',
-    'osmosis',
-    'sei',
-  ]
-  const evmChainList = [
-    'optimism-mainnet',
-    'arbitrum-mainnet',
-    'cronos-mainnet',
-    'zksync-mainnet',
-    'bsc-mainnet',
-    'base-mainnet',
-    'evmos-mainnet',
-    // "sui",
-    'mantle-mainnet',
-    'linea-mainnet',
-    'polygon-zkevm-mainnet',
-    'avalanche-mainnet',
-    'matic-mainnet',
-    'aurora-mainnet',
-    // "aptos",
-    'eth-mainnet',
-    'confluxespace-mainnet',
-    'celo-mainnet',
-    'meter-mainnet',
-    'gnosis-mainnet',
-    'kcc-mainnet',
-    'wemix-mainnet',
-    // "solana",
-    // "injective",
-    // "neutron",
-    // "osmosis",
-    // "sei"
-  ]
-
-  // don't need a separate cosmwasm list since all the addresses are unique?
-  const cosmWasmChainList = [
-    // "optimism-mainnet",
-    // "arbitrum-mainnet",
-    // "cronos-mainnet",
-    // "zksync-mainnet",
-    // "bsc-mainnet",
-    // "base-mainnet",
-    // "evmos-mainnet",
-    // "sui",
-    // "mantle-mainnet",
-    // "linea-mainnet",
-    // "polygon-zkevm-mainnet",
-    // "avalanche-mainnet",
-    // "matic-mainnet",
-    // "aurora-mainnet",
-    // "aptos",
-    // "eth-mainnet",
-    // "confluxespace-mainnet",
-    // "celo-mainnet",
-    // "meter-mainnet",
-    // "gnosis-mainnet",
-    // "kcc-mainnet",
-    // "wemix-mainnet",
-    // "solana",
-    // "injective",
-    'neutron',
-    'osmosis',
-    'sei',
-  ]
-
-  const ecosystemList = [
-    'solana',
-    'evm',
-    'discord',
-    'cosmwasm',
-    'aptos',
-    'sui',
-    'injective',
-  ]
 
   // group by address
   // only evm addresses should have multiple values
