@@ -28,6 +28,10 @@ import { SignedMessage } from './ecosystems/signatures'
 import { extractChainId } from './ecosystems/cosmos'
 import { fetchFundTransaction } from '../utils/api'
 
+export const ERROR_SIGNING_TX = 'error: signing transaction'
+export const ERROR_FUNDING_TX = 'error: funding transaction'
+export const ERROR_RPC_CONNECTION = 'error: rpc connection'
+
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
 const AUTHORIZATION_PAYLOAD = [
@@ -238,27 +242,43 @@ export class TokenDispenserProvider {
         )
       )
     }
-    const txsSignedOnce = await (
-      this.tokenDispenserProgram.provider as anchor.AnchorProvider
-    ).wallet.signAllTransactions(txs)
 
-    const txsSignedTwice = await fetchFundTransactionFunction(txsSignedOnce)
+    let txsSignedOnce
+    try {
+      txsSignedOnce = await (
+        this.tokenDispenserProgram.provider as anchor.AnchorProvider
+      ).wallet.signAllTransactions(txs)
+    } catch (e) {
+      throw new Error(ERROR_SIGNING_TX)
+    }
+
+    let txsSignedTwice
+    try {
+      txsSignedTwice = await fetchFundTransactionFunction(txsSignedOnce)
+    } catch (e) {
+      throw new Error(ERROR_FUNDING_TX)
+    }
+
     // send the txns. Associated token account will be created if needed.
     const sendTxs = txsSignedTwice.map(async (signedTx) => {
-      const signature = await this.connection.sendTransaction(signedTx, {
-        skipPreflight: true,
-      })
-      const latestBlockHash = await this.connection.getLatestBlockhash()
-      const result = await this.connection.confirmTransaction(
-        {
-          signature,
-          blockhash: latestBlockHash.blockhash,
-          lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-        },
-        'confirmed'
-      )
+      try {
+        const signature = await this.connection.sendTransaction(signedTx, {
+          skipPreflight: true,
+        })
+        const latestBlockHash = await this.connection.getLatestBlockhash()
+        const result = await this.connection.confirmTransaction(
+          {
+            signature,
+            blockhash: latestBlockHash.blockhash,
+            lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+          },
+          'confirmed'
+        )
 
-      return result.value.err
+        return result.value.err
+      } catch {
+        throw new Error(ERROR_RPC_CONNECTION)
+      }
     })
 
     return sendTxs

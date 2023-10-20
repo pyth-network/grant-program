@@ -12,10 +12,14 @@ import { ClaimStatus } from './ClaimStatus'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { BN } from '@coral-xyz/anchor'
 import { toStringWithDecimals } from 'utils/toStringWithDecimals'
-import { TransactionError } from '@solana/web3.js'
 import { Box } from '@components/Box'
 import { SolanaWalletCopyButton } from '@components/buttons/SolanaWalletCopyButton'
 import { setLastStepStatus } from 'pages/_app'
+import {
+  ERROR_FUNDING_TX,
+  ERROR_RPC_CONNECTION,
+  ERROR_SIGNING_TX,
+} from 'claim_sdk/solana'
 
 // Following the convention,
 // If error is:
@@ -23,7 +27,7 @@ import { setLastStepStatus } from 'pages/_app'
 // - null, the transaction has been successful
 // - defined, the transaction has failed
 export type EcosystemClaimState = {
-  error: TransactionError | undefined | null
+  error: Error | undefined | null
 }
 
 type SignAndClaimProps = {
@@ -96,27 +100,83 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
     setEcosystemsClaimState(stateObj)
 
     let totalCoinsClaimed = new BN(0)
-    const broadcastPromises = await tokenDispenser?.submitClaims(claims)
+    let broadcastPromises
+    try {
+      broadcastPromises = await tokenDispenser?.submitClaims(claims)
+    } catch (e) {
+      const err = e as Error
+      let message: string
+      if (
+        err.message === ERROR_SIGNING_TX ||
+        err.message === ERROR_FUNDING_TX
+      ) {
+        message =
+          'There was some error while signing the transaction. Please refresh the page and try again.'
+      } else {
+        message =
+          'There was some unknown error. Please refresh to try again or come back later.'
+      }
+
+      const stateObj: { [key in Ecosystem]?: EcosystemClaimState } = {}
+      ecosystems.forEach((ecosystem) => {
+        stateObj[ecosystem] = {
+          error: new Error(message),
+        }
+      })
+      setEcosystemsClaimState(stateObj)
+      return
+    }
+
+    // NOTE: there is an implicit order restriction
+    // Transaction Order should be same as Ecosystems array order
     const allPromises = broadcastPromises.map(
       async (broadcastPromise, index) => {
-        const transactionError = await broadcastPromise
+        await Promise.race([
+          broadcastPromise,
+          new Promise((_, reject) => {
+            setTimeout(() => reject(), 10000)
+          }),
+        ])
+          .then((transactionError) => {
+            // calculate the total coins claimed
+            if (transactionError === null) {
+              const eligibility = getEligibility(ecosystems[index])
+              if (eligibility?.claimInfo.amount !== undefined)
+                totalCoinsClaimed = totalCoinsClaimed.add(
+                  eligibility?.claimInfo.amount
+                )
+            }
 
-        // calculate the total coins claimed
-        if (transactionError === null) {
-          const eligibility = getEligibility(ecosystems[index])
-          if (eligibility?.claimInfo.amount !== undefined)
-            totalCoinsClaimed = totalCoinsClaimed.add(
-              eligibility?.claimInfo.amount
-            )
-        }
-        // NOTE: there is an implicit order restriction
-        // Transaction Order should be same as Ecosystems array order
-        setEcosystemsClaimState((ecosystemState) => ({
-          ...ecosystemState,
-          [ecosystems[index]]: {
-            error: transactionError,
-          },
-        }))
+            // NOTE: there is an implicit order restriction
+            // Transaction Order should be same as Ecosystems array order
+            setEcosystemsClaimState((ecosystemState) => ({
+              ...ecosystemState,
+              [ecosystems[index]]: {
+                error: transactionError
+                  ? new Error(
+                      'There was an error with the transaction. Please refresh and try again.'
+                    )
+                  : null,
+              },
+            }))
+          })
+          .catch((e) => {
+            // If the timeout triggers error.
+            let message =
+              'The connection is taking too long to respond. We cannot confirm this claim transaction.'
+            // If the error was with the connection edit the message to.
+            if (((e as Error).message = ERROR_RPC_CONNECTION)) {
+              message =
+                'There seems to be some issue with the RPC connection. Please try again after some time.'
+            }
+
+            setEcosystemsClaimState((ecosystemState) => ({
+              ...ecosystemState,
+              [ecosystems[index]]: {
+                error: new Error(message),
+              },
+            }))
+          })
       }
     )
 
