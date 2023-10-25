@@ -101,7 +101,9 @@ export class TokenDispenserProvider {
 
   public async getConfig(): Promise<IdlAccounts<TokenDispenser>['Config']> {
     // config is immutable once its been initialized so this is safe.
+
     if (this.config === undefined) {
+      console.log('Fetching config')
       this.config = await this.fetchConfigData()
     }
     return this.config
@@ -130,6 +132,7 @@ export class TokenDispenserProvider {
   }
 
   public async isClaimAlreadySubmitted(claimInfo: ClaimInfo): Promise<boolean> {
+    console.log('Checking if claim already submitted')
     return (
       (
         await this.connection.getAccountInfo(this.getReceiptPda(claimInfo)[0])

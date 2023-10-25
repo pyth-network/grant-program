@@ -24,8 +24,8 @@ export default function VerifyEligibilityPage() {
         </p>
         <p>
           You will not be able to proceed to <strong>Step 4</strong> to claim
-          your tokens if you do not successfully connect all of your wallets or
-          Discord account.
+          your PTYH tokens if you do not successfully connect all of your
+          wallets or Discord account.
         </p>
 
         <div className="mt-12 flex justify-end gap-4">

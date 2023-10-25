@@ -33,12 +33,12 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
     <>
       <Box>
         <h4 className="border-b border-light-35 bg-[#242339] py-8 px-10  font-header text-[28px] font-light leading-[1.2]">
-          Let’s Review Your Past Activity
+          Let's Review Your Activity
         </h4>
         <div className="px-10 py-8 text-base16">
           <p className="mb-6">
-            Please check the following boxes below corresponding to your past
-            wallet and social activity in the Pyth ecosystem.
+            Please check the following boxes below corresponding to your wallet
+            and social activity in the Pyth ecosystem.
           </p>
 
           <p className="mb-6 font-light">I am active on…</p>
