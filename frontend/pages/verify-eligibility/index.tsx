@@ -24,7 +24,7 @@ export default function VerifyEligibilityPage() {
         </p>
         <p>
           You will not be able to proceed to <strong>Step 4</strong> to claim
-          your PTYH tokens if you do not successfully connect all of your
+          your PYTH tokens if you do not successfully connect all of your
           wallets or Discord account.
         </p>
 
