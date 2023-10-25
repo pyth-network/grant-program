@@ -34,9 +34,9 @@ export const Welcome = ({ onProceed }: { onProceed: () => void }) => {
           </ul>
           <p>
             This Claim Process will check your wallet activity and Discord
-            account to calculate how many PYTH tokens you are eligible to claim. Your
-            progress is automatically saved. You will not lose your progress if
-            you leave.
+            account to calculate how many PYTH tokens you are eligible to claim.
+            Your progress is automatically saved. You will not lose your
+            progress if you leave.
           </p>
           <div className="mt-12 flex justify-end">
             <ProceedButton onProceed={onProceed} />
