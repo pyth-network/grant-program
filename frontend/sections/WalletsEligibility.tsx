@@ -118,7 +118,7 @@ function TableRow({ ecosystem }: TableRowProps) {
 
     if (identity === undefined) {
       return [
-        'Please connect the ecosystem to check for the granted Pyth tokens.',
+        'Please connect the relevant wallet to check eligibility.',
         <NotVerified key={null} />,
       ]
     } else {
