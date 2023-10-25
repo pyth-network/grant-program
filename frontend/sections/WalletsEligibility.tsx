@@ -116,28 +116,56 @@ function TableRow({ ecosystem }: TableRowProps) {
   const [tooltipContent, tooltipIcon] = useMemo(() => {
     if (isActive === false) return [undefined, <Verified key={null} />]
 
-    if (identity === undefined) {
-      return [
-        'Please connect the relevant wallet to check eligibility.',
-        <NotVerified key={null} />,
-      ]
-    } else {
-      if (eligibility?.claimInfo === undefined) {
+    if (ecosystem === Ecosystem.DISCORD) {
+      if (identity === undefined) {
         return [
-          'This wallet is unfortunately not eligible for an allocation. You can click on the wallet address to disconnect and connect to another wallet.',
+          'Please connect your Discord account to check eligibility.',
           <NotVerified key={null} />,
         ]
       } else {
-        if (eligibility.isClaimAlreadySubmitted === true) {
+        if (eligibility?.claimInfo === undefined) {
           return [
-            'The allocated tokens for this wallet have already been claimed. You can click on the wallet address to disconnect and connect to another wallet.',
+            'This Discord account is unfortunately not eligible for an allocation. You can click on your Discord username to disconnect and connect to another Discord account.',
             <NotVerified key={null} />,
           ]
         } else {
+          if (eligibility.isClaimAlreadySubmitted === true) {
+            return [
+              'The allocated tokens for this Discord account have already been claimed. You can click on your Discord username to disconnect and connect to another Discord account.',
+              <NotVerified key={null} />,
+            ]
+          } else {
+            return [
+              'Congratulations! Your Discord account is successfully connected.',
+              <Verified key={null} />,
+            ]
+          }
+        }
+      }
+    } else {
+      if (identity === undefined) {
+        return [
+          'Please connect the relevant wallet to check eligibility.',
+          <NotVerified key={null} />,
+        ]
+      } else {
+        if (eligibility?.claimInfo === undefined) {
           return [
-            'Congratulations! This wallet is successfully connected. Click on the wallet address to disconnect to connect to another wallet.',
-            <Verified key={null} />,
+            'This wallet is unfortunately not eligible for an allocation. You can click on the wallet address to disconnect and connect to another wallet.',
+            <NotVerified key={null} />,
           ]
+        } else {
+          if (eligibility.isClaimAlreadySubmitted === true) {
+            return [
+              'The allocated tokens for this wallet have already been claimed. You can click on the wallet address to disconnect and connect to another wallet.',
+              <NotVerified key={null} />,
+            ]
+          } else {
+            return [
+              'Congratulations! This wallet is successfully connected. Click on the wallet address to disconnect to connect to another wallet.',
+              <Verified key={null} />,
+            ]
+          }
         }
       }
     }
