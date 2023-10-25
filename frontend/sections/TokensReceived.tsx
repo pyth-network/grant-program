@@ -44,17 +44,13 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
             </span>
           </h3>
           <p className="mb-6">
-            We look forward to our journey together! This is just the beginning
-            chapter for the Pyth Network.
-          </p>
-          <p className="mb-6">
             You can stake your PYTH tokens to participate in Pyth Network’s
             governance, secure the network, and vote on important decisions.
           </p>
 
           <p>
-            Follow us on our socials to stay updated on future grant
-            opportunities, developer updates, and community events!
+            Follow us on our socials to stay updated on grant opportunities,
+            developer updates, and community events!
           </p>
 
           <div

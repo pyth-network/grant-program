@@ -34,7 +34,7 @@ export const Welcome = ({ onProceed }: { onProceed: () => void }) => {
           </ul>
           <p>
             This Claim Process will check your wallet activity and Discord
-            account to calculate how many tokens you are eligible to claim.
+            account to calculate how many PYTH tokens you are eligible to claim.
           </p>
           <div className="mt-12 flex justify-end">
             <ProceedButton onProceed={onProceed} />
