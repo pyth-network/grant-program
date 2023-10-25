@@ -84,7 +84,7 @@ export const SignForEligibleWallets = ({
       <div className="min-w-[650px]">
         <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-8 px-10">
           <h4 className="   font-header text-[28px] font-light leading-[1.2]">
-            Verify Eligibility
+            Sign Your Wallets and Claim
           </h4>
           <div className="flex gap-4">
             <BackButton onBack={onBack} />

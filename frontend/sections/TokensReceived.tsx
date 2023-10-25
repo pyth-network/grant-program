@@ -27,7 +27,7 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
             }}
             type={'secondary'}
           >
-            Re Claim
+            Claim Again
           </Button>
         </div>
         <div className="px-10 py-8 text-base16">

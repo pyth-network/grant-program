@@ -206,7 +206,11 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
               Please sign your connected wallets. To sign, click the
               corresponding “sign” button for each wallet. Your wallet will ask
               if you wish to sign the transaction. Confirm by clicking “sign” in
-              your wallet’s pop-up window.
+              your wallet's pop-up window.
+            </p>
+            <p className="mb-6">
+              Note: You will sign with your Solana wallet at a later stage. No
+              action is required for your Discord account.
             </p>
             <p>Your claimed PYTH tokens will go to this Solana wallet: </p>
             <div className="mt-4 flex justify-between gap-4">

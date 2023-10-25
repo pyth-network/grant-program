@@ -12,7 +12,7 @@ export const Welcome = ({ onProceed }: { onProceed: () => void }) => {
         <div className="px-10 py-8 text-base16">
           <p className="mb-6">
             As part of the Pyth Network’s recent governance initiative, PYTH
-            tokens have been allocated to the community
+            tokens have been allocated to the community.
           </p>
           <p className="mb-6">
             You may be eligible for the Pyth Airdrop if you:
@@ -34,7 +34,9 @@ export const Welcome = ({ onProceed }: { onProceed: () => void }) => {
           </ul>
           <p>
             This Claim Process will check your wallet activity and Discord
-            account to calculate how many PYTH tokens you are eligible to claim.
+            account to calculate how many PYTH tokens you are eligible to claim. Your
+            progress is automatically saved. You will not lose your progress if
+            you leave.
           </p>
           <div className="mt-12 flex justify-end">
             <ProceedButton onProceed={onProceed} />

@@ -39,7 +39,7 @@ export function getEvmName(chain: EvmChains) {
     case 'gnosis-mainnet':
       return 'Gnosis'
     case 'kcc-mainnet':
-      return 'Kcc'
+      return 'KCC'
     case 'wemix-mainnet':
       return 'Wemix'
   }
