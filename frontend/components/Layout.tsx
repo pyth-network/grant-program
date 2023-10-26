@@ -41,16 +41,14 @@ export const Layout = ({ children }: LayoutProps) => {
     <>
       <header className="absolute left-0 top-0 z-40 w-full px-1 transition-all lg:px-10">
         <div className="before:gradient-border relative flex items-center justify-between sm:px-4  sm:py-3  lg:py-4  sm:lg:px-10 sm:lg:py-6">
-          <Link href="/">
-            <Image
-              src="/pyth-logo-white.svg"
-              className="h-30 mr-3"
-              alt="pyth logo"
-              layout="intrinsic"
-              width={26}
-              height={33}
-            />
-          </Link>
+          <Image
+            src="/pyth-logo-white.svg"
+            className="h-30 mr-3"
+            alt="pyth logo"
+            layout="intrinsic"
+            width={26}
+            height={33}
+          />
           <span>Placeholder Always Check URL disclaimer placeholder</span>
         </div>
       </header>
