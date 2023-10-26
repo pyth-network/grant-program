@@ -10,6 +10,8 @@ import { getMaxAmount } from '../claim_sdk/claim'
 import * as anchor from '@coral-xyz/anchor'
 import { MerkleTree } from '../claim_sdk/merkleTree'
 import { BN } from 'bn.js'
+const sql = require('sql') as any
+// import { SQL, define } from 'sql';
 dotenv.config() // Load environment variables from .env file
 
 const SOLANA_ECOSYSTEM_INDEX = 2
@@ -69,32 +71,64 @@ export async function addClaimInfosToDatabase(
   pool: Pool,
   claimInfos: ClaimInfo[]
 ): Promise<Buffer> {
+  const merkleTreeStart = Date.now()
   const merkleTree = new MerkleTree(
     claimInfos.map((claimInfo) => {
       return claimInfo.toBuffer()
     })
   )
+  const merkleTreeEnd = Date.now()
 
-  console.log(`\n\nbuilt merkle tree\n\n`)
+  console.log(
+    `\n\nbuilt merkle tree time: ${merkleTreeEnd - merkleTreeStart}\n\n`
+  )
 
-  let claimInfoCnt = 0
-  for (const claimInfo of claimInfos) {
-    const proof = merkleTree.prove(claimInfo.toBuffer())
+  let claimInfoChunks = []
+  let chunkSize = 100
+  let chunkCounts = [...Array(Math.ceil(claimInfos.length / chunkSize))]
 
-    await pool.query(
-      'INSERT INTO claims VALUES($1::ecosystem_type, $2, $3, $4)',
-      [
-        claimInfo.ecosystem,
-        claimInfo.identity,
-        claimInfo.amount.toString(),
-        proof,
-      ]
-    )
-    claimInfoCnt++
-    if (claimInfoCnt % 10 === 0) {
-      console.log(`\n\nclaimInfoCnt: ${claimInfoCnt}\n\n`)
+  const claimInfoChunksStart = Date.now()
+
+  claimInfoChunks = chunkCounts.map((_, i) => {
+    if (i % 100 === 0) {
+      console.log(`\n\n making claimInfo chunk ${i}/${chunkCounts.length}\n\n`)
+    }
+    let chunk = claimInfos.splice(0, chunkSize)
+    return chunk.map((claimInfo) => {
+      return {
+        ecosystem: claimInfo.ecosystem,
+        identity: claimInfo.identity,
+        amount: claimInfo.amount.toString(),
+        proof_of_inclusion: merkleTree.prove(claimInfo.toBuffer()),
+      }
+    })
+  })
+  const claimInfoChunksEnd = Date.now()
+
+  console.log(
+    `\n\nclaiminfoChunks time: ${claimInfoChunksEnd - claimInfoChunksStart}\n\n`
+  )
+
+  let Claims = sql.define({
+    name: 'claims',
+    columns: ['ecosystem', 'identity', 'amount', 'proof_of_inclusion'],
+  })
+  const claimsInsertStart = Date.now()
+  let chunkCount = 0
+  for (const claimInfoChunk of claimInfoChunks) {
+    let query = Claims.insert(claimInfoChunk).toQuery()
+    await pool.query(query)
+    chunkCount++
+    if (chunkCount % 10 === 0) {
+      console.log(
+        `\n\ninserted ${chunkCount}/${claimInfoChunks.length} chunks\n\n`
+      )
     }
   }
+  const claimsInsertEnd = Date.now()
+  console.log(
+    `\n\nclaimsInsert time: ${claimsInsertEnd - claimsInsertStart}\n\n`
+  )
   return merkleTree.root
 }
 

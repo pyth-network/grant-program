@@ -24,7 +24,7 @@ import { SolanaBreakdown } from 'utils/api'
 import { hashDiscordUserId } from '../utils/hashDiscord'
 import { DISCORD_HASH_SALT } from '../claim_sdk/testWallets'
 
-const DEBUG = false
+const DEBUG = true
 const pool = getDatabasePool()
 
 // The config is read from these env variables
@@ -40,16 +40,13 @@ const CLUSTER = envOrErr('CLUSTER')
 const DEPLOYER_WALLET = Keypair.fromSecretKey(
   new Uint8Array(JSON.parse(envOrErr('DEPLOYER_WALLET')))
 )
-// const PYTH_MINT = new PublicKey(envOrErr('PYTH_MINT'))
-// const PYTH_TREASURY = new PublicKey(envOrErr('PYTH_TREASURY'))
-// const CSV_CLAIMS = envOrErr('CSV_CLAIMS')
-// const CSV_EVM_BREAKDOWNS = envOrErr('CSV_EVM_BREAKDOWNS')
+const PYTH_MINT = new PublicKey(envOrErr('PYTH_MINT'))
+const PYTH_TREASURY = new PublicKey(envOrErr('PYTH_TREASURY'))
 
 const CSV_DIR = envOrErr('CSV_DIR')
 const DEFI_CLAIMS = 'defi.csv'
 const DEFI_DEV_CLAIMS = 'defi_dev.csv'
 
-// const DISCORD_CLAIMS = '/Users/rchen/Desktop/crypto/pyth-network/airdrop-allocations/discord.csv';
 const DISCORD_CLAIMS = 'discord.csv'
 const DISCORD_DEV_CLAIMS = 'discord_dev.csv'
 
@@ -140,20 +137,23 @@ function parseCsvs() {
   const groupedDefiAddresses = parseDefiCsv(DEFI_CLAIMS)
   const groupedDefiDevAddresses = parseDefiCsv(DEFI_DEV_CLAIMS)
 
-  groupedDefiDevAddresses.forEach((chainsAndAllocs, key) => {
+  groupedDefiDevAddresses.forEach((devChainsAndAllocs, key) => {
     const curValues = groupedDefiAddresses.get(key)
     if (curValues) {
-      // check no duplicate identity + chain from defi_dev.csv
+      // skip duplicate identity + chain from defi_dev.csv
       const curChainsForAddr = curValues.map((row) => row[0])
-      chainsAndAllocs.forEach((chainAndAlloc) => {
-        assert(
-          !curChainsForAddr.includes(chainAndAlloc[0]),
-          `CurChainsForAddr: ${curChainsForAddr}. Address ${key} has duplicate chain ${chainAndAlloc[0]}`
-        )
+      const deduped = devChainsAndAllocs.filter(([chain, alloc]) => {
+        const isUniqueDevAddr = !curChainsForAddr.includes(chain)
+        if (!isUniqueDevAddr) {
+          console.log(
+            `skipping dev claim for ${chain} address ${key}  because it is already in defi.csv`
+          )
+        }
+        return isUniqueDevAddr
       })
-      groupedDefiAddresses.set(key, [...curValues, ...chainsAndAllocs])
+      groupedDefiAddresses.set(key, [...curValues, ...deduped])
     } else {
-      groupedDefiAddresses.set(key, chainsAndAllocs)
+      groupedDefiAddresses.set(key, devChainsAndAllocs)
     }
   })
 
@@ -218,23 +218,26 @@ function parseCsvs() {
     claimInfos.push(new ClaimInfo('evm', key, totalAmount))
   })
 
+  // convert into breakdown rows
+  const evmBreakdownRows: EvmBreakdownRow[] = []
+  evmBreakdownAddresses.forEach((chainsAndAllocs, identity) => {
+    chainsAndAllocs.forEach(([chain, alloc]) => {
+      evmBreakdownRows.push({
+        chain,
+        identity,
+        amount: truncateAllocation(alloc),
+      })
+    })
+  })
+
   // need solana breakdown between nft & defi
   const nftCsvClaims = Papa.parse(
     fs.readFileSync(path.resolve(CSV_DIR, NFT_CLAIMS), 'utf-8'),
     {
       header: true,
-      skipEmptyLines: true,
     }
   )
-
-  assert(
-    nftCsvClaims.meta.fields?.includes('address'),
-    "CSV file does not have required 'address' column"
-  )
-  assert(
-    nftCsvClaims.meta.fields?.includes('alloc'),
-    "CSV file does not have required 'alloc' column"
-  )
+  hasColumns(nftCsvClaims, ['address', 'alloc'])
 
   const nftClaims = nftCsvClaims.data as {
     address: string
@@ -267,6 +270,14 @@ function parseCsvs() {
     claimInfos.push(new ClaimInfo('solana', key, totalAmount))
   })
 
+  // flatten into breakdown rows
+  const solanaBreakdownRows: SolanaBreakdownRow[] = []
+  solanaBreakdownData.forEach((breakdowns, identity) => {
+    breakdowns.forEach((breakdown) => {
+      solanaBreakdownRows.push(breakdown)
+    })
+  })
+
   // read all discord claims and add to ecosystemAddresses
   const discordClaims = parseDiscordClaims()
   discordClaims.forEach((row) => {
@@ -277,9 +288,21 @@ function parseCsvs() {
 
   return {
     claimInfos,
-    evmBreakdownAddresses,
-    solanaBreakdownData,
+    evmBreakdownRows,
+    solanaBreakdownRows,
   }
+}
+
+function hasColumns(
+  csvClaims: Papa.ParseResult<unknown>,
+  columns: string[]
+): void {
+  columns.forEach((column) => {
+    assert(
+      csvClaims.meta.fields?.includes(column),
+      `CSV file does not have required '${column}' column`
+    )
+  })
 }
 
 function parseDefiCsv(defi_csv: string) {
@@ -287,18 +310,10 @@ function parseDefiCsv(defi_csv: string) {
     fs.readFileSync(path.resolve(CSV_DIR, defi_csv), 'utf-8'),
     {
       header: true,
-      skipEmptyLines: true,
     }
   )
 
-  assert(
-    defiCsvClaims.meta.fields?.includes('address'),
-    "CSV file does not have required 'address' column"
-  )
-  assert(
-    defiCsvClaims.meta.fields?.includes('alloc'),
-    "CSV file does not have required 'alloc' column"
-  )
+  hasColumns(defiCsvClaims, ['address', 'chain', 'alloc'])
 
   const claimsData = defiCsvClaims.data as {
     address: string
@@ -324,18 +339,9 @@ function parseDiscordClaims(): { address: string; alloc: string }[] {
     fs.readFileSync(path.resolve(CSV_DIR, DISCORD_CLAIMS), 'utf-8'),
     {
       header: true,
-      skipEmptyLines: true,
     }
   )
-
-  assert(
-    discordCsvClaims.meta.fields?.includes('address'),
-    "CSV file does not have required 'address' column"
-  )
-  assert(
-    discordCsvClaims.meta.fields?.includes('alloc'),
-    "CSV file does not have required 'alloc' column"
-  )
+  hasColumns(discordCsvClaims, ['address', 'alloc'])
 
   const discordClaims = discordCsvClaims.data as {
     address: string
@@ -352,38 +358,27 @@ function parseDiscordClaims(): { address: string; alloc: string }[] {
     fs.readFileSync(path.resolve(CSV_DIR, DISCORD_DEV_CLAIMS), 'utf-8'),
     {
       header: true,
-      skipEmptyLines: true,
     }
   )
 
-  assert(
-    discordDevCsvClaims.meta.fields?.includes('address'),
-    "CSV file does not have required 'address' column"
-  )
-  assert(
-    discordDevCsvClaims.meta.fields?.includes('alloc'),
-    "CSV file does not have required 'alloc' column"
-  )
+  hasColumns(discordDevCsvClaims, ['address', 'alloc'])
 
-  const discordDevClaims = discordDevCsvClaims.data as {
-    address: string
-    alloc: string
-  }[]
+  // filter out addresses that are already in discordClaims
+  const discordDevClaims = (
+    discordDevCsvClaims.data as {
+      address: string
+      alloc: string
+    }[]
+  ).filter((row) => {
+    const isUniqueDevAddress = !discordClaimsAddrSet.has(row.address)
+    if (!isUniqueDevAddress) {
+      console.log(
+        `skipping discord dev claim for ${row.address} because it is already in discord.csv`
+      )
+    }
+    return isUniqueDevAddress
+  })
 
-  const discordDevClaimsAddrSet = new Set(
-    discordDevClaims.map((row) => row.address)
-  )
-  assert(
-    discordDevClaims.length === discordDevClaimsAddrSet.size,
-    'Discord dev claims has duplicate addresses'
-  )
-
-  discordDevClaimsAddrSet.forEach((addr) => discordClaimsAddrSet.add(addr))
-  assert(
-    discordClaimsAddrSet.size ===
-      discordDevClaims.length + discordClaims.length,
-    'Discord claims and discord dev claims have duplicate addresses'
-  )
   return discordClaims.concat(discordDevClaims).map((addrAndAlloc) => {
     const hashedDiscordId = hashDiscordUserId(
       DISCORD_HASH_SALT,
@@ -436,8 +431,7 @@ function getTotalByEcosystems(claimInfos: ClaimInfo[]): Map<string, BN> {
 }
 
 // Requirements for this script :
-// - Two csv files : one for claims and one for evm breakdowns
-// - Program has been deployed
+// - Airdrop allocation repo has been downloaded and path to repo set in .env
 // - DB has been migrated
 
 // Extra steps after running this script :
@@ -445,8 +439,11 @@ function getTotalByEcosystems(claimInfos: ClaimInfo[]): Map<string, BN> {
 // - Make sure the treasury account has the config account as its delegate
 
 async function main() {
+  const mainStart = Date.now()
   await clearDatabase(pool)
-  const { claimInfos, evmBreakdownAddresses, solanaBreakdownData } = parseCsvs()
+  const parseCsvStart = Date.now()
+  const { claimInfos, evmBreakdownRows, solanaBreakdownRows } = parseCsvs()
+  const parseCsvEnd = Date.now()
   if (DEBUG) {
     const [maxUser, maxAmount] = getMaxUserAndAmount(claimInfos)
     console.log(`maxUser: ${maxUser} maxAmount: ${maxAmount.toString()}`)
@@ -476,35 +473,17 @@ async function main() {
           .toString()}% of total airdrop`
       )
     })
-    evmBreakdownAddresses.forEach((chainsAndAllocs, identity) => {
-      assert(
-        chainsAndAllocs.every(([chain, _]) => {
-          return EVM_CHAINS.includes(chain as EvmChains)
-        })
+    assert(
+      evmBreakdownRows.every((row) =>
+        EVM_CHAINS.includes(row.chain as EvmChains)
       )
-    })
+    )
   }
   const maxAmount = getMaxAmount(claimInfos)
 
-  const evmBreakDowns: EvmBreakdownRow[] = []
-  evmBreakdownAddresses.forEach((chainsAndAllocs, identity) => {
-    chainsAndAllocs.forEach(([chain, alloc]) => {
-      evmBreakDowns.push({
-        chain,
-        identity,
-        amount: truncateAllocation(alloc),
-      })
-    })
-  })
-  checkClaimsMatchEvmBreakdown(claimInfos, evmBreakDowns)
+  checkClaimsMatchEvmBreakdown(claimInfos, evmBreakdownRows)
 
-  const solanaBreakDowns: SolanaBreakdownRow[] = []
-  solanaBreakdownData.forEach((breakdowns, identity) => {
-    breakdowns.forEach((breakdown) => {
-      solanaBreakDowns.push(breakdown)
-    })
-  })
-  checkClaimsMatchSolanaBreakdown(claimInfos, solanaBreakDowns)
+  checkClaimsMatchSolanaBreakdown(claimInfos, solanaBreakdownRows)
 
   // sort by amount & identity
   claimInfos.sort((a, b) => {
@@ -513,14 +492,34 @@ async function main() {
   })
 
   // Add data to database
+  const addClaimInfosStart = Date.now()
   const root = await addClaimInfosToDatabase(pool, claimInfos)
-  console.log(`added claim infos to database`)
-  await addEvmBreakdownsToDatabase(pool, evmBreakDowns)
-  console.log(`added evm breakdowns`)
-  await addSolanaBreakdownsToDatabase(pool, solanaBreakDowns)
-  console.log(`added solana breakdowns to db`)
+  const addClaimInfoEnd = Date.now()
+  console.log(
+    `\n\nadded claim infos to database time: ${
+      addClaimInfoEnd - addClaimInfosStart
+    } ms`
+  )
+  const addEvmStart = Date.now()
+  await addEvmBreakdownsToDatabase(pool, evmBreakdownRows)
+  const addEvmEnd = Date.now()
+  console.log(`added evm breakdowns time : ${addEvmEnd - addEvmStart} ms`)
+  const addSolStart = Date.now()
+  await addSolanaBreakdownsToDatabase(pool, solanaBreakdownRows)
+  const addSolEnd = Date.now()
+  console.log(
+    `added solana breakdowns to db time: ${addSolEnd - addSolStart} ms`
+  )
 
-  // // Intialize the token dispenser
+  console.log(`
+    \n\n
+      parseCsvTime: ${parseCsvEnd - parseCsvStart}
+      addClaimInfoTime: ${addClaimInfoEnd - addClaimInfosStart}
+      addEvmTime: ${addEvmEnd - addEvmStart}
+      addSolTime: ${addSolEnd - addSolStart}
+    \n\n`)
+
+  // Initialize the token dispenser
   const tokenDispenserProvider = new TokenDispenserProvider(
     ENDPOINT,
     new NodeWallet(DEPLOYER_WALLET),
@@ -532,21 +531,25 @@ async function main() {
     }
   )
 
-  const mintAndTreasury = await tokenDispenserProvider.setupMintAndTreasury()
-  console.log(
-    `mint: ${mintAndTreasury.mint.publicKey.toBase58()} treasury: ${mintAndTreasury.treasury.toBase58()}`
-  )
   await tokenDispenserProvider.initialize(
     root,
-    // PYTH_MINT,
-    // PYTH_TREASURY,
-    mintAndTreasury.mint.publicKey,
-    mintAndTreasury.treasury,
+    PYTH_MINT,
+    PYTH_TREASURY,
     DISPENSER_GUARD.publicKey,
     FUNDER_KEYPAIR.publicKey,
     maxAmount
   )
-  console.log(`initialized token dispenser`)
+  const mainEnd = Date.now()
+  console.log(`\n\ninitialized token dispenser\n\n`)
+
+  console.log(`
+    \n\n
+    totalTime: ${mainEnd - mainStart}
+      parseCsvTime: ${parseCsvEnd - parseCsvStart}
+      addClaimInfoTime: ${addClaimInfoEnd - addClaimInfosStart}
+      addEvmTime: ${addEvmEnd - addEvmStart}
+      addSolTime: ${addSolEnd - addSolStart}
+    \n\n`)
 }
 
 ;(async () => {
