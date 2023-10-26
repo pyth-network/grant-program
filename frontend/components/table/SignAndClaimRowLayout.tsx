@@ -44,11 +44,13 @@ export function SignAndClaimRowLayout({
           </span>
 
           <span className="flex flex-1  items-center justify-around gap-5">
-            <EcosystemConnectButton
-              ecosystem={ecosystem}
-              disableOnConnect={true}
-            />
-            {children}
+            <span className="mx-2 mr-auto">
+              <EcosystemConnectButton
+                ecosystem={ecosystem}
+                disableOnConnect={true}
+              />
+            </span>
+            <span className="mr-auto">{children}</span>
           </span>
         </div>
       </td>
