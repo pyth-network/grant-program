@@ -43,10 +43,9 @@ export const LogInWithSolana = ({ onBack, onProceed }: StepProps) => {
       </div>
       <div className="px-10 py-8 text-base16">
         <p className="mb-6">
-          PYTH tokens are native to Solana. You will need a Solana (SPL) wallet
-          to receive your tokens and to resume progress on this page if you
-          leave before claiming. Your claimed PYTH tokens will go to the Solana
-          wallet you connect in this step.
+          PYTH tokens are native to Solana. You need a Solana (SPL) wallet to
+          proceed and receive your PYTH tokens. Your claimed PYTH tokens will go
+          to the Solana wallet you connect in this step.
         </p>
         <p className="">
           You can find a list of popular wallets that support Solana (SPL)
