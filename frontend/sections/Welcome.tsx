@@ -32,6 +32,14 @@ export const Welcome = ({ onProceed }: { onProceed: () => void }) => {
               server.
             </li>
           </ul>
+          <p className="font-weight:bold mb-6">
+            {' '}
+            <strong>
+              {' '}
+              Note: The eligibility window for the airdrop has closed. No
+              further participants can become eligible.
+            </strong>
+          </p>
           <p>
             This Claim Process will check your wallet activity and Discord
             account to calculate how many PYTH tokens you are eligible to claim.
