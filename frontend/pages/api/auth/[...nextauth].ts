@@ -1,5 +1,10 @@
 import NextAuth, { NextAuthOptions, Session } from 'next-auth'
 import DiscordProvider from 'next-auth/providers/discord'
+import { hashDiscordUserId } from 'utils/hashDiscord'
+
+const DISCORD_HASH_SALT = Buffer.from(
+  new Uint8Array(JSON.parse(process.env.DISCORD_HASH_SALT!))
+)
 
 export const authOptions: NextAuthOptions = {
   // Configure one or more authentication providers
@@ -22,6 +27,7 @@ export const authOptions: NextAuthOptions = {
           id: profile.id,
           name: profile.username,
           image: profile.image_url,
+          hashed_user_id: hashDiscordUserId(DISCORD_HASH_SALT, profile.id),
         }
       },
       httpOptions: {
@@ -32,6 +38,12 @@ export const authOptions: NextAuthOptions = {
     // ...add more providers here
   ],
   callbacks: {
+    async jwt({ token, user }) {
+      if (user !== undefined) {
+        token.hashed_user_id = user.hashed_user_id
+      }
+      return token
+    },
     async session({
       session,
       token,
@@ -40,7 +52,10 @@ export const authOptions: NextAuthOptions = {
       token: any
     }): Promise<Session> {
       return {
-        user: { ...session.user, id: token.sub },
+        user: {
+          ...session.user,
+          hashed_user_id: token.hashed_user_id,
+        },
         expires: session.expires,
       }
     },
