@@ -187,7 +187,6 @@ export function useDiscordSignMessage(): SignMessageFn {
 export function useSignMessage(ecosystem: Ecosystem): SignMessageFn {
   const aptosSignMessageFn = useAptosSignMessage()
   const evmSignMessageFn = useEVMSignMessage()
-  const injectiveSignMessageFn = useCosmosSignMessage('injective')
   const osmosisSignMessageFn = useCosmosSignMessage('osmosis')
   const neutronSignMessageFn = useCosmosSignMessage('neutron')
   const { connectedSeiWallet } = useSeiWalletContext()
@@ -205,7 +204,7 @@ export function useSignMessage(ecosystem: Ecosystem): SignMessageFn {
     case Ecosystem.EVM:
       return evmSignMessageFn
     case Ecosystem.INJECTIVE:
-      return injectiveSignMessageFn
+      return evmSignMessageFn
     case Ecosystem.NEUTRON:
       return neutronSignMessageFn
     case Ecosystem.OSMOSIS:

@@ -21,6 +21,7 @@ import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
 import coinbase from '@images/coinbase.svg'
 import walletConnect from '@images/wallet-connect.svg'
 import metamask from '@images/metamask.svg'
+import { getInjectiveAddress } from '@injectivelabs/sdk-ts'
 
 // Configure chains & providers with the Alchemy provider.
 // Two popular providers are Alchemy (alchemy.com) and Infura (infura.io)
@@ -68,9 +69,13 @@ export function EVMWalletProvider({
 }
 
 type EvmWalletButtonProps = {
+  isInjective?: boolean
   disableOnConnect?: boolean
 }
-export function EVMWalletButton({ disableOnConnect }: EvmWalletButtonProps) {
+export function EVMWalletButton({
+  disableOnConnect,
+  isInjective,
+}: EvmWalletButtonProps) {
   const { disconnect } = useDisconnect()
   const { address, status, isConnected, connector } = useAccount()
   const { connect, connectors } = useConnect()
@@ -104,7 +109,7 @@ export function EVMWalletButton({ disableOnConnect }: EvmWalletButtonProps) {
       walletConnectedButton={(address: string) => (
         <WalletConnectedButton
           onClick={disconnect}
-          address={address}
+          address={isInjective ? getInjectiveAddress(address) : address}
           disabled={disableOnConnect}
           icon={getIcon(connector?.id as WalletIds)}
         />
