@@ -9,7 +9,8 @@
     "serve": "serve out",
     "start": "next start",
     "migrate": "node-pg-migrate up",
-    "populate": "ts-node ./scripts/populate.ts"
+    "populate": "ts-node ./scripts/populate.ts",
+    "populate:csv": "ts-node ./scripts/populate_from_csv.ts"
   },
   "dependencies": {
     "@aptos-labs/wallet-adapter-react": "^1.2.2",
@@ -44,6 +45,7 @@
     "react-hot-toast": "^2.2.0",
     "serve": "13.0.2",
     "siwe": "^2.1.4",
+    "sql": "^0.78.0",
     "tweetnacl": "^1.0.3",
     "wagmi": "^1.2.0"
   },
