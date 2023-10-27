@@ -24,6 +24,7 @@ export function middleware(req) {
     </html>
     `
 
+    // NextResponse object does not have a body property so we use Response instead
     return new Response(body, {
       status: 451,
       headers: {
