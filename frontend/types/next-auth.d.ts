@@ -13,6 +13,6 @@ declare module 'next-auth' {
   interface User {
     name: string
     image: string
-    hashed_user_id: string
+    hashedUserId: string
   }
 }

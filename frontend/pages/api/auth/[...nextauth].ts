@@ -27,7 +27,7 @@ export const authOptions: NextAuthOptions = {
           id: profile.id,
           name: profile.username,
           image: profile.image_url,
-          hashed_user_id: hashDiscordUserId(DISCORD_HASH_SALT, profile.id),
+          hashedUserId: hashDiscordUserId(DISCORD_HASH_SALT, profile.id),
         }
       },
       httpOptions: {
@@ -40,7 +40,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user !== undefined) {
-        token.hashed_user_id = user.hashed_user_id
+        token.hashedUserId = user.hashedUserId
       }
       return token
     },
@@ -54,7 +54,7 @@ export const authOptions: NextAuthOptions = {
       return {
         user: {
           ...session.user,
-          hashed_user_id: token.hashed_user_id,
+          hashedUserId: token.hashedUserId,
         },
         expires: session.expires,
       }

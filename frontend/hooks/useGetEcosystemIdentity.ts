@@ -54,12 +54,12 @@ export function useGetEcosystemIdentity() {
           return suiAddress
 
         case Ecosystem.DISCORD:
-          return data?.user?.hashed_user_id
+          return data?.user?.hashedUserId
       }
     },
     [
       aptosAddress,
-      data?.user?.hashed_user_id,
+      data?.user?.hashedUserId,
       evmAddress,
       injectiveAddress,
       neutronAddress,
