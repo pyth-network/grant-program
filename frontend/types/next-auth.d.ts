@@ -5,12 +5,14 @@ declare module 'next-auth' {
    * Returned by `getServerSession`
    */
   interface Session {
-    user?: {
-      name?: string | null
-      email?: string | null
-      image?: string | null
-      id?: string | null
-    }
+    user?: Partial<User>
     expires: ISODateString
+  }
+
+  /** The OAuth profile returned from your provider */
+  interface User {
+    name: string
+    image: string
+    hashedUserId: string
   }
 }
