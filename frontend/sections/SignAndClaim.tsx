@@ -110,11 +110,13 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
         err.message === ERROR_SIGNING_TX ||
         err.message === ERROR_FUNDING_TX
       ) {
-        message =
-          'There was some error while signing the transaction. Please refresh the page and try again.'
+        message = `There was an error while signing the transaction. Please refresh this page and try again. 
+
+          Note: You will not lose your progress when you refresh.`
       } else {
-        message =
-          'There was some unknown error. Please refresh to try again or come back later.'
+        message = `Try claiming your tokens again by refreshing your browser.
+          
+          If the problem persists, contact our support team on Discord.`
       }
 
       const stateObj: { [key in Ecosystem]?: EcosystemClaimState } = {}
@@ -154,7 +156,9 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
               [ecosystems[index]]: {
                 error: transactionError
                   ? new Error(
-                      'There was an error with the transaction. Please refresh and try again.'
+                      `There was an error with your transaction. Please refresh this page and try again. 
+                      
+                      Note: You will not lose your progress when you refresh.`
                     )
                   : null,
               },
@@ -162,12 +166,14 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
           })
           .catch((e) => {
             // If the timeout triggers error.
-            let message =
-              'The connection is taking too long to respond. We cannot confirm this claim transaction.'
+            let message = `We are unable to confirm your transaction claim because the connection timed out. 
+              
+              Note: You will not lose your progress if you refresh.`
             // If the error was with the connection edit the message to.
             if (((e as Error).message = ERROR_RPC_CONNECTION)) {
-              message =
-                'There seems to be some issue with the RPC connection. Please try again after some time.'
+              message = `There was a problem with the RPC connection. Please wait a few minutes before trying again. 
+                
+                Note: You will not lose your progress if you refresh this page.`
             }
 
             setEcosystemsClaimState((ecosystemState) => ({
