@@ -40,7 +40,7 @@ export const Layout = ({ children }: LayoutProps) => {
   return (
     <>
       <header className="absolute left-0 top-0 z-40 w-full px-1 transition-all lg:px-10">
-        <div className="before:gradient-border relative flex items-center justify-between sm:px-4  sm:py-3  lg:py-4  sm:lg:px-10 sm:lg:py-6">
+        <div className="before:gradient-border relative flex items-center justify-between px-4 py-3 lg:py-6 lg:px-10">
           <Image
             src="/pyth-logo-white.svg"
             className="h-30 mr-3"
@@ -52,7 +52,7 @@ export const Layout = ({ children }: LayoutProps) => {
           <span>Placeholder Always Check URL disclaimer placeholder</span>
         </div>
       </header>
-      <div className="relative   px-4 pt-40 pb-32">
+      <div className="relative px-4 pt-28 pb-32 lg:pt-40">
         <div className="mx-auto max-w-[997px] justify-between gap-2.5 lg:flex">
           <ul
             className={classNames(
