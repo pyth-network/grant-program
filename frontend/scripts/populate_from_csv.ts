@@ -22,7 +22,7 @@ import assert from 'assert'
 import path from 'path'
 import { SolanaBreakdown } from 'utils/api'
 import { hashDiscordUserId } from '../utils/hashDiscord'
-import { DISCORD_HASH_SALT } from '../claim_sdk/testWallets'
+import { DISCORD_HASH_SALT, loadFunderWallet } from '../claim_sdk/testWallets'
 
 const DEBUG = true
 const pool = getDatabasePool()
@@ -522,7 +522,7 @@ async function main() {
   // Initialize the token dispenser
   const tokenDispenserProvider = new TokenDispenserProvider(
     ENDPOINT,
-    new NodeWallet(DEPLOYER_WALLET),
+    loadFunderWallet(),
     new PublicKey(PROGRAM_ID),
     {
       skipPreflight: true,
@@ -530,11 +530,11 @@ async function main() {
       commitment: 'processed',
     }
   )
-
+  const mintAndTreasury = await tokenDispenserProvider.setupMintAndTreasury()
   await tokenDispenserProvider.initialize(
     root,
-    PYTH_MINT,
-    PYTH_TREASURY,
+    mintAndTreasury.mint.publicKey,
+    mintAndTreasury.treasury,
     DISPENSER_GUARD.publicKey,
     FUNDER_KEYPAIR.publicKey,
     maxAmount

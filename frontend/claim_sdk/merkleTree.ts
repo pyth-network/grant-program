@@ -8,7 +8,7 @@ export const HASH_SIZE = 20
 
 export class MerkleTree {
   public nodes: Buffer[]
-  public indices = new Map<Buffer, number>()
+  public indices = new Map<string, number>()
 
   static hash(buffer: Buffer) {
     const bytes = keccak256(buffer)
@@ -33,7 +33,7 @@ export class MerkleTree {
     for (let i = 0; i < 1 << depth; i++) {
       if (i < leaves.length) {
         this.nodes[(1 << depth) + i] = MerkleTree.hashLeaf(leaves[i])
-        this.indices.set(leaves[i], (1 << depth) + i)
+        this.indices.set(leaves[i].toString('hex'), (1 << depth) + i)
       } else {
         this.nodes[(1 << depth) + i] = MerkleTree.hash(NULL_PREFIX)
       }
@@ -54,8 +54,9 @@ export class MerkleTree {
   prove(leaf: Buffer): Buffer | undefined {
     const leafHash = MerkleTree.hashLeaf(leaf)
 
-    let index = this.indices.get(leaf)!
-    if (index == -1) {
+    let index = this.indices.get(leaf.toString('hex'))!
+
+    if (!index) {
       return undefined
     }
 
@@ -66,7 +67,7 @@ export class MerkleTree {
       index = Math.floor(index / 2)
     }
 
-    return Buffer.alloc(0)
+    return Buffer.concat(path)
   }
 
   get root(): Buffer {
