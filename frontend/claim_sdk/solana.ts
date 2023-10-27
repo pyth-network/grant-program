@@ -233,14 +233,18 @@ export class TokenDispenserProvider {
   ): Promise<Promise<TransactionError | null>[]> {
     const txs: VersionedTransaction[] = []
 
-    for (const claim of claims) {
-      txs.push(
-        await this.generateClaimTransaction(
-          claim.claimInfo,
-          claim.proofOfInclusion,
-          claim.signedMessage
+    try {
+      for (const claim of claims) {
+        txs.push(
+          await this.generateClaimTransaction(
+            claim.claimInfo,
+            claim.proofOfInclusion,
+            claim.signedMessage
+          )
         )
-      )
+      }
+    } catch (e) {
+      throw new Error(ERROR_RPC_CONNECTION)
     }
 
     let txsSignedOnce
