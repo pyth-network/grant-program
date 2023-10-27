@@ -12,7 +12,6 @@ export function middleware(req) {
   // Extract country
   const country = req.geo.country
 
-  // Specify the correct pathname
   if (country === BLOCKED_COUNTRY) {
     return NextResponse.error(451)
   } else {
