@@ -13,8 +13,24 @@ export function middleware(req) {
   const country = req.geo.country
 
   if (country === BLOCKED_COUNTRY) {
-    return NextResponse.error(451)
+    // Error 451: Unavailable For Legal Reasons
+    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/451
+    return new NextResponse(null, {
+      status: 451,
+      headers: {
+        'Content-Type': 'text/html',
+      },
+      body: `
+          <html>
+            <body>
+              <h1>Error 451: Unavailable For Legal Reasons</h1>
+              <p>Access to this site is restricted for users accessing from the United States due to legal or regulatory requirements.</p>
+            </body>
+          </html>
+        `,
+    })
   } else {
-    return NextResponse.rewrite(req.nextUrl)
+    // Continue with the request if the country is not blocked
+    return NextResponse.next()
   }
 }
