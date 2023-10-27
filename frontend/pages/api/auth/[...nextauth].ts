@@ -39,6 +39,9 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
+      // as per next auth docs
+      // The arguments user, account, profile and isNewUser are only passed the first time this
+      // callback is called on a new session, after the user signs in. In subsequent calls, only token will be available.
       if (user !== undefined) {
         token.hashedUserId = user.hashedUserId
       }
