@@ -9,6 +9,7 @@ import { useSession } from 'next-auth/react'
 import { Ecosystem } from '@components/Ecosystem'
 import { useCallback } from 'react'
 import { useSeiWalletContext } from '@components/wallets/Sei'
+import { getInjectiveAddress } from '@injectivelabs/sdk-ts'
 
 // It will return a function that can be used to get the identity of a given ecosystem
 // The function will return the identity if the ecosystem is connected
@@ -36,7 +37,7 @@ export function useGetEcosystemIdentity() {
           return evmAddress
 
         case Ecosystem.INJECTIVE:
-          return injectiveAddress
+          return evmAddress ? getInjectiveAddress(evmAddress) : undefined
 
         case Ecosystem.NEUTRON:
           return neutronAddress
