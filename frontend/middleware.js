@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
-// Block US visitors
-const BLOCKED_COUNTRY = 'US'
+// Block visitors from these countries
+const BLOCKED_COUNTRIES = ['US']
 
 // Limit middleware pathname config
 export const config = {
@@ -12,7 +12,7 @@ export function middleware(req) {
   // Extract country
   const country = req.geo.country
 
-  if (country === BLOCKED_COUNTRY) {
+  if (BLOCKED_COUNTRIES.includes(country)) {
     // Error 451: Unavailable For Legal Reasons
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/451
     const body = `
