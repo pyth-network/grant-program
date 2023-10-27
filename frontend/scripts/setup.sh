@@ -184,7 +184,7 @@ function main() {
       fi
       run_integration_tests;
   elif [ "$csv" -eq 1 ]; then
-    # populate_from_csv;
+    populate_from_csv;
     ( trap exit SIGINT ; read -r -d '' _ </dev/tty )
   else
       echo "no mode selected"
