@@ -14,13 +14,17 @@ import {
 import fs from 'fs'
 import Papa from 'papaparse'
 
-import { ClaimInfo, Ecosystem, getMaxAmount } from '../claim_sdk/claim'
+import {
+  ClaimInfo,
+  Ecosystem,
+  Ecosystems,
+  getMaxAmount,
+} from '../claim_sdk/claim'
 import BN from 'bn.js'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { EvmBreakdownRow } from '../utils/db'
 import assert from 'assert'
 import path from 'path'
-import { SolanaBreakdown } from 'utils/api'
 import { hashDiscordUserId } from '../utils/hashDiscord'
 import { DISCORD_HASH_SALT, loadFunderWallet } from '../claim_sdk/testWallets'
 
@@ -36,7 +40,6 @@ const DISPENSER_GUARD = Keypair.fromSecretKey(
 const FUNDER_KEYPAIR = Keypair.fromSecretKey(
   new Uint8Array(JSON.parse(envOrErr('FUNDER_KEYPAIR')))
 )
-const CLUSTER = envOrErr('CLUSTER')
 const DEPLOYER_WALLET = Keypair.fromSecretKey(
   new Uint8Array(JSON.parse(envOrErr('DEPLOYER_WALLET')))
 )
@@ -51,16 +54,6 @@ const DISCORD_CLAIMS = 'discord.csv'
 const DISCORD_DEV_CLAIMS = 'discord_dev.csv'
 
 const NFT_CLAIMS = 'nft.csv'
-
-const ECOSYSTEM_LIST = [
-  'solana',
-  'evm',
-  'discord',
-  'cosmwasm',
-  'aptos',
-  'sui',
-  'injective',
-]
 
 const COSMWASM_CHAIN_LIST = ['neutron', 'osmosis', 'sei']
 
@@ -187,7 +180,7 @@ function parseCsvs() {
       )
     } else {
       assert(
-        ECOSYSTEM_LIST.includes(chainsAndAllocs[0][0]),
+        Ecosystems.includes(chainsAndAllocs[0][0] as Ecosystem),
         `Unknown ecosystem detected for identity ${key} - ${chainsAndAllocs[0]}`
       )
       if (chainsAndAllocs[0][0] === 'solana') {
@@ -231,18 +224,7 @@ function parseCsvs() {
   })
 
   // need solana breakdown between nft & defi
-  const nftCsvClaims = Papa.parse(
-    fs.readFileSync(path.resolve(CSV_DIR, NFT_CLAIMS), 'utf-8'),
-    {
-      header: true,
-    }
-  )
-  hasColumns(nftCsvClaims, ['address', 'alloc'])
-
-  const nftClaims = nftCsvClaims.data as {
-    address: string
-    alloc: string
-  }[]
+  const nftClaims = parseNftCsv()
 
   nftClaims.forEach((row) => {
     if (solanaBreakdownData.has(row.address)) {
@@ -334,6 +316,22 @@ function parseDefiCsv(defi_csv: string) {
   }, new Map<string, [string, string][]>())
 }
 
+function parseNftCsv() {
+  const nftCsvClaims = Papa.parse(
+    fs.readFileSync(path.resolve(CSV_DIR, NFT_CLAIMS), 'utf-8'),
+    {
+      header: true,
+    }
+  )
+  hasColumns(nftCsvClaims, ['address', 'alloc'])
+
+  const nftClaims = nftCsvClaims.data as {
+    address: string
+    alloc: string
+  }[]
+  return nftClaims
+}
+
 function parseDiscordClaims(): { address: string; alloc: string }[] {
   const discordCsvClaims = Papa.parse(
     fs.readFileSync(path.resolve(CSV_DIR, DISCORD_CLAIMS), 'utf-8'),
@@ -398,8 +396,7 @@ function truncateAllocation(allocation: string): BN {
   const allocationParts = allocation.split('.')
   assert(allocationParts.length === 2)
   const allocationInt = allocationParts[0]
-  const allocationDec = allocationParts[1].slice(0, 6)
-  const allocationNormalized = allocationInt + allocationDec
+  const allocationNormalized = allocationInt + '000000'
   const allocationBn = new BN(allocationNormalized)
   return allocationBn
 }
@@ -448,7 +445,7 @@ async function main() {
     const [maxUser, maxAmount] = getMaxUserAndAmount(claimInfos)
     console.log(`maxUser: ${maxUser} maxAmount: ${maxAmount.toString()}`)
 
-    ECOSYSTEM_LIST.forEach((ecosystem) => {
+    Ecosystems.forEach((ecosystem) => {
       const [maxEcoUser, maxEcoAmount] = getMaxUserAndAmount(
         claimInfos.filter((claimInfo) => claimInfo.ecosystem === ecosystem)
       )
@@ -522,7 +519,9 @@ async function main() {
   // Initialize the token dispenser
   const tokenDispenserProvider = new TokenDispenserProvider(
     ENDPOINT,
-    loadFunderWallet(),
+    new NodeWallet(DEPLOYER_WALLET),
+    // for local testing
+    // loadFunderWallet(),
     new PublicKey(PROGRAM_ID),
     {
       skipPreflight: true,
@@ -530,15 +529,26 @@ async function main() {
       commitment: 'processed',
     }
   )
-  const mintAndTreasury = await tokenDispenserProvider.setupMintAndTreasury()
+
   await tokenDispenserProvider.initialize(
     root,
-    mintAndTreasury.mint.publicKey,
-    mintAndTreasury.treasury,
+    PYTH_MINT,
+    PYTH_TREASURY,
     DISPENSER_GUARD.publicKey,
     FUNDER_KEYPAIR.publicKey,
     maxAmount
   )
+
+  // for local testing
+  // const mintAndTreasury = await tokenDispenserProvider.setupMintAndTreasury()
+  // await tokenDispenserProvider.initialize(
+  //   root,
+  //   mintAndTreasury.mint.publicKey,
+  //   mintAndTreasury.treasury,
+  //   DISPENSER_GUARD.publicKey,
+  //   FUNDER_KEYPAIR.publicKey,
+  //   maxAmount
+  // )
   const mainEnd = Date.now()
   console.log(`\n\ninitialized token dispenser\n\n`)
 

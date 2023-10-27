@@ -11,7 +11,6 @@ import * as anchor from '@coral-xyz/anchor'
 import { MerkleTree } from '../claim_sdk/merkleTree'
 import { BN } from 'bn.js'
 const sql = require('sql') as any
-// import { SQL, define } from 'sql';
 dotenv.config() // Load environment variables from .env file
 
 const SOLANA_ECOSYSTEM_INDEX = 2
@@ -84,8 +83,8 @@ export async function addClaimInfosToDatabase(
   )
 
   let claimInfoChunks = []
-  let chunkSize = 100
-  let chunkCounts = [...Array(Math.ceil(claimInfos.length / chunkSize))]
+  const chunkSize = 100
+  const chunkCounts = [...Array(Math.ceil(claimInfos.length / chunkSize))]
 
   const claimInfoChunksStart = Date.now()
 
