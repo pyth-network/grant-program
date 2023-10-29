@@ -71,7 +71,7 @@ export function cosmwasmBuildSignedMessage(
         uncompressedPublicKey,
         Hash.sha256(fullMessage)
       ),
-      fullMessage,
+      fullMessage: Hash.sha256(fullMessage),
     }
   }
 }
