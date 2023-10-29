@@ -75,7 +75,7 @@ describe('signature tests', () => {
       __dirname,
       '../../integration/keys/cosmos_private_key.json'
     )
-    const injectiveWallet = TestEvmWallet.fromKeyFile(
+    const injectiveWallet = TestEvmWallet.fromKeyfile(
       cosmosPrivateKeyPath,
       true
     )

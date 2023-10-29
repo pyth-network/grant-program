@@ -87,7 +87,7 @@ export async function loadTestWallets(): Promise<
     DiscordTestWallet.fromKeyfile(TEST_DISCORD_USERNAME, dispenserGuardKeyPath),
   ]
   result['solana'] = [TestSolanaWallet.fromKeyfile(solanaPrivateKeyPath)]
-  result['evm'] = [TestEvmWallet.fromKeyFile(evmPrivateKeyPath)]
+  result['evm'] = [TestEvmWallet.fromKeyfile(evmPrivateKeyPath)]
   result['sui'] = [TestSuiWallet.fromKeyfile(suiPrivateKeyPath)]
   result['aptos'] = [TestAptosWallet.fromKeyfile(aptosPrivateKeyPath)]
   result['cosmwasm'] = [
@@ -95,7 +95,7 @@ export async function loadTestWallets(): Promise<
     await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath, 'osmo'),
     await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath, 'neutron'),
   ]
-  result['injective'] = [TestEvmWallet.fromKeyFile(cosmosPrivateKeyPath, true)]
+  result['injective'] = [TestEvmWallet.fromKeyfile(cosmosPrivateKeyPath, true)]
 
   return result
 }
@@ -110,7 +110,7 @@ export class TestEvmWallet implements TestWallet {
     readonly wallet: ethers.Wallet,
     readonly isInjectiveWallet: boolean
   ) {}
-  static fromKeyFile(
+  static fromKeyfile(
     keyFile: string,
     isInjectiveWallet = false
   ): TestEvmWallet {
