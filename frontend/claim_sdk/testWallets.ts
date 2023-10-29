@@ -20,7 +20,6 @@ import { AptosAccount } from 'aptos'
 import { aptosGetFullMessage } from './ecosystems/aptos'
 import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519'
 import { hashDiscordUserId } from '../utils/hashDiscord'
-import { toBech32 } from '@cosmjs/encoding'
 import { Address as InjectiveAddress } from '@injectivelabs/sdk-ts'
 
 dotenv.config() // Load environment variables from .env file
