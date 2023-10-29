@@ -4,7 +4,6 @@ use {
     anchor_lang::{
         prelude::*,
         solana_program::{
-            hash,
             instruction::Instruction,
             secp256k1_program::ID as SECP256K1_ID,
             secp256k1_recover::secp256k1_recover,
@@ -174,18 +173,14 @@ impl AnchorSerialize for Secp256k1InstructionData {
  * messages. Instead of using Keccak256, Cosmos uses SHA256. This prevents
  * us from using the Secp256k1 instruction struct for Cosmos.
  */
-pub fn secp256k1_sha256_verify_signer(
+pub fn secp256k1_verify_signer(
     signature: &Secp256k1Signature,
     recovery_id: &u8,
     pubkey: &UncompressedSecp256k1Pubkey,
-    message: &Vec<u8>,
+    message: &[u8],
 ) -> Result<()> {
-    let recovered_key = secp256k1_recover(
-        &hash::hashv(&[message]).to_bytes(),
-        *recovery_id,
-        &signature.0,
-    )
-    .map_err(|_| ErrorCode::SignatureVerificationWrongSigner)?;
+    let recovered_key = secp256k1_recover(message, *recovery_id, &signature.0)
+        .map_err(|_| ErrorCode::SignatureVerificationWrongSigner)?;
     if !(recovered_key.0 == pubkey.as_bytes()[1..] && pubkey.as_bytes()[0] == SECP256K1_FULL_PREFIX)
     {
         return err!(ErrorCode::SignatureVerificationWrongSigner);
@@ -363,15 +358,16 @@ pub fn test_secp256k1_sha256_verify_signer() {
     let public_key = libsecp256k1::PublicKey::from_secret_key(&secret);
     let mut public_key_bytes = public_key.serialize();
     let uncompressed_public_key = &UncompressedSecp256k1Pubkey::from(public_key_bytes);
-    let mut message = b"hello".to_vec();
+    let message = b"hello".to_vec();
     let message_hash = libsecp256k1::Message::parse_slice(hashv(&[&message]).as_ref()).unwrap();
     let (signature, recovery_id) = libsecp256k1::sign(&message_hash, &secret);
     let mut signature_bytes = signature.serialize();
-    assert!(secp256k1_sha256_verify_signer(
+    let mut message_hash_bytes = message_hash.serialize();
+    assert!(secp256k1_verify_signer(
         &Secp256k1Signature::from(signature_bytes),
         &recovery_id.serialize(),
         uncompressed_public_key,
-        &message,
+        &message_hash_bytes,
     )
     .is_ok());
 
@@ -379,11 +375,11 @@ pub fn test_secp256k1_sha256_verify_signer() {
     // wrong public key
     public_key_bytes[0] ^= 0xff;
     let uncompressed_public_key = &UncompressedSecp256k1Pubkey::from(public_key_bytes);
-    let res = secp256k1_sha256_verify_signer(
+    let res = secp256k1_verify_signer(
         &Secp256k1Signature::from(signature_bytes),
         &recovery_id.serialize(),
         uncompressed_public_key,
-        &message,
+        &message_hash_bytes,
     );
     assert!(res.is_err());
     assert_eq!(
@@ -397,11 +393,11 @@ pub fn test_secp256k1_sha256_verify_signer() {
     // invalid signature
     signature_bytes[0] ^= 0xff;
 
-    let res = secp256k1_sha256_verify_signer(
+    let res = secp256k1_verify_signer(
         &Secp256k1Signature::from(signature_bytes),
         &recovery_id.serialize(),
         uncompressed_public_key,
-        &message,
+        &message_hash_bytes,
     );
     assert!(res.is_err());
     assert_eq!(
@@ -412,12 +408,12 @@ pub fn test_secp256k1_sha256_verify_signer() {
     signature_bytes[0] ^= 0xff;
 
     // invalid message
-    message[0] ^= 0xff;
-    let res = secp256k1_sha256_verify_signer(
+    message_hash_bytes[0] ^= 0xff;
+    let res = secp256k1_verify_signer(
         &Secp256k1Signature::from(signature_bytes),
         &recovery_id.serialize(),
         uncompressed_public_key,
-        &message,
+        &message_hash_bytes,
     );
     assert!(res.is_err());
     assert_eq!(
@@ -425,16 +421,16 @@ pub fn test_secp256k1_sha256_verify_signer() {
         Error::from(ErrorCode::SignatureVerificationWrongSigner)
     );
 
-    message[0] ^= 0xff;
+    message_hash_bytes[0] ^= 0xff;
 
     let mut recovery_id_bytes = recovery_id.serialize();
     recovery_id_bytes ^= 0xff;
 
-    let res = secp256k1_sha256_verify_signer(
+    let res = secp256k1_verify_signer(
         &Secp256k1Signature::from(signature_bytes),
         &recovery_id_bytes,
         uncompressed_public_key,
-        &message,
+        &message_hash_bytes,
     );
     assert!(res.is_err());
     assert_eq!(
@@ -443,11 +439,11 @@ pub fn test_secp256k1_sha256_verify_signer() {
     );
 
     recovery_id_bytes ^= 0xff;
-    assert!(secp256k1_sha256_verify_signer(
+    assert!(secp256k1_verify_signer(
         &Secp256k1Signature::from(signature_bytes),
         &recovery_id_bytes,
         uncompressed_public_key,
-        &message,
+        &message_hash_bytes,
     )
     .is_ok());
 }

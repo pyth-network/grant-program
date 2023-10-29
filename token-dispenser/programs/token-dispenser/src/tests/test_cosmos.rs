@@ -8,7 +8,6 @@ use {
                 ADMISSIBLE_CHAIN_IDS,
             },
             get_expected_payload,
-            secp256k1::Secp256k1TestMessage,
         },
         ErrorCode,
         Identity,
@@ -53,7 +52,11 @@ impl From<Secp256k1TestIdentityCertificate<CosmosMessage, Sha256>> for IdentityC
             signature:   val.signature.serialize().into(),
             recovery_id: val.recovery_id.into(),
             pubkey:      val.recover().serialize().into(),
-            message:     val.message.get_message_with_metadata(),
+            message:     Secp256k1TestIdentityCertificate::<CosmosMessage, Sha256>::hash_message(
+                &val.message,
+            )
+            .serialize()
+            .to_vec(),
         }
     }
 }
