@@ -14,13 +14,14 @@ import { AminoSignResponse, Secp256k1HdWallet } from '@cosmjs/amino'
 import { makeADR36AminoSignDoc } from '@keplr-wallet/cosmos'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { EthSecp256k1Wallet } from '@injectivelabs/sdk-ts/dist/cjs/core/accounts/signers/EthSecp256k1Wallet'
 import { OfflineAminoSigner } from '@injectivelabs/sdk-ts/dist/cjs/core/accounts/signers/types/amino-signer'
 import { hardDriveSignMessage, signDiscordMessage } from './ecosystems/solana'
 import { AptosAccount } from 'aptos'
 import { aptosGetFullMessage } from './ecosystems/aptos'
 import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519'
 import { hashDiscordUserId } from '../utils/hashDiscord'
+import { toBech32 } from '@cosmjs/encoding'
+import { Address as InjectiveAddress } from '@injectivelabs/sdk-ts'
 
 dotenv.config() // Load environment variables from .env file
 
@@ -87,7 +88,7 @@ export async function loadTestWallets(): Promise<
     DiscordTestWallet.fromKeyfile(TEST_DISCORD_USERNAME, dispenserGuardKeyPath),
   ]
   result['solana'] = [TestSolanaWallet.fromKeyfile(solanaPrivateKeyPath)]
-  result['evm'] = [TestEvmWallet.fromKeyfile(evmPrivateKeyPath)]
+  result['evm'] = [TestEvmWallet.fromKeyFile(evmPrivateKeyPath)]
   result['sui'] = [TestSuiWallet.fromKeyfile(suiPrivateKeyPath)]
   result['aptos'] = [TestAptosWallet.fromKeyfile(aptosPrivateKeyPath)]
   result['cosmwasm'] = [
@@ -95,9 +96,7 @@ export async function loadTestWallets(): Promise<
     await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath, 'osmo'),
     await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath, 'neutron'),
   ]
-  result['injective'] = [
-    await TestCosmWasmWallet.fromKeyFile(cosmosPrivateKeyPath, 'inj'),
-  ]
+  result['injective'] = [TestEvmWallet.fromKeyFile(cosmosPrivateKeyPath, true)]
 
   return result
 }
@@ -108,11 +107,17 @@ export interface TestWallet {
 }
 
 export class TestEvmWallet implements TestWallet {
-  constructor(readonly wallet: ethers.Wallet) {}
-  static fromKeyfile(keyFile: string): TestEvmWallet {
+  constructor(
+    readonly wallet: ethers.Wallet,
+    readonly isInjectiveWallet: boolean
+  ) {}
+  static fromKeyFile(
+    keyFile: string,
+    isInjectiveWallet = false
+  ): TestEvmWallet {
     const jsonContent = fs.readFileSync(keyFile, 'utf8')
     const privateKey = JSON.parse(jsonContent).privateKey
-    return new TestEvmWallet(new ethers.Wallet(privateKey))
+    return new TestEvmWallet(new ethers.Wallet(privateKey), isInjectiveWallet)
   }
 
   async signMessage(payload: string): Promise<SignedMessage> {
@@ -126,9 +131,14 @@ export class TestEvmWallet implements TestWallet {
   }
 
   public address(): string {
-    return this.wallet.address
+    if (this.isInjectiveWallet) {
+      return InjectiveAddress.fromHex(this.wallet.address).toBech32('inj')
+    } else {
+      return this.wallet.address
+    }
   }
 }
+
 export class TestCosmWasmWallet implements TestWallet {
   protected constructor(
     readonly wallet: OfflineAminoSigner,
@@ -146,17 +156,11 @@ export class TestCosmWasmWallet implements TestWallet {
   ): Promise<TestCosmWasmWallet> {
     const jsonContent = fs.readFileSync(keyFile, 'utf8')
 
-    let wallet: OfflineAminoSigner
-    if (chainId === 'inj') {
-      const privateKey = Buffer.from(JSON.parse(jsonContent).privateKey, 'hex')
-      wallet = await EthSecp256k1Wallet.fromKey(privateKey)
-    } else {
-      const mnemonic = JSON.parse(jsonContent).mnemonic
-      wallet = await Secp256k1HdWallet.fromMnemonic(
-        mnemonic,
-        chainId ? { prefix: chainId } : {}
-      )
-    }
+    const mnemonic = JSON.parse(jsonContent).mnemonic
+    const wallet: OfflineAminoSigner = await Secp256k1HdWallet.fromMnemonic(
+      mnemonic,
+      chainId ? { prefix: chainId } : {}
+    )
 
     const { address: addressStr } = (await wallet.getAccounts())[0]
     return new TestCosmWasmWallet(wallet, addressStr)
