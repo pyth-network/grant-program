@@ -141,7 +141,7 @@ impl TestClaimCertificate {
         Self {
             amount:                      Self::random_amount(),
             off_chain_proof_of_identity: TestIdentityCertificate::Injective(
-                Secp256k1TestIdentityCertificate::<CosmosMessage, Keccak256>::random(claimant),
+                Secp256k1TestIdentityCertificate::<EvmPrefixedMessage, Keccak256>::random(claimant),
             ),
         }
     }
@@ -236,7 +236,7 @@ pub enum TestIdentityCertificate {
     Aptos(Ed25519TestIdentityCertificate<AptosMessage>),
     Sui(Ed25519TestIdentityCertificate<SuiMessage>),
     Solana(SolanaTestIdentityCertificate),
-    Injective(Secp256k1TestIdentityCertificate<CosmosMessage, Keccak256>),
+    Injective(Secp256k1TestIdentityCertificate<EvmPrefixedMessage, Keccak256>),
 }
 
 #[tokio::test]
