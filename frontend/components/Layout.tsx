@@ -49,7 +49,9 @@ export const Layout = ({ children }: LayoutProps) => {
             width={26}
             height={33}
           />
-          <span>Placeholder Always Check URL disclaimer placeholder</span>
+          <span className="text-right">
+            Placeholder Always Check URL disclaimer placeholder
+          </span>
         </div>
       </header>
       <div className="relative px-4 pt-28 pb-32 lg:pt-40">
@@ -80,7 +82,7 @@ export const Layout = ({ children }: LayoutProps) => {
               )
             })}
           </ul>
-          <div className="flex-1 ">
+          <div className="flex-1 overflow-auto">
             {children}
 
             <div className="mt-6">
