@@ -50,7 +50,7 @@ export const Layout = ({ children }: LayoutProps) => {
             height={33}
           />
           <span>
-            Please verify that the site url is:{' '}
+            Please verify that the site URL is:{' '}
             <strong>airdrop.pyth.network</strong>
           </span>
         </div>
