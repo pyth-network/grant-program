@@ -78,8 +78,8 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
                   <EcosystemProviders>
                     <Layout>
                       <NextSeo
-                        title="Price Feed Oracles & Market Data for Smart Contracts"
-                        description="Pyth delivers real-time market data from institutions to smart contracts on any blockchain. Get reliable, accurate price data for your blockchain applications."
+                        title="Pyth Network Retrospective Airdrop"
+                        description="This is the official claim webpage for the Pyth Network Retrospective Airdrop program."
                       />
                       <Component {...pageProps} />
                     </Layout>
