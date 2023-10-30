@@ -49,8 +49,9 @@ export const Layout = ({ children }: LayoutProps) => {
             width={26}
             height={33}
           />
-          <span className="text-right">
-            Placeholder Always Check URL disclaimer placeholder
+          <span>
+            Please verify that the site URL is:{' '}
+            <strong>airdrop.pyth.network</strong>
           </span>
         </div>
       </header>
