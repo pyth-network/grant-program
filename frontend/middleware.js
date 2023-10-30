@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 // Block visitors from these countries
-const BLOCKED_COUNTRIES = ['US']
+const BLOCKED_COUNTRIES = ['US', 'GB']
 
 // Limit middleware pathname config
 export const config = {
