@@ -18,7 +18,7 @@ export function Disclaimer({ onAgree, showModal }: DisclaimerProps) {
         <div className="scrollbar flex max-h-[300px] flex-col gap-3 overflow-auto border-b border-light-35 px-10 py-5 font-body text-base font-light leading-5 tracking-widest">
           <p>
             {`The Pyth Data Association Airdrop Site is a website located at
-            [INSERT URL] (the “Site”). Your use of the Site is entirely at your
+            airdrop.pyth.network (the “Site”). Your use of the Site is entirely at your
             own risk.`}
           </p>
           <p>
