@@ -49,7 +49,7 @@ export function Disclaimer({ onAgree, showModal }: DisclaimerProps) {
             African Republic, The Democratic Republic of Congo, the Democratic
             People's Republic of Korea, the Crimea, Donetsk People’s Republic,
             and Luhansk People’s Republic regions of Ukraine, Cuba, Iran, Libya,
-            Somalia, Sudan, South Sudan, Syria, the USA, [the United Kingdom,]
+            Somalia, Sudan, South Sudan, Syria, the USA, the United Kingdom,
             Yemen, Zimbabwe and any other jurisdiction in which accessing or
             using the Site is prohibited (the “Prohibited Jurisdictions”).`}
           </p>

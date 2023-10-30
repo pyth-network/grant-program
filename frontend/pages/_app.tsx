@@ -56,12 +56,11 @@ function useRedirect() {
 
 const DISCLAIMER_KEY = 'disclaimer-read'
 const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
-  const [showDisclaimer, setShowDisclaimer] = useState(false)
+  const [disclaimerWasRead, setDisclaimerWasRead] = useState(false)
   useLayoutEffect(() => {
     if (typeof window !== 'undefined') {
-      const wasShown = localStorage.getItem(DISCLAIMER_KEY)
-      if (wasShown === 'true') setShowDisclaimer(false)
-      else setShowDisclaimer(true)
+      const wasRead = localStorage.getItem(DISCLAIMER_KEY)
+      if (wasRead === 'true') setDisclaimerWasRead(true)
     }
   }, [])
 
@@ -90,10 +89,10 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
                       reverseOrder={false}
                     />
                     <Disclaimer
-                      showModal={showDisclaimer}
+                      showModal={!disclaimerWasRead}
                       onAgree={() => {
                         localStorage.setItem(DISCLAIMER_KEY, 'true')
-                        setShowDisclaimer(false)
+                        setDisclaimerWasRead(true)
                       }}
                     />
                   </EcosystemProviders>
