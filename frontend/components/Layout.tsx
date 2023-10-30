@@ -8,14 +8,10 @@ import Link from 'next/link'
 import { WELCOME_METADATA } from 'pages'
 import { REVIEW_ELIGIBILITY_METADATA } from 'pages/review-eligibility'
 import { VERIFY_ELIGIBILITY_METADATA } from 'pages/verify-eligibility'
-import { LOGIN_SOLANA_METADATA } from 'pages/login-solana'
-import { CLAIM_TOKENS_METADATA } from 'pages/claim-tokens'
-import { NEXT_STEPS } from 'pages/next-steps'
 import { classNames } from 'utils/classNames'
 import { useRouter } from 'next/router'
 
 import statue from '@images/bg-statue.png'
-import statueWithCoins from '@images/bg-statue-with-coins.png'
 
 type LayoutProps = {
   children: ReactNode
@@ -32,9 +28,6 @@ export const Layout = ({ children }: LayoutProps) => {
     WELCOME_METADATA,
     REVIEW_ELIGIBILITY_METADATA,
     VERIFY_ELIGIBILITY_METADATA,
-    LOGIN_SOLANA_METADATA,
-    CLAIM_TOKENS_METADATA,
-    NEXT_STEPS,
   ]
 
   return (
@@ -96,14 +89,6 @@ export const Layout = ({ children }: LayoutProps) => {
         />
         <span className="absolute -left-[430px] -bottom-24 max-h-[100vh] max-w-[1200px]">
           <Image src={statue} alt="" priority />
-        </span>
-        <span
-          className={classNames(
-            'absolute -left-[430px] -bottom-24 max-h-[100vh] max-w-[1200px] opacity-0 transition duration-1000 ease-out',
-            pathname === NEXT_STEPS.url ? 'opacity-100' : ''
-          )}
-        >
-          <Image src={statueWithCoins} alt="" priority />
         </span>
       </span>
     </>

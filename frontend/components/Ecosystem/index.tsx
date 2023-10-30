@@ -1,7 +1,6 @@
 import { ReactNode } from 'react'
 import { ActivityProvider } from './ActivityProvider'
 import { EligibilityProvider } from './EligibilityProvider'
-import { SignatureProvider } from './SignatureProvider'
 
 export enum Ecosystem {
   SOLANA = 'Solana',
@@ -25,9 +24,7 @@ export function EcosystemProviders({ children }: ProviderProps) {
     // Order matters here EligibilityProvider can use ActivityProvider
     // And SignatureProvider can use both
     <ActivityProvider>
-      <EligibilityProvider>
-        <SignatureProvider>{children}</SignatureProvider>
-      </EligibilityProvider>
+      <EligibilityProvider>{children}</EligibilityProvider>
     </ActivityProvider>
   )
 }
