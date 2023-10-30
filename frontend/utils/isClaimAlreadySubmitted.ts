@@ -22,7 +22,7 @@ function getReceiptPda(
   programId: anchor.web3.PublicKey
 ): [anchor.web3.PublicKey, number] {
   return anchor.web3.PublicKey.findProgramAddressSync(
-    [Buffer.from('receipt'), MerkleTree.hashLeaf(claimInfo.toBuffer())],
+    [Buffer.from('receipt'), Buffer.from(claimInfo.identity, 'utf-8')],
     programId
   )
 }
