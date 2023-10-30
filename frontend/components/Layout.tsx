@@ -83,7 +83,7 @@ export const Layout = ({ children }: LayoutProps) => {
               )
             })}
           </ul>
-          <div className="flex-1 ">
+          <div className="flex-1 overflow-auto">
             {children}
 
             <div className="mt-6">

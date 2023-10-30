@@ -33,7 +33,7 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
     <>
       <Box>
         <h4 className="border-b border-light-35 bg-[#242339] py-8 px-10  font-header text-[28px] font-light leading-[1.2]">
-          Let's Review Your Activity
+          {`Let's Review Your Activity`}
         </h4>
         <div className="px-10 py-8 text-base16">
           <p className="mb-6">
@@ -42,7 +42,7 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
           </p>
 
           <p className="mb-6 font-light">I am active on…</p>
-          <div className="mb-6 grid max-w-[420px] grid-cols-4 gap-4">
+          <div className="mb-6 grid max-w-[420px] grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {Object.values(Ecosystem).map((ecosystem) => {
               if (ecosystem === Ecosystem.DISCORD) return <></>
               else
