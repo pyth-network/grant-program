@@ -111,11 +111,11 @@ impl CosmosMessage {
     }
 
     pub fn check_hashed_payload(
-        payload: &[u8],
+        hashed_message: &[u8],
         signer: &CosmosBech32Address,
         claimant: &Pubkey,
     ) -> Result<()> {
-        if payload
+        if hashed_message
             != CosmosMessage::get_expected_hash(get_expected_payload(claimant).as_bytes(), signer)
         {
             return err!(ErrorCode::SignatureVerificationWrongPayload);
