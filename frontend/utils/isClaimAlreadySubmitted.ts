@@ -1,18 +1,28 @@
 import { web3 } from '@coral-xyz/anchor'
-import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
-import { Keypair } from '@solana/web3.js'
 import { ClaimInfo } from 'claim_sdk/claim'
-import { TokenDispenserProvider } from 'claim_sdk/solana'
-
-// Tokendispenser with randomly generated keypair. Since we don't need a
-// specific one to check if claims were already submitted
-const tokenDispenser = new TokenDispenserProvider(
-  process.env.ENDPOINT!,
-  new NodeWallet(new Keypair()),
-  new web3.PublicKey(process.env.PROGRAM_ID!)
-)
+import { MerkleTree } from 'claim_sdk/merkleTree'
+import * as anchor from '@coral-xyz/anchor'
 
 // isClaimAlreadySubmitted help us check if a claim has already been submitted or not.
-export function isClaimAlreadySubmitted(claimInfo: ClaimInfo) {
-  return tokenDispenser.isClaimAlreadySubmitted(claimInfo)
+export async function isClaimAlreadySubmitted(claimInfo: ClaimInfo) {
+  const programId = new web3.PublicKey(process.env.PROGRAM_ID!)
+  const connection = new anchor.web3.Connection(
+    process.env.ENDPOINT!,
+    anchor.AnchorProvider.defaultOptions()
+  )
+  return (
+    (
+      await connection.getAccountInfo(getReceiptPda(claimInfo, programId)[0])
+    )?.owner.equals(programId) ?? false
+  )
+}
+
+function getReceiptPda(
+  claimInfo: ClaimInfo,
+  programId: anchor.web3.PublicKey
+): [anchor.web3.PublicKey, number] {
+  return anchor.web3.PublicKey.findProgramAddressSync(
+    [Buffer.from('receipt'), MerkleTree.hashLeaf(claimInfo.toBuffer())],
+    programId
+  )
 }
