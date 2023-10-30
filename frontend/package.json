@@ -38,6 +38,7 @@
     "ethers": "^6.6.0",
     "next": "latest",
     "next-auth": "^4.22.3",
+    "next-seo": "^6.4.0",
     "petra-plugin-wallet-adapter": "^0.1.5",
     "pg": "^8.11.1",
     "react": "^18.2.0",
