@@ -1,11 +1,14 @@
 #[cfg(test)]
 use super::secp256k1::Secp256k1TestMessage;
 use {
-    super::secp256k1::{
-        EvmPubkey,
-        SECP256K1_COMPRESSED_PUBKEY_LENGTH,
-        SECP256K1_EVEN_PREFIX,
-        SECP256K1_ODD_PREFIX,
+    super::{
+        get_expected_payload,
+        secp256k1::{
+            EvmPubkey,
+            SECP256K1_COMPRESSED_PUBKEY_LENGTH,
+            SECP256K1_EVEN_PREFIX,
+            SECP256K1_ODD_PREFIX,
+        },
     },
     crate::ErrorCode,
     anchor_lang::{
@@ -74,8 +77,50 @@ impl CosmosMessage {
         })
     }
 
+
     pub fn get_payload(&self) -> &[u8] {
         self.payload.as_slice()
+    }
+
+    pub fn build_message(payload: &[u8], signer: &CosmosBech32Address) -> Vec<u8> {
+        let sign_doc: CosmosStdSignDoc = CosmosStdSignDoc {
+            account_number: "0".to_string(),
+            chain_id:       "".to_string(),
+            fee:            CosmosStdFee {
+                amount: vec![],
+                gas:    "0".to_string(),
+            },
+            memo:           "".to_string(),
+            msgs:           vec![CosmosStdMsg {
+                r#type: EXPECTED_COSMOS_MESSAGE_TYPE.to_string(),
+                value:  CosmosAdr036Value {
+                    data:   base64_standard_engine.encode(payload),
+                    signer: signer.0.clone(),
+                },
+            }],
+            sequence:       "0".to_string(),
+        };
+        return serde_json::to_string(&sign_doc)
+            .unwrap()
+            .as_bytes()
+            .to_vec();
+    }
+
+    pub fn get_expected_hash(payload: &[u8], signer: &CosmosBech32Address) -> [u8; 32] {
+        hash::hashv(&[&CosmosMessage::build_message(payload, signer)]).to_bytes()
+    }
+
+    pub fn check_hashed_payload(
+        hashed_message: &[u8],
+        signer: &CosmosBech32Address,
+        claimant: &Pubkey,
+    ) -> Result<()> {
+        if hashed_message
+            != CosmosMessage::get_expected_hash(get_expected_payload(claimant).as_bytes(), signer)
+        {
+            return err!(ErrorCode::SignatureVerificationWrongPayload);
+        }
+        Ok(())
     }
 }
 
@@ -211,27 +256,7 @@ impl From<&str> for CosmosBech32Address {
 #[cfg(test)]
 impl Secp256k1TestMessage for CosmosMessage {
     fn get_message_with_metadata(&self) -> Vec<u8> {
-        let sign_doc: CosmosStdSignDoc = CosmosStdSignDoc {
-            account_number: "0".to_string(),
-            chain_id:       "".to_string(),
-            fee:            CosmosStdFee {
-                amount: vec![],
-                gas:    "0".to_string(),
-            },
-            memo:           "".to_string(),
-            msgs:           vec![CosmosStdMsg {
-                r#type: EXPECTED_COSMOS_MESSAGE_TYPE.to_string(),
-                value:  CosmosAdr036Value {
-                    data:   base64_standard_engine.encode(&self.payload),
-                    signer: self.signer.0.clone(),
-                },
-            }],
-            sequence:       "0".to_string(),
-        };
-        return serde_json::to_string(&sign_doc)
-            .unwrap()
-            .as_bytes()
-            .to_vec();
+        CosmosMessage::build_message(&self.payload, &self.signer)
     }
 }
 
