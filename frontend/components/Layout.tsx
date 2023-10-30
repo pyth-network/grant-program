@@ -49,7 +49,10 @@ export const Layout = ({ children }: LayoutProps) => {
             width={26}
             height={33}
           />
-          <span>Placeholder Always Check URL disclaimer placeholder</span>
+          <span>
+            Please verify that the site url is:{' '}
+            <strong>airdrop.pyth.network</strong>
+          </span>
         </div>
       </header>
       <div className="relative px-4 pt-28 pb-32 lg:pt-40">
