@@ -39,7 +39,8 @@ describe('signature tests', () => {
 
   test('Evm signature', async () => {
     const evmTestWallet = new TestEvmWallet(
-      new ethers.Wallet(ethers.Wallet.createRandom().privateKey)
+      new ethers.Wallet(ethers.Wallet.createRandom().privateKey),
+      false
     )
     const payload = 'Test payload'
     const signedMessage = await evmTestWallet.signMessage(payload)
@@ -74,9 +75,9 @@ describe('signature tests', () => {
       __dirname,
       '../../integration/keys/cosmos_private_key.json'
     )
-    const injectiveWallet = await TestCosmWasmWallet.fromKeyFile(
+    const injectiveWallet = TestEvmWallet.fromKeyfile(
       cosmosPrivateKeyPath,
-      'inj'
+      true
     )
     const payload = 'Test payload'
     const signedMessage = await injectiveWallet.signMessage(payload)
