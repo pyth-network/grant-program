@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 const BLOCKED_COUNTRIES = [
   'BY',
   'CF',
+  'CD',
   'KP',
   'CU',
   'IR',
