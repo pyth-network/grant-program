@@ -39,7 +39,9 @@ export function middleware(req) {
         />
         <style>
           body {
-            background: radial-gradient(100% 628.91% at 95.63% 10.42%, rgba(230, 218, 254, 0) 0%, #E6DAFE 30.71%, #E6DAFE 71.52%, rgba(230, 218, 254, 0) 100%);
+            background-image: url('https://pyth-og-images.s3.eu-west-2.amazonaws.com/airdrop-blocked-background.png');
+            background-size: cover;
+            background-repeat: no-repeat;
           }
           h1 {
             font-family: "Red Hat Display", sans-serif;
