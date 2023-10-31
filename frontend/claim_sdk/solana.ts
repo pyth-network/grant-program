@@ -31,6 +31,7 @@ import { fetchFundTransaction } from '../utils/api'
 export const ERROR_SIGNING_TX = 'error: signing transaction'
 export const ERROR_FUNDING_TX = 'error: funding transaction'
 export const ERROR_RPC_CONNECTION = 'error: rpc connection'
+export const ERROR_CRAFTING_TX = 'error: crafting transaction'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -244,7 +245,7 @@ export class TokenDispenserProvider {
         )
       }
     } catch (e) {
-      throw new Error(ERROR_RPC_CONNECTION)
+      throw new Error(ERROR_CRAFTING_TX)
     }
 
     let txsSignedOnce

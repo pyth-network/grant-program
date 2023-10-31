@@ -16,6 +16,7 @@ import { Box } from '@components/Box'
 import { SolanaWalletCopyButton } from '@components/buttons/SolanaWalletCopyButton'
 import { setLastStepStatus } from 'pages/_app'
 import {
+  ERROR_CRAFTING_TX,
   ERROR_FUNDING_TX,
   ERROR_RPC_CONNECTION,
   ERROR_SIGNING_TX,
@@ -111,9 +112,9 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
         err.message === ERROR_FUNDING_TX
       ) {
         message = `There was an error while signing the transaction. Please refresh this page and try again. Note: You will not lose your progress when you refresh.`
-      } else if (err.message === ERROR_RPC_CONNECTION) {
+      } else if (err.message === ERROR_CRAFTING_TX) {
         message =
-          'There was a problem with the RPC connection. Please wait a few minutes before trying again. Note: You will not lose your progress if you refresh this page.'
+          'There was a problem while crafting the transaction. Please wait a few minutes before trying again. Note: You will not lose your progress if you refresh this page.'
       } else {
         message = `Try claiming your tokens again by refreshing your browser. If the problem persists, contact our support team on Discord.`
       }
@@ -202,10 +203,10 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
           </div>
           <div className="px-10 py-8 text-base16">
             <p className="mb-6">
-              Please sign your connected wallets. To sign, click the
+              {`Please sign your connected wallets. To sign, click the
               corresponding “sign” button for each wallet. Your wallet will ask
               if you wish to sign the transaction. Confirm by clicking “sign” in
-              your wallet's pop-up window.
+              your wallet's pop-up window.`}
             </p>
             <p className="mb-6">
               Note: You will sign with your Solana wallet at a later stage. No
