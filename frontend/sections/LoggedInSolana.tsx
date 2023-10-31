@@ -21,9 +21,9 @@ export const LoggedInSolana = ({ onBack, onProceed }: StepProps) => {
       </div>
       <div className="px-10 py-8 text-base16">
         <p className="mb-6">
-          PYTH tokens are native to Solana. You need a Solana (SPL) wallet to
-          receive your tokens. Your claimed PYTH tokens will go to the Solana
-          wallet you have connected in the previous step.
+          PYTH tokens are native to Solana. You need a Solana wallet to receive
+          your tokens. Your claimed PYTH tokens will go to the Solana wallet you
+          have connected in the previous step.
         </p>
         <p className="">
           To change the connected wallet please go to the previous step.
