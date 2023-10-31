@@ -50,13 +50,11 @@ export function middleware(req) {
           h1 {
             font-family: "Red Hat Display", sans-serif;
             color: #E6DAFE;
-            margin-top: auto;
-            margin-bottom: auto;
           }
           p {
             font-family: "Red Hat Text", sans-serif;
             color: #E6DAFE;
-            max-width: 500px;
+            max-width: 900px;
           }
         </style>
       </head>
