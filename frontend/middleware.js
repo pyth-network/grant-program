@@ -33,6 +33,10 @@ export function middleware(req) {
     const body = `
     <html>
       <head>
+        <link
+        href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@300;400;600&family=Red+Hat+Mono&family=Red+Hat+Text&display=swap"
+        rel="stylesheet"
+        />
         <style>
           h1 {
             font-family: "Red Hat Display", sans-serif;
