@@ -32,9 +32,35 @@ export function middleware(req) {
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/451
     const body = `
     <html>
+      <head>
+        <link
+        href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@300;400;600&family=Red+Hat+Mono&family=Red+Hat+Text&display=swap"
+        rel="stylesheet"
+        />
+        <style>
+          body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #110F23;
+            height: 100vh;
+            text-align: center;
+          }
+          h1 {
+            font-family: "Red Hat Display", sans-serif;
+            color: #E6DAFE;
+          }
+          p {
+            font-family: "Red Hat Text", sans-serif;
+            color: #E6DAFE;
+            max-width: 900px;
+          }
+        </style>
+      </head>
       <body>
         <h1>Error 451: Unavailable For Legal Reasons</h1>
-        <p>This Site is not available to residents of Belarus, the Central African Republic, The Democratic Republic of Congo, the Democratic People's Republic of Korea, the Crimea, Donetsk People's Republic, and Luhansk People's Republic regions of Ukraine, Cuba, Iran, Libya, Somalia, Sudan, South Sudan, Syria, the USA, the United Kingdom, Yemen, Zimbabwe and any other jurisdiction in which accessing or using the Site is prohibited (the “Prohibited Jurisdictions”).</p>
+        <p>This Site is not available to residents of Belarus, the Central African Republic, The Democratic Republic of Congo, the Democratic People's Republic of Korea, the Crimea, Donetsk People's Republic, and Luhansk People's Republic regions of Ukraine, Cuba, Iran, Libya, Somalia, Sudan, South Sudan, Syria, the USA, the United Kingdom, Yemen, Zimbabwe and any other jurisdiction in which accessing or using the Site is prohibited (the "Prohibited Jurisdictions").</p>
       </body>
     </html>
     `
