@@ -1,4 +1,4 @@
-import Document, { Html, Head, Main, NextScript } from 'next/document'
+import Document, { Head, Html, Main, NextScript } from 'next/document'
 import Script from 'next/script'
 
 class CustomDocument extends Document {
@@ -14,23 +14,11 @@ class CustomDocument extends Document {
             href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@300;400;600&family=Red+Hat+Mono&family=Red+Hat+Text&display=swap"
             rel="stylesheet"
           />
-          <link href="favicon.ico" rel="icon" id="faviconTag" />
+          <link href="favicon.png" rel="icon" id="faviconTag" />
           <link
             rel="apple-touch-icon"
             sizes="180x180"
             href="/apple-touch-icon.png"
-          />
-          <link
-            rel="icon"
-            type="image/png"
-            sizes="32x32"
-            href="/favicon-32x32.png"
-          />
-          <link
-            rel="icon"
-            type="image/png"
-            sizes="16x16"
-            href="/favicon-16x16.png"
           />
           <link rel="manifest" href="/site.webmanifest" />
           <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#242235" />
@@ -40,8 +28,8 @@ class CustomDocument extends Document {
             {`const faviconTag = document.getElementById("faviconTag");
             const isDark = window.matchMedia("(prefers-color-scheme: dark)");
             const changeFavicon = () => {
-              if (isDark.matches) faviconTag.href = "/favicon-light.ico";
-              else faviconTag.href = "/favicon.ico";
+              if (isDark.matches) faviconTag.href = "/favicon.png";
+              else faviconTag.href = "/favicon-dark.png";
             };
             changeFavicon();
             setInterval(changeFavicon, 1000);`}
