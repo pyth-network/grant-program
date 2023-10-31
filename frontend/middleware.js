@@ -1,5 +1,3 @@
-import { NextResponse } from 'next/server'
-
 // Block visitors from these countries
 const BLOCKED_COUNTRIES = [
   'BY',
@@ -23,14 +21,14 @@ export const config = {
   matcher: '/',
 }
 
-export function middleware(req) {
+export function middleware(req, res, next) {
   // Extract country
   const country = req.geo.country
 
   if (BLOCKED_COUNTRIES.includes(country)) {
-    return NextResponse.redirect(new URL('/error/451', req.url))
+    res.statusCode = 451 // Unavailable For Legal Reasons
+    res.end()
   } else {
-    // Continue with the request if the country is not blocked
-    return NextResponse.next()
+    next()
   }
 }
