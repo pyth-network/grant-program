@@ -7,7 +7,7 @@ export const Welcome = ({ onProceed }: { onProceed: () => void }) => {
     <>
       <Box>
         <h4 className="border-b border-light-35 bg-[#242339] py-8 px-10  font-header text-[28px] font-light leading-[1.2]">
-          Welcome to the Pyth Airdrop Claim Process
+          Welcome to the Pyth Airdrop
         </h4>
         <div className="px-10 py-8 text-base16">
           <p className="mb-6">
@@ -24,7 +24,7 @@ export const Welcome = ({ onProceed }: { onProceed: () => void }) => {
               ecosystem.
             </li>
             <li>
-              Received and held Pyth NFT’s from official Pyth community
+              Received and held Pyth NFTs from official Pyth community
               activities.
             </li>
             <li>
@@ -41,10 +41,10 @@ export const Welcome = ({ onProceed }: { onProceed: () => void }) => {
             </strong>
           </p>
           <p>
-            This Claim Process will check your wallet activity and Discord
-            account to calculate how many PYTH tokens you are eligible to claim.
-            Your progress is automatically saved. You will not lose your
-            progress if you leave.
+            This website will check your wallet activity and Discord account to
+            calculate how many PYTH tokens you are eligible to claim. Your
+            progress is automatically saved. You will not lose your progress if
+            you leave.
           </p>
           <div className="mt-12 flex justify-end">
             <ProceedButton onProceed={onProceed} />
