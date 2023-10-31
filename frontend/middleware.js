@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import Blocked from './sections/blocked'
 
 // Block visitors from these countries
 const BLOCKED_COUNTRIES = [
@@ -30,7 +29,7 @@ export function middleware(req) {
 
   if (BLOCKED_COUNTRIES.includes(country)) {
     // make response with status code 451
-    return new NextResponse(<Blocked />, { status: 451 })
+    return new NextResponse(null, { status: 500 })
   } else {
     return NextResponse.next()
   }
