@@ -14,7 +14,7 @@ class CustomDocument extends Document {
             href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@300;400;600&family=Red+Hat+Mono&family=Red+Hat+Text&display=swap"
             rel="stylesheet"
           />
-          <link href="favicon.ico" rel="icon" id="faviconTag" />
+          <link href="favicon.png" rel="icon" id="faviconTag" />
           <link
             rel="apple-touch-icon"
             sizes="180x180"
