@@ -39,9 +39,12 @@ export function middleware(req) {
         />
         <style>
           body {
-            background-image: url('https://pyth-og-images.s3.eu-west-2.amazonaws.com/airdrop-blocked-background.png');
-            background-size: cover;
-            background-repeat: no-repeat;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #110F23;
+            height: 100vh;
+            text-align: center;
           }
           h1 {
             font-family: "Red Hat Display", sans-serif;
