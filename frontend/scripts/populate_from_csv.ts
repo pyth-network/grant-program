@@ -491,6 +491,7 @@ async function main() {
   // Add data to database
   const addClaimInfosStart = Date.now()
   const root = await addClaimInfosToDatabase(pool, claimInfos)
+  console.log('THE ROOT IS :', root.toString('hex'))
   const addClaimInfoEnd = Date.now()
   console.log(
     `\n\nadded claim infos to database time: ${

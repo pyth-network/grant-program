@@ -70,6 +70,7 @@ export async function addClaimInfosToDatabase(
   pool: Pool,
   claimInfos: ClaimInfo[]
 ): Promise<Buffer> {
+  console.log('ADDING ', claimInfos.length, ' CLAIMS INFOS')
   const merkleTreeStart = Date.now()
   const merkleTree = new MerkleTree(
     claimInfos.map((claimInfo) => {
