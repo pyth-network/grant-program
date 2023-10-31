@@ -34,7 +34,7 @@ export function middleware(req) {
     <html>
       <body>
         <h1>Error 451: Unavailable For Legal Reasons</h1>
-        <p>Access to this site is restricted for users accessing from the United States due to legal or regulatory requirements.</p>
+        <p>This Site is not available to residents of Belarus, the Central African Republic, The Democratic Republic of Congo, the Democratic People's Republic of Korea, the Crimea, Donetsk People's Republic, and Luhansk People's Republic regions of Ukraine, Cuba, Iran, Libya, Somalia, Sudan, South Sudan, Syria, the USA, the United Kingdom, Yemen, Zimbabwe and any other jurisdiction in which accessing or using the Site is prohibited (the “Prohibited Jurisdictions”).</p>
       </body>
     </html>
     `
