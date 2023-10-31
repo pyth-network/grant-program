@@ -4,7 +4,7 @@ interface ErrorProps {
   statusCode: number | undefined
 }
 
-const Error: NextPage<ErrorProps> = ({ statusCode }) => {
+const ErrorPage: NextPage<ErrorProps> = ({ statusCode }) => {
   return (
     <p>
       {statusCode
@@ -14,9 +14,9 @@ const Error: NextPage<ErrorProps> = ({ statusCode }) => {
   )
 }
 
-Error.getInitialProps = ({ res, err }: NextPageContext): ErrorProps => {
+ErrorPage.getInitialProps = ({ res, err }: NextPageContext): ErrorProps => {
   const statusCode = res ? res.statusCode : err ? err.statusCode : 404
   return { statusCode }
 }
 
-export default Error
+export default ErrorPage

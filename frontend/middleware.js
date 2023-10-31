@@ -29,7 +29,7 @@ export function middleware(req) {
 
   if (BLOCKED_COUNTRIES.includes(country)) {
     // make response with status code 451
-    return new NextResponse(null, { status: 500 })
+    return NextResponse.redirect('/error/451')
   } else {
     return NextResponse.next()
   }
