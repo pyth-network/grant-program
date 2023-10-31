@@ -28,7 +28,7 @@ export function middleware(req) {
   const country = req.geo.country
 
   if (BLOCKED_COUNTRIES.includes(country)) {
-    return NextResponse.redirect(new URL('/blocked', req.url))
+    return NextResponse.redirect(new URL('/error/451', req.url))
   } else {
     // Continue with the request if the country is not blocked
     return NextResponse.next()
