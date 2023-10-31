@@ -1,4 +1,5 @@
 import Document, { Html, Head, Main, NextScript } from 'next/document'
+import Script from 'next/script'
 
 class CustomDocument extends Document {
   render() {
@@ -13,16 +14,7 @@ class CustomDocument extends Document {
             href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@300;400;600&family=Red+Hat+Mono&family=Red+Hat+Text&display=swap"
             rel="stylesheet"
           />
-          <link
-            href="favicon.ico"
-            rel="icon"
-            media="(prefers-color-scheme: light)"
-          />
-          <link
-            href="favicon-light.ico"
-            rel="icon"
-            media="(prefers-color-scheme: dark)"
-          />
+          <link href="favicon.ico" rel="icon" id="faviconTag" />
           <link
             rel="apple-touch-icon"
             sizes="180x180"
@@ -44,6 +36,16 @@ class CustomDocument extends Document {
           <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#242235" />
           <meta name="msapplication-TileColor" content="#242235" />
           <meta name="theme-color" content="#242235"></meta>
+          <Script id="show-banner" strategy="beforeInteractive">
+            {`const faviconTag = document.getElementById("faviconTag");
+            const isDark = window.matchMedia("(prefers-color-scheme: dark)");
+            const changeFavicon = () => {
+              if (isDark.matches) faviconTag.href = "/favicon-light.ico";
+              else faviconTag.href = "/favicon.ico";
+            };
+            changeFavicon();
+            setInterval(changeFavicon, 1000);`}
+          </Script>
         </Head>
         <body className="min-h-screen">
           <Main />
