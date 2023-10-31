@@ -83,7 +83,7 @@ export async function addClaimInfosToDatabase(
   )
 
   let claimInfoChunks = []
-  const chunkSize = 100
+  const chunkSize = 1000
   const chunkCounts = [...Array(Math.ceil(claimInfos.length / chunkSize))]
 
   const claimInfoChunksStart = Date.now()
@@ -156,15 +156,28 @@ export async function addEvmBreakdownsToDatabase(
   pool: Pool,
   evmBreakdowns: EvmBreakdownRow[]
 ) {
-  for (const evmBreakdown of evmBreakdowns) {
-    await pool.query(
-      'INSERT INTO evm_breakdowns VALUES($1::evm_chain, $2, $3)',
-      [
-        evmBreakdown.chain,
-        evmBreakdown.identity,
-        evmBreakdown.amount.toString(),
-      ]
+  console.log('INSERTING :', evmBreakdowns.length, ' EVM BREAKDOWNS')
+  const chunks = []
+  while (evmBreakdowns.length) {
+    chunks.push(
+      evmBreakdowns.splice(0, 1000).map((row) => {
+        return {
+          chain: row.chain,
+          amount: row.amount.toString(),
+          identity: row.identity,
+        }
+      })
     )
+  }
+
+  const EvmBreakdowns = sql.define({
+    name: 'evm_breakdowns',
+    columns: ['chain', 'identity', 'amount'],
+  })
+
+  for (const chunk of chunks) {
+    const query = EvmBreakdowns.insert(chunk).toQuery()
+    await pool.query(query)
   }
 }
 
@@ -211,15 +224,28 @@ export async function addSolanaBreakdownsToDatabase(
   pool: Pool,
   solanaBreakdowns: SolanaBreakdownRow[]
 ) {
-  for (const solanaBreakdown of solanaBreakdowns) {
-    await pool.query(
-      'INSERT INTO solana_breakdowns VALUES($1::source, $2, $3)',
-      [
-        solanaBreakdown.source,
-        solanaBreakdown.identity,
-        solanaBreakdown.amount.toString(),
-      ]
+  console.log('INSERTING :', solanaBreakdowns.length, ' SOLANA BREAKDOWNS')
+  const chunks = []
+  while (solanaBreakdowns.length) {
+    chunks.push(
+      solanaBreakdowns.splice(0, 1000).map((row) => {
+        return {
+          source: row.source,
+          amount: row.amount.toString(),
+          identity: row.identity,
+        }
+      })
     )
+  }
+
+  const SolanaBreakdowns = sql.define({
+    name: 'solana_breakdowns',
+    columns: ['source', 'identity', 'amount'],
+  })
+
+  for (const chunk of chunks) {
+    const query = SolanaBreakdowns.insert(chunk).toQuery()
+    await pool.query(query)
   }
 }
 
