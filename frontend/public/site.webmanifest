@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "Pyth Network Retrospective Airdrop",
   "short_name": "",
   "icons": [
     {
@@ -15,5 +15,6 @@
   ],
   "theme_color": "#242235",
   "background_color": "#242235",
-  "display": "standalone"
+  "display": "standalone",
+  "iconPath": "./pyth-logo-white.svg"
 }
