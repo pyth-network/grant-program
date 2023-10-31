@@ -38,6 +38,9 @@ export function middleware(req) {
         rel="stylesheet"
         />
         <style>
+          body {
+            background: radial-gradient(100% 628.91% at 95.63% 10.42%, rgba(230, 218, 254, 0) 0%, #E6DAFE 30.71%, #E6DAFE 71.52%, rgba(230, 218, 254, 0) 100%);
+          }
           h1 {
             font-family: "Red Hat Display", sans-serif;
             color: #E6DAFE;
@@ -48,7 +51,7 @@ export function middleware(req) {
           }
         </style>
       </head>
-      <body style="background-color: #110F23;">
+      <body>
         <h1>Error 451: Unavailable For Legal Reasons</h1>
         <p>This Site is not available to residents of Belarus, the Central African Republic, The Democratic Republic of Congo, the Democratic People's Republic of Korea, the Crimea, Donetsk People's Republic, and Luhansk People's Republic regions of Ukraine, Cuba, Iran, Libya, Somalia, Sudan, South Sudan, Syria, the USA, the United Kingdom, Yemen, Zimbabwe and any other jurisdiction in which accessing or using the Site is prohibited (the “Prohibited Jurisdictions”).</p>
       </body>
