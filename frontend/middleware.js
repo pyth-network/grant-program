@@ -40,12 +40,13 @@ export function middleware(req) {
     `
 
     // NextResponse object does not have a body property so we use Response instead
-    return new Response(body, {
-      status: 451,
-      headers: {
-        'Content-Type': 'text/html',
-      },
-    })
+    // return new Response(body, {
+    //   status: 451,
+    //   headers: {
+    //     'Content-Type': 'text/html',
+    //   },
+    // })
+    return NextResponse.redirect(new URL('/_error', request.url))
   } else {
     // Continue with the request if the country is not blocked
     return NextResponse.next()
