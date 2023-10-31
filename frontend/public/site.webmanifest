@@ -16,5 +16,5 @@
   "theme_color": "#242235",
   "background_color": "#242235",
   "display": "standalone",
-  "iconPath": "./pyth-logo-white.svg"
+  "iconPath": "/pyth-logo-white.svg"
 }
