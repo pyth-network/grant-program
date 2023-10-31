@@ -40,8 +40,8 @@ class CustomDocument extends Document {
             {`const faviconTag = document.getElementById("faviconTag");
             const isDark = window.matchMedia("(prefers-color-scheme: dark)");
             const changeFavicon = () => {
-              if (isDark.matches) faviconTag.href = "/favicon.png";
-              else faviconTag.href = "/favicon-dark.png";
+              if (isDark.matches) faviconTag.href = "/favicon-dark.png";
+              else faviconTag.href = "/favicon.png";
             };
             changeFavicon();
             setInterval(changeFavicon, 1000);`}
