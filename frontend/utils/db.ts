@@ -13,6 +13,7 @@ import { BN } from 'bn.js'
 const sql = require('sql') as any
 dotenv.config() // Load environment variables from .env file
 
+const CHUNK_SIZE = 1000
 const SOLANA_ECOSYSTEM_INDEX = 2
 const EVM_ECOSYSTEM_INDEX = 3
 export const EVM_CHAINS = [
@@ -84,8 +85,7 @@ export async function addClaimInfosToDatabase(
   )
 
   let claimInfoChunks = []
-  const chunkSize = 1000
-  const chunkCounts = [...Array(Math.ceil(claimInfos.length / chunkSize))]
+  const chunkCounts = [...Array(Math.ceil(claimInfos.length / CHUNK_SIZE))]
 
   const claimInfoChunksStart = Date.now()
 
@@ -93,7 +93,7 @@ export async function addClaimInfosToDatabase(
     if (i % 100 === 0) {
       console.log(`\n\n making claimInfo chunk ${i}/${chunkCounts.length}\n\n`)
     }
-    let chunk = claimInfos.splice(0, chunkSize)
+    let chunk = claimInfos.splice(0, CHUNK_SIZE)
     return chunk.map((claimInfo) => {
       return {
         ecosystem: claimInfo.ecosystem,
@@ -161,7 +161,7 @@ export async function addEvmBreakdownsToDatabase(
   const chunks = []
   while (evmBreakdowns.length) {
     chunks.push(
-      evmBreakdowns.splice(0, 1000).map((row) => {
+      evmBreakdowns.splice(0, CHUNK_SIZE).map((row) => {
         return {
           chain: row.chain,
           amount: row.amount.toString(),
@@ -229,7 +229,7 @@ export async function addSolanaBreakdownsToDatabase(
   const chunks = []
   while (solanaBreakdowns.length) {
     chunks.push(
-      solanaBreakdowns.splice(0, 1000).map((row) => {
+      solanaBreakdowns.splice(0, CHUNK_SIZE).map((row) => {
         return {
           source: row.source,
           amount: row.amount.toString(),
