@@ -39,24 +39,24 @@ export function middleware(req) {
         />
         <style>
           body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             background-color: #110F23;
+            height: 100vh;
             text-align: center;
           }
           h1 {
             font-family: "Red Hat Display", sans-serif;
             color: #E6DAFE;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            margin-top: auto;
+            margin-bottom: auto;
           }
           p {
             font-family: "Red Hat Text", sans-serif;
             color: #E6DAFE;
-            position: absolute;
-            top: 60%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            max-width: 500px;
           }
         </style>
       </head>
