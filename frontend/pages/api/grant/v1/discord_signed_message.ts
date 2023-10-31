@@ -36,8 +36,6 @@ export default async function handler(
   const claimant = new PublicKey(req.query.publicKey) // The claimant's public key, it will receive the tokens
   const session = await getServerSession(req, res, authOptions)
 
-  console.log(session)
-
   if (session && session.user && session.user.hashedUserId) {
     const signedMessage = signDiscordMessage(
       session.user.hashedUserId,
