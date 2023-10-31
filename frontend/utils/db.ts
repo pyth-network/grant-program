@@ -13,6 +13,7 @@ import { BN } from 'bn.js'
 const sql = require('sql') as any
 dotenv.config() // Load environment variables from .env file
 
+const CHUNK_SIZE = 1000
 const SOLANA_ECOSYSTEM_INDEX = 2
 const EVM_ECOSYSTEM_INDEX = 3
 export const EVM_CHAINS = [
@@ -70,6 +71,7 @@ export async function addClaimInfosToDatabase(
   pool: Pool,
   claimInfos: ClaimInfo[]
 ): Promise<Buffer> {
+  console.log('ADDING :', claimInfos.length, ' CLAIM INFOS')
   const merkleTreeStart = Date.now()
   const merkleTree = new MerkleTree(
     claimInfos.map((claimInfo) => {
@@ -83,8 +85,7 @@ export async function addClaimInfosToDatabase(
   )
 
   let claimInfoChunks = []
-  const chunkSize = 100
-  const chunkCounts = [...Array(Math.ceil(claimInfos.length / chunkSize))]
+  const chunkCounts = [...Array(Math.ceil(claimInfos.length / CHUNK_SIZE))]
 
   const claimInfoChunksStart = Date.now()
 
@@ -92,7 +93,7 @@ export async function addClaimInfosToDatabase(
     if (i % 100 === 0) {
       console.log(`\n\n making claimInfo chunk ${i}/${chunkCounts.length}\n\n`)
     }
-    let chunk = claimInfos.splice(0, chunkSize)
+    let chunk = claimInfos.splice(0, CHUNK_SIZE)
     return chunk.map((claimInfo) => {
       return {
         ecosystem: claimInfo.ecosystem,
@@ -156,15 +157,28 @@ export async function addEvmBreakdownsToDatabase(
   pool: Pool,
   evmBreakdowns: EvmBreakdownRow[]
 ) {
-  for (const evmBreakdown of evmBreakdowns) {
-    await pool.query(
-      'INSERT INTO evm_breakdowns VALUES($1::evm_chain, $2, $3)',
-      [
-        evmBreakdown.chain,
-        evmBreakdown.identity,
-        evmBreakdown.amount.toString(),
-      ]
+  console.log('INSERTING :', evmBreakdowns.length, ' EVM BREAKDOWNS')
+  const chunks = []
+  while (evmBreakdowns.length) {
+    chunks.push(
+      evmBreakdowns.splice(0, CHUNK_SIZE).map((row) => {
+        return {
+          chain: row.chain,
+          amount: row.amount.toString(),
+          identity: row.identity,
+        }
+      })
     )
+  }
+
+  const EvmBreakdowns = sql.define({
+    name: 'evm_breakdowns',
+    columns: ['chain', 'identity', 'amount'],
+  })
+
+  for (const chunk of chunks) {
+    const query = EvmBreakdowns.insert(chunk).toQuery()
+    await pool.query(query)
   }
 }
 
@@ -211,15 +225,28 @@ export async function addSolanaBreakdownsToDatabase(
   pool: Pool,
   solanaBreakdowns: SolanaBreakdownRow[]
 ) {
-  for (const solanaBreakdown of solanaBreakdowns) {
-    await pool.query(
-      'INSERT INTO solana_breakdowns VALUES($1::source, $2, $3)',
-      [
-        solanaBreakdown.source,
-        solanaBreakdown.identity,
-        solanaBreakdown.amount.toString(),
-      ]
+  console.log('INSERTING :', solanaBreakdowns.length, ' SOLANA BREAKDOWNS')
+  const chunks = []
+  while (solanaBreakdowns.length) {
+    chunks.push(
+      solanaBreakdowns.splice(0, CHUNK_SIZE).map((row) => {
+        return {
+          source: row.source,
+          amount: row.amount.toString(),
+          identity: row.identity,
+        }
+      })
     )
+  }
+
+  const SolanaBreakdowns = sql.define({
+    name: 'solana_breakdowns',
+    columns: ['source', 'identity', 'amount'],
+  })
+
+  for (const chunk of chunks) {
+    const query = SolanaBreakdowns.insert(chunk).toQuery()
+    await pool.query(query)
   }
 }
 
