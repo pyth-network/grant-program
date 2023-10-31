@@ -46,7 +46,7 @@ export function middleware(req) {
     //     'Content-Type': 'text/html',
     //   },
     // })
-    return NextResponse.redirect(new URL('/_error', request.url))
+    return NextResponse.redirect(new URL('/_error', req.url))
   } else {
     // Continue with the request if the country is not blocked
     return NextResponse.next()
