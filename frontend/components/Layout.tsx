@@ -1,10 +1,10 @@
 import Image from 'next/image'
-import React, { ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
+import { ReactNode } from 'react'
 
 import bg from '../images/bg.png'
 
-import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { WELCOME_METADATA } from 'pages'
 import { REVIEW_ELIGIBILITY_METADATA } from 'pages/review-eligibility'
 import { VERIFY_ELIGIBILITY_METADATA } from 'pages/verify-eligibility'
@@ -12,7 +12,6 @@ import { LOGIN_SOLANA_METADATA } from 'pages/login-solana'
 import { CLAIM_TOKENS_METADATA } from 'pages/claim-tokens'
 import { NEXT_STEPS } from 'pages/next-steps'
 import { classNames } from 'utils/classNames'
-import { useRouter } from 'next/router'
 
 import statue from '@images/bg-statue.png'
 import statueWithCoins from '@images/bg-statue-with-coins.png'
@@ -49,7 +48,8 @@ export const Layout = ({ children }: LayoutProps) => {
             width={26}
             height={33}
           />
-          <span>
+
+          <span className="text-right">
             Please verify that the site URL is:{' '}
             <strong>airdrop.pyth.network</strong>
           </span>

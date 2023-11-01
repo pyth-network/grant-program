@@ -1,11 +1,11 @@
-import { useSignMessage } from 'hooks/useSignMessage'
-import { useState, useCallback } from 'react'
-import Signed from '@images/signed.inline.svg'
-import { classNames } from 'utils/classNames'
-import { useSignature } from '@components/Ecosystem/SignatureProvider'
 import { Ecosystem } from '@components/Ecosystem'
+import { useSignature } from '@components/Ecosystem/SignatureProvider'
+import Signed from '@images/signed.inline.svg'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
+import { useSignMessage } from 'hooks/useSignMessage'
 import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
+import { useCallback, useState } from 'react'
+import { classNames } from 'utils/classNames'
 
 export type EcosystemSignButtonProps = {
   ecosystem: Ecosystem
@@ -69,7 +69,7 @@ export function EcosystemSignButton({
       onClick={signMessageWrapper}
       disabled={isDisabled || isSigned}
     >
-      <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+      <span className="relative inline-flex items-center gap-1 whitespace-nowrap  sm:gap-2.5">
         <span className="flex items-center gap-3">
           {isSigned ? (
             <>
