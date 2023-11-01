@@ -12,7 +12,7 @@ export default async function handlerEvmBreakdown(
   res: NextApiResponse
 ) {
   const { identity } = req.query
-  if (identity === undefined) {
+  if (identity === undefined || identity instanceof Array) {
     res.status(400).json({
       error: "Must provide the 'identity' query parameter",
     })
@@ -22,7 +22,7 @@ export default async function handlerEvmBreakdown(
   try {
     const result = await pool.query(
       'SELECT chain, amount FROM evm_breakdowns WHERE identity = $1',
-      [identity]
+      [identity.toLowerCase()]
     )
     if (result.rows.length == 0) {
       res.status(404).json({
