@@ -11,5 +11,12 @@ const NoSSREligibility = dynamic(() => import('@sections/WalletsEligibility'), {
 export default function VerifyEligibilityPage() {
   const router = useRouter()
 
-  return <NoSSREligibility onBack={() => router.push('/verify-eligibility')} />
+  return (
+    <NoSSREligibility
+      onBack={() => router.push('/verify-eligibility')}
+      onProceed={(eligibleTokens: string) =>
+        router.push(`/next-steps?eligibleTokens=${eligibleTokens}`)
+      }
+    />
+  )
 }

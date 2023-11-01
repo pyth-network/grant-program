@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { WELCOME_METADATA } from 'pages'
 import { REVIEW_ELIGIBILITY_METADATA } from 'pages/review-eligibility'
 import { VERIFY_ELIGIBILITY_METADATA } from 'pages/verify-eligibility'
+import { NEXT_STEPS } from 'pages/next-steps'
 import { classNames } from 'utils/classNames'
 import { useRouter } from 'next/router'
 
@@ -28,6 +29,7 @@ export const Layout = ({ children }: LayoutProps) => {
     WELCOME_METADATA,
     REVIEW_ELIGIBILITY_METADATA,
     VERIFY_ELIGIBILITY_METADATA,
+    NEXT_STEPS,
   ]
 
   return (
