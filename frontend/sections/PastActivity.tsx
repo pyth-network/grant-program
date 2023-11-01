@@ -49,7 +49,7 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
                 return (
                   <CheckBox
                     key={ecosystem}
-                    label={ecosystem}
+                    label={ecosystem === Ecosystem.EVM ? 'EVM' : ecosystem}
                     isActive={activity[ecosystem]}
                     onChange={onChangeForEcosystem(ecosystem)}
                   />
