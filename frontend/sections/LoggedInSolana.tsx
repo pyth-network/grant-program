@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { WalletConnectedButton } from '@components/wallets/WalletButton'
-import { truncateAddress } from 'utils/truncateAddress'
-import { ProceedButton, BackButton } from '@components/buttons'
-import { StepProps } from './common'
 import { Box } from '@components/Box'
+import { BackButton, ProceedButton } from '@components/buttons'
+import { WalletConnectedButton } from '@components/wallets/WalletButton'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { useMemo } from 'react'
+import { truncateAddress } from 'utils/truncateAddress'
+import { StepProps } from './common'
 
 export const LoggedInSolana = ({ onBack, onProceed }: StepProps) => {
   const { publicKey, wallet, disconnect } = useWallet()
@@ -19,7 +19,7 @@ export const LoggedInSolana = ({ onBack, onProceed }: StepProps) => {
         </h4>
         <BackButton onBack={onBack} />
       </div>
-      <div className="px-10 py-8 text-base16">
+      <div className="px-4 py-8 text-base sm:px-10 sm:text-base16">
         <p className="mb-6">
           PYTH tokens are native to Solana. You need a Solana wallet to receive
           your tokens. Your claimed PYTH tokens will go to the Solana wallet you

@@ -1,15 +1,15 @@
 import { Ecosystem } from '@components/Ecosystem'
 import { RowLabelButton } from '@components/buttons/RowLabelButton'
 import {
-  BreakdownModalRowInfo,
   BreakdownModal,
+  BreakdownModalRowInfo,
 } from '@components/modal/BreakdownModal'
+import Defi from '@images/defi.inline.svg'
+import Nft from '@images/nft.inline.svg'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { SolanaBreakdown, fetchSolanaBreakdown } from 'utils/api'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
-import Nft from '@images/nft.inline.svg'
-import Defi from '@images/defi.inline.svg'
 
 export function SolanaRowLabelWrapper() {
   const label = getEcosystemTableLabel(Ecosystem.SOLANA)
@@ -38,7 +38,11 @@ export function SolanaRowLabelWrapper() {
   }, [setBreakdownModalRowInfo, identity])
 
   if (breakdownModalRowInfo === undefined)
-    return <span className="font-header text-base18 font-thin">{label}</span>
+    return (
+      <span className="pr-2 font-header text-base font-thin leading-none sm:text-base18">
+        {label}
+      </span>
+    )
 
   return (
     <>

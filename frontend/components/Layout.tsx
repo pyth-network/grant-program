@@ -1,15 +1,14 @@
 import Image from 'next/image'
-import React, { ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
+import { ReactNode } from 'react'
 
 import bg from '../images/bg.png'
 
-import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { WELCOME_METADATA } from 'pages'
 import { REVIEW_ELIGIBILITY_METADATA } from 'pages/review-eligibility'
 import { VERIFY_ELIGIBILITY_METADATA } from 'pages/verify-eligibility'
 import { classNames } from 'utils/classNames'
-import { useRouter } from 'next/router'
 
 import statue from '@images/bg-statue.png'
 
@@ -42,7 +41,8 @@ export const Layout = ({ children }: LayoutProps) => {
             width={26}
             height={33}
           />
-          <span>
+
+          <span className="text-right">
             Please verify that the site URL is:{' '}
             <strong>airdrop.pyth.network</strong>
           </span>
