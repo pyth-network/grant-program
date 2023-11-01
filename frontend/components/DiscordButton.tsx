@@ -39,7 +39,7 @@ export function DiscordButton({ disableOnAuth }: DiscordButtonProps) {
 
     return {
       logo: <Discord />,
-      text: 'Sign In',
+      text: 'sign in',
     }
   }, [status, data?.user])
 
