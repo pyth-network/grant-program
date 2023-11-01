@@ -50,7 +50,11 @@ function useRedirect() {
     // If the pathname for the current page is the once used for discord oauth,
     // don't store it.
     if (pathname === '/discord-login' || pathname === '/discord-logout') return
-    else setLastStepStatus(`${pathname}?${params.toString()}`)
+    else {
+      const paramsStr = params.toString()
+      if (paramsStr === '') setLastStepStatus(pathname)
+      else setLastStepStatus(`${pathname}?${params.toString()}`)
+    }
   }, [params, pathname])
 }
 
