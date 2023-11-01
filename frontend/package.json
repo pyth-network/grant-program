@@ -33,6 +33,7 @@
     "@solana/web3.js": "^1.36.0",
     "@svgr/webpack": "^8.0.1",
     "@tippyjs/react": "^4.2.6",
+    "@vercel/analytics": "^1.1.1",
     "chain-registry": "^1.20.0",
     "dotenv": "^16.0.0",
     "ethers": "^6.6.0",

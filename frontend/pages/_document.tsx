@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react'
 import Document, { Head, Html, Main, NextScript } from 'next/document'
 import Script from 'next/script'
 
@@ -38,6 +39,7 @@ class CustomDocument extends Document {
         <body className="min-h-screen">
           <Main />
           <NextScript />
+          <Analytics />
         </body>
       </Html>
     )
