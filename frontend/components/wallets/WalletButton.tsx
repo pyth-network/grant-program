@@ -1,8 +1,8 @@
-import { ReactElement, useLayoutEffect, useState } from 'react'
-import { truncateAddress } from 'utils/truncateAddress'
+import Modal from '@components/Modal'
 import Wallet from '@images/wallet.inline.svg'
 import Image from 'next/image'
-import Modal from '@components/Modal'
+import { ReactElement, useLayoutEffect, useState } from 'react'
+import { truncateAddress } from 'utils/truncateAddress'
 
 export type WalletConnectedButtonProps = {
   onClick: () => void
@@ -29,15 +29,16 @@ export function WalletConnectedButton({
 
   return (
     <button
-      className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light disabled:text-light disabled:before:bg-dark"
+      className="btn before:btn-bg btn--dark min-w-[127px] before:bg-dark hover:text-dark hover:before:bg-light disabled:text-light disabled:before:bg-dark sm:min-w-[207px]"
       onClick={onClick}
       onMouseEnter={() => !disabled && setButtonText(onHoverText)}
       onMouseLeave={() => !disabled && setButtonText(dispAddress)}
       disabled={disabled}
     >
-      <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+      <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap pt-1">
+        {/* hack here pt-1 to make it centered visually */}
         <WalletIcon icon={icon} />
-        <span>{buttonText}</span>
+        <span className="text-xs sm:text-base">{buttonText}</span>
       </span>
     </button>
   )
@@ -45,10 +46,10 @@ export function WalletConnectedButton({
 
 export function WalletLoadingButton() {
   return (
-    <button className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light">
+    <button className="btn before:btn-bg btn--dark min-w-[107px] before:bg-dark hover:text-dark hover:before:bg-light sm:min-w-[207px]">
       <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
         <WalletIcon />
-        <span>Connecting...</span>
+        <span className="text-xs sm:text-base">Connecting...</span>
       </span>
     </button>
   )
@@ -90,12 +91,12 @@ export function WalletModalButton({ wallets }: WalletModalButtonProps) {
   return (
     <>
       <button
-        className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light"
+        className="btn before:btn-bg btn--dark min-w-[127px] before:bg-dark hover:text-dark hover:before:bg-light sm:min-w-[207px]"
         onClick={() => openModal(true)}
       >
         <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
           <Wallet />
-          <span>connect wallet</span>
+          <span className="text-xs sm:text-base">connect wallet</span>
         </span>
       </button>
       {modal && <WalletModal openModal={openModal} wallets={wallets} />}
@@ -135,7 +136,7 @@ export type SingleWalletViewProps = {
 export function SingleWalletView({ wallet, onSelect }: SingleWalletViewProps) {
   return (
     <button
-      className="btn before:btn-bg btn--dark min-w-[207px]  before:bg-dark hover:text-dark hover:before:bg-light"
+      className="btn before:btn-bg btn--dark min-w-[127px] before:bg-dark hover:text-dark hover:before:bg-light sm:min-w-[207px]"
       onClick={() => {
         wallet.onSelect()
         onSelect()

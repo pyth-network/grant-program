@@ -37,7 +37,7 @@ export function EVMRowLabelWrapper() {
   }, [setBreakdownModalRowInfo, identity])
 
   if (breakdownModalRowInfo === undefined)
-    return <span className="font-header text-base18 font-thin">{label}</span>
+    return <span className="font-header text-base leading-none sm:text-base18 font-thin pr-2">{label}</span>
 
   return (
     <>
