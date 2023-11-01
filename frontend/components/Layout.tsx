@@ -47,7 +47,7 @@ export const Layout = ({ children }: LayoutProps) => {
 
           <span className="text-right">
             Please verify that the site URL is:{' '}
-            <strong>airdrop.pyth.network</strong>
+            <strong>https://airdrop.pyth.network/</strong>
           </span>
         </div>
       </header>
