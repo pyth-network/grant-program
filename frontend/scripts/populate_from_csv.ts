@@ -373,6 +373,8 @@ function parseDiscordClaims(): { address: string; alloc: string }[] {
       console.log(
         `skipping discord dev claim for ${row.address} because it is already in discord.csv`
       )
+      console.log(hashDiscordUserId(DISCORD_HASH_SALT, '1121897637289934959'))
+      console.log(hashDiscordUserId(DISCORD_HASH_SALT, '1039850202636484689'))
     }
     return isUniqueDevAddress
   })

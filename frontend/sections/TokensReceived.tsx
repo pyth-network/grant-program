@@ -26,7 +26,7 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
             }}
             type={'secondary'}
           >
-            Claim Again
+            Restart
           </Button>
         </div>
         <div className="px-4 py-8 text-base sm:px-10 sm:text-base16">
@@ -94,10 +94,6 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
                 </span>
               </Link>
             </div>
-            {/* TODO: link to governance later */}
-            <Button onClick={() => {}} type={'primary'}>
-              explore governance
-            </Button>
           </div>
         </div>
       </Box>
