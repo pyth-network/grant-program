@@ -2,11 +2,11 @@ import { Ecosystem } from '@components/Ecosystem'
 import { EvmLogo } from '@components/EvmLogo'
 import { RowLabelButton } from '@components/buttons/RowLabelButton'
 import {
-  BreakdownModalRowInfo,
   BreakdownModal,
+  BreakdownModalRowInfo,
 } from '@components/modal/BreakdownModal'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { EvmChainAllocation, fetchEvmBreakdown } from 'utils/api'
 import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { getEvmName } from 'utils/getEvmName'
@@ -37,7 +37,11 @@ export function EVMRowLabelWrapper() {
   }, [setBreakdownModalRowInfo, identity])
 
   if (breakdownModalRowInfo === undefined)
-    return <span className="font-header text-base leading-none sm:text-base18 font-thin pr-2">{label}</span>
+    return (
+      <span className="pr-2 font-header text-base font-thin leading-none sm:text-base18">
+        {label}
+      </span>
+    )
 
   return (
     <>

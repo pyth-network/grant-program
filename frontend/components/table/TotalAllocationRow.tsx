@@ -15,7 +15,7 @@ export function TotalAllocationRow({
           </span>
         </div>
       </td>
-      <td className="min-w-[100px] sm:min-w-[130px] border-l border-light-35 bg-dark-25">
+      <td className="min-w-[100px] border-l border-light-35 bg-dark-25 sm:min-w-[130px]">
         <span className=" flex min-h-[60px]  items-center justify-center gap-1 text-[20px] font-semibold">
           {totalGrantedCoins} <Coin />{' '}
         </span>
