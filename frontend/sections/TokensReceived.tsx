@@ -26,12 +26,12 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
             }}
             type={'secondary'}
           >
-            Restart
+            Restart Process
           </Button>
         </div>
         <div className="px-4 py-8 text-base sm:px-10 sm:text-base16">
           <h3 className="mb-8 flex items-center gap-2 font-header text-[36px] font-light">
-            You Received{' '}
+            You are Eligible for{' '}
             <span className="flex items-center gap-2 font-bold">
               {totalCoinsClaimed === null ? (
                 'N/A'
@@ -43,13 +43,16 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
             </span>
           </h3>
           <p className="mb-6">
-            You can stake your PYTH tokens to participate in Pyth Network’s
-            governance, secure the network, and vote on important decisions.
+            The purpose of the Pyth Network Retrospective Airdrop Program is to
+            help bring the Pyth Network to a permissionless, decentralized, and
+            self-sustainable mainnet state.
           </p>
 
           <p>
-            Follow us on our socials to stay updated on grant opportunities,
-            developer updates, and community events!
+            Please note that, as of November 1, 2023, the date when eligible
+            participants can claim their airdrop allocations has not been
+            announced. You can follow the official Pyth Network social channels
+            to stay updated.
           </p>
 
           <div
