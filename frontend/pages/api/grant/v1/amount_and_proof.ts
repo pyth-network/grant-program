@@ -1,4 +1,3 @@
-import { id } from 'ethers'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { Pool } from 'pg'
 
