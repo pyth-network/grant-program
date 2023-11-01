@@ -26,12 +26,12 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
             }}
             type={'secondary'}
           >
-            Restart Process
+            Start Over
           </Button>
         </div>
         <div className="px-4 py-8 text-base sm:px-10 sm:text-base16">
           <h3 className="mb-8 flex items-center gap-2 font-header text-[36px] font-light">
-            You are Eligible for{' '}
+            You are eligible for{' '}
             <span className="flex items-center gap-2 font-bold">
               {totalCoinsClaimed === null ? (
                 'N/A'
@@ -43,16 +43,15 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
             </span>
           </h3>
           <p className="mb-6">
-            The purpose of the Pyth Network Retrospective Airdrop Program is to
-            help bring the Pyth Network to a permissionless, decentralized, and
-            self-sustainable mainnet state.
+            Return to this site once the Pyth airdrop is live to claim your
+            tokens.
           </p>
 
           <p>
-            Please note that, as of November 1, 2023, the date when eligible
-            participants can claim their airdrop allocations has not been
-            announced. You can follow the official Pyth Network social channels
-            to stay updated.
+            As of November 1, 2023, the date when eligible participants can
+            claim their tokens has not been announced. Follow the Pyth Network
+            social channels to stay updated on the airdrop and learn more about
+            grant opportunities, developer updates and community events.
           </p>
 
           <div
