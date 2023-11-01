@@ -13,10 +13,10 @@ export default function VerifyEligibilityPage() {
 
   return (
     <Box>
-      <h4 className="border-b border-light-35 bg-[#242339] py-8 px-10  font-header text-[28px] font-light leading-[1.2]">
+      <h4 className="border-b border-light-35 bg-[#242339] py-8 px-4 sm:px-10  font-header text-[28px] font-light leading-[1.2]">
         Verify Eligibility
       </h4>
-      <div className="px-10 py-8 text-base16">
+      <div className="px-4 sm:px-10 py-8 text-base sm:text-base16">
         <p className="mb-6">
           Please connect your wallets and Discord account according to the boxes
           you checked in <strong>Step 2</strong>. You can go back and change any
