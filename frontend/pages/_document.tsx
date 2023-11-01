@@ -5,6 +5,19 @@ class CustomDocument extends Document {
   render() {
     return (
       <Html>
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-C2TFD85LKJ"
+        />
+        <Script id="google-tag">
+          {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'G-C2TFD85LKJ');
+        `}
+        </Script>
         <Head>
           <link
             href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=Urbanist:wght@400;600;700&display=swap"
