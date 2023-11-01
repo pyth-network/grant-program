@@ -33,18 +33,13 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
           <h3 className="mb-8 flex items-center gap-2 font-header text-[26px] font-light sm:text-[36px]">
             You are eligible for{' '}
             <span className="flex items-center gap-2 font-bold">
-              {/* {totalCoinsClaimed === null ? (
+              {totalCoinsClaimed === null ? (
                 'N/A'
               ) : (
                 <>
                   {totalCoinsClaimed} <Pyth />
                 </>
-              )} */}
-              {
-                <>
-                  10000 <Pyth />
-                </>
-              }
+              )}
             </span>
           </h3>
           <p className="mb-6">
