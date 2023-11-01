@@ -4,13 +4,13 @@ import { ReactNode } from 'react'
 
 import bg from '../images/bg.png'
 
+import statueWithCoins from '@images/bg-statue-with-coins.png'
 import { useRouter } from 'next/router'
 import { WELCOME_METADATA } from 'pages'
+import { NEXT_STEPS } from 'pages/next-steps'
 import { REVIEW_ELIGIBILITY_METADATA } from 'pages/review-eligibility'
 import { VERIFY_ELIGIBILITY_METADATA } from 'pages/verify-eligibility'
-import { NEXT_STEPS } from 'pages/next-steps'
 import { classNames } from 'utils/classNames'
-import statueWithCoins from '@images/bg-statue-with-coins.png'
 
 import statue from '@images/bg-statue.png'
 
@@ -51,7 +51,7 @@ export const Layout = ({ children }: LayoutProps) => {
           </span>
         </div>
       </header>
-      <div className="relative px-4 pt-28 pb-32 lg:pt-40">
+      <div className="relative px-4 pt-20 pb-32 sm:pt-28 lg:pt-40">
         <div className="mx-auto max-w-[997px] justify-between gap-2.5 lg:flex">
           <ul
             className={classNames(
