@@ -32,7 +32,7 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
   return (
     <>
       <Box>
-        <h4 className="border-b border-light-35 bg-[#242339] py-8 px-4 sm:px-10  font-header text-[28px] font-light leading-[1.2]">
+        <h4 className="border-b border-light-35 bg-[#242339] py-8 px-4 font-header  text-[28px] font-light leading-[1.2] sm:px-10">
           {`Let's Review Your Activity`}
         </h4>
         <div className="px-4 py-8 text-base sm:px-10 sm:text-base16">
