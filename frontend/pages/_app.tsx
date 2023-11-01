@@ -39,6 +39,8 @@ function useRedirect() {
     // These pathnames are being loaded when we have to oauth with Discord
     // We shouldn't be redirecting the user from these pages
     if (pathname === '/discord-login' || pathname === '/discord-logout') return
+
+    console.log(lastStep)
     //RULES:
     // 1. no last state -> redirect to welcome page
     // 2. there is a last state -> redirect to that page
@@ -50,7 +52,10 @@ function useRedirect() {
     // If the pathname for the current page is the once used for discord oauth,
     // don't store it.
     if (pathname === '/discord-login' || pathname === '/discord-logout') return
-    else setLastStepStatus(`${pathname}?${params.toString()}`)
+    else
+      setLastStepStatus(
+        `${pathname}${params.toString() ? '?' + params.toString() : ''}`
+      )
   }, [params, pathname])
 }
 
