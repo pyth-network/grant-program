@@ -5,7 +5,7 @@ import { SignatureProvider } from './SignatureProvider'
 
 export enum Ecosystem {
   SOLANA = 'Solana',
-  EVM = 'Evm',
+  EVM = 'EVM',
   APTOS = 'Aptos',
   SUI = 'Sui',
   INJECTIVE = 'Injective',
