@@ -40,7 +40,6 @@ function useRedirect() {
     // We shouldn't be redirecting the user from these pages
     if (pathname === '/discord-login' || pathname === '/discord-logout') return
 
-    console.log(lastStep)
     //RULES:
     // 1. no last state -> redirect to welcome page
     // 2. there is a last state -> redirect to that page
