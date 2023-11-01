@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 
 import Discord from '@images/discord.inline.svg'
 
@@ -56,7 +56,7 @@ export function DiscordButton({ disableOnAuth }: DiscordButtonProps) {
       }}
       disabled={disableOnAuth}
     >
-      <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+      <span className="relative inline-flex items-center gap-1 whitespace-nowrap  sm:gap-2.5">
         {logo}
         <span>{text}</span>
       </span>

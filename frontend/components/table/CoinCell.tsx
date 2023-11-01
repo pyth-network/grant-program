@@ -14,11 +14,11 @@ export function CoinCell({
   rowTooltipContent,
 }: CoinCellProps) {
   return (
-    <td className="min-w-[130px] border-l border-light-35 bg-dark-25">
+    <td className=" border-l border-light-35 bg-dark-25">
       <Tooltip content={rowTooltipContent} placement={'right'}>
         <span
           className={classNames(
-            'flex items-center justify-center  gap-1 text-[20px]',
+            'flex items-center justify-center gap-1 text-[14px] sm:text-[20px]',
             isStriked ? 'line-through' : ''
           )}
         >
