@@ -6,15 +6,16 @@ import bg from '../images/bg.png'
 
 import { useRouter } from 'next/router'
 import { WELCOME_METADATA } from 'pages'
+import { NEXT_STEPS } from 'pages/next-steps'
 import { REVIEW_ELIGIBILITY_METADATA } from 'pages/review-eligibility'
 import { VERIFY_ELIGIBILITY_METADATA } from 'pages/verify-eligibility'
 import { LOGIN_SOLANA_METADATA } from 'pages/login-solana'
 import { CLAIM_TOKENS_METADATA } from 'pages/claim-tokens'
-import { NEXT_STEPS } from 'pages/next-steps'
 import { classNames } from 'utils/classNames'
 
 import statue from '@images/bg-statue.png'
 import statueWithCoins from '@images/bg-statue-with-coins.png'
+import Link from 'next/link'
 
 type LayoutProps = {
   children: ReactNode
@@ -55,7 +56,7 @@ export const Layout = ({ children }: LayoutProps) => {
           </span>
         </div>
       </header>
-      <div className="relative px-4 pt-28 pb-32 lg:pt-40">
+      <div className="relative px-4 pt-20 pb-32 sm:pt-28 lg:pt-40">
         <div className="mx-auto max-w-[997px] justify-between gap-2.5 lg:flex">
           <ul
             className={classNames(
