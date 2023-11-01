@@ -12,6 +12,7 @@ module.exports = {
       'cdn.discordapp.com',
       'raw.githubusercontent.com',
     ],
+    unoptimized: true,
   },
   swcMinify: false,
   env: {
