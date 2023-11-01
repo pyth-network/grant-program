@@ -8,7 +8,9 @@ import { useRouter } from 'next/router'
 import { WELCOME_METADATA } from 'pages'
 import { REVIEW_ELIGIBILITY_METADATA } from 'pages/review-eligibility'
 import { VERIFY_ELIGIBILITY_METADATA } from 'pages/verify-eligibility'
+import { NEXT_STEPS } from 'pages/next-steps'
 import { classNames } from 'utils/classNames'
+import statueWithCoins from '@images/bg-statue-with-coins.png'
 
 import statue from '@images/bg-statue.png'
 
@@ -27,6 +29,7 @@ export const Layout = ({ children }: LayoutProps) => {
     WELCOME_METADATA,
     REVIEW_ELIGIBILITY_METADATA,
     VERIFY_ELIGIBILITY_METADATA,
+    NEXT_STEPS,
   ]
 
   return (
@@ -89,6 +92,14 @@ export const Layout = ({ children }: LayoutProps) => {
         />
         <span className="absolute -left-[430px] -bottom-24 max-h-[100vh] max-w-[1200px]">
           <Image src={statue} alt="" priority />
+        </span>
+        <span
+          className={classNames(
+            'absolute -left-[430px] -bottom-24 max-h-[100vh] max-w-[1200px] opacity-0 transition duration-1000 ease-out',
+            pathname === NEXT_STEPS.url ? 'opacity-100' : ''
+          )}
+        >
+          <Image src={statueWithCoins} alt="" priority />
         </span>
       </span>
     </>

@@ -26,12 +26,12 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
             }}
             type={'secondary'}
           >
-            Claim Again
+            Start Over
           </Button>
         </div>
         <div className="px-4 py-8 text-base sm:px-10 sm:text-base16">
           <h3 className="mb-8 flex items-center gap-2 font-header text-[36px] font-light">
-            You Received{' '}
+            You are eligible for{' '}
             <span className="flex items-center gap-2 font-bold">
               {totalCoinsClaimed === null ? (
                 'N/A'
@@ -43,13 +43,15 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
             </span>
           </h3>
           <p className="mb-6">
-            You can stake your PYTH tokens to participate in Pyth Network’s
-            governance, secure the network, and vote on important decisions.
+            Return to this site once the Pyth airdrop is live to claim your
+            tokens.
           </p>
 
           <p>
-            Follow us on our socials to stay updated on grant opportunities,
-            developer updates, and community events!
+            As of November 1, 2023, the date when eligible participants can
+            claim their tokens has not been announced. Follow the Pyth Network
+            social channels to stay updated on the airdrop and learn more about
+            grant opportunities, developer updates and community events.
           </p>
 
           <div
@@ -94,10 +96,6 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
                 </span>
               </Link>
             </div>
-            {/* TODO: link to governance later */}
-            <Button onClick={() => {}} type={'primary'}>
-              explore governance
-            </Button>
           </div>
         </div>
       </Box>

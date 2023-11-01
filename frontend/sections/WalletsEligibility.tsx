@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 import Tooltip from '@components/Tooltip'
 import NotVerified from '@images/not.inline.svg'
@@ -9,7 +9,7 @@ import { Ecosystem } from '@components/Ecosystem'
 import { useActivity } from '@components/Ecosystem/ActivityProvider'
 import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
-import { BackButton } from '@components/buttons'
+import { BackButton, ProceedButton } from '@components/buttons'
 import { CoinCell } from '@components/table/CoinCell'
 import { EcosystemRowLabel } from '@components/table/EcosystemRowLabel'
 import { TotalAllocationRow } from '@components/table/TotalAllocationRow'
@@ -18,8 +18,63 @@ import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { useTotalGrantedCoins } from 'hooks/useTotalGrantedCoins'
 import { classNames } from 'utils/classNames'
 
-const Eligibility = ({ onBack }: { onBack: () => void }) => {
+const Eligibility = ({
+  onBack,
+  onProceed,
+}: {
+  onBack: () => void
+  onProceed: (totalGrantedCoins: string) => void
+}) => {
+  const { activity } = useActivity()
   const totalGrantedCoins = useTotalGrantedCoins()
+  const [isProceedDisabled, setIsProceedDisabled] = useState(true)
+  const [proceedTooltipContent, setProceedTooltipContent] = useState<string>()
+  const getEcosystemIdentity = useGetEcosystemIdentity()
+  const { getEligibility } = useEligibility()
+
+  const onProceedWrapper = useCallback(() => {
+    onProceed(totalGrantedCoins)
+  }, [onProceed, totalGrantedCoins])
+
+  useEffect(() => {
+    // we will check if the user has connected to all the ecosystem they have
+    // selected as active
+    // active + connected
+    let isConnectionPending: boolean = false
+    Object.values(Ecosystem).forEach((ecosystem) => {
+      if (activity[ecosystem] === false) return
+      else {
+        const identity = getEcosystemIdentity(ecosystem)
+        if (identity === undefined) isConnectionPending = true
+      }
+    })
+
+    // We will also check if there are some tokens yet to claim
+    let areAllTokensClaimed: boolean = true
+    Object.values(Ecosystem).forEach((ecosystem) => {
+      const eligibility = getEligibility(ecosystem)
+      if (eligibility?.isClaimAlreadySubmitted === false) {
+        areAllTokensClaimed = false
+      }
+    })
+
+    // Proceed is disabled if a connection is pending or
+    // if there is no tokens to claim
+    if (isConnectionPending) {
+      setIsProceedDisabled(true)
+      setProceedTooltipContent(
+        'Some ecosystems are not yet connected. You can go back and change any of your selections.'
+      )
+      return
+    } else if (areAllTokensClaimed) {
+      setIsProceedDisabled(true)
+      setProceedTooltipContent('There are no tokens to claim.')
+      return
+    } else {
+      setIsProceedDisabled(false)
+      setProceedTooltipContent(undefined)
+    }
+  }, [activity, getEcosystemIdentity, getEligibility])
 
   return (
     <Box>
@@ -29,6 +84,11 @@ const Eligibility = ({ onBack }: { onBack: () => void }) => {
         </h4>
         <div className="flex gap-4">
           <BackButton onBack={onBack} />
+          <ProceedButton
+            onProceed={onProceedWrapper}
+            disabled={isProceedDisabled}
+            tooltipContent={proceedTooltipContent}
+          />
         </div>
       </div>
       <table>
