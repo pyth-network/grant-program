@@ -1,3 +1,4 @@
+import { id } from 'ethers'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { Pool } from 'pg'
 
@@ -12,7 +13,12 @@ export default async function handlerAmountAndProof(
   res: NextApiResponse
 ) {
   const { ecosystem, identity } = req.query
-  if (ecosystem === undefined || identity === undefined) {
+  if (
+    ecosystem === undefined ||
+    identity === undefined ||
+    identity instanceof Array ||
+    ecosystem instanceof Array
+  ) {
     res.status(400).json({
       error: "Must provide the 'ecosystem' and 'identity' query parameters",
     })
@@ -22,7 +28,7 @@ export default async function handlerAmountAndProof(
   try {
     const result = await pool.query(
       'SELECT amount, proof_of_inclusion FROM claims WHERE ecosystem = $1 AND identity = $2',
-      [ecosystem, identity]
+      [ecosystem, lowerCapIfEvm(identity, ecosystem)]
     )
     if (result.rows.length == 0) {
       res.status(404).json({
@@ -39,4 +45,11 @@ export default async function handlerAmountAndProof(
       error: `An unexpected error occurred`,
     })
   }
+}
+
+function lowerCapIfEvm(identity: string, ecosystem: string): string {
+  if (ecosystem === 'evm') {
+    return identity.toLowerCase()
+  }
+  return identity
 }
