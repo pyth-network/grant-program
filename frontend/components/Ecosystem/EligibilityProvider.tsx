@@ -169,20 +169,20 @@ export function EligibilityProvider({ children }: ProviderProps) {
     })()
   }, [eligibilityMap, getEcosystemIdentity])
 
-  const { activity } = useActivity()
+  const { getActivity } = useActivity()
   // `getEligibility` will return the eligibility for the given ecosystem.
   // If the ecosystem is not active or there is no auth connection, it will
   // return undefined. Else whatever the value was stored for the current connection
   const getEligibility = useCallback(
     (ecosystem: Ecosystem): Eligibility => {
-      if (activity[ecosystem] === false) return undefined
+      if (getActivity(ecosystem) === false) return undefined
       else {
         const identity = getEcosystemIdentity(ecosystem)
         if (identity === undefined) return undefined
         else return eligibilityMap[ecosystem][identity]
       }
     },
-    [activity, eligibilityMap, getEcosystemIdentity]
+    [getActivity, eligibilityMap, getEcosystemIdentity]
   )
 
   return (

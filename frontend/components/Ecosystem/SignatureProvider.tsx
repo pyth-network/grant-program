@@ -95,13 +95,13 @@ export function SignatureProvider({ children }: ProviderProps) {
     []
   )
 
-  const { activity } = useActivity()
+  const { getActivity } = useActivity()
   const getEcosystemIdentity = useGetEcosystemIdentity()
   // It returns the signature for the currently connected solana wallet
   // and current ecosystem auth connection if it is active
   const getSignature = useCallback(
     (ecosystem: Ecosystem) => {
-      if (activity[ecosystem] === false) return undefined
+      if (getActivity(ecosystem) === false) return undefined
       const solanaIdentity = getEcosystemIdentity(Ecosystem.SOLANA)
       const ecosystemIdentity = getEcosystemIdentity(ecosystem)
 
@@ -109,7 +109,7 @@ export function SignatureProvider({ children }: ProviderProps) {
         return undefined
       return signatureMap[solanaIdentity]?.[ecosystem]?.[ecosystemIdentity]
     },
-    [activity, getEcosystemIdentity, signatureMap]
+    [getActivity, getEcosystemIdentity, signatureMap]
   )
 
   return (

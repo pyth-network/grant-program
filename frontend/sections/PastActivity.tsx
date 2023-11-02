@@ -7,18 +7,18 @@ import { useCallback, useEffect, useState } from 'react'
 import { StepProps } from './common'
 
 export const PastActivity = ({ onBack, onProceed }: StepProps) => {
-  const { activity, setActivity } = useActivity()
+  const { getActivity, setActivity } = useActivity()
   const [isProceedDisabled, setIsProceedDisabled] = useState(true)
 
   // The rule to proceed is:
   // The user must be active in at least one of the ecosystem.
   useEffect(() => {
-    const isAnyActive = Object.values(activity).find(
-      (isActive) => isActive === true
+    const isAnyActive = Object.values(Ecosystem).find((ecosystem) =>
+      getActivity(ecosystem)
     )
     if (isAnyActive === undefined) setIsProceedDisabled(true)
     else setIsProceedDisabled(false)
-  }, [activity])
+  }, [getActivity])
 
   const onChangeForEcosystem = useCallback(
     (ecosystem: Ecosystem) => {
@@ -49,7 +49,7 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
                 return (
                   <CheckBox
                     label={ecosystem}
-                    isActive={activity[ecosystem]}
+                    isActive={getActivity(ecosystem)}
                     onChange={onChangeForEcosystem(ecosystem)}
                   />
                 )
@@ -59,7 +59,7 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
           <div>
             <CheckBox
               label={Ecosystem.DISCORD}
-              isActive={activity[Ecosystem.DISCORD]}
+              isActive={getActivity(Ecosystem.DISCORD)}
               onChange={onChangeForEcosystem(Ecosystem.DISCORD)}
             />
           </div>

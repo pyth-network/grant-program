@@ -9,7 +9,7 @@ type RowStateRet = {
 }
 
 export function useSignAndClaimRowState(ecosystem: Ecosystem): RowStateRet {
-  const { activity } = useActivity()
+  const { getActivity } = useActivity()
   const { getEligibility } = useEligibility()
 
   return useMemo(() => {
@@ -24,7 +24,7 @@ export function useSignAndClaimRowState(ecosystem: Ecosystem): RowStateRet {
     // - Ecosystem has a claim info and
     // - Claim has not been submitted
 
-    const isActive = activity[ecosystem]
+    const isActive = getActivity(ecosystem)
     // (NOTE: ecosystem will have a claim info only if the connected identity has a claim info)
     const eligibility = getEligibility(ecosystem)
     if (isActive === true) {
@@ -50,5 +50,5 @@ export function useSignAndClaimRowState(ecosystem: Ecosystem): RowStateRet {
       return {
         disabled: true,
       }
-  }, [activity, ecosystem, getEligibility])
+  }, [getActivity, ecosystem, getEligibility])
 }

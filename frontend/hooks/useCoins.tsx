@@ -11,18 +11,18 @@ import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 // If the wallet is not eligible, returns '0'
 // Else, it will return the amount if it is stored
 export function useCoins() {
-  const { activity } = useActivity()
+  const { getActivity } = useActivity()
   const { getEligibility } = useEligibility()
 
   return useCallback(
     (ecosystem: Ecosystem) => {
-      if (activity[ecosystem] === false) return undefined
+      if (getActivity(ecosystem) === false) return undefined
 
       const eligibility = getEligibility(ecosystem)
       if (eligibility === undefined) return '0'
 
       return toStringWithDecimals(eligibility.claimInfo.amount)
     },
-    [activity, getEligibility]
+    [getActivity, getEligibility]
   )
 }

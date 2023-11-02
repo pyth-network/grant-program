@@ -25,7 +25,7 @@ const Eligibility = ({
   onBack: () => void
   onProceed: (totalGrantedCoins: string) => void
 }) => {
-  const { activity } = useActivity()
+  const { getActivity } = useActivity()
   const totalGrantedCoins = useTotalGrantedCoins()
   const [isProceedDisabled, setIsProceedDisabled] = useState(true)
   const [proceedTooltipContent, setProceedTooltipContent] = useState<string>()
@@ -42,7 +42,7 @@ const Eligibility = ({
     // active + connected
     let isConnectionPending: boolean = false
     Object.values(Ecosystem).forEach((ecosystem) => {
-      if (activity[ecosystem] === false) return
+      if (getActivity(ecosystem) === false) return
       else {
         const identity = getEcosystemIdentity(ecosystem)
         if (identity === undefined) isConnectionPending = true
@@ -74,7 +74,7 @@ const Eligibility = ({
       setIsProceedDisabled(false)
       setProceedTooltipContent(undefined)
     }
-  }, [activity, getEcosystemIdentity, getEligibility])
+  }, [getActivity, getEcosystemIdentity, getEligibility])
 
   return (
     <Box>
@@ -107,13 +107,13 @@ type TableRowProps = {
   ecosystem: Ecosystem
 }
 function TableRow({ ecosystem }: TableRowProps) {
-  const { activity } = useActivity()
+  const { getActivity } = useActivity()
   const getEcosystemIdentity = useGetEcosystemIdentity()
   const getEligibleCoins = useCoins()
   const { getEligibility } = useEligibility()
 
   const eligibility = getEligibility(ecosystem)
-  const isActive = activity[ecosystem]
+  const isActive = getActivity(ecosystem)
   const rowDisabled = isActive === false
 
   const identity = getEcosystemIdentity(ecosystem)

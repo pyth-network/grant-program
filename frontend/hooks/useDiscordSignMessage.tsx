@@ -9,7 +9,7 @@ import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
 
 export function useDiscordSignMessage() {
   const ecosystem = Ecosystem.DISCORD
-  const { activity } = useActivity()
+  const { getActivity } = useActivity()
   const { getEligibility } = useEligibility()
   const { getSignature, setSignature } = useSignature()
   const getEcosystemIdentity = useGetEcosystemIdentity()
@@ -28,7 +28,7 @@ export function useDiscordSignMessage() {
       message === undefined ||
       solanaIdentity === undefined ||
       ecosystemIdentity === undefined ||
-      activity[ecosystem] === false ||
+      getActivity(ecosystem) === false ||
       eligibility === undefined ||
       eligibility.isClaimAlreadySubmitted === true
     )
@@ -42,7 +42,7 @@ export function useDiscordSignMessage() {
     if (signedMessage !== undefined)
       setSignature(solanaIdentity, ecosystem, ecosystemIdentity, signedMessage)
   }, [
-    activity,
+    getActivity,
     ecosystem,
     ecosystemIdentity,
     getEligibility,

@@ -20,7 +20,7 @@ export const SignForEligibleWallets = ({
   onBack: () => void
   onProceed: () => void
 }) => {
-  const { activity } = useActivity()
+  const { getActivity } = useActivity()
   const totalGrantedCoins = useTotalGrantedCoins()
   const [isProceedDisabled, setIsProceedDisabled] = useState(true)
   const [proceedTooltipContent, setProceedTooltipContent] = useState<string>()
@@ -46,7 +46,7 @@ export const SignForEligibleWallets = ({
       // We don't need to get a signed message from Solana.
       if (ecosystem === Ecosystem.SOLANA) return
 
-      if (activity[ecosystem] === false) return
+      if (getActivity(ecosystem) === false) return
       if (solanaIdentity === undefined) return
 
       const identity = getEcosystemIdentity(ecosystem)
@@ -77,7 +77,7 @@ export const SignForEligibleWallets = ({
       setIsProceedDisabled(false)
       setProceedTooltipContent(undefined)
     }
-  }, [activity, getEcosystemIdentity, getEligibility, getSignature])
+  }, [getActivity, getEcosystemIdentity, getEligibility, getSignature])
 
   return (
     <Box>
