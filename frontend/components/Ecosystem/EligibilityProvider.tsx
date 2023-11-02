@@ -175,7 +175,7 @@ export function EligibilityProvider({ children }: ProviderProps) {
   // return undefined. Else whatever the value was stored for the current connection
   const getEligibility = useCallback(
     (ecosystem: Ecosystem): Eligibility => {
-      if (activity[ecosystem] !== true) return undefined
+      if (!activity[ecosystem]) return undefined
       else {
         const identity = getEcosystemIdentity(ecosystem)
         if (identity === undefined) return undefined

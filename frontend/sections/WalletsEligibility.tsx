@@ -38,7 +38,7 @@ const Eligibility = ({
     // active + connected
     let isConnectionPending: boolean = false
     Object.values(Ecosystem).forEach((ecosystem) => {
-      if (activity[ecosystem] !== true) return
+      if (!activity[ecosystem]) return
       else {
         const identity = getEcosystemIdentity(ecosystem)
         if (identity === undefined) isConnectionPending = true
