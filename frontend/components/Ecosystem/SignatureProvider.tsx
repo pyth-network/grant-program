@@ -101,7 +101,7 @@ export function SignatureProvider({ children }: ProviderProps) {
   // and current ecosystem auth connection if it is active
   const getSignature = useCallback(
     (ecosystem: Ecosystem) => {
-      if (activity[ecosystem] === false) return undefined
+      if (activity[ecosystem] !== true) return undefined
       const solanaIdentity = getEcosystemIdentity(Ecosystem.SOLANA)
       const ecosystemIdentity = getEcosystemIdentity(ecosystem)
 

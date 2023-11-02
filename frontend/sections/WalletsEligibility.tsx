@@ -38,7 +38,7 @@ const Eligibility = ({
     // active + connected
     let isConnectionPending: boolean = false
     Object.values(Ecosystem).forEach((ecosystem) => {
-      if (activity[ecosystem] === false) return
+      if (activity[ecosystem] !== true) return
       else {
         const identity = getEcosystemIdentity(ecosystem)
         if (identity === undefined) isConnectionPending = true
@@ -109,7 +109,7 @@ function TableRow({ ecosystem }: TableRowProps) {
   const { getEligibility } = useEligibility()
 
   const eligibility = getEligibility(ecosystem)
-  const isActive = activity[ecosystem]
+  const isActive = activity[ecosystem] === true
   const rowDisabled = isActive === false
 
   const identity = getEcosystemIdentity(ecosystem)

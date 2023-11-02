@@ -28,7 +28,7 @@ export function useDiscordSignMessage() {
       message === undefined ||
       solanaIdentity === undefined ||
       ecosystemIdentity === undefined ||
-      activity[ecosystem] === false ||
+      activity[ecosystem] !== true ||
       eligibility === undefined ||
       eligibility.isClaimAlreadySubmitted === true
     )

@@ -7,17 +7,12 @@ import {
 } from 'react'
 import { Ecosystem, ProviderProps } from '.'
 
-type ActivityMap = Record<Ecosystem, boolean>
+type ActivityMap = {
+  [ecosystem in Ecosystem]?: boolean
+}
 type ActivityContextType = {
   activity: ActivityMap
   setActivity: (ecosystem: Ecosystem, isActive: boolean) => void
-}
-
-function getDefaultActivity(): ActivityMap {
-  return Object.values(Ecosystem).reduce((map, currentValue) => {
-    map[currentValue] = false
-    return map
-  }, {} as ActivityMap)
 }
 
 const ACTIVIY_KEY = 'activity-store'
@@ -35,9 +30,7 @@ const ActivityContext = createContext<ActivityContextType | undefined>(
   undefined
 )
 export function ActivityProvider({ children }: ProviderProps) {
-  const [activity, setActivity] = useState(
-    getStoredActivityMap() ?? getDefaultActivity()
-  )
+  const [activity, setActivity] = useState(getStoredActivityMap() ?? {})
 
   // side effect: whenever the activity map changes sync the local storage
   useEffect(() => {
@@ -51,6 +44,7 @@ export function ActivityProvider({ children }: ProviderProps) {
     },
     [setActivity]
   )
+
   return (
     <ActivityContext.Provider
       value={{ activity, setActivity: setActivityWrapper }}

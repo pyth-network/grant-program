@@ -13,8 +13,8 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
   // The rule to proceed is:
   // The user must be active in at least one of the ecosystem.
   useEffect(() => {
-    const isAnyActive = Object.values(activity).find(
-      (isActive) => isActive === true
+    const isAnyActive = Object.values(Ecosystem).find(
+      (ecosystem) => activity[ecosystem] === true
     )
     if (isAnyActive === undefined) setIsProceedDisabled(true)
     else setIsProceedDisabled(false)
@@ -49,7 +49,7 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
                 return (
                   <CheckBox
                     label={ecosystem}
-                    isActive={activity[ecosystem]}
+                    isActive={activity[ecosystem] === true}
                     onChange={onChangeForEcosystem(ecosystem)}
                   />
                 )
@@ -59,7 +59,7 @@ export const PastActivity = ({ onBack, onProceed }: StepProps) => {
           <div>
             <CheckBox
               label={Ecosystem.DISCORD}
-              isActive={activity[Ecosystem.DISCORD]}
+              isActive={activity[Ecosystem.DISCORD] === true}
               onChange={onChangeForEcosystem(Ecosystem.DISCORD)}
             />
           </div>
