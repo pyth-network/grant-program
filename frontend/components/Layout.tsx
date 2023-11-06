@@ -2,7 +2,8 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { ReactNode } from 'react'
 
-import bg from '../images/bg.png'
+import bg from '../images/bg.svg'
+import sphere from '../images/sphere.png'
 
 import statueWithCoins from '@images/bg-statue-with-coins.png'
 import { useRouter } from 'next/router'
@@ -89,6 +90,19 @@ export const Layout = ({ children }: LayoutProps) => {
           layout="fill"
           objectFit="cover"
           objectPosition="left bottom"
+        />
+        <Image
+          src={sphere}
+          alt=""
+          objectFit="cover"
+          objectPosition="left bottom"
+          style={{
+            width: '50%',
+            position: 'absolute',
+            bottom: '-4%',
+            left: '-5%',
+            opacity: 0.6,
+          }}
         />
         <span className="absolute -left-[430px] -bottom-24 max-h-[100vh] max-w-[1200px]">
           <Image src={statue} alt="" priority />
