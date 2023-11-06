@@ -16,7 +16,7 @@ export function useCoins() {
 
   return useCallback(
     (ecosystem: Ecosystem) => {
-      if (activity[ecosystem] === false) return undefined
+      if (!activity[ecosystem]) return undefined
 
       const eligibility = getEligibility(ecosystem)
       if (eligibility === undefined) return '0'
