@@ -23,6 +23,7 @@ import { ed25519 } from '@noble/curves/ed25519'
 import { Ed25519PublicKey } from '@mysten/sui.js/keypairs/ed25519'
 import { blake2b } from '@noble/hashes/blake2b'
 import { getInjectiveAddress } from '../../utils/getInjectiveAddress'
+import { Address } from 'ethereumjs-util'
 
 describe('signature tests', () => {
   const solanaKeypair = anchor.web3.Keypair.generate()
@@ -93,7 +94,7 @@ describe('signature tests', () => {
     )
 
     const injectiveAddrFromRecovered = getInjectiveAddress(
-      Buffer.from(recoveredEvmPubkey).toString('hex')
+      Address.fromPublicKey(Buffer.from(recoveredEvmPubkey)).toString()
     )
     expect(injectiveAddrFromRecovered).toEqual(injectiveWallet.address())
 
