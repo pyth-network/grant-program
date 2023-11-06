@@ -22,12 +22,11 @@ type Eligibility =
     }
   | undefined
 
-export type EligibilityMap = Record<
-  Ecosystem,
-  {
-    [identity: string]: Eligibility
+export type EligibilityMap = {
+  [ecosystem in Ecosystem]?: {
+    [ecosystemIdentity: string]: Eligibility
   }
->
+}
 
 type EligibilityContextType = {
   getEligibility: (ecosystem: Ecosystem) => Eligibility
@@ -66,15 +65,9 @@ function getStoredEligibilityMap(): EligibilityMap | null {
   return obj as EligibilityMap
 }
 
-function getDefaultEligibilityMap() {
-  const map: any = {}
-  Object.values(Ecosystem).forEach((key) => (map[key] = {}))
-  return map as EligibilityMap
-}
-
 export function EligibilityProvider({ children }: ProviderProps) {
   const [eligibilityMap, setEligibilityMap] = useState(
-    getStoredEligibilityMap() ?? getDefaultEligibilityMap()
+    getStoredEligibilityMap() ?? {}
   )
 
   const getEcosystemIdentity = useGetEcosystemIdentity()
@@ -100,7 +93,11 @@ export function EligibilityProvider({ children }: ProviderProps) {
           // We can't check it using eligibilityMap[ecosystem][identity] === undefined
           // As, an undefined eligibility can be stored before.
           // Hence, we are checking if the key exists in the object
-          if (identity === undefined || identity in eligibilityMap[ecosystem])
+          if (identity === undefined) return
+          if (
+            eligibilityMap[ecosystem] !== undefined &&
+            identity in eligibilityMap[ecosystem]!
+          )
             return
 
           // No eligibility was stored before
@@ -117,7 +114,8 @@ export function EligibilityProvider({ children }: ProviderProps) {
       if (changes.length !== 0) {
         setEligibilityMap((prev) => {
           changes.forEach(([ecosystem, identity, eligibility]) => {
-            prev[ecosystem][identity] = eligibility
+            if (prev[ecosystem] === undefined) prev[ecosystem] = {}
+            prev[ecosystem]![identity] = eligibility
           })
 
           return { ...prev }
@@ -137,13 +135,14 @@ export function EligibilityProvider({ children }: ProviderProps) {
             const identity = getEcosystemIdentity(ecosystem)
             // If there is no current connection
             if (identity === undefined) return
+            if (eligibilityMap[ecosystem] === undefined) return
 
-            if (identity in eligibilityMap[ecosystem]) {
-              if (eligibilityMap[ecosystem][identity] === undefined) return
+            if (identity in eligibilityMap[ecosystem]!) {
+              if (eligibilityMap[ecosystem]![identity] === undefined) return
               const prevSubmittedStatus =
-                eligibilityMap[ecosystem][identity]!.isClaimAlreadySubmitted
+                eligibilityMap[ecosystem]![identity]!.isClaimAlreadySubmitted
               const newSubmittedStatus = await isClaimAlreadySubmitted(
-                eligibilityMap[ecosystem][identity]!.claimInfo
+                eligibilityMap[ecosystem]![identity]!.claimInfo
               )
 
               if (prevSubmittedStatus !== newSubmittedStatus) {
@@ -157,9 +156,9 @@ export function EligibilityProvider({ children }: ProviderProps) {
       if (changes.length !== 0) {
         setEligibilityMap((prev) => {
           for (let [ecosystem, identity, isSubmitted] of changes) {
-            prev[ecosystem][identity] = {
+            prev[ecosystem]![identity] = {
               // store ecosystem, identity in array maybe
-              ...prev[ecosystem][identity]!,
+              ...prev[ecosystem]![identity]!,
               isClaimAlreadySubmitted: isSubmitted,
             }
           }
@@ -179,7 +178,7 @@ export function EligibilityProvider({ children }: ProviderProps) {
       else {
         const identity = getEcosystemIdentity(ecosystem)
         if (identity === undefined) return undefined
-        else return eligibilityMap[ecosystem][identity]
+        else return eligibilityMap[ecosystem]?.[identity]
       }
     },
     [activity, eligibilityMap, getEcosystemIdentity]
