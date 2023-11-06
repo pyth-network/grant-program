@@ -89,7 +89,7 @@ test('Merkle tree sanity check', () => {
 
 describe('Claim Info Evm Test', () => {
   it('should generate the same claim info buffer for an evm address regardless of case', async () => {
-    const evmAddressStr = '0xf3f9225A2166861e745742509CED164183a626d7'
+    const evmAddressStr = '0xb80Eb09f118ca9Df95b2DF575F68E41aC7B9E2f8'
     const evmClaimInfo0 = coder.types.encode('ClaimInfo', {
       amount: new anchor.BN(2000),
       identity: {
