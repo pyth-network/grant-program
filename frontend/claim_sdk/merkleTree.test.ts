@@ -6,9 +6,9 @@ import { MerkleTree } from './merkleTree'
 import { expect } from '@jest/globals'
 import { ethers } from 'ethers'
 
+const coder = new anchor.BorshCoder(IDL as any)
 /** Build a Merkle tree and check the result against the Rust implementation. */
 test('Merkle tree sanity check', () => {
-  const coder = new anchor.BorshCoder(IDL as any)
   let claimInfos = [
     coder.types.encode('ClaimInfo', {
       amount: new anchor.BN(4000),
@@ -85,4 +85,66 @@ test('Merkle tree sanity check', () => {
   for (let i = 0; i < claimInfos.length; i++) {
     expect(merkleTree.prove(claimInfos[i]).toString('hex')).toBe(proofs[i])
   }
+})
+
+describe('Claim Info Evm Test', () => {
+  it('should generate the same claim info buffer for an evm address regardless of case', async () => {
+    const evmAddressStr = '0xf3f9225A2166861e745742509CED164183a626d7'
+    const evmClaimInfo0 = coder.types.encode('ClaimInfo', {
+      amount: new anchor.BN(2000),
+      identity: {
+        evm: {
+          pubkey: Buffer.from(removeLeading0x(evmAddressStr), 'hex'),
+        },
+      },
+    })
+
+    const evmClaimInfo1 = coder.types.encode('ClaimInfo', {
+      amount: new anchor.BN(2000),
+      identity: {
+        evm: {
+          pubkey: Buffer.from(
+            removeLeading0x(evmAddressStr.toLowerCase()),
+            'hex'
+          ),
+        },
+      },
+    })
+
+    const evmClaimInfo2 = coder.types.encode('ClaimInfo', {
+      amount: new anchor.BN(2000),
+      identity: {
+        evm: {
+          pubkey: Array.from(ethers.getBytes(evmAddressStr)),
+        },
+      },
+    })
+
+    const evmClaimInfo3 = coder.types.encode('ClaimInfo', {
+      amount: new anchor.BN(2000),
+      identity: {
+        evm: {
+          pubkey: Array.from(ethers.getBytes(evmAddressStr.toLowerCase())),
+        },
+      },
+    })
+
+    expect(evmClaimInfo0.equals(evmClaimInfo1)).toBe(true)
+    expect(evmClaimInfo0.equals(evmClaimInfo2)).toBe(true)
+    expect(evmClaimInfo0.equals(evmClaimInfo3)).toBe(true)
+
+    const merkleTree0 = new MerkleTree([evmClaimInfo0])
+    const merkleTree1 = new MerkleTree([evmClaimInfo1])
+    const merkleTree2 = new MerkleTree([evmClaimInfo2])
+    const merkleTree3 = new MerkleTree([evmClaimInfo3])
+    expect(merkleTree0.nodes[1].toString('hex')).toBe(
+      merkleTree1.nodes[1].toString('hex')
+    )
+    expect(merkleTree0.nodes[1].toString('hex')).toBe(
+      merkleTree2.nodes[1].toString('hex')
+    )
+    expect(merkleTree0.nodes[1].toString('hex')).toBe(
+      merkleTree3.nodes[1].toString('hex')
+    )
+  })
 })
