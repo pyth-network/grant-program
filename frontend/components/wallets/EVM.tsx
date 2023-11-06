@@ -21,7 +21,7 @@ import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
 import coinbase from '@images/coinbase.svg'
 import walletConnect from '@images/wallet-connect.svg'
 import metamask from '@images/metamask.svg'
-import { getInjectiveAddress } from '@injectivelabs/sdk-ts'
+import { getInjectiveAddress } from '../../utils/getInjectiveAddress'
 
 // Configure chains & providers with the Alchemy provider.
 // Two popular providers are Alchemy (alchemy.com) and Infura (infura.io)
