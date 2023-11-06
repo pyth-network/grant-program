@@ -17,7 +17,6 @@ import { getInjectiveAddress } from '../utils/getInjectiveAddress'
 export function useGetEcosystemIdentity() {
   const aptosAddress = useAptosAddress()
   const evmAddress = useEVMAddress()
-  const injectiveAddress = useCosmosAddress('injective')
   const osmosisAddress = useCosmosAddress('osmosis')
   const neutronAddress = useCosmosAddress('neutron')
 
@@ -62,7 +61,6 @@ export function useGetEcosystemIdentity() {
       aptosAddress,
       data?.user?.hashedUserId,
       evmAddress,
-      injectiveAddress,
       neutronAddress,
       osmosisAddress,
       seiAddress,
