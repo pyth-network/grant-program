@@ -31,6 +31,7 @@ import { fetchFundTransaction } from '../utils/api'
 export const ERROR_SIGNING_TX = 'error: signing transaction'
 export const ERROR_FUNDING_TX = 'error: funding transaction'
 export const ERROR_RPC_CONNECTION = 'error: rpc connection'
+export const ERROR_CRAFTING_TX = 'error: crafting transaction'
 
 type bump = number
 // NOTE: This must be kept in sync with the on-chain program
@@ -233,14 +234,18 @@ export class TokenDispenserProvider {
   ): Promise<Promise<TransactionError | null>[]> {
     const txs: VersionedTransaction[] = []
 
-    for (const claim of claims) {
-      txs.push(
-        await this.generateClaimTransaction(
-          claim.claimInfo,
-          claim.proofOfInclusion,
-          claim.signedMessage
+    try {
+      for (const claim of claims) {
+        txs.push(
+          await this.generateClaimTransaction(
+            claim.claimInfo,
+            claim.proofOfInclusion,
+            claim.signedMessage
+          )
         )
-      )
+      }
+    } catch (e) {
+      throw new Error(ERROR_CRAFTING_TX)
     }
 
     let txsSignedOnce

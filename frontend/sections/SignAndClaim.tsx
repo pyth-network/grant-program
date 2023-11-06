@@ -16,6 +16,7 @@ import { Box } from '@components/Box'
 import { SolanaWalletCopyButton } from '@components/buttons/SolanaWalletCopyButton'
 import { setLastStepStatus } from 'pages/_app'
 import {
+  ERROR_CRAFTING_TX,
   ERROR_FUNDING_TX,
   ERROR_RPC_CONNECTION,
   ERROR_SIGNING_TX,
@@ -110,11 +111,12 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
         err.message === ERROR_SIGNING_TX ||
         err.message === ERROR_FUNDING_TX
       ) {
+        message = `There was an error while signing the transaction. Please refresh this page and try again. Note: You will not lose your progress when you refresh.`
+      } else if (err.message === ERROR_CRAFTING_TX) {
         message =
-          'There was some error while signing the transaction. Please refresh the page and try again.'
+          'There was a problem while crafting the transaction. Please wait a few minutes before trying again. Note: You will not lose your progress if you refresh this page.'
       } else {
-        message =
-          'There was some unknown error. Please refresh to try again or come back later.'
+        message = `Try claiming your tokens again by refreshing your browser. If the problem persists, contact our support team on Discord.`
       }
 
       const stateObj: { [key in Ecosystem]?: EcosystemClaimState } = {}
@@ -154,7 +156,7 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
               [ecosystems[index]]: {
                 error: transactionError
                   ? new Error(
-                      'There was an error with the transaction. Please refresh and try again.'
+                      `There was an error with your transaction. Please refresh this page and try again. Note: You will not lose your progress when you refresh.`
                     )
                   : null,
               },
@@ -162,12 +164,10 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
           })
           .catch((e) => {
             // If the timeout triggers error.
-            let message =
-              'The connection is taking too long to respond. We cannot confirm this claim transaction.'
+            let message = `We are unable to confirm your transaction claim because the connection timed out. Note: You will not lose your progress if you refresh.`
             // If the error was with the connection edit the message to.
             if (((e as Error).message = ERROR_RPC_CONNECTION)) {
-              message =
-                'There seems to be some issue with the RPC connection. Please try again after some time.'
+              message = `There was a problem with the RPC connection. Please wait a few minutes before trying again. Note: You will not lose your progress if you refresh this page.`
             }
 
             setEcosystemsClaimState((ecosystemState) => ({
@@ -203,10 +203,10 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
           </div>
           <div className="px-10 py-8 text-base16">
             <p className="mb-6">
-              Please sign your connected wallets. To sign, click the
+              {`Please sign your connected wallets. To sign, click the
               corresponding “sign” button for each wallet. Your wallet will ask
               if you wish to sign the transaction. Confirm by clicking “sign” in
-              your wallet's pop-up window.
+              your wallet's pop-up window.`}
             </p>
             <p className="mb-6">
               Note: You will sign with your Solana wallet at a later stage. No
