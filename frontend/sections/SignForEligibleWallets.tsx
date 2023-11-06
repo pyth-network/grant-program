@@ -46,7 +46,7 @@ export const SignForEligibleWallets = ({
       // We don't need to get a signed message from Solana.
       if (ecosystem === Ecosystem.SOLANA) return
 
-      if (activity[ecosystem] === false) return
+      if (!activity[ecosystem]) return
       if (solanaIdentity === undefined) return
 
       const identity = getEcosystemIdentity(ecosystem)
