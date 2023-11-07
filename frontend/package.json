@@ -34,7 +34,6 @@
     "@tippyjs/react": "^4.2.6",
     "bech32": "^2.0.0",
     "dotenv": "^16.0.0",
-    "ethereumjs-util": "^7.1.5",
     "ethers": "^6.6.0",
     "next": "latest",
     "next-auth": "^4.22.3",
