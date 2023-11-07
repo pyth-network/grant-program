@@ -1,7 +1,11 @@
 require('dotenv').config()
 
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+})
+
 /** @type {import('next').NextConfig} */
-module.exports = {
+module.exports = withBundleAnalyzer({
   reactStrictMode: true,
   experimental: {
     externalDir: true,
@@ -39,4 +43,4 @@ module.exports = {
 
     return config
   },
-}
+})

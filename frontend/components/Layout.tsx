@@ -2,7 +2,8 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { ReactNode } from 'react'
 
-import bg from '../images/bg.png'
+import bg from '../images/bg.svg'
+import sphere from '../images/sphere.png'
 
 import statueWithCoins from '@images/bg-statue-with-coins.png'
 import { useRouter } from 'next/router'
@@ -82,13 +83,32 @@ export const Layout = ({ children }: LayoutProps) => {
           <div className="flex-1 ">{children}</div>
         </div>
       </div>
-      <span className="pointer-events-none fixed top-0 bottom-0 left-0 right-0 z-[-1]">
+      <span
+        className="pointer-events-none fixed top-0 bottom-0 left-0 right-0 z-[-1]"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(70,43,120,1) 0%, rgba(8,6,17,1) 100%)',
+        }}
+      >
         <Image
           src={bg}
           alt=""
           layout="fill"
           objectFit="cover"
           objectPosition="left bottom"
+        />
+        <Image
+          src={sphere}
+          alt=""
+          objectFit="cover"
+          objectPosition="left bottom"
+          style={{
+            width: '50%',
+            position: 'absolute',
+            bottom: '-4%',
+            left: '-5%',
+            opacity: 0.6,
+          }}
         />
         <span className="absolute -left-[430px] -bottom-24 max-h-[100vh] max-w-[1200px]">
           <Image src={statue} alt="" priority />
