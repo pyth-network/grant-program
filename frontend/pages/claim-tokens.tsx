@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router'
 import { SignAndClaim } from '@sections/SignAndClaim'
 import { LOGIN_SOLANA_METADATA } from './login-solana'
-import { NEXT_STEPS } from './next-steps'
+import { NEXT_STEPS } from './claimed'
 
 export const CLAIM_TOKENS_METADATA = {
   url: '/claim-tokens',

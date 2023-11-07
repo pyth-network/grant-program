@@ -2,7 +2,7 @@ import { TokensReceived } from '@sections/TokensReceived'
 import { useSearchParams } from 'next/navigation'
 
 export const NEXT_STEPS = {
-  url: '/next-steps',
+  url: '/claimed',
   title: 'Next Steps',
 }
 

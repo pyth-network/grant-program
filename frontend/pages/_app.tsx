@@ -27,7 +27,14 @@ function useRedirect() {
   // As we need this before it is being reset
   const lastStep = useMemo(() => {
     if (typeof window === 'undefined') return null
-    return localStorage.getItem(LAST_STEP_STATUS_KEY)
+    const lastStep = localStorage.getItem(LAST_STEP_STATUS_KEY)
+
+    // On the breakpoint version we have used this step url
+    // It will cause us some issues when we launch the full site.
+    // We are going to use a different URL for the last step -> '/claimed'
+    // If this url is stored in localStorage, we will return null.
+    if (lastStep?.startsWith('/next-steps')) return null
+    else return lastStep
   }, [])
 
   const pathname = usePathname()

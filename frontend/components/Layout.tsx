@@ -10,7 +10,7 @@ import { REVIEW_ELIGIBILITY_METADATA } from 'pages/review-eligibility'
 import { VERIFY_ELIGIBILITY_METADATA } from 'pages/verify-eligibility'
 import { LOGIN_SOLANA_METADATA } from 'pages/login-solana'
 import { CLAIM_TOKENS_METADATA } from 'pages/claim-tokens'
-import { NEXT_STEPS } from 'pages/next-steps'
+import { NEXT_STEPS } from 'pages/claimed'
 import { classNames } from 'utils/classNames'
 import { useRouter } from 'next/router'
 
