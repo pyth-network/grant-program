@@ -1,6 +1,5 @@
 import { bech32 } from 'bech32'
-import { removeLeading0x } from 'claim_sdk'
-import { ethers } from 'ethers'
+import { removeLeading0x } from '../claim_sdk'
 
 /**
  * Get injective address from Ethereum hex address
