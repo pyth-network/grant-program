@@ -83,7 +83,13 @@ export const Layout = ({ children }: LayoutProps) => {
           <div className="flex-1 ">{children}</div>
         </div>
       </div>
-      <span className="pointer-events-none fixed top-0 bottom-0 left-0 right-0 z-[-1]">
+      <span
+        className="pointer-events-none fixed top-0 bottom-0 left-0 right-0 z-[-1]"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(70,43,120,1) 0%, rgba(8,6,17,1) 100%)',
+        }}
+      >
         <Image
           src={bg}
           alt=""
