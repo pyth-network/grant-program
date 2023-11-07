@@ -18,11 +18,12 @@ import {
   TestSuiWallet,
 } from '../testWallets'
 import path from 'path'
-import { Address as InjectiveAddress } from '@injectivelabs/sdk-ts'
 import { airdrop } from '../solana'
 import { ed25519 } from '@noble/curves/ed25519'
 import { Ed25519PublicKey } from '@mysten/sui.js/keypairs/ed25519'
 import { blake2b } from '@noble/hashes/blake2b'
+import { getInjectiveAddress } from '../../utils/getInjectiveAddress'
+import { getAddress } from 'ethers'
 
 describe('signature tests', () => {
   const solanaKeypair = anchor.web3.Keypair.generate()
@@ -92,16 +93,10 @@ describe('signature tests', () => {
         .toRawBytes(false)
     )
 
-    const injectiveAddrFromRecovered = InjectiveAddress.fromHex(
-      Buffer.from(recoveredEvmPubkey).toString('hex')
+    const injectiveAddrFromRecovered = getInjectiveAddress(
+      getAddress(Buffer.from(recoveredEvmPubkey).toString('hex'))
     )
-    expect(injectiveAddrFromRecovered.toBech32('inj')).toEqual(
-      injectiveWallet.address()
-    )
-
-    expect(removeLeading0x(injectiveAddrFromRecovered.toHex())).toEqual(
-      Buffer.from(recoveredEvmPubkey).toString('hex')
-    )
+    expect(injectiveAddrFromRecovered).toEqual(injectiveWallet.address())
 
     expect(Buffer.from(recoveredEvmPubkey).equals(Buffer.from(evmPubkey)))
 
