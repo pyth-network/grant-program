@@ -1,9 +1,7 @@
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 
-import Phantom from '@images/phantom.inline.svg'
-import Backpack from '@images/backpack.inline.svg'
-import Solflare from '@images/solflare.inline.svg'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { Box } from '@components/Box'
+import { BackButton, ProceedButton } from '@components/buttons'
 import {
   BACKPACK_WALLET_ADAPTER,
   PHANTOM_WALLET_ADAPTER,
@@ -15,10 +13,12 @@ import {
   WalletConnectedButton,
   WalletModal,
 } from '@components/wallets/WalletButton'
+import Backpack from '@images/backpack.inline.svg'
+import Phantom from '@images/phantom.inline.svg'
+import Solflare from '@images/solflare.inline.svg'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { truncateAddress } from 'utils/truncateAddress'
-import { ProceedButton, BackButton } from '@components/buttons'
 import { StepProps } from './common'
-import { Box } from '@components/Box'
 
 export const LogInWithSolana = ({ onBack, onProceed }: StepProps) => {
   const { publicKey, wallet, disconnect, connecting, connected, connect } =
@@ -41,7 +41,7 @@ export const LogInWithSolana = ({ onBack, onProceed }: StepProps) => {
         </h4>
         <BackButton onBack={onBack} />
       </div>
-      <div className="px-10 py-8 text-base16">
+      <div className="px-4 py-8 text-base sm:px-10 sm:text-base16">
         <p className="mb-6">
           PYTH tokens are native to Solana. You need a Solana wallet to proceed
           and receive your PYTH tokens. Your claimed PYTH tokens will go to the
@@ -88,7 +88,7 @@ const SelectWallets = () => {
           className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
           onClick={() => selectWallet(PHANTOM_WALLET_ADAPTER)}
         >
-          <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+          <span className="relative inline-flex items-center gap-1 whitespace-nowrap  sm:gap-2.5">
             <Phantom /> Phantom
           </span>
         </button>
@@ -96,7 +96,7 @@ const SelectWallets = () => {
           className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
           onClick={() => selectWallet(BACKPACK_WALLET_ADAPTER)}
         >
-          <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+          <span className="relative inline-flex items-center gap-1 whitespace-nowrap  sm:gap-2.5">
             <Backpack /> Backpack
           </span>
         </button>
@@ -104,7 +104,7 @@ const SelectWallets = () => {
           className="btn before:btn-bg  btn--light  before:bg-light hover:text-light hover:before:bg-dark"
           onClick={() => selectWallet(SOLFLARE_WALLET_ADAPTER)}
         >
-          <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+          <span className="relative inline-flex items-center gap-1 whitespace-nowrap  sm:gap-2.5">
             <Solflare /> Solflare
           </span>
         </button>

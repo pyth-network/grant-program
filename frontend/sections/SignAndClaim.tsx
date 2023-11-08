@@ -1,26 +1,26 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import Modal from '@components/Modal'
-import { SignForEligibleWallets } from './SignForEligibleWallets'
-import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
-import { useGetClaim } from 'hooks/useGetClaim'
-import { Ecosystem } from '@components/Ecosystem'
-import { ProceedButton, BackButton } from '@components/buttons'
-import { StepProps } from './common'
-import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
-import { ClaimInfo } from 'claim_sdk/claim'
-import { ClaimStatus } from './ClaimStatus'
-import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
-import { BN } from '@coral-xyz/anchor'
-import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 import { Box } from '@components/Box'
+import { Ecosystem } from '@components/Ecosystem'
+import { useEligibility } from '@components/Ecosystem/EligibilityProvider'
+import Modal from '@components/Modal'
+import { BackButton, ProceedButton } from '@components/buttons'
 import { SolanaWalletCopyButton } from '@components/buttons/SolanaWalletCopyButton'
-import { setLastStepStatus } from 'pages/_app'
+import { BN } from '@coral-xyz/anchor'
+import { ClaimInfo } from 'claim_sdk/claim'
+import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
 import {
   ERROR_CRAFTING_TX,
   ERROR_FUNDING_TX,
   ERROR_RPC_CONNECTION,
   ERROR_SIGNING_TX,
 } from 'claim_sdk/solana'
+import { useGetClaim } from 'hooks/useGetClaim'
+import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
+import { setLastStepStatus } from 'pages/_app'
+import { useCallback, useState } from 'react'
+import { toStringWithDecimals } from 'utils/toStringWithDecimals'
+import { ClaimStatus } from './ClaimStatus'
+import { SignForEligibleWallets } from './SignForEligibleWallets'
+import { StepProps } from './common'
 
 // Following the convention,
 // If error is:
@@ -201,7 +201,7 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
             </h4>
             <BackButton onBack={onBack} />
           </div>
-          <div className="px-10 py-8 text-base16">
+          <div className="px-4 py-8 text-base sm:px-10 sm:text-base16">
             <p className="mb-6">
               {`Please sign your connected wallets. To sign, click the
               corresponding “sign” button for each wallet. Your wallet will ask

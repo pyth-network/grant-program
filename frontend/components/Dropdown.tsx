@@ -19,7 +19,7 @@ export function Dropdown({ icon, title, items }: DropdownProps) {
         {({ open }) => (
           <>
             <Listbox.Button className="btn before:btn-bg btn--dark min-w-[207px] before:bg-dark hover:text-dark hover:before:bg-light">
-              <span className="relative inline-flex items-center gap-2.5  whitespace-nowrap">
+              <span className="relative inline-flex items-center gap-1 whitespace-nowrap  sm:gap-2.5">
                 {icon}
                 <span>{title}</span>
                 <Down className={`${open ? 'rotate-0' : 'rotate-180'}`} />
