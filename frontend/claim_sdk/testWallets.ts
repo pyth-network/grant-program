@@ -14,13 +14,12 @@ import { AminoSignResponse, Secp256k1HdWallet } from '@cosmjs/amino'
 import { makeADR36AminoSignDoc } from '@keplr-wallet/cosmos'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { OfflineAminoSigner } from '@injectivelabs/sdk-ts/dist/cjs/core/accounts/signers/types/amino-signer'
 import { hardDriveSignMessage, signDiscordMessage } from './ecosystems/solana'
 import { AptosAccount } from 'aptos'
 import { aptosGetFullMessage } from './ecosystems/aptos'
 import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519'
 import { hashDiscordUserId } from '../utils/hashDiscord'
-import { Address as InjectiveAddress } from '@injectivelabs/sdk-ts'
+import { getInjectiveAddress } from '../utils/getInjectiveAddress'
 
 dotenv.config() // Load environment variables from .env file
 
@@ -131,7 +130,7 @@ export class TestEvmWallet implements TestWallet {
 
   public address(): string {
     if (this.isInjectiveWallet) {
-      return InjectiveAddress.fromHex(this.wallet.address).toBech32('inj')
+      return getInjectiveAddress(this.wallet.address)
     } else {
       return this.wallet.address.toLowerCase()
     }
@@ -140,7 +139,7 @@ export class TestEvmWallet implements TestWallet {
 
 export class TestCosmWasmWallet implements TestWallet {
   protected constructor(
-    readonly wallet: OfflineAminoSigner,
+    readonly wallet: Secp256k1HdWallet,
     readonly addressStr: string
   ) {}
   /**
@@ -156,7 +155,7 @@ export class TestCosmWasmWallet implements TestWallet {
     const jsonContent = fs.readFileSync(keyFile, 'utf8')
 
     const mnemonic = JSON.parse(jsonContent).mnemonic
-    const wallet: OfflineAminoSigner = await Secp256k1HdWallet.fromMnemonic(
+    const wallet: Secp256k1HdWallet = await Secp256k1HdWallet.fromMnemonic(
       mnemonic,
       chainId ? { prefix: chainId } : {}
     )
