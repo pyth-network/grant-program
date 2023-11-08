@@ -136,12 +136,11 @@ export function resetLocalState() {
 }
 
 // callback will be called if there is a version mismatch.
-export function resetOnVersionMismatch(cb: () => void) {
+export function resetOnVersionMismatch() {
   const oldVersion = VersionStore.get()
   if (oldVersion === VersionStore.appVersion) return
 
   resetLocalState()
   // the clean state is compatible with the new version and hence
   VersionStore.set(VersionStore.appVersion)
-  cb()
 }
