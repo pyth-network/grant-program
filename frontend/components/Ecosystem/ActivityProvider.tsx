@@ -6,8 +6,9 @@ import {
   useState,
 } from 'react'
 import { Ecosystem, ProviderProps } from '.'
+import { ActivityStore } from 'utils/store'
 
-type ActivityMap = {
+export type ActivityMap = {
   [ecosystem in Ecosystem]?: boolean
 }
 type ActivityContextType = {
@@ -15,27 +16,15 @@ type ActivityContextType = {
   setActivity: (ecosystem: Ecosystem, isActive: boolean) => void
 }
 
-const ACTIVIY_KEY = 'activity-store'
-function getStoredActivityMap(): ActivityMap | null {
-  if (typeof window === 'undefined') return null
-
-  const mapStr = localStorage.getItem(ACTIVIY_KEY)
-  if (mapStr === null) return null
-
-  const obj = JSON.parse(mapStr)
-  return obj as ActivityMap
-}
-
 const ActivityContext = createContext<ActivityContextType | undefined>(
   undefined
 )
 export function ActivityProvider({ children }: ProviderProps) {
-  const [activity, setActivity] = useState(getStoredActivityMap() ?? {})
+  const [activity, setActivity] = useState(ActivityStore.get() ?? {})
 
   // side effect: whenever the activity map changes sync the local storage
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    localStorage.setItem(ACTIVIY_KEY, JSON.stringify(activity))
+    ActivityStore.set(activity)
   }, [activity])
 
   const setActivityWrapper = useCallback(

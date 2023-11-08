@@ -7,6 +7,7 @@ import Linkedin from '@images/linkedin.inline.svg'
 import Telegram from '@images/telegram.inline.svg'
 import Twitter from '@images/twitter.inline.svg'
 import Link from 'next/link'
+import { resetLocalState } from 'utils/store'
 
 export type TokensReceivedProps = {
   totalCoinsClaimed: string | null
@@ -21,7 +22,7 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
           </h4>
           <Button
             onClick={() => {
-              localStorage.clear()
+              resetLocalState()
               location.replace('/')
             }}
             type={'secondary'}

@@ -6,13 +6,13 @@ import {
   useState,
 } from 'react'
 import { ProviderProps, Ecosystem } from '.'
-import { BN } from '@coral-xyz/anchor'
 import { ClaimInfo } from 'claim_sdk/claim'
 import { useActivity } from './ActivityProvider'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { fetchAmountAndProof } from 'utils/api'
 import { enumToSdkEcosystem } from 'utils/ecosystemEnumToEcosystem'
 import { isClaimAlreadySubmitted } from 'utils/isClaimAlreadySubmitted'
+import { EligibilityStore } from 'utils/store'
 
 type Eligibility =
   | {
@@ -35,47 +35,16 @@ const EligibilityContext = createContext<EligibilityContextType | undefined>(
   undefined
 )
 
-const ELIGIBILITY_KEY = 'eligibility-key'
-function getStoredEligibilityMap(): EligibilityMap | null {
-  if (typeof window === 'undefined') return null
-
-  const mapStr = localStorage.getItem(ELIGIBILITY_KEY)
-  if (mapStr === null) return null
-
-  const obj = JSON.parse(mapStr)
-
-  // Every other key value pair is fine, except for ClaimInfo.
-  // We need to do some customized parsing as it is a class.
-  Object.keys(obj).forEach((ecosystem) => {
-    Object.keys(obj[ecosystem]).forEach((identity) => {
-      if (obj[ecosystem][identity] === undefined) return
-      const claimInfo = obj[ecosystem][identity].claimInfo
-      obj[ecosystem][identity].claimInfo = new ClaimInfo(
-        claimInfo.ecosystem,
-        claimInfo.identity,
-        new BN(claimInfo.amount, 'hex')
-      )
-
-      obj[ecosystem][identity].proofOfInclusion = obj[ecosystem][
-        identity
-      ].proofOfInclusion.map((chunk: any) => Buffer.from(chunk))
-    })
-  })
-
-  return obj as EligibilityMap
-}
-
 export function EligibilityProvider({ children }: ProviderProps) {
   const [eligibilityMap, setEligibilityMap] = useState(
-    getStoredEligibilityMap() ?? {}
+    EligibilityStore.get() ?? {}
   )
 
   const getEcosystemIdentity = useGetEcosystemIdentity()
 
   // side effect: whenever the eligibilityMap changes sync the local storage
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    localStorage.setItem(ELIGIBILITY_KEY, JSON.stringify(eligibilityMap))
+    EligibilityStore.set(eligibilityMap)
   }, [eligibilityMap])
 
   // Whenever any ecosystem identity changes

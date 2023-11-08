@@ -15,12 +15,12 @@ import {
 } from 'claim_sdk/solana'
 import { useGetClaim } from 'hooks/useGetClaim'
 import { useTokenDispenserProvider } from 'hooks/useTokenDispenserProvider'
-import { setLastStepStatus } from 'pages/_app'
 import { useCallback, useState } from 'react'
 import { toStringWithDecimals } from 'utils/toStringWithDecimals'
 import { ClaimStatus } from './ClaimStatus'
 import { SignForEligibleWallets } from './SignForEligibleWallets'
 import { StepProps } from './common'
+import { PathnameStore } from 'utils/store'
 
 // Following the convention,
 // If error is:
@@ -184,7 +184,7 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
     await Promise.allSettled(allPromises)
     window.onbeforeunload = null
     // once the transaction has been submitted set the local storage with the path
-    setLastStepStatus(
+    PathnameStore.set(
       `/next-steps?totalTokensClaimed=${toStringWithDecimals(
         totalCoinsClaimed
       )}`

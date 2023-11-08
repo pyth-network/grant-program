@@ -17,18 +17,17 @@ import { Layout } from '@components/Layout'
 import { Disclaimer } from '@components/modal/Disclaimer'
 import Script from 'next/script'
 
-const LAST_STEP_STATUS_KEY = 'last-step-status-key'
-
-export function setLastStepStatus(pathname: string) {
-  localStorage.setItem(LAST_STEP_STATUS_KEY, pathname)
-}
+import {
+  DisclaimerCheckStore,
+  PathnameStore,
+  resetOnVersionMismatch,
+} from 'utils/store'
 
 function useRedirect() {
   // We are fetching it here and not in useEffect
   // As we need this before it is being reset
   const lastStep = useMemo(() => {
-    if (typeof window === 'undefined') return null
-    return localStorage.getItem(LAST_STEP_STATUS_KEY)
+    return PathnameStore.get()
   }, [])
 
   const pathname = usePathname()
@@ -53,20 +52,22 @@ function useRedirect() {
     // don't store it.
     if (pathname === '/discord-login' || pathname === '/discord-logout') return
     else
-      setLastStepStatus(
+      PathnameStore.set(
         `${pathname}${params.toString() ? '?' + params.toString() : ''}`
       )
   }, [params, pathname])
 }
 
-const DISCLAIMER_KEY = 'disclaimer-read'
 const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
+  const router = useRouter()
   const [disclaimerWasRead, setDisclaimerWasRead] = useState(false)
+
+  // side effects on initial reload
   useLayoutEffect(() => {
-    if (typeof window !== 'undefined') {
-      const wasRead = localStorage.getItem(DISCLAIMER_KEY)
-      if (wasRead === 'true') setDisclaimerWasRead(true)
-    }
+    resetOnVersionMismatch(() => router.replace('/'))
+
+    const wasRead = DisclaimerCheckStore.get()
+    if (wasRead === 'true') setDisclaimerWasRead(true)
   }, [])
 
   useRedirect()
@@ -114,7 +115,7 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
                       <Disclaimer
                         showModal={!disclaimerWasRead}
                         onAgree={() => {
-                          localStorage.setItem(DISCLAIMER_KEY, 'true')
+                          DisclaimerCheckStore.set('true')
                           setDisclaimerWasRead(true)
                         }}
                       />
