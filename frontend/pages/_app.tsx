@@ -59,14 +59,13 @@ function useRedirect() {
 }
 
 const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
-  // This should run before any rendering.
-  // Clear any local state if mismatch
-  resetOnVersionMismatch()
-
+  const router = useRouter()
   const [disclaimerWasRead, setDisclaimerWasRead] = useState(false)
 
   // side effects on initial reload
   useLayoutEffect(() => {
+    resetOnVersionMismatch(() => router.replace('/'))
+
     const wasRead = DisclaimerCheckStore.get()
     if (wasRead === 'true') setDisclaimerWasRead(true)
   }, [])
