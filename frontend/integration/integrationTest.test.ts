@@ -96,9 +96,11 @@ describe('integration test', () => {
       confirmOpts
     )
 
+    const tenMinTimeWindow = 10 * 60
     const tokenDispenserEventSubscriber = new TokenDispenserEventSubscriber(
       endpoint,
       tokenDispenserPid,
+      tenMinTimeWindow,
       confirmOpts
     )
 
@@ -198,7 +200,7 @@ describe('integration test', () => {
       // check event
       const txnEvents =
         await tokenDispenserEventSubscriber.parseTransactionLogs()
-      expect(txnEvents.length).toEqual(1)
+      expect(txnEvents.length).toEqual(2)
       expect(txnEvents[0].events.length).toEqual(1)
       const evmClaimEvent = txnEvents[0].events[0]
       expect(evmClaimEvent.claimant.equals(wallet.publicKey)).toBeTruthy()
@@ -256,7 +258,7 @@ describe('integration test', () => {
 
       const txnEvents =
         await tokenDispenserEventSubscriber.parseTransactionLogs()
-      expect(txnEvents.length).toEqual(1)
+      expect(txnEvents.length).toEqual(3)
       expect(txnEvents[0].events.length).toEqual(1)
       const cosmClaimEvent = txnEvents[0].events[0]
       expect(cosmClaimEvent.claimant.equals(wallet.publicKey)).toBeTruthy()
