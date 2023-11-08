@@ -133,7 +133,7 @@ export class TestEvmWallet implements TestWallet {
     if (this.isInjectiveWallet) {
       return InjectiveAddress.fromHex(this.wallet.address).toBech32('inj')
     } else {
-      return this.wallet.address
+      return this.wallet.address.toLowerCase()
     }
   }
 }
