@@ -15,6 +15,7 @@ import { SeiProvider } from '@components/wallets/Sei'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Layout } from '@components/Layout'
 import { Disclaimer } from '@components/modal/Disclaimer'
+import Script from 'next/script'
 
 const LAST_STEP_STATUS_KEY = 'last-step-status-key'
 
@@ -39,6 +40,7 @@ function useRedirect() {
     // These pathnames are being loaded when we have to oauth with Discord
     // We shouldn't be redirecting the user from these pages
     if (pathname === '/discord-login' || pathname === '/discord-logout') return
+
     //RULES:
     // 1. no last state -> redirect to welcome page
     // 2. there is a last state -> redirect to that page
@@ -50,7 +52,10 @@ function useRedirect() {
     // If the pathname for the current page is the once used for discord oauth,
     // don't store it.
     if (pathname === '/discord-login' || pathname === '/discord-logout') return
-    else setLastStepStatus(`${pathname}?${params.toString()}`)
+    else
+      setLastStepStatus(
+        `${pathname}${params.toString() ? '?' + params.toString() : ''}`
+      )
   }, [params, pathname])
 }
 
@@ -66,47 +71,62 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
 
   useRedirect()
   return (
-    <SessionProvider>
-      <SolanaWalletProvider>
-        <AptosWalletProvider>
-          <SuiWalletProvider>
-            <EVMWalletProvider>
-              <CosmosWalletProvider>
-                <SeiProvider>
-                  {/* WARN: EcosystemProviders might use wallet provider addresses and hence
+    <>
+      <Script
+        async
+        src="https://www.googletagmanager.com/gtag/js?id=G-C2TFD85LKJ"
+      />
+      <Script id="google-tag">
+        {`
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-C2TFD85LKJ');
+  `}
+      </Script>
+      <SessionProvider>
+        <SolanaWalletProvider>
+          <AptosWalletProvider>
+            <SuiWalletProvider>
+              <EVMWalletProvider>
+                <CosmosWalletProvider>
+                  <SeiProvider>
+                    {/* WARN: EcosystemProviders might use wallet provider addresses and hence
                  They should be inside all those providers. */}
-                  <EcosystemProviders>
-                    <Layout>
-                      <NextSeo
-                        title="Pyth Network Retrospective Airdrop"
-                        description="This is the official claim webpage for the Pyth Network Retrospective Airdrop program."
+                    <EcosystemProviders>
+                      <Layout>
+                        <NextSeo
+                          title="Pyth Network Retrospective Airdrop"
+                          description="This is the official claim webpage for the Pyth Network Retrospective Airdrop program."
+                        />
+                        <Component {...pageProps} />
+                      </Layout>
+                      <Toaster
+                        position="bottom-left"
+                        toastOptions={{
+                          style: {
+                            wordBreak: 'break-word',
+                          },
+                        }}
+                        reverseOrder={false}
                       />
-                      <Component {...pageProps} />
-                    </Layout>
-                    <Toaster
-                      position="bottom-left"
-                      toastOptions={{
-                        style: {
-                          wordBreak: 'break-word',
-                        },
-                      }}
-                      reverseOrder={false}
-                    />
-                    <Disclaimer
-                      showModal={!disclaimerWasRead}
-                      onAgree={() => {
-                        localStorage.setItem(DISCLAIMER_KEY, 'true')
-                        setDisclaimerWasRead(true)
-                      }}
-                    />
-                  </EcosystemProviders>
-                </SeiProvider>
-              </CosmosWalletProvider>
-            </EVMWalletProvider>
-          </SuiWalletProvider>
-        </AptosWalletProvider>
-      </SolanaWalletProvider>
-    </SessionProvider>
+                      <Disclaimer
+                        showModal={!disclaimerWasRead}
+                        onAgree={() => {
+                          localStorage.setItem(DISCLAIMER_KEY, 'true')
+                          setDisclaimerWasRead(true)
+                        }}
+                      />
+                    </EcosystemProviders>
+                  </SeiProvider>
+                </CosmosWalletProvider>
+              </EVMWalletProvider>
+            </SuiWalletProvider>
+          </AptosWalletProvider>
+        </SolanaWalletProvider>
+      </SessionProvider>
+    </>
   )
 }
 
