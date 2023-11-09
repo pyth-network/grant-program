@@ -31,7 +31,7 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
           </Button>
         </div>
         <div className="px-4 py-8 text-base sm:px-10 sm:text-base16">
-          <h3 className="mb-8 flex items-center gap-2 font-header text-[36px] font-light">
+          <h3 className="mb-8 flex items-center gap-2 font-header text-[26px] font-light sm:text-[36px]">
             You Received{' '}
             <span className="flex items-center gap-2 font-bold">
               {totalCoinsClaimed === null ? (
