@@ -9,8 +9,9 @@ import { Ecosystem, ProviderProps } from '.'
 import { SignedMessage } from 'claim_sdk/ecosystems/signatures'
 import { useGetEcosystemIdentity } from 'hooks/useGetEcosystemIdentity'
 import { useActivity } from './ActivityProvider'
+import { SignatureStore } from 'utils/store'
 
-type SignatureMap = {
+export type SignatureMap = {
   [solanaIdentity: string]: {
     [ecosystem in Ecosystem]?: {
       [ecosystemIdentity: string]: SignedMessage
@@ -30,42 +31,12 @@ const SignatureContext = createContext<SignatureContextType | undefined>(
   undefined
 )
 
-const SIGNATURE_KEY = 'signature-key'
-function getStoredSignatureMap(): SignatureMap | null {
-  if (typeof window === 'undefined') return null
-
-  const mapStr = localStorage.getItem(SIGNATURE_KEY)
-  if (mapStr === null) return null
-
-  const obj = JSON.parse(mapStr)
-  Object.keys(obj).forEach((solanaIdentity) => {
-    Object.keys(obj[solanaIdentity]).forEach((ecosystem) => {
-      Object.keys(obj[solanaIdentity][ecosystem]).forEach(
-        (ecosystemIdentity) => {
-          const signedMsg = obj[solanaIdentity][ecosystem][ecosystemIdentity]
-          obj[solanaIdentity][ecosystem][ecosystemIdentity] = {
-            // parsing the stringified buffer here
-            publicKey: Buffer.from(signedMsg.publicKey),
-            signature: Buffer.from(signedMsg.signature),
-            recoveryId: signedMsg.recoveryId,
-            fullMessage: Buffer.from(signedMsg.fullMessage),
-          }
-        }
-      )
-    })
-  })
-  return obj as SignatureMap
-}
-
 export function SignatureProvider({ children }: ProviderProps) {
-  const [signatureMap, setSignatureMap] = useState(
-    getStoredSignatureMap() ?? {}
-  )
+  const [signatureMap, setSignatureMap] = useState(SignatureStore.get() ?? {})
 
   // side effect: whenever the signature map changes sync the local storage
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    localStorage.setItem(SIGNATURE_KEY, JSON.stringify(signatureMap))
+    SignatureStore.set(signatureMap)
   }, [signatureMap])
 
   const setSignatureMapWrapper = useCallback(
