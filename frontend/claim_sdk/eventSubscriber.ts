@@ -44,7 +44,6 @@ export class TokenDispenserEventSubscriber {
   > {
     const currentTimeSec = Date.now() / 1000
     let signatures: Array<ConfirmedSignatureInfo> = []
-    let beforeSig: TransactionSignature | undefined = undefined
     let currentBatch = await this.connection.getSignaturesForAddress(
       this.programId,
       {},
@@ -63,12 +62,11 @@ export class TokenDispenserEventSubscriber {
       ) {
         batchWithinWindow = false
       }
-      beforeSig = currentBatch[currentBatch.length - 1]?.signature
       signatures = signatures.concat(currentBatch)
       currentBatch = await this.connection.getSignaturesForAddress(
         this.programId,
         {
-          before: beforeSig,
+          before: currentBatchLastSig,
           // Note: ignoring lastSignature and will assume datadog can handle de-duplication
         },
         this.connection.commitment as anchor.web3.Finality
