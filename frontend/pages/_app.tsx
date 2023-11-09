@@ -23,7 +23,7 @@ import {
   resetOnVersionMismatch,
 } from 'utils/store'
 
-function useRedirect() {
+function useRedirect(isVersionChecked: boolean) {
   // We are fetching it here and not in useEffect
   // As we need this before it is being reset
   const lastStep = useMemo(() => {
@@ -36,6 +36,7 @@ function useRedirect() {
   const router = useRouter()
   // We will only redirect on the first load
   useLayoutEffect(() => {
+    if (!isVersionChecked) return
     // These pathnames are being loaded when we have to oauth with Discord
     // We shouldn't be redirecting the user from these pages
     if (pathname === '/discord-login' || pathname === '/discord-logout') return
@@ -45,9 +46,10 @@ function useRedirect() {
     // 2. there is a last state -> redirect to that page
     if (lastStep === null) router.replace('/')
     if (lastStep) router.replace(lastStep)
-  }, [])
+  }, [isVersionChecked])
 
   useEffect(() => {
+    if (!isVersionChecked) return
     // If the pathname for the current page is the once used for discord oauth,
     // don't store it.
     if (pathname === '/discord-login' || pathname === '/discord-logout') return
@@ -55,22 +57,31 @@ function useRedirect() {
       PathnameStore.set(
         `${pathname}${params.toString() ? '?' + params.toString() : ''}`
       )
-  }, [params, pathname])
+  }, [params, pathname, isVersionChecked])
 }
 
 const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
   const router = useRouter()
   const [disclaimerWasRead, setDisclaimerWasRead] = useState(false)
 
-  // side effects on initial reload
+  const [isVersionChecked, setIsVersionChecked] = useState(false)
+
+  // check if there is a version mismatch, if it is reload after reset
+  // if no setIsVersionChecked to true, which will be used to render other things
   useLayoutEffect(() => {
     resetOnVersionMismatch(() => router.replace('/'))
+    setIsVersionChecked(true)
+  }, [router])
 
-    const wasRead = DisclaimerCheckStore.get()
-    if (wasRead === 'true') setDisclaimerWasRead(true)
-  }, [])
+  useLayoutEffect(() => {
+    if (isVersionChecked) {
+      const wasRead = DisclaimerCheckStore.get()
+      if (wasRead === 'true') setDisclaimerWasRead(true)
+    }
+  }, [isVersionChecked])
 
-  useRedirect()
+  useRedirect(isVersionChecked)
+
   return (
     <>
       <Script
@@ -86,47 +97,51 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
     gtag('config', 'G-C2TFD85LKJ');
   `}
       </Script>
-      <SessionProvider>
-        <SolanaWalletProvider>
-          <AptosWalletProvider>
-            <SuiWalletProvider>
-              <EVMWalletProvider>
-                <CosmosWalletProvider>
-                  <SeiProvider>
-                    {/* WARN: EcosystemProviders might use wallet provider addresses and hence
+      {isVersionChecked ? (
+        <SessionProvider>
+          <SolanaWalletProvider>
+            <AptosWalletProvider>
+              <SuiWalletProvider>
+                <EVMWalletProvider>
+                  <CosmosWalletProvider>
+                    <SeiProvider>
+                      {/* WARN: EcosystemProviders might use wallet provider addresses and hence
                  They should be inside all those providers. */}
-                    <EcosystemProviders>
-                      <Layout>
-                        <NextSeo
-                          title="Pyth Network Retrospective Airdrop"
-                          description="This is the official claim webpage for the Pyth Network Retrospective Airdrop program."
+                      <EcosystemProviders>
+                        <Layout>
+                          <NextSeo
+                            title="Pyth Network Retrospective Airdrop"
+                            description="This is the official claim webpage for the Pyth Network Retrospective Airdrop program."
+                          />
+                          <Component {...pageProps} />
+                        </Layout>
+                        <Toaster
+                          position="bottom-left"
+                          toastOptions={{
+                            style: {
+                              wordBreak: 'break-word',
+                            },
+                          }}
+                          reverseOrder={false}
                         />
-                        <Component {...pageProps} />
-                      </Layout>
-                      <Toaster
-                        position="bottom-left"
-                        toastOptions={{
-                          style: {
-                            wordBreak: 'break-word',
-                          },
-                        }}
-                        reverseOrder={false}
-                      />
-                      <Disclaimer
-                        showModal={!disclaimerWasRead}
-                        onAgree={() => {
-                          DisclaimerCheckStore.set('true')
-                          setDisclaimerWasRead(true)
-                        }}
-                      />
-                    </EcosystemProviders>
-                  </SeiProvider>
-                </CosmosWalletProvider>
-              </EVMWalletProvider>
-            </SuiWalletProvider>
-          </AptosWalletProvider>
-        </SolanaWalletProvider>
-      </SessionProvider>
+                        <Disclaimer
+                          showModal={!disclaimerWasRead}
+                          onAgree={() => {
+                            DisclaimerCheckStore.set('true')
+                            setDisclaimerWasRead(true)
+                          }}
+                        />
+                      </EcosystemProviders>
+                    </SeiProvider>
+                  </CosmosWalletProvider>
+                </EVMWalletProvider>
+              </SuiWalletProvider>
+            </AptosWalletProvider>
+          </SolanaWalletProvider>
+        </SessionProvider>
+      ) : (
+        <></>
+      )}
     </>
   )
 }
