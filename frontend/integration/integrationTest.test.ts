@@ -107,6 +107,7 @@ describe('integration test', () => {
       tokenDispenserPid,
       tenMinTimeWindow,
       50,
+      1, // not worried about rate limit when testing locally
       confirmOpts
     )
 
