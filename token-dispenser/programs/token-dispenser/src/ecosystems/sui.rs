@@ -78,6 +78,10 @@ pub struct SuiAddress([u8; 32]);
 
 impl SuiAddress {
     pub const LEN: usize = 32;
+
+    pub fn as_bytes(&self) -> [u8; Self::LEN] {
+        self.0
+    }
 }
 
 impl From<Ed25519Pubkey> for SuiAddress {

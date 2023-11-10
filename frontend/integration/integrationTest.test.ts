@@ -14,7 +14,10 @@ import {
 } from '@solana/web3.js'
 import { Buffer } from 'buffer'
 import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
-import { TokenDispenserEventSubscriber } from '../claim_sdk/eventSubscriber'
+import {
+  formatTxnEventInfo,
+  TokenDispenserEventSubscriber,
+} from '../claim_sdk/eventSubscriber'
 import {
   DiscordTestWallet,
   TestWallet,
@@ -23,6 +26,8 @@ import {
 } from '../claim_sdk/testWallets'
 import { loadTestWallets } from '../claim_sdk/testWallets'
 import { mockFetchAmountAndProof, mockfetchFundTransaction } from './api'
+import { removeLeading0x } from '../claim_sdk'
+import { AnchorError } from '@coral-xyz/anchor'
 
 const pool = getDatabasePool()
 
@@ -156,11 +161,11 @@ describe('integration test', () => {
       expect(
         lookupTableAddresses.includes(SYSVAR_INSTRUCTIONS_PUBKEY.toBase58())
       ).toBeTruthy()
-      const txnEvents =
+      const { txnEvents } =
         await tokenDispenserEventSubscriber.parseTransactionLogs()
       expect(txnEvents.length).toEqual(1)
       // no events emitted in initialize
-      expect(txnEvents[0].events.length).toEqual(0)
+      expect(txnEvents[0].event).toBeUndefined()
     })
 
     it('submits an evm claim', async () => {
@@ -198,12 +203,16 @@ describe('integration test', () => {
       expect(claimantFund.amount.eq(new anchor.BN(3000000))).toBeTruthy()
 
       // check event
-      const txnEvents =
+      const { txnEvents } =
         await tokenDispenserEventSubscriber.parseTransactionLogs()
       expect(txnEvents.length).toEqual(2)
-      expect(txnEvents[0].events.length).toEqual(1)
-      const evmClaimEvent = txnEvents[0].events[0]
+      expect(txnEvents[0].event).toBeDefined()
+      const evmClaimEvent = txnEvents[0].event!
       expect(evmClaimEvent.claimant.equals(wallet.publicKey)).toBeTruthy()
+      expect(evmClaimEvent.ecosystem).toEqual('evm')
+      expect(evmClaimEvent.address).toEqual(
+        removeLeading0x(testWallets.evm[0].address())
+      )
       expect(
         new anchor.BN(evmClaimEvent.claimAmount.toString()).eq(claimInfo.amount)
       ).toBeTruthy()
@@ -256,11 +265,11 @@ describe('integration test', () => {
         claimantFund.amount.eq(new anchor.BN(3000000 + 6000000))
       ).toBeTruthy()
 
-      const txnEvents =
+      const { txnEvents } =
         await tokenDispenserEventSubscriber.parseTransactionLogs()
       expect(txnEvents.length).toEqual(3)
-      expect(txnEvents[0].events.length).toEqual(1)
-      const cosmClaimEvent = txnEvents[0].events[0]
+      expect(txnEvents[0].event).toBeDefined()
+      const cosmClaimEvent = txnEvents[0].event!
       expect(cosmClaimEvent.claimant.equals(wallet.publicKey)).toBeTruthy()
       expect(
         new anchor.BN(cosmClaimEvent.claimAmount.toString()).eq(
@@ -568,6 +577,51 @@ describe('integration test', () => {
           )
         )
       ).toBeTruthy()
+    }, 40000)
+    it('fails to submit a duplicate claim', async () => {
+      const wallet = testWallets.sui[0]
+      const { claimInfo, proofOfInclusion } = (await mockFetchAmountAndProof(
+        'sui',
+        wallet.address()
+      ))!
+      const signedMessage = await wallet.signMessage(
+        tokenDispenserProvider.generateAuthorizationPayload()
+      )
+
+      const res = await Promise.all(
+        await tokenDispenserProvider.submitClaims(
+          [
+            {
+              claimInfo,
+              proofOfInclusion,
+              signedMessage,
+            },
+          ],
+          mockfetchFundTransaction
+        )
+      )
+      expect(JSON.stringify(res[0]).includes('InstructionError')).toBeTruthy()
+    })
+    it('eventSubscriber parses transaction logs', async () => {
+      const { txnEvents, errorLogs } =
+        await tokenDispenserEventSubscriber.parseTransactionLogs()
+      const aptosWallet = testWallets.aptos[0]
+      const suiWallet = testWallets.sui[0]
+
+      expect(errorLogs.length).toEqual(1)
+      console.log(`
+        aptosWallet.address(): ${aptosWallet.address()}
+        suiWallet.address(): ${suiWallet.address()}
+        solanaWallet: ${tokenDispenserProvider.claimant.toBase58()}
+      `)
+      txnEvents.forEach((txnEvent) => {
+        console.log(`
+          rawEvents:
+            ${JSON.stringify(formatTxnEventInfo(txnEvent), null, 2)}
+        `)
+        //         max_safe 9_007_199_254_740_991
+        let total = 207_726_793_000_000
+      })
     }, 40000)
   })
 })

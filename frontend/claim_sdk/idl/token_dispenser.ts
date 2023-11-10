@@ -619,6 +619,16 @@ export type TokenDispenser =
           "name": "leafBuffer",
           "type": "bytes",
           "index": false
+        },
+        {
+          "name": "ecosystem",
+          "type": "string",
+          "index": false
+        },
+        {
+          "name": "address",
+          "type": "string",
+          "index": false
         }
       ]
     }
@@ -1291,6 +1301,16 @@ export const IDL: TokenDispenser =
         {
           "name": "leafBuffer",
           "type": "bytes",
+          "index": false
+        },
+        {
+          "name": "ecosystem",
+          "type": "string",
+          "index": false
+        },
+        {
+          "name": "address",
+          "type": "string",
           "index": false
         }
       ]

@@ -174,6 +174,8 @@ pub mod token_dispenser {
             claim_amount:      claim_info.amount,
             claimant:          *ctx.accounts.claimant.key,
             leaf_buffer:       leaf_vector,
+            ecosystem:         claim_info.identity.ecosystem().to_owned(),
+            address:           claim_info.identity.address(),
         });
 
 
@@ -257,6 +259,36 @@ pub enum Identity {
     Aptos { address: AptosAddress },
     Cosmwasm { address: CosmosBech32Address },
     Injective { address: CosmosBech32Address },
+}
+
+impl Identity {
+    fn ecosystem(&self) -> &str {
+        match self {
+            Identity::Discord { .. } => "discord",
+            Identity::Solana { .. } => "solana",
+            Identity::Evm { .. } => "evm",
+            Identity::Sui { .. } => "sui",
+            Identity::Aptos { .. } => "aptos",
+            Identity::Cosmwasm { .. } => "cosmwasm",
+            Identity::Injective { .. } => "injective",
+        }
+    }
+
+    fn address(&self) -> String {
+        match self {
+            Identity::Discord { username } => username.to_string(),
+            Identity::Solana { pubkey } => {
+                // hex::encode(pubkey.to_bytes())
+                Pubkey::from(pubkey.to_bytes()).to_string()
+                // bs58::encode().into_string()
+            }
+            Identity::Evm { pubkey } => hex::encode(pubkey.as_bytes()),
+            Identity::Sui { address } => hex::encode(address.as_bytes()),
+            Identity::Aptos { address } => hex::encode(address.as_bytes()),
+            Identity::Cosmwasm { address } => address.as_string(),
+            Identity::Injective { address } => address.as_string(),
+        }
+    }
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
@@ -658,4 +690,6 @@ pub struct ClaimEvent {
     pub claim_amount:      u64,
     pub claimant:          Pubkey,
     pub leaf_buffer:       Vec<u8>,
+    pub ecosystem:         String,
+    pub address:           String,
 }
