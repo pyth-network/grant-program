@@ -277,11 +277,7 @@ impl Identity {
     fn address(&self) -> String {
         match self {
             Identity::Discord { username } => username.to_string(),
-            Identity::Solana { pubkey } => {
-                // hex::encode(pubkey.to_bytes())
-                Pubkey::from(pubkey.to_bytes()).to_string()
-                // bs58::encode().into_string()
-            }
+            Identity::Solana { pubkey } => Pubkey::from(pubkey.to_bytes()).to_string(),
             Identity::Evm { pubkey } => hex::encode(pubkey.as_bytes()),
             Identity::Sui { address } => hex::encode(address.as_bytes()),
             Identity::Aptos { address } => hex::encode(address.as_bytes()),
