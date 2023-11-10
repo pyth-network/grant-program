@@ -9,17 +9,20 @@ export class TokenDispenserEventSubscriber {
   connection: anchor.web3.Connection
   programId: anchor.web3.PublicKey
   timeWindowSecs: number
+  chunkSize: number
 
   constructor(
     endpoint: string,
     programId: anchor.web3.PublicKey,
     timeWindowSecs: number,
+    chunkSize: number,
     confirmOpts?: anchor.web3.ConfirmOptions
   ) {
     const coder = new BorshCoder(tokenDispenser as Idl)
     this.programId = programId
     this.eventParser = new anchor.EventParser(this.programId, coder)
     this.timeWindowSecs = timeWindowSecs
+    this.chunkSize = chunkSize
     confirmOpts = confirmOpts ?? anchor.AnchorProvider.defaultOptions()
     if (
       !confirmOpts.commitment ||
@@ -71,28 +74,40 @@ export class TokenDispenserEventSubscriber {
       )
     }
 
-    const validTxns = []
+    const validTxnSigs = []
     // TODO: figure out what to do with error txns
-    const errorTxns = []
+    const errorTxnSigs = []
     for (const signature of signatures) {
       if (signature.err) {
-        errorTxns.push(signature.signature)
+        errorTxnSigs.push(signature.signature)
       } else {
-        validTxns.push(signature.signature)
+        validTxnSigs.push(signature.signature)
       }
     }
-    const txns = await this.connection.getTransactions(validTxns, {
-      commitment: this.connection.commitment as anchor.web3.Finality,
-      maxSupportedTransactionVersion: 0,
-    })
-    const txnLogs = txns.map((txLog) => {
-      return {
-        signature: txLog?.transaction.signatures[0] ?? '',
-        logs: txLog?.meta?.logMessages ?? [],
-        blockTime: txLog?.blockTime ?? 0,
-        slot: txLog?.slot ?? 0,
-      }
-    })
+    const validTxnSigChunks = chunkArray(validTxnSigs, this.chunkSize)
+    let txnLogs: Array<{
+      signature: string
+      logs: string[]
+      blockTime: number
+      slot: number
+    }> = []
+    await Promise.all(
+      validTxnSigChunks.map(async (validTxnSigChunk, i) => {
+        const txns = await this.connection.getTransactions(validTxnSigChunk, {
+          commitment: this.connection.commitment as anchor.web3.Finality,
+          maxSupportedTransactionVersion: 0,
+        })
+        const txnLogsChunk = txns.map((txLog) => {
+          return {
+            signature: txLog?.transaction.signatures[0] ?? '',
+            logs: txLog?.meta?.logMessages ?? [],
+            blockTime: txLog?.blockTime ?? 0,
+            slot: txLog?.slot ?? 0,
+          }
+        })
+        txnLogs.push(...txnLogsChunk)
+      })
+    )
 
     const txnEvents = txnLogs.map((txnLog) => {
       const eventGen = this.eventParser.parseLogs(txnLog.logs)
@@ -114,17 +129,31 @@ export class TokenDispenserEventSubscriber {
       }
     })
 
-    const errorTxnInfo = await this.connection.getTransactions(errorTxns, {
-      commitment: this.connection.commitment as anchor.web3.Finality,
-      maxSupportedTransactionVersion: 0,
-    })
-    const errorLogs: TxnInfo[] = errorTxnInfo.map((txLog) => {
-      return {
-        signature: txLog?.transaction.signatures[0] ?? '',
-        blockTime: txLog?.blockTime ?? 0,
-        slot: txLog?.slot ?? 0,
-      }
-    })
+    const errorTxnSigChunks = chunkArray(errorTxnSigs, this.chunkSize)
+    let errorLogs: Array<{
+      signature: string
+      blockTime: number
+      slot: number
+    }> = []
+    await Promise.all(
+      errorTxnSigChunks.map(async (errorTxnSigChunk, i) => {
+        const errorTxns = await this.connection.getTransactions(
+          errorTxnSigChunk,
+          {
+            commitment: this.connection.commitment as anchor.web3.Finality,
+            maxSupportedTransactionVersion: 0,
+          }
+        )
+        const errorTxnLogsChunk = errorTxns.map((txLog) => {
+          return {
+            signature: txLog?.transaction.signatures[0] ?? '',
+            blockTime: txLog?.blockTime ?? 0,
+            slot: txLog?.slot ?? 0,
+          }
+        })
+        errorLogs.push(...errorTxnLogsChunk)
+      })
+    )
 
     return {
       txnEvents,
@@ -179,6 +208,11 @@ export function formatTxnEventInfo(txnEvnInfo: TxnEventInfo) {
   return formattedEvent
 }
 
+function chunkArray(array: any[], chunkSize: number) {
+  return Array.from({ length: Math.ceil(array.length / chunkSize) }, (_, i) =>
+    array.slice(i * chunkSize, i * chunkSize + chunkSize)
+  )
+}
 export type TxnInfo = {
   signature: string
   blockTime: number

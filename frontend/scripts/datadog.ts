@@ -14,20 +14,23 @@ import {
 } from '../claim_sdk/eventSubscriber'
 import * as anchor from '@coral-xyz/anchor'
 import {
+  ERROR,
   INFO,
-  WARNING,
 } from '@datadog/datadog-api-client/dist/packages/datadog-api-client-v1/models/EventAlertType'
 import { envOrErr } from '../claim_sdk'
 
 const ENDPOINT = envOrErr('ENDPOINT')
 const PROGRAM_ID = envOrErr('PROGRAM_ID')
-const TIME_WINDOW_SECS = envOrErr('TIME_WINDOW_SECS')
+const CLUSTER = envOrErr('CLUSTER')
+const TIME_WINDOW_SECS = Number.parseInt(envOrErr('TIME_WINDOW_SECS'), 10)
+const CHUNK_SIZE = Number.parseInt(envOrErr('CHUNK_SIZE'), 10)
 
 async function main() {
   const tokenDispenserEventSubscriber = new TokenDispenserEventSubscriber(
     ENDPOINT,
     new anchor.web3.PublicKey(PROGRAM_ID),
-    Number.parseInt(TIME_WINDOW_SECS, 10),
+    TIME_WINDOW_SECS,
+    CHUNK_SIZE,
     {
       commitment: 'confirmed',
     }
@@ -120,8 +123,7 @@ function createTxnEventRequest(
         tags: [
           `claimant:${claimant}`,
           `ecosystem:${ecosystem}`,
-          //TODO: add cluster name to the tag
-          `network:solana-mainnet`,
+          `network:${CLUSTER}`,
           `service:token-dispenser-event-subscriber`,
         ],
       },
@@ -137,10 +139,9 @@ function createErrorLogRequest(
       body: {
         title: `error-${errorLog.signature}`,
         text: JSON.stringify(errorLog),
-        alertType: WARNING,
+        alertType: ERROR,
         tags: [
-          //TODO: add cluster name to the tag
-          `network:solana-mainnet`,
+          `network:${CLUSTER}`,
           `service:token-dispenser-event-subscriber`,
         ],
       },

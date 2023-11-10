@@ -106,6 +106,7 @@ describe('integration test', () => {
       endpoint,
       tokenDispenserPid,
       tenMinTimeWindow,
+      50,
       confirmOpts
     )
 
@@ -271,15 +272,14 @@ describe('integration test', () => {
       expect(txnEvents[0].event).toBeDefined()
       const cosmClaimEvent = txnEvents[0].event!
       expect(cosmClaimEvent.claimant.equals(wallet.publicKey)).toBeTruthy()
+      expect(cosmClaimEvent.ecosystem).toEqual('cosmwasm')
+      expect(cosmClaimEvent.address).toEqual(testWallets.cosmwasm[0].address())
       expect(
         new anchor.BN(cosmClaimEvent.claimAmount.toString()).eq(
           claimInfo.amount
         )
       ).toBeTruthy()
       expectedTreasuryBalance = expectedTreasuryBalance.sub(claimInfo.amount)
-      const eventRemainingBalance = new anchor.BN(
-        cosmClaimEvent.remainingBalance.toString()
-      )
       expect(
         new anchor.BN(cosmClaimEvent.remainingBalance.toString()).eq(
           expectedTreasuryBalance
