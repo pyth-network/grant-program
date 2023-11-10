@@ -174,7 +174,7 @@ pub mod token_dispenser {
             claim_amount:      claim_info.amount,
             claimant:          *ctx.accounts.claimant.key,
             leaf_buffer:       leaf_vector,
-            ecosystem:         claim_info.identity.ecosystem().to_owned(),
+            ecosystem:         claim_info.identity.ecosystem(),
             address:           claim_info.identity.address(),
         });
 
@@ -262,8 +262,8 @@ pub enum Identity {
 }
 
 impl Identity {
-    fn ecosystem(&self) -> &str {
-        match self {
+    fn ecosystem(&self) -> String {
+        let ecosystem = match self {
             Identity::Discord { .. } => "discord",
             Identity::Solana { .. } => "solana",
             Identity::Evm { .. } => "evm",
@@ -271,7 +271,8 @@ impl Identity {
             Identity::Aptos { .. } => "aptos",
             Identity::Cosmwasm { .. } => "cosmwasm",
             Identity::Injective { .. } => "injective",
-        }
+        };
+        ecosystem.to_owned()
     }
 
     fn address(&self) -> String {

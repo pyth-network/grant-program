@@ -21,12 +21,13 @@ import { envOrErr } from '../claim_sdk'
 
 const ENDPOINT = envOrErr('ENDPOINT')
 const PROGRAM_ID = envOrErr('PROGRAM_ID')
+const TIME_WINDOW_SECS = envOrErr('TIME_WINDOW_SECS')
 
 async function main() {
   const tokenDispenserEventSubscriber = new TokenDispenserEventSubscriber(
     ENDPOINT,
     new anchor.web3.PublicKey(PROGRAM_ID),
-    10 * 60,
+    Number.parseInt(TIME_WINDOW_SECS, 10),
     {
       commitment: 'confirmed',
     }
