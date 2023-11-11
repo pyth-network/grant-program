@@ -195,7 +195,7 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
     <>
       {screen == 1 ? (
         <Box>
-          <div className="flex items-center justify-between border-b border-light-35  bg-[#242339] py-8 px-10">
+          <div className="flex items-center justify-between border-b border-light-35  bg-[#242339] py-8 px-4 sm:px-10">
             <h4 className="font-header text-[28px] font-light leading-[1.2]">
               Sign Your Wallets and Claim
             </h4>

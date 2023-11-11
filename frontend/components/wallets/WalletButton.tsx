@@ -111,7 +111,7 @@ export type WalletModalProps = {
 export function WalletModal({ openModal, wallets }: WalletModalProps) {
   return (
     <Modal openModal={openModal}>
-      <h3 className="mb-16  font-header text-[36px] font-light">
+      <h3 className="mb-8 font-header  text-[24px] font-light sm:mb-16 sm:text-[36px]">
         Connect Your Wallet
       </h3>
       <div className="mx-auto flex max-w-[200px] flex-col justify-around gap-y-4">
