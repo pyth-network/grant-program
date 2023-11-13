@@ -42,43 +42,6 @@ async function main() {
   const configuration = client.createConfiguration()
   const apiInstance = new v1.EventsApi(configuration)
 
-  // # An example is: PriceFeedOfflineCheck-Crypto.AAVE/USD
-  // 	aggregation_key = f"{self.check.__class__.__name__}-{self.check.state().symbol}"
-  //
-  // 	if self.check.__class__.__bases__ == (PublisherCheck,):
-  // # Add publisher key to the aggregation key to separate different faulty publishers
-  // # An example would be: PublisherPriceCheck-Crypto.AAVE/USD-9TvAYCUkGajRXs....
-  // 	aggregation_key += "-" + self.check.state().public_key.key
-  //
-  // 	event = DatadogAPIEvent(
-  // 		aggregation_key=aggregation_key,
-  // 		title=text.split("\n")[0],
-  // 		text=text,
-  // 		tags=[
-  // 			"service:observer",
-  // 			f"network:{self.context['network']}",
-  // 			f"symbol:{self.check.state().symbol}",
-  // 			f"check:{self.check.__class__.__name__}",
-  // 		],
-  // 		alert_type=EventAlertType.WARNING,
-  // 		source_type_name="my_apps",
-  // 	)
-  // 74000000000
-  // const {
-  // 	claimant,
-  // 	claimAmount,
-  // 	ecosystem,
-  // 	address,
-  // } = event;
-  // example datadog event
-  // title: Crypto.GRAIL/USD is too far at the price service.
-  // aggregation_key: PriceFeedCrossChainDeviationCheck-Crypto.GRAIL/USD
-  // text:
-  //  Crypto.GRAIL/USD is too far at the price service.
-  //
-  //  Price: 1876.14745716
-  //  Price at price service: 1618.41120956
-
   const txnEventRequests = createTxnEventRequest(txnEvents)
   await Promise.all(
     txnEventRequests.map((txnEventRequest) => {
