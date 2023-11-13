@@ -2,7 +2,7 @@
  * Post an event returns "OK" response
  *
  * To Run:
- * DD_SITE="datadoghq.com" DD_API_KEY="<DD_API_KEY>" tsc "example.ts"
+ * DD_SITE="datadoghq.com" DD_API_KEY="<DD_API_KEY>" ts-node ./scripts/datadog.ts
  */
 
 import { client, v1 } from '@datadog/datadog-api-client'
