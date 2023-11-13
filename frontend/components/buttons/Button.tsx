@@ -18,7 +18,7 @@ export function Button({ onClick, type, disabled, children }: ButtonProps) {
 
   return (
     <button
-      className={`${className} disabled:cursor-not-allowed disabled:opacity-40`}
+      className={`${className} flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-40`}
       onClick={onClick}
       disabled={disabled}
     >
