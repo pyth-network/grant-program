@@ -55,19 +55,11 @@ export const LogInWithSolana = ({ onBack, onProceed }: StepProps) => {
           <SelectWallets />
         ) : (
           <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <WalletConnectedButton
-                onClick={disconnect}
-                address={buttonText!}
-                icon={wallet?.adapter.icon}
-              />
-              <span
-                className="mt-4 block text-center font-body font-normal underline hover:cursor-pointer"
-                onClick={disconnect}
-              >
-                Change wallet
-              </span>
-            </div>
+            <WalletConnectedButton
+              onClick={disconnect}
+              address={buttonText!}
+              icon={wallet?.adapter.icon}
+            />
             <ProceedButton onProceed={onProceed} />
           </div>
         )}
