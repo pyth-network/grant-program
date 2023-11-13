@@ -25,6 +25,8 @@ export function SignAndClaimRowLayout({
   const { disabled: rowDisabled, tooltipContent: rowTooltipContent } =
     useSignAndClaimRowState(ecosystem)
 
+  const isMobile = window.innerWidth < 480
+
   return (
     <tr className={classNames('border-b border-light-35 ')}>
       <td
@@ -39,16 +41,18 @@ export function SignAndClaimRowLayout({
             rowDisabled ? 'pointer-events-none' : ''
           )}
         >
-          <span className="sm:min-w-[150px]">
+          <span className="flex min-h-[36px] items-center sm:min-w-[150px]">
             <EcosystemRowLabel ecosystem={ecosystem} />
           </span>
           <span className="flex items-center justify-around gap-2 sm:flex-1 sm:gap-5">
-            <span className="mr-auto">
-              <EcosystemConnectButton
-                ecosystem={ecosystem}
-                disableOnConnect={true}
-              />
-            </span>
+            {!isMobile && (
+              <span className="mr-auto">
+                <EcosystemConnectButton
+                  ecosystem={ecosystem}
+                  disableOnConnect={true}
+                />
+              </span>
+            )}
             <span className="">{children}</span>
           </span>
         </div>
