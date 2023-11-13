@@ -72,18 +72,24 @@ const Eligibility = ({
     }
   }, [activity, getEcosystemIdentity, getEligibility])
 
+  const windowWidth = window.innerWidth
+  const isMobile = windowWidth < 480
+
+  console.log(isMobile)
+
   return (
     <Box>
       <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-4 px-4 sm:py-8 sm:px-10">
         <h4 className="font-header text-[20px] font-light leading-[1.2] sm:text-[28px]">
           Verify Eligibility
         </h4>
-        <div className="flex gap-4">
-          <BackButton onBack={onBack} />
+        <div className="flex gap-2 sm:gap-4">
+          <BackButton onBack={onBack} hideText={isMobile} />
           <ProceedButton
             onProceed={onProceed}
             disabled={isProceedDisabled}
             tooltipContent={proceedTooltipContent}
+            hideText={isMobile}
           />
         </div>
       </div>
