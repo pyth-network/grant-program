@@ -136,7 +136,7 @@ export type SingleWalletViewProps = {
 export function SingleWalletView({ wallet, onSelect }: SingleWalletViewProps) {
   return (
     <button
-      className="btn before:btn-bg btn--dark min-w-[117px] before:bg-dark hover:text-dark hover:before:bg-light sm:min-w-[207px]"
+      className="before:btn-bg btn--dark relative inline-block h-[44px] min-w-[117px] px-4 font-body text-base transition-all before:bg-dark hover:text-dark hover:before:bg-light sm:min-w-[207px] md:px-8"
       onClick={() => {
         wallet.onSelect()
         onSelect()
