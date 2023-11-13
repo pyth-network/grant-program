@@ -252,7 +252,7 @@ function ClaimAirdropModal({
 }: StepProps & { openModal: () => void }) {
   return (
     <Modal openModal={openModal}>
-      <h3 className="mb-8  font-header text-[36px] font-light">
+      <h3 className="mb-8  font-header text-[30px] font-light sm:text-[36px]">
         Claim Airdrop
       </h3>
       <p className="mx-auto max-w-[454px] font-body text-base16">
