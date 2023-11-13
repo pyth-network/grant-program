@@ -186,7 +186,7 @@ export function formatTxnEventInfo(txnEvnInfo: TxnEventInfo) {
     formattedEvent = {
       ...formattedEvent,
       ...txnEvnInfo.event,
-      //TODO: how to format leafBuffer?
+      leafBuffer: txnEvnInfo.event.leafBuffer.toString('hex'),
       claimant: txnEvnInfo.event.claimant.toBase58(),
       claimAmount: txnEvnInfo.event.claimAmount.toNumber(),
       remainingBalance: txnEvnInfo.event.remainingBalance.toNumber(),
