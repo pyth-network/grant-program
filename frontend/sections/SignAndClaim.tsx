@@ -213,11 +213,9 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
               action is required for your Discord account.
             </p>
             <p>Your claimed PYTH tokens will go to this Solana wallet: </p>
-            <div className="mt-4 flex justify-between gap-4">
+            <div className="mt-8 flex items-center justify-between gap-4">
               <SolanaWalletCopyButton />
-              <div className="mt-8">
-                <ProceedButton onProceed={() => setScreen(2)} />
-              </div>
+              <ProceedButton onProceed={() => setScreen(2)} />
             </div>
           </div>
         </Box>
