@@ -207,10 +207,6 @@ function chunkArray(array: any[], chunkSize: number) {
   )
 }
 
-async function sleep(delay: number) {
-  return new Promise((resolve) => setTimeout(resolve, delay))
-}
-
 export type TxnInfo = {
   signature: string
   blockTime: number
