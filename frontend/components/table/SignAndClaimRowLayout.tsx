@@ -41,7 +41,7 @@ export function SignAndClaimRowLayout({
             rowDisabled ? 'pointer-events-none' : ''
           )}
         >
-          <span className="flex min-h-[36px] items-center sm:min-w-[150px]">
+          <span className="flex min-h-[36px] items-center sm:min-w-[170px]">
             <EcosystemRowLabel ecosystem={ecosystem} />
           </span>
           <span className="flex items-center justify-around gap-2 sm:flex-1 sm:gap-5">
