@@ -175,7 +175,10 @@ export class TokenDispenserEventSubscriber {
  * normalized with decimals 200_000_000_000_000
  * @param event
  */
-export function formatTxnEventInfo(txnEvnInfo: TxnEventInfo) {
+export function formatTxnEventInfo(
+  txnEvnInfo: TxnEventInfo,
+  coder: BorshCoder
+) {
   const prefixEcosystems = ['evm', 'sui', 'aptos']
   let formattedEvent: any = {
     signature: txnEvnInfo.signature,
@@ -190,6 +193,7 @@ export function formatTxnEventInfo(txnEvnInfo: TxnEventInfo) {
       claimant: txnEvnInfo.event.claimant.toBase58(),
       claimAmount: txnEvnInfo.event.claimAmount.toNumber(),
       remainingBalance: txnEvnInfo.event.remainingBalance.toNumber(),
+      claimInfo: txnEvnInfo.event.claimInfo,
     }
     if (prefixEcosystems.includes(txnEvnInfo.event.ecosystem)) {
       formattedEvent = {

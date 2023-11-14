@@ -629,6 +629,13 @@ export type TokenDispenser =
           "name": "address",
           "type": "string",
           "index": false
+        },
+        {
+          "name": "claimInfo",
+          "type": {
+            "defined": "ClaimInfo"
+          },
+          "index": false
         }
       ]
     }
@@ -1311,6 +1318,13 @@ export const IDL: TokenDispenser =
         {
           "name": "address",
           "type": "string",
+          "index": false
+        },
+        {
+          "name": "claimInfo",
+          "type": {
+            "defined": "ClaimInfo"
+          },
           "index": false
         }
       ]

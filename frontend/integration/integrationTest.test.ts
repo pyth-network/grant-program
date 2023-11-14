@@ -27,7 +27,8 @@ import {
 import { loadTestWallets } from '../claim_sdk/testWallets'
 import { mockFetchAmountAndProof, mockfetchFundTransaction } from './api'
 import { removeLeading0x } from '../claim_sdk'
-import { AnchorError } from '@coral-xyz/anchor'
+import { AnchorError, BorshCoder, Idl } from '@coral-xyz/anchor'
+import tokenDispenser from '../claim_sdk/idl/token_dispenser.json'
 
 const pool = getDatabasePool()
 
@@ -605,22 +606,21 @@ describe('integration test', () => {
     it('eventSubscriber parses transaction logs', async () => {
       const { txnEvents, errorLogs } =
         await tokenDispenserEventSubscriber.parseTransactionLogs()
-      const aptosWallet = testWallets.aptos[0]
-      const suiWallet = testWallets.sui[0]
-
+      //TODO: this part is just for testing changes for the PR.
+      // Delete before merging
       expect(errorLogs.length).toEqual(1)
-      console.log(`
-        aptosWallet.address(): ${aptosWallet.address()}
-        suiWallet.address(): ${suiWallet.address()}
-        solanaWallet: ${tokenDispenserProvider.claimant.toBase58()}
-      `)
       txnEvents.forEach((txnEvent) => {
         console.log(`
           rawEvents:
-            ${JSON.stringify(formatTxnEventInfo(txnEvent), null, 2)}
+            ${JSON.stringify(
+              formatTxnEventInfo(
+                txnEvent,
+                new BorshCoder(tokenDispenser as Idl)
+              ),
+              null,
+              2
+            )}
         `)
-        //         max_safe 9_007_199_254_740_991
-        let total = 207_726_793_000_000
       })
     }, 40000)
   })

@@ -628,6 +628,13 @@
           "name": "address",
           "type": "string",
           "index": false
+        },
+        {
+          "name": "claimInfo",
+          "type": {
+            "defined": "ClaimInfo"
+          },
+          "index": false
         }
       ]
     }
