@@ -604,18 +604,10 @@ describe('integration test', () => {
       )
       expect(JSON.stringify(res[0]).includes('InstructionError')).toBeTruthy()
     })
-    it('eventSubscriber parses transaction logs', async () => {
+    it('eventSubscriber parses error transaction logs', async () => {
       const { txnEvents, errorLogs } =
         await tokenDispenserEventSubscriber.parseTransactionLogs()
-      //TODO: this part is just for testing changes for the PR.
-      // Delete before merging
       expect(errorLogs.length).toEqual(1)
-      txnEvents.forEach((txnEvent) => {
-        console.log(`
-          rawEvents:
-            ${JSON.stringify(formatTxnEventInfo(txnEvent), null, 2)}
-        `)
-      })
     }, 40000)
   })
 })
