@@ -61,10 +61,6 @@ pub struct AptosAddress([u8; 32]);
 
 impl AptosAddress {
     pub const LEN: usize = 32;
-
-    pub fn as_bytes(&self) -> [u8; Self::LEN] {
-        self.0
-    }
 }
 
 impl From<Ed25519Pubkey> for AptosAddress {

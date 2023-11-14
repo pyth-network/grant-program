@@ -232,12 +232,6 @@ impl From<[u8; Self::LEN]> for UncompressedSecp256k1Pubkey {
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
 pub struct CosmosBech32Address(String);
 
-impl CosmosBech32Address {
-    pub fn as_string(&self) -> String {
-        self.0.to_owned()
-    }
-}
-
 impl From<EvmPubkey> for CosmosBech32Address {
     fn from(value: EvmPubkey) -> Self {
         CosmosBech32Address(

@@ -218,7 +218,9 @@ describe('integration test', () => {
         },
       })
       expect(
-        new anchor.BN(evmClaimEvent.claimAmount.toString()).eq(claimInfo.amount)
+        new anchor.BN(evmClaimEvent.claimInfo.amount.toString()).eq(
+          claimInfo.amount
+        )
       ).toBeTruthy()
       expectedTreasuryBalance = expectedTreasuryBalance.sub(claimInfo.amount)
       const eventRemainingBalance = new anchor.BN(
@@ -229,8 +231,6 @@ describe('integration test', () => {
           expectedTreasuryBalance
         )
       ).toBeTruthy()
-      const expectedLeafBuffer = claimInfo.toBuffer()
-      expect(evmClaimEvent.leafBuffer).toEqual(expectedLeafBuffer)
     }, 40000)
 
     it('submits a cosmwasm claim', async () => {
@@ -279,7 +279,7 @@ describe('integration test', () => {
         cosmwasm: { address: testWallets.cosmwasm[0].address() },
       })
       expect(
-        new anchor.BN(cosmClaimEvent.claimAmount.toString()).eq(
+        new anchor.BN(cosmClaimEvent.claimInfo.amount.toString()).eq(
           claimInfo.amount
         )
       ).toBeTruthy()
@@ -289,8 +289,6 @@ describe('integration test', () => {
           expectedTreasuryBalance
         )
       ).toBeTruthy()
-      const expectedLeafBuffer = claimInfo.toBuffer()
-      expect(cosmClaimEvent.leafBuffer).toEqual(expectedLeafBuffer)
     }, 40000)
 
     it('submits multiple claims at once', async () => {

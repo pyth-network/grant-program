@@ -95,10 +95,6 @@ export class TokenDispenserEventSubscriber {
     })
 
     const txnEvents = validTxns.map((txnLog) => {
-      console.log(`
-        signature: ${txnLog.signature}
-        logs: ${JSON.stringify(txnLog.logs)}
-      `)
       const eventGen = this.eventParser.parseLogs(txnLog.logs)
       const events = []
       let event = eventGen.next()
@@ -188,10 +184,7 @@ export function formatTxnEventInfo(txnEvnInfo: TxnEventInfo) {
   if (txnEvnInfo.event) {
     formattedEvent = {
       ...formattedEvent,
-      ...txnEvnInfo.event,
-      leafBuffer: txnEvnInfo.event.leafBuffer.toString('hex'),
       claimant: txnEvnInfo.event.claimant.toBase58(),
-      claimAmount: txnEvnInfo.event.claimAmount.toNumber(),
       remainingBalance: txnEvnInfo.event.remainingBalance.toNumber(),
       claimInfo: txnEvnInfo.event.claimInfo,
     }
