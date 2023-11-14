@@ -241,13 +241,13 @@ function formatClaimInfo(
   } else if (claimInfo.identity.cosmwasm) {
     return {
       ecosystem: 'cosmwasm',
-      address: Buffer.from(claimInfo.identity.cosmwasm.address).toString(),
+      address: claimInfo.identity.cosmwasm.address,
       amount: claimInfo.amount.toNumber(),
     }
   } else if (claimInfo.identity.injective) {
     return {
       ecosystem: 'injective',
-      address: Buffer.from(claimInfo.identity.injective.address).toString(),
+      address: claimInfo.identity.injective.address,
       amount: claimInfo.amount.toNumber(),
     }
   } else
