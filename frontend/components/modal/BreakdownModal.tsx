@@ -25,7 +25,7 @@ export function BreakdownModal({
     <ModalWrapper>
       <div className="relative max-h-[80vh] w-full max-w-[588px] bg-darkGray1">
         <ModalCloseButton onClick={() => openModal(false)} />
-        <h3 className=" border-x border-t border-light-35 p-4 font-header text-[30px] font-light sm:p-10 sm:text-[36px]">
+        <h3 className=" border-x border-t border-light-35 p-4 font-header text-[24px] font-light sm:p-10 sm:text-[36px]">
           {title}
         </h3>
         <table className="w-full border-collapse bg-[#1B1A2C] font-header text-base18 font-light">
