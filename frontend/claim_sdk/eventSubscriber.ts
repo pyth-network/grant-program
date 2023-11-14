@@ -180,7 +180,6 @@ export class TokenDispenserEventSubscriber {
  * @param event
  */
 export function formatTxnEventInfo(txnEvnInfo: TxnEventInfo) {
-  const prefixEcosystems = ['evm', 'sui', 'aptos']
   let formattedEvent: any = {
     signature: txnEvnInfo.signature,
     blockTime: txnEvnInfo.blockTime,
@@ -195,12 +194,6 @@ export function formatTxnEventInfo(txnEvnInfo: TxnEventInfo) {
       claimAmount: txnEvnInfo.event.claimAmount.toNumber(),
       remainingBalance: txnEvnInfo.event.remainingBalance.toNumber(),
       claimInfo: txnEvnInfo.event.claimInfo,
-    }
-    if (prefixEcosystems.includes(txnEvnInfo.event.ecosystem)) {
-      formattedEvent = {
-        ...formattedEvent,
-        address: '0x' + txnEvnInfo.event.address,
-      }
     }
   }
   return formattedEvent
