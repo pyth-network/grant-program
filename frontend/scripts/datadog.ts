@@ -36,7 +36,7 @@ async function main() {
     }
   )
 
-  const { txnEvents, errorLogs } =
+  const { txnEvents, failedTxnInfos } =
     await tokenDispenserEventSubscriber.parseTransactionLogs()
 
   const configuration = client.createConfiguration()
@@ -56,9 +56,9 @@ async function main() {
     })
   )
 
-  const errorLogRequests = createErrorLogRequest(errorLogs)
+  const failedTxnEventRequests = createFailedTxnEventRequest(failedTxnInfos)
   await Promise.all(
-    errorLogRequests.map((errorLogRequest) => {
+    failedTxnEventRequests.map((errorLogRequest) => {
       apiInstance
         .createEvent(errorLogRequest)
         .then((data: v1.EventCreateResponse) => {
@@ -94,10 +94,10 @@ function createTxnEventRequest(
   })
 }
 
-function createErrorLogRequest(
-  errorLogs: TxnInfo[]
+function createFailedTxnEventRequest(
+  failedTxns: TxnInfo[]
 ): v1.EventsApiCreateEventRequest[] {
-  return errorLogs.map((errorLog) => {
+  return failedTxns.map((errorLog) => {
     return {
       body: {
         title: `error-${errorLog.signature}`,

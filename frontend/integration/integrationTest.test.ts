@@ -605,9 +605,9 @@ describe('integration test', () => {
       expect(JSON.stringify(res[0]).includes('InstructionError')).toBeTruthy()
     })
     it('eventSubscriber parses error transaction logs', async () => {
-      const { txnEvents, errorLogs } =
+      const { txnEvents, failedTxnInfos } =
         await tokenDispenserEventSubscriber.parseTransactionLogs()
-      expect(errorLogs.length).toEqual(1)
+      expect(failedTxnInfos.length).toEqual(1)
     }, 40000)
   })
 })

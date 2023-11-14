@@ -41,7 +41,7 @@ export class TokenDispenserEventSubscriber {
    */
   public async parseTransactionLogs(): Promise<{
     txnEvents: TxnEventInfo[]
-    errorLogs: TxnInfo[]
+    failedTxnInfos: TxnInfo[]
   }> {
     const currentTimeSec = Date.now() / 1000
     let signatures: Array<ConfirmedSignatureInfo> = []
@@ -114,19 +114,21 @@ export class TokenDispenserEventSubscriber {
       }
     })
 
-    const errorTxnSigChunks = chunkArray(errorTxnSigs, this.chunkSize)
+    const failedTxnSigChunks = chunkArray(errorTxnSigs, this.chunkSize)
 
-    const errorTxns = (await this.fetchTxns(errorTxnSigChunks)).map((txn) => {
-      return {
-        signature: txn?.transaction.signatures[0] ?? '',
-        blockTime: txn?.blockTime ?? 0,
-        slot: txn?.slot ?? 0,
+    const failedTxnInfos = (await this.fetchTxns(failedTxnSigChunks)).map(
+      (txn) => {
+        return {
+          signature: txn?.transaction.signatures[0] ?? '',
+          blockTime: txn?.blockTime ?? 0,
+          slot: txn?.slot ?? 0,
+        }
       }
-    })
+    )
 
     return {
       txnEvents,
-      errorLogs: errorTxns,
+      failedTxnInfos,
     }
   }
 
