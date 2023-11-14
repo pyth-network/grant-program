@@ -1,6 +1,12 @@
 import * as anchor from '@coral-xyz/anchor'
 import tokenDispenser from './idl/token_dispenser.json'
-import { BorshCoder, Idl, AnchorProvider, IdlEvents } from '@coral-xyz/anchor'
+import {
+  BorshCoder,
+  Idl,
+  AnchorProvider,
+  IdlEvents,
+  IdlTypes,
+} from '@coral-xyz/anchor'
 import { ConfirmedSignatureInfo, TransactionSignature } from '@solana/web3.js'
 import { TokenDispenser } from './idl/token_dispenser'
 
@@ -188,10 +194,72 @@ export function formatTxnEventInfo(txnEvnInfo: TxnEventInfo) {
       ...formattedEvent,
       claimant: txnEvnInfo.event.claimant.toBase58(),
       remainingBalance: txnEvnInfo.event.remainingBalance.toNumber(),
-      claimInfo: txnEvnInfo.event.claimInfo,
+      claimInfo: formatClaimInfo(txnEvnInfo.event.claimInfo),
     }
   }
   return formattedEvent
+}
+
+function formatClaimInfo(
+  claimInfo: IdlTypes<TokenDispenser>['ClaimInfo']
+): FormattedClaimInfo {
+  if (claimInfo.identity.discord) {
+    return {
+      ecosystem: 'discord',
+      address: claimInfo.identity.discord.username,
+      amount: claimInfo.amount.toNumber(),
+    }
+  } else if (claimInfo.identity.solana) {
+    return {
+      ecosystem: 'solana',
+      address: new anchor.web3.PublicKey(
+        claimInfo.identity.solana.pubkey
+      ).toBase58(),
+      amount: claimInfo.amount.toNumber(),
+    }
+  } else if (claimInfo.identity.evm) {
+    return {
+      ecosystem: 'evm',
+      address:
+        '0x' + Buffer.from(claimInfo.identity.evm.pubkey).toString('hex'),
+      amount: claimInfo.amount.toNumber(),
+    }
+  } else if (claimInfo.identity.aptos) {
+    return {
+      ecosystem: 'aptos',
+      address:
+        '0x' + Buffer.from(claimInfo.identity.aptos.address).toString('hex'),
+      amount: claimInfo.amount.toNumber(),
+    }
+  } else if (claimInfo.identity.sui) {
+    return {
+      ecosystem: 'sui',
+      address:
+        '0x' + Buffer.from(claimInfo.identity.sui.address).toString('hex'),
+      amount: claimInfo.amount.toNumber(),
+    }
+  } else if (claimInfo.identity.cosmwasm) {
+    return {
+      ecosystem: 'cosmwasm',
+      address: claimInfo.identity.cosmwasm.address,
+      amount: claimInfo.amount.toNumber(),
+    }
+  } else if (claimInfo.identity.injective) {
+    return {
+      ecosystem: 'injective',
+      address: claimInfo.identity.injective.address,
+      amount: claimInfo.amount.toNumber(),
+    }
+  } else
+    throw new Error(
+      `unknown identity type. ${JSON.stringify(claimInfo.identity)}}`
+    )
+}
+
+export type FormattedClaimInfo = {
+  ecosystem: string
+  address: string
+  amount: number
 }
 
 function chunkArray(array: any[], chunkSize: number) {

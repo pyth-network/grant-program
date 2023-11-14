@@ -13,11 +13,8 @@ import {
   SYSVAR_INSTRUCTIONS_PUBKEY,
 } from '@solana/web3.js'
 import { Buffer } from 'buffer'
-import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
-import {
-  formatTxnEventInfo,
-  TokenDispenserEventSubscriber,
-} from '../claim_sdk/eventSubscriber'
+import { TokenDispenserProvider } from '../claim_sdk/solana'
+import { TokenDispenserEventSubscriber } from '../claim_sdk/eventSubscriber'
 import {
   DiscordTestWallet,
   TestWallet,
@@ -26,9 +23,6 @@ import {
 } from '../claim_sdk/testWallets'
 import { loadTestWallets } from '../claim_sdk/testWallets'
 import { mockFetchAmountAndProof, mockfetchFundTransaction } from './api'
-import { removeLeading0x } from '../claim_sdk'
-import { AnchorError, BorshCoder, Idl } from '@coral-xyz/anchor'
-import tokenDispenser from '../claim_sdk/idl/token_dispenser.json'
 import { ethers } from 'ethers'
 
 const pool = getDatabasePool()
