@@ -612,14 +612,7 @@ describe('integration test', () => {
       txnEvents.forEach((txnEvent) => {
         console.log(`
           rawEvents:
-            ${JSON.stringify(
-              formatTxnEventInfo(
-                txnEvent,
-                new BorshCoder(tokenDispenser as Idl)
-              ),
-              null,
-              2
-            )}
+            ${JSON.stringify(formatTxnEventInfo(txnEvent), null, 2)}
         `)
       })
     }, 40000)

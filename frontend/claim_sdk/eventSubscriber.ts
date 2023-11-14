@@ -175,10 +175,7 @@ export class TokenDispenserEventSubscriber {
  * normalized with decimals 200_000_000_000_000
  * @param event
  */
-export function formatTxnEventInfo(
-  txnEvnInfo: TxnEventInfo,
-  coder: BorshCoder
-) {
+export function formatTxnEventInfo(txnEvnInfo: TxnEventInfo) {
   const prefixEcosystems = ['evm', 'sui', 'aptos']
   let formattedEvent: any = {
     signature: txnEvnInfo.signature,
