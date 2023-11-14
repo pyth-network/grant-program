@@ -195,7 +195,7 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
     <>
       {screen == 1 ? (
         <Box>
-          <div className="flex items-center justify-between border-b border-light-35  bg-[#242339] py-8 px-10">
+          <div className="flex items-center justify-between border-b border-light-35  bg-[#242339] py-8 px-4 sm:px-10">
             <h4 className="font-header text-[28px] font-light leading-[1.2]">
               Sign Your Wallets and Claim
             </h4>
@@ -213,11 +213,9 @@ export const SignAndClaim = ({ onBack, onProceed }: SignAndClaimProps) => {
               action is required for your Discord account.
             </p>
             <p>Your claimed PYTH tokens will go to this Solana wallet: </p>
-            <div className="mt-4 flex justify-between gap-4">
+            <div className="mt-8 flex items-center justify-between gap-4">
               <SolanaWalletCopyButton />
-              <div className="mt-8">
-                <ProceedButton onProceed={() => setScreen(2)} />
-              </div>
+              <ProceedButton onProceed={() => setScreen(2)} />
             </div>
           </div>
         </Box>
@@ -254,7 +252,7 @@ function ClaimAirdropModal({
 }: StepProps & { openModal: () => void }) {
   return (
     <Modal openModal={openModal}>
-      <h3 className="mb-8  font-header text-[36px] font-light">
+      <h3 className="mb-8  font-header text-[30px] font-light sm:text-[36px]">
         Claim Airdrop
       </h3>
       <p className="mx-auto max-w-[454px] font-body text-base16">

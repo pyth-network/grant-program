@@ -111,7 +111,7 @@ export type WalletModalProps = {
 export function WalletModal({ openModal, wallets }: WalletModalProps) {
   return (
     <Modal openModal={openModal}>
-      <h3 className="mb-16  font-header text-[36px] font-light">
+      <h3 className="mb-8 font-header  text-[24px] font-light sm:mb-16 sm:text-[36px]">
         Connect Your Wallet
       </h3>
       <div className="mx-auto flex max-w-[200px] flex-col justify-around gap-y-4">
@@ -136,7 +136,7 @@ export type SingleWalletViewProps = {
 export function SingleWalletView({ wallet, onSelect }: SingleWalletViewProps) {
   return (
     <button
-      className="btn before:btn-bg btn--dark min-w-[117px] before:bg-dark hover:text-dark hover:before:bg-light sm:min-w-[207px]"
+      className="before:btn-bg btn--dark relative flex h-[44px] min-w-[117px] items-center justify-center px-4 font-body text-base transition-all before:bg-dark hover:text-dark hover:before:bg-light sm:min-w-[207px] md:px-8 "
       onClick={() => {
         wallet.onSelect()
         onSelect()

@@ -54,7 +54,7 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
           </p>
 
           <div
-            className="space-between mt-12 flex items-center justify-between
+            className="space-between mt-12 flex flex-wrap items-center justify-between
            gap-4"
           >
             <div className="flex gap-2">

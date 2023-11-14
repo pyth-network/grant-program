@@ -3,10 +3,10 @@ import { EcosystemConnectButton } from '@components/EcosystemConnectButton'
 import { useCoins } from 'hooks/useCoins'
 import { useSignAndClaimRowState } from 'hooks/useSignAndClaimRowState'
 import { classNames } from 'utils/classNames'
-import { getEcosystemTableLabel } from 'utils/getEcosystemTableLabel'
 import { CoinCell } from './CoinCell'
 import { Ecosystem } from '@components/Ecosystem'
 import { ReactNode } from 'react'
+import { EcosystemRowLabel } from './EcosystemRowLabel'
 
 type SignAndClaimRowLayoutProps = {
   ecosystem: Ecosystem
@@ -25,11 +25,13 @@ export function SignAndClaimRowLayout({
   const { disabled: rowDisabled, tooltipContent: rowTooltipContent } =
     useSignAndClaimRowState(ecosystem)
 
+  const isMobile = window.innerWidth < 480
+
   return (
     <tr className={classNames('border-b border-light-35 ')}>
       <td
         className={classNames(
-          'w-full py-2 pl-10 pr-4',
+          'w-full py-2 pl-4 pr-4 sm:pl-10',
           rowDisabled ? 'opacity-25' : ''
         )}
       >
@@ -39,18 +41,19 @@ export function SignAndClaimRowLayout({
             rowDisabled ? 'pointer-events-none' : ''
           )}
         >
-          <span className="min-w-[150px] font-header text-base18 font-thin">
-            {getEcosystemTableLabel(ecosystem)}
+          <span className="flex min-h-[36px] items-center sm:min-w-[170px]">
+            <EcosystemRowLabel ecosystem={ecosystem} />
           </span>
-
-          <span className="flex flex-1  items-center justify-around gap-5">
-            <span className="mx-2 mr-auto">
-              <EcosystemConnectButton
-                ecosystem={ecosystem}
-                disableOnConnect={true}
-              />
-            </span>
-            <span className="mr-auto">{children}</span>
+          <span className="flex items-center justify-around gap-2 sm:flex-1 sm:gap-5">
+            {!isMobile && (
+              <span className="mr-auto">
+                <EcosystemConnectButton
+                  ecosystem={ecosystem}
+                  disableOnConnect={true}
+                />
+              </span>
+            )}
+            <span className="">{children}</span>
           </span>
         </div>
       </td>

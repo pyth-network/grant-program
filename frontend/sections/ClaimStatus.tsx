@@ -12,6 +12,7 @@ import { ProceedButton } from '@components/buttons'
 import { SignAndClaimRowLayout } from '@components/table/SignAndClaimRowLayout'
 import { Box } from '@components/Box'
 import Tooltip from '@components/Tooltip'
+import { TotalAllocationRow } from '@components/table/TotalAllocationRow'
 
 export const ClaimStatus = ({
   onProceed,
@@ -46,48 +47,33 @@ export const ClaimStatus = ({
 
   return (
     <Box>
-      <div className="min-w-[650px]">
-        <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-8 px-10">
-          <h4 className="   font-header text-[28px] font-light leading-[1.2]">
-            Sign Your Wallets and Claim
-          </h4>
-          <div className="flex gap-4">
-            <ProceedButton
-              onProceed={onProceed}
-              disabled={isProceedDisabled}
-              tooltipContent={proceedTooltipContent}
-            />
-          </div>
+      <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-4 px-4 sm:py-8 sm:px-10">
+        <h4 className="font-header text-[20px] font-light leading-[1.2] sm:text-[28px]">
+          Sign Your Wallets and Claim
+        </h4>
+        <div className="flex gap-4">
+          <ProceedButton
+            onProceed={onProceed}
+            disabled={isProceedDisabled}
+            tooltipContent={proceedTooltipContent}
+          />
         </div>
-
-        <table className="">
-          <tbody>
-            {Object.values(Ecosystem).map((ecosystem) => (
-              <SignAndClaimRowLayout ecosystem={ecosystem} key={ecosystem}>
-                {ecosystemsClaimState?.[ecosystem] !== undefined && (
-                  <ClaimState
-                    ecosystemClaimState={ecosystemsClaimState?.[ecosystem]!}
-                  />
-                )}
-              </SignAndClaimRowLayout>
-            ))}
-            <tr className="border-b border-light-35 ">
-              <td className="w-full bg-darkGray5 py-2 pl-10 pr-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-header text-base18 font-semibold">
-                    Eligible Token Allocation
-                  </span>
-                </div>
-              </td>
-              <td className="min-w-[130px] border-l border-light-35 bg-dark-25">
-                <span className=" flex min-h-[60px]  items-center justify-center gap-1 text-[20px] font-semibold">
-                  {totalGrantedCoins} <Coin />{' '}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
       </div>
+
+      <table className="">
+        <tbody>
+          {Object.values(Ecosystem).map((ecosystem) => (
+            <SignAndClaimRowLayout ecosystem={ecosystem} key={ecosystem}>
+              {ecosystemsClaimState?.[ecosystem] !== undefined && (
+                <ClaimState
+                  ecosystemClaimState={ecosystemsClaimState?.[ecosystem]!}
+                />
+              )}
+            </SignAndClaimRowLayout>
+          ))}
+          <TotalAllocationRow totalGrantedCoins={totalGrantedCoins} />
+        </tbody>
+      </table>
     </Box>
   )
 }

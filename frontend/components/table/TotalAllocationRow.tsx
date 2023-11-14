@@ -8,8 +8,8 @@ export function TotalAllocationRow({
 }: TotalAllocationRowProps) {
   return (
     <tr className="border-b border-light-35 ">
-      <td className="w-full bg-darkGray5 py-2 pl-10 pr-4">
-        <div className="flex items-center justify-between">
+      <td className="w-full bg-darkGray5 py-2 pl-4 pr-4 sm:pl-10">
+        <div className="flex justify-between">
           <span className="font-header text-[14px] font-semibold sm:text-base18">
             Eligible Token Allocation
           </span>

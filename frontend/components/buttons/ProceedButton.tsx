@@ -7,16 +7,18 @@ export type ProceedButtonProps = {
   disabled?: boolean
   tooltipContent?: string
   placement?: string
+  hideText?: boolean
 }
 export function ProceedButton({
   onProceed,
   disabled,
   tooltipContent,
+  hideText,
 }: ProceedButtonProps) {
   return (
     <Tooltip content={tooltipContent} placement={'bottom'}>
       <Button onClick={onProceed} type={'primary'} disabled={disabled}>
-        proceed <Arrow />
+        {hideText ? '' : 'proceed'} <Arrow />
       </Button>
     </Tooltip>
   )

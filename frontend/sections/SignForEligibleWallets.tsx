@@ -79,46 +79,44 @@ export const SignForEligibleWallets = ({
     }
   }, [activity, getEcosystemIdentity, getEligibility, getSignature])
 
+  const isMobile = window.innerWidth < 480
+
   return (
     <Box>
-      <div className="min-w-[650px]">
-        <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-8 px-10">
-          <h4 className="   font-header text-[28px] font-light leading-[1.2]">
-            Sign Your Wallets and Claim
-          </h4>
-          <div className="flex gap-4">
-            <BackButton onBack={onBack} />
-            <ProceedButton
-              onProceed={onProceed}
-              disabled={isProceedDisabled}
-              tooltipContent={proceedTooltipContent}
-            />
-          </div>
+      <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-4 px-4 sm:py-8 sm:px-10">
+        <h4 className="font-header text-[20px] font-light leading-[1.2] sm:text-[28px]">
+          Sign Your Wallets and Claim
+        </h4>
+        <div className="flex gap-1 sm:gap-4">
+          <BackButton onBack={onBack} hideText={isMobile} />
+          <ProceedButton
+            onProceed={onProceed}
+            disabled={isProceedDisabled}
+            tooltipContent={proceedTooltipContent}
+            hideText={isMobile}
+          />
         </div>
-
-        <table className="">
-          <tbody>
-            {Object.values(Ecosystem).map((ecosystem) => {
-              if (
-                ecosystem === Ecosystem.DISCORD ||
-                ecosystem === Ecosystem.SOLANA
-              )
-                return (
-                  <SignAndClaimRowLayout
-                    ecosystem={ecosystem}
-                    key={ecosystem}
-                  />
-                )
-              return (
-                <SignAndClaimRowLayout ecosystem={ecosystem} key={ecosystem}>
-                  <EcosystemSignButton ecosystem={ecosystem} />
-                </SignAndClaimRowLayout>
-              )
-            })}
-            <TotalAllocationRow totalGrantedCoins={totalGrantedCoins} />
-          </tbody>
-        </table>
       </div>
+
+      <table className="">
+        <tbody>
+          {Object.values(Ecosystem).map((ecosystem) => {
+            if (
+              ecosystem === Ecosystem.DISCORD ||
+              ecosystem === Ecosystem.SOLANA
+            )
+              return (
+                <SignAndClaimRowLayout ecosystem={ecosystem} key={ecosystem} />
+              )
+            return (
+              <SignAndClaimRowLayout ecosystem={ecosystem} key={ecosystem}>
+                <EcosystemSignButton ecosystem={ecosystem} />
+              </SignAndClaimRowLayout>
+            )
+          })}
+          <TotalAllocationRow totalGrantedCoins={totalGrantedCoins} />
+        </tbody>
+      </table>
     </Box>
   )
 }
