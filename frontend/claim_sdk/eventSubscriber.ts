@@ -9,17 +9,20 @@ export class TokenDispenserEventSubscriber {
   connection: anchor.web3.Connection
   programId: anchor.web3.PublicKey
   timeWindowSecs: number
+  chunkSize: number
 
   constructor(
     endpoint: string,
     programId: anchor.web3.PublicKey,
     timeWindowSecs: number,
+    chunkSize: number,
     confirmOpts?: anchor.web3.ConfirmOptions
   ) {
     const coder = new BorshCoder(tokenDispenser as Idl)
     this.programId = programId
     this.eventParser = new anchor.EventParser(this.programId, coder)
     this.timeWindowSecs = timeWindowSecs
+    this.chunkSize = chunkSize
     confirmOpts = confirmOpts ?? anchor.AnchorProvider.defaultOptions()
     if (
       !confirmOpts.commitment ||
@@ -36,12 +39,10 @@ export class TokenDispenserEventSubscriber {
    * Parses transaction logs for the program and returns the events
    * for the transactions that occurred within the time window.
    */
-  public async parseTransactionLogs(): Promise<
-    {
-      signature: string
-      events: IdlEvents<TokenDispenser>['ClaimEvent'][]
-    }[]
-  > {
+  public async parseTransactionLogs(): Promise<{
+    txnEvents: TxnEventInfo[]
+    failedTxnInfos: TxnInfo[]
+  }> {
     const currentTimeSec = Date.now() / 1000
     let signatures: Array<ConfirmedSignatureInfo> = []
     let currentBatch = await this.connection.getSignaturesForAddress(
@@ -73,28 +74,27 @@ export class TokenDispenserEventSubscriber {
       )
     }
 
-    const validTxns = []
-    // TODO: figure out what to do with error txns
-    const errorTxns = []
+    const validTxnSigs = []
+    const errorTxnSigs = []
     for (const signature of signatures) {
       if (signature.err) {
-        errorTxns.push(signature.signature)
+        errorTxnSigs.push(signature.signature)
       } else {
-        validTxns.push(signature.signature)
+        validTxnSigs.push(signature.signature)
       }
     }
-    const txns = await this.connection.getTransactions(validTxns, {
-      commitment: this.connection.commitment as anchor.web3.Finality,
-      maxSupportedTransactionVersion: 0,
-    })
-    const txnLogs = txns.map((txLog) => {
+    const validTxnSigChunks = chunkArray(validTxnSigs, this.chunkSize)
+
+    const validTxns = (await this.fetchTxns(validTxnSigChunks)).map((txn) => {
       return {
-        signature: txLog?.transaction.signatures[0] ?? '',
-        logs: txLog?.meta?.logMessages ?? [],
+        signature: txn?.transaction.signatures[0] ?? '',
+        logs: txn?.meta?.logMessages ?? [],
+        blockTime: txn?.blockTime ?? 0,
+        slot: txn?.slot ?? 0,
       }
     })
 
-    const txnEvents = txnLogs.map((txnLog) => {
+    const txnEvents = validTxns.map((txnLog) => {
       const eventGen = this.eventParser.parseLogs(txnLog.logs)
       const events = []
       let event = eventGen.next()
@@ -105,13 +105,31 @@ export class TokenDispenserEventSubscriber {
         )
         event = eventGen.next()
       }
+
       return {
         signature: txnLog.signature,
-        events,
+        blockTime: txnLog.blockTime,
+        slot: txnLog.slot,
+        event: events.length > 0 ? events[0] : undefined,
       }
     })
 
-    return txnEvents
+    const failedTxnSigChunks = chunkArray(errorTxnSigs, this.chunkSize)
+
+    const failedTxnInfos = (await this.fetchTxns(failedTxnSigChunks)).map(
+      (txn) => {
+        return {
+          signature: txn?.transaction.signatures[0] ?? '',
+          blockTime: txn?.blockTime ?? 0,
+          slot: txn?.slot ?? 0,
+        }
+      }
+    )
+
+    return {
+      txnEvents,
+      failedTxnInfos,
+    }
   }
 
   private async getTransactionBlockTime(
@@ -124,4 +142,69 @@ export class TokenDispenserEventSubscriber {
     // blockTime in unix timestamp (seconds)
     return txn?.blockTime
   }
+
+  /**
+   * This fetches all the txns by sending each chunk asynchronously as fast as possible.
+   * Assumes that RPC node we're using will not rate-limit.
+   * @param txnSigChunks
+   * @private
+   */
+  private async fetchTxns(txnSigChunks: any[][]) {
+    let txns: anchor.web3.VersionedTransactionResponse[] = []
+    await Promise.all(
+      txnSigChunks.map(async (txnSigChunk) => {
+        const txnsChunk = await this.connection.getTransactions(txnSigChunk, {
+          commitment: this.connection.commitment as anchor.web3.Finality,
+          maxSupportedTransactionVersion: 0,
+        })
+        txnsChunk.forEach((txLog) => {
+          if (txLog !== null) {
+            txns.push(txLog)
+          }
+        })
+      })
+    )
+    return txns
+  }
+}
+
+/**
+ * Formats the fields in claimEvent.
+ *
+ * Note: toNumber() is safe for both claimAmount & remainingBalance
+ * javascript number.MAX_SAFE_INTEGER = 9_007_199_254_740_991 (2^53 - 1)
+ * total airdrop 200_000_000.
+ * normalized with decimals 200_000_000_000_000
+ * @param event
+ */
+export function formatTxnEventInfo(txnEvnInfo: TxnEventInfo) {
+  let formattedEvent: any = {
+    signature: txnEvnInfo.signature,
+    blockTime: txnEvnInfo.blockTime,
+    slot: txnEvnInfo.slot,
+  }
+  if (txnEvnInfo.event) {
+    formattedEvent = {
+      ...formattedEvent,
+      claimant: txnEvnInfo.event.claimant.toBase58(),
+      remainingBalance: txnEvnInfo.event.remainingBalance.toNumber(),
+      claimInfo: txnEvnInfo.event.claimInfo,
+    }
+  }
+  return formattedEvent
+}
+
+function chunkArray(array: any[], chunkSize: number) {
+  return Array.from({ length: Math.ceil(array.length / chunkSize) }, (_, i) =>
+    array.slice(i * chunkSize, i * chunkSize + chunkSize)
+  )
+}
+
+export type TxnInfo = {
+  signature: string
+  blockTime: number
+  slot: number
+}
+export type TxnEventInfo = TxnInfo & {
+  event: IdlEvents<TokenDispenser>['ClaimEvent'] | undefined
 }

@@ -14,7 +14,10 @@ import {
 } from '@solana/web3.js'
 import { Buffer } from 'buffer'
 import { TokenDispenserProvider, airdrop } from '../claim_sdk/solana'
-import { TokenDispenserEventSubscriber } from '../claim_sdk/eventSubscriber'
+import {
+  formatTxnEventInfo,
+  TokenDispenserEventSubscriber,
+} from '../claim_sdk/eventSubscriber'
 import {
   DiscordTestWallet,
   TestWallet,
@@ -23,6 +26,10 @@ import {
 } from '../claim_sdk/testWallets'
 import { loadTestWallets } from '../claim_sdk/testWallets'
 import { mockFetchAmountAndProof, mockfetchFundTransaction } from './api'
+import { removeLeading0x } from '../claim_sdk'
+import { AnchorError, BorshCoder, Idl } from '@coral-xyz/anchor'
+import tokenDispenser from '../claim_sdk/idl/token_dispenser.json'
+import { ethers } from 'ethers'
 
 const pool = getDatabasePool()
 
@@ -101,6 +108,7 @@ describe('integration test', () => {
       endpoint,
       tokenDispenserPid,
       tenMinTimeWindow,
+      50,
       confirmOpts
     )
 
@@ -156,11 +164,11 @@ describe('integration test', () => {
       expect(
         lookupTableAddresses.includes(SYSVAR_INSTRUCTIONS_PUBKEY.toBase58())
       ).toBeTruthy()
-      const txnEvents =
+      const { txnEvents } =
         await tokenDispenserEventSubscriber.parseTransactionLogs()
       expect(txnEvents.length).toEqual(1)
       // no events emitted in initialize
-      expect(txnEvents[0].events.length).toEqual(0)
+      expect(txnEvents[0].event).toBeUndefined()
     })
 
     it('submits an evm claim', async () => {
@@ -198,14 +206,21 @@ describe('integration test', () => {
       expect(claimantFund.amount.eq(new anchor.BN(3000000))).toBeTruthy()
 
       // check event
-      const txnEvents =
+      const { txnEvents } =
         await tokenDispenserEventSubscriber.parseTransactionLogs()
       expect(txnEvents.length).toEqual(2)
-      expect(txnEvents[0].events.length).toEqual(1)
-      const evmClaimEvent = txnEvents[0].events[0]
+      expect(txnEvents[0].event).toBeDefined()
+      const evmClaimEvent = txnEvents[0].event!
       expect(evmClaimEvent.claimant.equals(wallet.publicKey)).toBeTruthy()
+      expect(evmClaimEvent.claimInfo.identity).toEqual({
+        evm: {
+          pubkey: Array.from(ethers.getBytes(testWallets.evm[0].address())),
+        },
+      })
       expect(
-        new anchor.BN(evmClaimEvent.claimAmount.toString()).eq(claimInfo.amount)
+        new anchor.BN(evmClaimEvent.claimInfo.amount.toString()).eq(
+          claimInfo.amount
+        )
       ).toBeTruthy()
       expectedTreasuryBalance = expectedTreasuryBalance.sub(claimInfo.amount)
       const eventRemainingBalance = new anchor.BN(
@@ -216,8 +231,6 @@ describe('integration test', () => {
           expectedTreasuryBalance
         )
       ).toBeTruthy()
-      const expectedLeafBuffer = claimInfo.toBuffer()
-      expect(evmClaimEvent.leafBuffer).toEqual(expectedLeafBuffer)
     }, 40000)
 
     it('submits a cosmwasm claim', async () => {
@@ -256,28 +269,26 @@ describe('integration test', () => {
         claimantFund.amount.eq(new anchor.BN(3000000 + 6000000))
       ).toBeTruthy()
 
-      const txnEvents =
+      const { txnEvents } =
         await tokenDispenserEventSubscriber.parseTransactionLogs()
       expect(txnEvents.length).toEqual(3)
-      expect(txnEvents[0].events.length).toEqual(1)
-      const cosmClaimEvent = txnEvents[0].events[0]
+      expect(txnEvents[0].event).toBeDefined()
+      const cosmClaimEvent = txnEvents[0].event!
       expect(cosmClaimEvent.claimant.equals(wallet.publicKey)).toBeTruthy()
+      expect(cosmClaimEvent.claimInfo.identity).toEqual({
+        cosmwasm: { address: testWallets.cosmwasm[0].address() },
+      })
       expect(
-        new anchor.BN(cosmClaimEvent.claimAmount.toString()).eq(
+        new anchor.BN(cosmClaimEvent.claimInfo.amount.toString()).eq(
           claimInfo.amount
         )
       ).toBeTruthy()
       expectedTreasuryBalance = expectedTreasuryBalance.sub(claimInfo.amount)
-      const eventRemainingBalance = new anchor.BN(
-        cosmClaimEvent.remainingBalance.toString()
-      )
       expect(
         new anchor.BN(cosmClaimEvent.remainingBalance.toString()).eq(
           expectedTreasuryBalance
         )
       ).toBeTruthy()
-      const expectedLeafBuffer = claimInfo.toBuffer()
-      expect(cosmClaimEvent.leafBuffer).toEqual(expectedLeafBuffer)
     }, 40000)
 
     it('submits multiple claims at once', async () => {
@@ -568,6 +579,35 @@ describe('integration test', () => {
           )
         )
       ).toBeTruthy()
+    }, 40000)
+    it('fails to submit a duplicate claim', async () => {
+      const wallet = testWallets.sui[0]
+      const { claimInfo, proofOfInclusion } = (await mockFetchAmountAndProof(
+        'sui',
+        wallet.address()
+      ))!
+      const signedMessage = await wallet.signMessage(
+        tokenDispenserProvider.generateAuthorizationPayload()
+      )
+
+      const res = await Promise.all(
+        await tokenDispenserProvider.submitClaims(
+          [
+            {
+              claimInfo,
+              proofOfInclusion,
+              signedMessage,
+            },
+          ],
+          mockfetchFundTransaction
+        )
+      )
+      expect(JSON.stringify(res[0]).includes('InstructionError')).toBeTruthy()
+    })
+    it('eventSubscriber parses error transaction logs', async () => {
+      const { txnEvents, failedTxnInfos } =
+        await tokenDispenserEventSubscriber.parseTransactionLogs()
+      expect(failedTxnInfos.length).toEqual(1)
     }, 40000)
   })
 })
