@@ -36,11 +36,11 @@ async function main() {
     }
   )
 
-  const { txnEvents, failedTxnInfos } =
-    await tokenDispenserEventSubscriber.parseTransactionLogs()
-
   const configuration = client.createConfiguration()
   const apiInstance = new v1.EventsApi(configuration)
+
+  const { txnEvents, failedTxnInfos } =
+    await tokenDispenserEventSubscriber.parseTransactionLogs()
 
   const txnEventRequests = createTxnEventRequest(txnEvents)
   await Promise.all(
@@ -74,24 +74,28 @@ async function main() {
 function createTxnEventRequest(
   txnEvents: TxnEventInfo[]
 ): v1.EventsApiCreateEventRequest[] {
-  return txnEvents.map((txnEvent) => {
-    const formattedEvent = formatTxnEventInfo(txnEvent)
-    const { claimant, ecosystem, address } = formattedEvent
+  return txnEvents
+    .filter((txnEvent) => txnEvent.event) // skip initialize txn
+    .map((txnEvent) => {
+      const formattedEvent = formatTxnEventInfo(txnEvent)
+      const { claimant } = formattedEvent
 
-    return {
-      body: {
-        title: `${claimant}-${ecosystem}-${address}`,
-        text: JSON.stringify(formattedEvent),
-        alertType: INFO,
-        tags: [
-          `claimant:${claimant}`,
-          `ecosystem:${ecosystem}`,
-          `network:${CLUSTER}`,
-          `service:token-dispenser-event-subscriber`,
-        ],
-      },
-    }
-  })
+      const { ecosystem, address } = formattedEvent.claimInfo
+
+      return {
+        body: {
+          title: `${claimant}-${ecosystem}-${address}`,
+          text: JSON.stringify(formattedEvent),
+          alertType: INFO,
+          tags: [
+            `claimant:${claimant}`,
+            `ecosystem:${ecosystem}`,
+            `network:${CLUSTER}`,
+            `service:token-dispenser-event-subscriber`,
+          ],
+        },
+      }
+    })
 }
 
 function createFailedTxnEventRequest(
