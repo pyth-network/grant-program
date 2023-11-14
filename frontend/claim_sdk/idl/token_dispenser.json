@@ -620,16 +620,6 @@
           "index": false
         },
         {
-          "name": "ecosystem",
-          "type": "string",
-          "index": false
-        },
-        {
-          "name": "address",
-          "type": "string",
-          "index": false
-        },
-        {
           "name": "claimInfo",
           "type": {
             "defined": "ClaimInfo"

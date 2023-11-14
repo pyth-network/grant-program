@@ -29,6 +29,7 @@ import { mockFetchAmountAndProof, mockfetchFundTransaction } from './api'
 import { removeLeading0x } from '../claim_sdk'
 import { AnchorError, BorshCoder, Idl } from '@coral-xyz/anchor'
 import tokenDispenser from '../claim_sdk/idl/token_dispenser.json'
+import { ethers } from 'ethers'
 
 const pool = getDatabasePool()
 
@@ -211,10 +212,11 @@ describe('integration test', () => {
       expect(txnEvents[0].event).toBeDefined()
       const evmClaimEvent = txnEvents[0].event!
       expect(evmClaimEvent.claimant.equals(wallet.publicKey)).toBeTruthy()
-      expect(evmClaimEvent.ecosystem).toEqual('evm')
-      expect(evmClaimEvent.address).toEqual(
-        removeLeading0x(testWallets.evm[0].address())
-      )
+      expect(evmClaimEvent.claimInfo.identity).toEqual({
+        evm: {
+          pubkey: Array.from(ethers.getBytes(testWallets.evm[0].address())),
+        },
+      })
       expect(
         new anchor.BN(evmClaimEvent.claimAmount.toString()).eq(claimInfo.amount)
       ).toBeTruthy()
@@ -273,8 +275,9 @@ describe('integration test', () => {
       expect(txnEvents[0].event).toBeDefined()
       const cosmClaimEvent = txnEvents[0].event!
       expect(cosmClaimEvent.claimant.equals(wallet.publicKey)).toBeTruthy()
-      expect(cosmClaimEvent.ecosystem).toEqual('cosmwasm')
-      expect(cosmClaimEvent.address).toEqual(testWallets.cosmwasm[0].address())
+      expect(cosmClaimEvent.claimInfo.identity).toEqual({
+        cosmwasm: { address: testWallets.cosmwasm[0].address() },
+      })
       expect(
         new anchor.BN(cosmClaimEvent.claimAmount.toString()).eq(
           claimInfo.amount

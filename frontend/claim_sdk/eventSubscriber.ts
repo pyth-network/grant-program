@@ -95,6 +95,10 @@ export class TokenDispenserEventSubscriber {
     })
 
     const txnEvents = validTxns.map((txnLog) => {
+      console.log(`
+        signature: ${txnLog.signature}
+        logs: ${JSON.stringify(txnLog.logs)}
+      `)
       const eventGen = this.eventParser.parseLogs(txnLog.logs)
       const events = []
       let event = eventGen.next()
