@@ -174,8 +174,6 @@ pub mod token_dispenser {
             claim_amount: claim_info.amount,
             claimant: *ctx.accounts.claimant.key,
             leaf_buffer: leaf_vector,
-            // ecosystem:         claim_info.identity.ecosystem(),
-            // address:           claim_info.identity.address(),
             claim_info,
         });
 
