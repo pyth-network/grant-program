@@ -183,7 +183,9 @@ export class TokenDispenserEventSubscriber {
  * normalized with decimals 200_000_000_000_000
  * @param event
  */
-export function formatTxnEventInfo(txnEvnInfo: TxnEventInfo) {
+export function formatTxnEventInfo(
+  txnEvnInfo: TxnEventInfo
+): FormattedTxnEventInfo {
   let formattedEvent: any = {
     signature: txnEvnInfo.signature,
     blockTime: txnEvnInfo.blockTime,
@@ -198,6 +200,15 @@ export function formatTxnEventInfo(txnEvnInfo: TxnEventInfo) {
     }
   }
   return formattedEvent
+}
+
+export type FormattedTxnEventInfo = {
+  signature: string
+  blockTime: number
+  slot: number
+  claimant?: string
+  remainingBalance?: number
+  claimInfo?: FormattedClaimInfo
 }
 
 function formatClaimInfo(
