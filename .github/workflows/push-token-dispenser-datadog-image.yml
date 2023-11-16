@@ -1,8 +1,8 @@
 name: Build and Push Token Dispenser Datadog image
 on:
   push:
-    tags:
-      - v*
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       dispatch_description:
