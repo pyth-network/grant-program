@@ -449,10 +449,24 @@ async function main() {
       const [maxEcoUser, maxEcoAmount] = getMaxUserAndAmount(
         claimInfos.filter((claimInfo) => claimInfo.ecosystem === ecosystem)
       )
+      const ecoAmounts = claimInfos
+        .filter((claimInfo) => claimInfo.ecosystem === ecosystem)
+        .reduce((acc, curr) => {
+          const amountCount = acc.get(curr.amount.toNumber()) ?? 0
+          acc.set(curr.amount.toNumber(), amountCount + 1)
+          return acc
+        }, new Map<number, number>()) //map <amount, count>
+      const ecoAmountsArr = Array.from(ecoAmounts.entries())
+      ecoAmountsArr.sort((a, b) => {
+        return b[0] - a[0]
+      })
+
       console.log(
         `ecosystem: ${ecosystem} maxEcoUser: ${maxEcoUser} maxEcoAmount: ${maxEcoAmount
           .div(new BN(1000000))
-          .toString()}`
+          .toString()}
+          ecoAmountsArr: ${JSON.stringify(ecoAmountsArr)}
+        `
       )
     })
     const ecosystemMap = getTotalByEcosystems(claimInfos)
