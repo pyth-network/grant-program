@@ -7,9 +7,9 @@
 
 import { client, v1 } from '@datadog/datadog-api-client'
 import {
+  FormattedTxnEventInfo,
   formatTxnEventInfo,
   TokenDispenserEventSubscriber,
-  TxnEventInfo,
   TxnInfo,
 } from '../claim_sdk/eventSubscriber'
 import * as anchor from '@coral-xyz/anchor'
@@ -42,7 +42,28 @@ async function main() {
   const { txnEvents, failedTxnInfos } =
     await tokenDispenserEventSubscriber.parseTransactionLogs()
 
-  const txnEventRequests = createTxnEventRequest(txnEvents)
+  const formattedTxnEvents = txnEvents
+    .filter((txnEvent) => txnEvent.event)
+    .map((txnEvent) => formatTxnEventInfo(txnEvent))
+
+  const doubleClaimEventRequests =
+    createDoubleClaimEventRequest(formattedTxnEvents)
+  if (doubleClaimEventRequests.length > 0) {
+    await Promise.all(
+      doubleClaimEventRequests.map((doubleClaimEventRequest) => {
+        apiInstance
+          .createEvent(doubleClaimEventRequest)
+          .then((data: v1.EventCreateResponse) => {
+            console.log(
+              'API called successfully. Returned data: ' + JSON.stringify(data)
+            )
+          })
+          .catch((error: any) => console.error(error))
+      })
+    )
+  }
+
+  const txnEventRequests = createTxnEventRequest(formattedTxnEvents)
   await Promise.all(
     txnEventRequests.map((txnEventRequest) => {
       apiInstance
@@ -72,30 +93,79 @@ async function main() {
 }
 
 function createTxnEventRequest(
-  txnEvents: TxnEventInfo[]
+  formattedTxnEvents: FormattedTxnEventInfo[]
 ): v1.EventsApiCreateEventRequest[] {
-  return txnEvents
-    .filter((txnEvent) => txnEvent.event) // skip initialize txn
-    .map((txnEvent) => {
-      const formattedEvent = formatTxnEventInfo(txnEvent)
-      const { claimant } = formattedEvent
+  return formattedTxnEvents.map((formattedEvent) => {
+    const { signature, claimant } = formattedEvent
 
-      const { ecosystem, address } = formattedEvent.claimInfo
+    const { ecosystem, address } = formattedEvent.claimInfo!
 
-      return {
-        body: {
-          title: `${claimant}-${ecosystem}-${address}`,
-          text: JSON.stringify(formattedEvent),
-          alertType: INFO,
-          tags: [
-            `claimant:${claimant}`,
-            `ecosystem:${ecosystem}`,
-            `network:${CLUSTER}`,
-            `service:token-dispenser-event-subscriber`,
-          ],
-        },
-      }
-    })
+    return {
+      body: {
+        aggregationKey: `${signature}`,
+        title: `${claimant}-${ecosystem}-${address}`,
+        text: JSON.stringify(formattedEvent),
+        alertType: INFO,
+        tags: [
+          `claimant:${claimant}`,
+          `ecosystem:${ecosystem}`,
+          `network:${CLUSTER}`,
+          `service:token-dispenser-event-subscriber`,
+        ],
+      },
+    }
+  })
+}
+
+/**
+ * Check for double claims and create error events for any detected
+ * @param formattedTxnEvents
+ */
+function createDoubleClaimEventRequest(
+  formattedTxnEvents: FormattedTxnEventInfo[]
+): v1.EventsApiCreateEventRequest[] {
+  const claimInfoMap = new Map<string, Set<FormattedTxnEventInfo>>()
+  formattedTxnEvents.forEach((formattedTxnEvent) => {
+    const claimInfoKey = `${formattedTxnEvent.claimInfo!.ecosystem}-${
+      formattedTxnEvent.claimInfo!.address
+    }`
+
+    if (!claimInfoMap.get(claimInfoKey)) {
+      claimInfoMap.set(claimInfoKey, new Set<FormattedTxnEventInfo>())
+    }
+    claimInfoMap.get(claimInfoKey)!.add(formattedTxnEvent)
+  })
+  console.log(`claimInfoMap.size: ${claimInfoMap.size}`)
+  const entryGen = claimInfoMap.entries()
+  let entry = entryGen.next()
+  const doubleClaimEntries: Array<[string, Set<FormattedTxnEventInfo>]> = []
+  while (!entry.done) {
+    if (entry.value[1].size > 1) {
+      doubleClaimEntries.push(entry.value)
+    }
+    entry = entryGen.next()
+  }
+
+  return doubleClaimEntries.map(([claimInfoKey, txnEventInfosSet]) => {
+    const [ecosystem, address] = claimInfoKey.split('-')
+    const txnEventInfos = Array.from(txnEventInfosSet.values())
+    return {
+      body: {
+        aggregationKey: `DOUBLE-CLAIM-${ecosystem}-${address}`,
+        title: `DOUBLE-CLAIM-${ecosystem}-${address}`,
+        text: `
+              Double Claim detected for ${ecosystem} ${address}
+              claim events: ${JSON.stringify(txnEventInfos)}
+            `,
+        alertType: ERROR,
+        tags: [
+          `ecosystem:${ecosystem}`,
+          `network:${CLUSTER}`,
+          `service:token-dispenser-event-subscriber`,
+        ],
+      },
+    }
+  })
 }
 
 function createFailedTxnEventRequest(
@@ -104,6 +174,7 @@ function createFailedTxnEventRequest(
   return failedTxns.map((errorLog) => {
     return {
       body: {
+        aggregationKey: `${errorLog.signature}`,
         title: `error-${errorLog.signature}`,
         text: JSON.stringify(errorLog),
         alertType: ERROR,
