@@ -7,15 +7,16 @@
 
 import { client, v1 } from '@datadog/datadog-api-client'
 import {
-  FormattedTxnEventInfo,
   formatTxnEventInfo,
   TokenDispenserEventSubscriber,
+  FormattedTxnEventInfo,
   TxnInfo,
 } from '../claim_sdk/eventSubscriber'
 import * as anchor from '@coral-xyz/anchor'
 import {
-  ERROR,
   INFO,
+  WARNING,
+  ERROR,
 } from '@datadog/datadog-api-client/dist/packages/datadog-api-client-v1/models/EventAlertType'
 import { envOrErr } from '../claim_sdk'
 
@@ -24,6 +25,16 @@ const PROGRAM_ID = envOrErr('PROGRAM_ID')
 const CLUSTER = envOrErr('CLUSTER')
 const TIME_WINDOW_SECS = Number.parseInt(envOrErr('TIME_WINDOW_SECS'), 10)
 const CHUNK_SIZE = Number.parseInt(envOrErr('CHUNK_SIZE'), 10)
+// based off airdrop allocation commit 16d0c19f3951427f04cc015d38805f356fcb88b1
+const MAX_AMOUNT_PER_ECOSYSTEM = new Map<string, number>([
+  ['discord', 87000000000],
+  ['solana', 19175000000],
+  ['evm', 18371000000],
+  ['sui', 4049000000],
+  ['aptos', 4049000000],
+  ['cosmwasm', 4049000000],
+  ['injective', 4049000000],
+])
 
 async function main() {
   const tokenDispenserEventSubscriber = new TokenDispenserEventSubscriber(
@@ -98,21 +109,38 @@ function createTxnEventRequest(
   return formattedTxnEvents.map((formattedEvent) => {
     const { signature, claimant } = formattedEvent
 
-    const { ecosystem, address } = formattedEvent.claimInfo!
-
-    return {
-      body: {
-        aggregationKey: `${signature}`,
-        title: `${claimant}-${ecosystem}-${address}`,
-        text: JSON.stringify(formattedEvent),
-        alertType: INFO,
-        tags: [
-          `claimant:${claimant}`,
-          `ecosystem:${ecosystem}`,
-          `network:${CLUSTER}`,
-          `service:token-dispenser-event-subscriber`,
-        ],
-      },
+    const { ecosystem, address, amount } = formattedEvent.claimInfo!
+    if (MAX_AMOUNT_PER_ECOSYSTEM.get(ecosystem)! < amount) {
+      return {
+        body: {
+          aggregationKey: `MAX-TRANSFER-EXCEEDED-${signature}`,
+          title: `MAX-TRANSFER-FOR-${ecosystem}-EXCEEDED-${claimant}-${address}`,
+          text: JSON.stringify(formattedEvent),
+          alertType: ERROR,
+          tags: [
+            `claimant:${claimant}`,
+            `ecosystem:${ecosystem}`,
+            `network:${CLUSTER}`,
+            `error-type:MAX-TRANSFER-EXCEEDED`,
+            `service:token-dispenser-event-subscriber`,
+          ],
+        },
+      }
+    } else {
+      return {
+        body: {
+          aggregationKey: `${signature}`,
+          title: `${claimant}-${ecosystem}-${address}`,
+          text: JSON.stringify(formattedEvent),
+          alertType: INFO,
+          tags: [
+            `claimant:${claimant}`,
+            `ecosystem:${ecosystem}`,
+            `network:${CLUSTER}`,
+            `service:token-dispenser-event-subscriber`,
+          ],
+        },
+      }
     }
   })
 }
@@ -135,7 +163,6 @@ function createDoubleClaimEventRequest(
     }
     claimInfoMap.get(claimInfoKey)!.add(formattedTxnEvent)
   })
-  console.log(`claimInfoMap.size: ${claimInfoMap.size}`)
   const entryGen = claimInfoMap.entries()
   let entry = entryGen.next()
   const doubleClaimEntries: Array<[string, Set<FormattedTxnEventInfo>]> = []
@@ -161,6 +188,7 @@ function createDoubleClaimEventRequest(
         tags: [
           `ecosystem:${ecosystem}`,
           `network:${CLUSTER}`,
+          `error-type:DOUBLE-CLAIM`,
           `service:token-dispenser-event-subscriber`,
         ],
       },
@@ -174,10 +202,10 @@ function createFailedTxnEventRequest(
   return failedTxns.map((errorLog) => {
     return {
       body: {
-        aggregationKey: `${errorLog.signature}`,
-        title: `error-${errorLog.signature}`,
+        aggregationKey: `FailedTxn-${errorLog.signature}}`,
+        title: `FailedTxn-${errorLog.signature}`,
         text: JSON.stringify(errorLog),
-        alertType: ERROR,
+        alertType: WARNING,
         tags: [
           `network:${CLUSTER}`,
           `service:token-dispenser-event-subscriber`,
