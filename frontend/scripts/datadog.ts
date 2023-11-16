@@ -7,11 +7,9 @@
 
 import { client, v1 } from '@datadog/datadog-api-client'
 import {
-  FormattedClaimInfo,
   FormattedTxnEventInfo,
   formatTxnEventInfo,
   TokenDispenserEventSubscriber,
-  TxnEventInfo,
   TxnInfo,
 } from '../claim_sdk/eventSubscriber'
 import * as anchor from '@coral-xyz/anchor'
@@ -20,7 +18,6 @@ import {
   INFO,
 } from '@datadog/datadog-api-client/dist/packages/datadog-api-client-v1/models/EventAlertType'
 import { envOrErr } from '../claim_sdk'
-import assert from 'assert'
 
 const ENDPOINT = envOrErr('ENDPOINT')
 const PROGRAM_ID = envOrErr('PROGRAM_ID')
@@ -145,7 +142,6 @@ function createDoubleClaimEventRequest(
   while (!entry.done) {
     if (entry.value[1].size > 1) {
       doubleClaimEntries.push(entry.value)
-      console.log(`adding doubleClaimEntry`)
     }
     entry = entryGen.next()
   }
