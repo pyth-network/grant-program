@@ -75,8 +75,6 @@ const Eligibility = ({
   const windowWidth = window.innerWidth
   const isMobile = windowWidth < 480
 
-  console.log(isMobile)
-
   return (
     <Box>
       <div className="flex items-center justify-between border-b border-light-35 bg-[#242339] py-4 px-4 sm:py-8 sm:px-10">
