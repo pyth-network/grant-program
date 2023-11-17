@@ -19,6 +19,7 @@ import {
   ERROR,
 } from '@datadog/datadog-api-client/dist/packages/datadog-api-client-v1/models/EventAlertType'
 import { envOrErr } from '../claim_sdk'
+import { BN } from '@coral-xyz/anchor'
 
 const ENDPOINT = envOrErr('ENDPOINT')
 const PROGRAM_ID = envOrErr('PROGRAM_ID')
@@ -26,14 +27,14 @@ const CLUSTER = envOrErr('CLUSTER')
 const TIME_WINDOW_SECS = Number.parseInt(envOrErr('TIME_WINDOW_SECS'), 10)
 const CHUNK_SIZE = Number.parseInt(envOrErr('CHUNK_SIZE'), 10)
 // based off airdrop allocation commit 16d0c19f3951427f04cc015d38805f356fcb88b1
-const MAX_AMOUNT_PER_ECOSYSTEM = new Map<string, number>([
-  ['discord', 87000000000],
-  ['solana', 19175000000],
-  ['evm', 18371000000],
-  ['sui', 4049000000],
-  ['aptos', 4049000000],
-  ['cosmwasm', 4049000000],
-  ['injective', 4049000000],
+const MAX_AMOUNT_PER_ECOSYSTEM = new Map<string, BN>([
+  ['discord', new BN('87000000000')],
+  ['solana', new BN('19175000000')],
+  ['evm', new BN('18371000000')],
+  ['sui', new BN('4049000000')],
+  ['aptos', new BN('4049000000')],
+  ['cosmwasm', new BN('4049000000')],
+  ['injective', new BN('4049000000')],
 ])
 
 async function main() {
@@ -110,7 +111,7 @@ function createTxnEventRequest(
     const { signature, claimant } = formattedEvent
 
     const { ecosystem, address, amount } = formattedEvent.claimInfo!
-    if (MAX_AMOUNT_PER_ECOSYSTEM.get(ecosystem)! < amount) {
+    if (MAX_AMOUNT_PER_ECOSYSTEM.get(ecosystem)!.lt(new BN(amount))) {
       return {
         body: {
           aggregationKey: `MAX-TRANSFER-EXCEEDED-${signature}`,

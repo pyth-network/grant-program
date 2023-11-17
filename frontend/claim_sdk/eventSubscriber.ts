@@ -195,7 +195,7 @@ export function formatTxnEventInfo(
     formattedEvent = {
       ...formattedEvent,
       claimant: txnEvnInfo.event.claimant.toBase58(),
-      remainingBalance: txnEvnInfo.event.remainingBalance.toNumber(),
+      remainingBalance: txnEvnInfo.event.remainingBalance.toString(),
       claimInfo: formatClaimInfo(txnEvnInfo.event.claimInfo),
     }
   }
@@ -207,7 +207,7 @@ export type FormattedTxnEventInfo = {
   blockTime: number
   slot: number
   claimant?: string
-  remainingBalance?: number
+  remainingBalance?: string
   claimInfo?: FormattedClaimInfo
 }
 
@@ -218,7 +218,7 @@ function formatClaimInfo(
     return {
       ecosystem: 'discord',
       address: claimInfo.identity.discord.username,
-      amount: claimInfo.amount.toNumber(),
+      amount: claimInfo.amount.toString(),
     }
   } else if (claimInfo.identity.solana) {
     return {
@@ -226,40 +226,40 @@ function formatClaimInfo(
       address: new anchor.web3.PublicKey(
         claimInfo.identity.solana.pubkey
       ).toBase58(),
-      amount: claimInfo.amount.toNumber(),
+      amount: claimInfo.amount.toString(),
     }
   } else if (claimInfo.identity.evm) {
     return {
       ecosystem: 'evm',
       address:
         '0x' + Buffer.from(claimInfo.identity.evm.pubkey).toString('hex'),
-      amount: claimInfo.amount.toNumber(),
+      amount: claimInfo.amount.toString(),
     }
   } else if (claimInfo.identity.aptos) {
     return {
       ecosystem: 'aptos',
       address:
         '0x' + Buffer.from(claimInfo.identity.aptos.address).toString('hex'),
-      amount: claimInfo.amount.toNumber(),
+      amount: claimInfo.amount.toString(),
     }
   } else if (claimInfo.identity.sui) {
     return {
       ecosystem: 'sui',
       address:
         '0x' + Buffer.from(claimInfo.identity.sui.address).toString('hex'),
-      amount: claimInfo.amount.toNumber(),
+      amount: claimInfo.amount.toString(),
     }
   } else if (claimInfo.identity.cosmwasm) {
     return {
       ecosystem: 'cosmwasm',
       address: claimInfo.identity.cosmwasm.address,
-      amount: claimInfo.amount.toNumber(),
+      amount: claimInfo.amount.toString(),
     }
   } else if (claimInfo.identity.injective) {
     return {
       ecosystem: 'injective',
       address: claimInfo.identity.injective.address,
-      amount: claimInfo.amount.toNumber(),
+      amount: claimInfo.amount.toString(),
     }
   } else
     throw new Error(
@@ -270,7 +270,7 @@ function formatClaimInfo(
 export type FormattedClaimInfo = {
   ecosystem: string
   address: string
-  amount: number
+  amount: string
 }
 
 function chunkArray(array: any[], chunkSize: number) {
