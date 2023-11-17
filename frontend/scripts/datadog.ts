@@ -26,6 +26,7 @@ const PROGRAM_ID = envOrErr('PROGRAM_ID')
 const CLUSTER = envOrErr('CLUSTER')
 const TIME_WINDOW_SECS = Number.parseInt(envOrErr('TIME_WINDOW_SECS'), 10)
 const CHUNK_SIZE = Number.parseInt(envOrErr('CHUNK_SIZE'), 10)
+const LOW_BALANCE_THRESHOLD = envOrErr('LOW_BALANCE_THRESHOLD')
 // based off airdrop allocation commit 16d0c19f3951427f04cc015d38805f356fcb88b1
 const MAX_AMOUNT_PER_ECOSYSTEM = new Map<string, BN>([
   ['discord', new BN('87000000000')],
@@ -67,12 +68,27 @@ async function main() {
           .createEvent(doubleClaimEventRequest)
           .then((data: v1.EventCreateResponse) => {
             console.log(
-              'API called successfully. Returned data: ' + JSON.stringify(data)
+              'API called successfully for double claim event. Returned data: ' +
+                JSON.stringify(data)
             )
           })
           .catch((error: any) => console.error(error))
       })
     )
+  }
+
+  const lowBalanceEventRequest =
+    createLowBalanceEventRequest(formattedTxnEvents)
+  if (lowBalanceEventRequest) {
+    await apiInstance
+      .createEvent(lowBalanceEventRequest)
+      .then((data: v1.EventCreateResponse) => {
+        console.log(
+          'API called successfully for low balance threshold event. Returned data: ' +
+            JSON.stringify(data)
+        )
+      })
+      .catch((error: any) => console.error(error))
   }
 
   const txnEventRequests = createTxnEventRequest(formattedTxnEvents)
@@ -82,7 +98,8 @@ async function main() {
         .createEvent(txnEventRequest)
         .then((data: v1.EventCreateResponse) => {
           console.log(
-            'API called successfully. Returned data: ' + JSON.stringify(data)
+            'API called successfully for claim event. Returned data: ' +
+              JSON.stringify(data)
           )
         })
         .catch((error: any) => console.error(error))
@@ -96,7 +113,8 @@ async function main() {
         .createEvent(errorLogRequest)
         .then((data: v1.EventCreateResponse) => {
           console.log(
-            'API called successfully. Returned data: ' + JSON.stringify(data)
+            'API called successfully for failed txn event. Returned data: ' +
+              JSON.stringify(data)
           )
         })
         .catch((error: any) => console.error(error))
@@ -208,12 +226,42 @@ function createFailedTxnEventRequest(
         text: JSON.stringify(errorLog),
         alertType: WARNING,
         tags: [
+          `warning-type:FAILED-TXN`,
           `network:${CLUSTER}`,
           `service:token-dispenser-event-subscriber`,
         ],
       },
     }
   })
+}
+
+function createLowBalanceEventRequest(
+  formattedTxnEvents: FormattedTxnEventInfo[]
+): v1.EventsApiCreateEventRequest | undefined {
+  if (formattedTxnEvents.length === 0) {
+    return undefined
+  }
+  const mostRecentEvent = formattedTxnEvents.sort((a, b) => {
+    return b.slot - a.slot
+  })[0]
+  if (
+    mostRecentEvent.remainingBalance &&
+    new BN(mostRecentEvent.remainingBalance).lt(new BN(LOW_BALANCE_THRESHOLD))
+  ) {
+    return {
+      body: {
+        aggregationKey: `LOW-BALANCE-${mostRecentEvent.signature}`,
+        title: `LOW-BALANCE-${mostRecentEvent.signature}`,
+        text: JSON.stringify(mostRecentEvent),
+        alertType: WARNING,
+        tags: [
+          `warning-type:LOW-BALANCE`,
+          `network:${CLUSTER}`,
+          `service:token-dispenser-event-subscriber`,
+        ],
+      },
+    }
+  }
 }
 
 ;(async () => {
