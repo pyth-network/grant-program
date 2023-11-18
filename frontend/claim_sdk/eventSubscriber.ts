@@ -56,22 +56,20 @@ export class TokenDispenserEventSubscriber {
       {},
       this.connection.commitment as anchor.web3.Finality
     )
-    let batchWithinWindow = true
-    if (currentBatch.length === 0) {
-      batchWithinWindow = false
-    } else {
-      const currentBatchLastSig =
-        currentBatch[currentBatch.length - 1]?.signature
-      const currentBatchLastSigBlockTime = await this.getTransactionBlockTime(
-        currentBatchLastSig
-      )
-      if (
-        currentBatchLastSigBlockTime &&
-        currentBatchLastSigBlockTime < currentTimeSec - this.timeWindowSecs
-      ) {
-        batchWithinWindow = false
+    const currentBatchLastSig = currentBatch[currentBatch.length - 1]?.signature
+    const currentBatchLastSigBlockTime = await this.getTransactionBlockTime(
+      currentBatchLastSig
+    )
+    if (
+      currentBatchLastSigBlockTime &&
+      currentBatchLastSigBlockTime < currentTimeSec - this.timeWindowSecs
+    ) {
+      return {
+        txnEvents: [],
+        failedTxnInfos: [],
       }
     }
+    let batchWithinWindow = true
     while (currentBatch.length > 0 && batchWithinWindow) {
       const currentBatchLastSig =
         currentBatch[currentBatch.length - 1]?.signature
