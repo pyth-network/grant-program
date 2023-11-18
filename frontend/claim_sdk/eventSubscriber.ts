@@ -56,6 +56,19 @@ export class TokenDispenserEventSubscriber {
       {},
       this.connection.commitment as anchor.web3.Finality
     )
+    const currentBatchLastSig = currentBatch[currentBatch.length - 1]?.signature
+    const currentBatchLastSigBlockTime = await this.getTransactionBlockTime(
+      currentBatchLastSig
+    )
+    if (
+      currentBatchLastSigBlockTime &&
+      currentBatchLastSigBlockTime < currentTimeSec - this.timeWindowSecs
+    ) {
+      return {
+        txnEvents: [],
+        failedTxnInfos: [],
+      }
+    }
     let batchWithinWindow = true
     while (currentBatch.length > 0 && batchWithinWindow) {
       const currentBatchLastSig =
