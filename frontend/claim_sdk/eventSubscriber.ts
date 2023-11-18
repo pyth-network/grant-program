@@ -56,13 +56,13 @@ export class TokenDispenserEventSubscriber {
       {},
       this.connection.commitment as anchor.web3.Finality
     )
-    const currentBatchLastSig = currentBatch[currentBatch.length - 1]?.signature
-    const currentBatchLastSigBlockTime = await this.getTransactionBlockTime(
-      currentBatchLastSig
+    const initialBatchNewestSig = currentBatch[0]?.signature
+    const initialBatchNewestSigBlockTime = await this.getTransactionBlockTime(
+      initialBatchNewestSig
     )
     if (
-      currentBatchLastSigBlockTime &&
-      currentBatchLastSigBlockTime < currentTimeSec - this.timeWindowSecs
+      initialBatchNewestSigBlockTime &&
+      initialBatchNewestSigBlockTime < currentTimeSec - this.timeWindowSecs
     ) {
       return {
         txnEvents: [],
