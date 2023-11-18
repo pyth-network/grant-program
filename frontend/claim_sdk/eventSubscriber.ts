@@ -56,19 +56,6 @@ export class TokenDispenserEventSubscriber {
       {},
       this.connection.commitment as anchor.web3.Finality
     )
-    const initialBatchNewestSig = currentBatch[0]?.signature
-    const initialBatchNewestSigBlockTime = await this.getTransactionBlockTime(
-      initialBatchNewestSig
-    )
-    if (
-      initialBatchNewestSigBlockTime &&
-      initialBatchNewestSigBlockTime < currentTimeSec - this.timeWindowSecs
-    ) {
-      return {
-        txnEvents: [],
-        failedTxnInfos: [],
-      }
-    }
     let batchWithinWindow = true
     while (currentBatch.length > 0 && batchWithinWindow) {
       const currentBatchLastSig =
@@ -113,37 +100,45 @@ export class TokenDispenserEventSubscriber {
       }
     })
 
-    const txnEvents = validTxns.map((txnLog) => {
-      const eventGen = this.eventParser.parseLogs(txnLog.logs)
-      const events = []
-      let event = eventGen.next()
-      // Note: should only have 1 event/claim per txn at most
-      while (!event.done) {
-        events.push(
-          event.value.data as any as IdlEvents<TokenDispenser>['ClaimEvent']
-        )
-        event = eventGen.next()
-      }
+    const txnEvents = validTxns
+      .map((txnLog) => {
+        const eventGen = this.eventParser.parseLogs(txnLog.logs)
+        const events = []
+        let event = eventGen.next()
+        // Note: should only have 1 event/claim per txn at most
+        while (!event.done) {
+          events.push(
+            event.value.data as any as IdlEvents<TokenDispenser>['ClaimEvent']
+          )
+          event = eventGen.next()
+        }
 
-      return {
-        signature: txnLog.signature,
-        blockTime: txnLog.blockTime,
-        slot: txnLog.slot,
-        event: events.length > 0 ? events[0] : undefined,
-      }
-    })
+        return {
+          signature: txnLog.signature,
+          blockTime: txnLog.blockTime,
+          slot: txnLog.slot,
+          event: events.length > 0 ? events[0] : undefined,
+        }
+      })
+      .filter(
+        (txnEventInfo) =>
+          txnEventInfo.blockTime < currentTimeSec - this.timeWindowSecs
+      )
 
     const failedTxnSigChunks = chunkArray(errorTxnSigs, this.chunkSize)
 
-    const failedTxnInfos = (await this.fetchTxns(failedTxnSigChunks)).map(
-      (txn) => {
+    const failedTxnInfos = (await this.fetchTxns(failedTxnSigChunks))
+      .map((txn) => {
         return {
           signature: txn?.transaction.signatures[0] ?? '',
           blockTime: txn?.blockTime ?? 0,
           slot: txn?.slot ?? 0,
         }
-      }
-    )
+      })
+      .filter(
+        (txnEventInfo) =>
+          txnEventInfo.blockTime < currentTimeSec - this.timeWindowSecs
+      )
 
     return {
       txnEvents,
