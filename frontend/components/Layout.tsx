@@ -91,7 +91,10 @@ export const Layout = ({ children }: LayoutProps) => {
             <div className="mt-6">
               <p className="font-body text-[15px] ">
                 Useful links:{' '}
-                <Link href="/" className="ml-5 inline-block underline">
+                <Link
+                  href="https://pyth.network/airdrop/faq"
+                  className="ml-5 inline-block underline"
+                >
                   FAQ
                 </Link>
               </p>

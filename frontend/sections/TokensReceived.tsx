@@ -95,8 +95,12 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
                 </span>
               </Link>
             </div>
-            {/* TODO: link to governance later */}
-            <Button onClick={() => {}} type={'primary'}>
+            <Button
+              onClick={() => {
+                window.location.href = 'https://realms.pyth.network/dao/PYTH'
+              }}
+              type={'primary'}
+            >
               explore governance
             </Button>
           </div>
