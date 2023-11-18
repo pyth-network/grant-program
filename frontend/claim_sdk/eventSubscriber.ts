@@ -122,7 +122,7 @@ export class TokenDispenserEventSubscriber {
       })
       .filter(
         (txnEventInfo) =>
-          txnEventInfo.blockTime < currentTimeSec - this.timeWindowSecs
+          txnEventInfo.blockTime >= currentTimeSec - this.timeWindowSecs
       )
 
     const failedTxnSigChunks = chunkArray(errorTxnSigs, this.chunkSize)
@@ -137,7 +137,7 @@ export class TokenDispenserEventSubscriber {
       })
       .filter(
         (txnEventInfo) =>
-          txnEventInfo.blockTime < currentTimeSec - this.timeWindowSecs
+          txnEventInfo.blockTime >= currentTimeSec - this.timeWindowSecs
       )
 
     return {
