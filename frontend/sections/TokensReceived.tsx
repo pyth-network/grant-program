@@ -97,7 +97,7 @@ export const TokensReceived = ({ totalCoinsClaimed }: TokensReceivedProps) => {
             </div>
             <Button
               onClick={() => {
-                window.location.href = 'https://realms.pyth.network/dao/PYTH'
+                window.location.href = 'https://staking.pyth.network/'
               }}
               type={'primary'}
             >
