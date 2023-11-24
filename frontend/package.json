@@ -49,7 +49,7 @@
     "siwe": "^2.1.4",
     "sql": "^0.78.0",
     "tweetnacl": "^1.0.3",
-    "wagmi": "^1.2.0"
+    "wagmi": "^1.4.7"
   },
   "devDependencies": {
     "@coral-xyz/spl-token": "^0.27.0",
