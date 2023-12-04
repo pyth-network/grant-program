@@ -292,9 +292,9 @@ pub enum IdentityCertificate {
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimCertificate {
-    amount:             u64,
-    proof_of_identity:  IdentityCertificate,
-    proof_of_inclusion: MerklePath<SolanaHasher>, // Proof that the leaf is in the tree
+    pub amount:             u64,
+    pub proof_of_identity:  IdentityCertificate,
+    pub proof_of_inclusion: MerklePath<SolanaHasher>, // Proof that the leaf is in the tree
 }
 
 ////////////////////////////////////////////////////////////////////////////////
