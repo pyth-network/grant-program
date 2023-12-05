@@ -238,8 +238,8 @@ pub struct Claim<'info> {
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ClaimInfo {
-    identity: Identity,
-    amount:   u64,
+    pub identity: Identity,
+    pub amount:   u64,
 }
 
 /**
