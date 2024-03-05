@@ -1,6 +1,6 @@
 // Limit middleware pathname config
 export const config = {
-  matcher: '/',
+  matcher: '/(.*)',
 }
 
 export function middleware(req) {
