@@ -267,6 +267,7 @@ export class TokenDispenserProvider {
     // send the txns. Associated token account will be created if needed.
     const sendTxs = txsSignedTwice.map(async (signedTx) => {
       try {
+        console.log(Buffer.from(signedTx.serialize()).toString('hex'))
         const signature = await this.connection.sendTransaction(signedTx, {
           skipPreflight: true,
         })

@@ -476,7 +476,7 @@
                 "type": "string"
               },
               {
-                "name": "verification_instruction_index",
+                "name": "verificationInstructionIndex",
                 "type": "u8"
               }
             ]
@@ -494,7 +494,7 @@
                 }
               },
               {
-                "name": "verification_instruction_index",
+                "name": "verificationInstructionIndex",
                 "type": "u8"
               }
             ]
@@ -515,7 +515,7 @@
                 }
               },
               {
-                "name": "verification_instruction_index",
+                "name": "verificationInstructionIndex",
                 "type": "u8"
               }
             ]
@@ -533,7 +533,7 @@
                 }
               },
               {
-                "name": "verification_instruction_index",
+                "name": "verificationInstructionIndex",
                 "type": "u8"
               }
             ]
@@ -542,7 +542,7 @@
             "name": "Cosmwasm",
             "fields": [
               {
-                "name": "chain_id",
+                "name": "chainId",
                 "type": "string"
               },
               {
@@ -555,7 +555,7 @@
                 }
               },
               {
-                "name": "recovery_id",
+                "name": "recoveryId",
                 "type": "u8"
               },
               {
@@ -586,7 +586,7 @@
                 }
               },
               {
-                "name": "verification_instruction_index",
+                "name": "verificationInstructionIndex",
                 "type": "u8"
               }
             ]

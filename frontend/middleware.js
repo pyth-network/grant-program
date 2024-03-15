@@ -1,6 +1,6 @@
 // Limit middleware pathname config
 export const config = {
-  matcher: '/',
+  matcher: '/(.*)',
 }
 
 export function middleware(req) {
@@ -30,11 +30,19 @@ export function middleware(req) {
             color: #E6DAFE;
             max-width: 900px;
           }
+          a {
+            color: #C792EA; /* Light purple, for better visibility */
+            text-decoration: none; /* Optional: removes underline */
+          }
+          a:hover {
+            color: #FFCB6B; /* Changes color on hover for interactivity */
+            text-decoration: underline; /* Optional: adds underline on hover */
+          }
         </style>
       </head>
       <body>
         <h1>The airdrop claim period has ended</h1>
-        <p>To stay in touch with future Pyth community initiatives head over to our <a href="https://discord.gg/invite/PythNetwork">Discord</a>  </p>
+        <p>To stay in touch with future Pyth community initiatives head over to our <a href="https://discord.gg/invite/PythNetwork">Discord</a></p>
       </body>
     </html>
     `
