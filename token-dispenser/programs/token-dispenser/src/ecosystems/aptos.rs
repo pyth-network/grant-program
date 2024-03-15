@@ -21,7 +21,7 @@ pub const APTOS_SIGNATURE_SCHEME_ID: u8 = 0;
 /**
 * An arbitrary signed message used in Aptos.
 * Only the message payload is stored in this struct.
-* The message signed for Aptos is the payload prefixed with APTOS_PREFIX and suffixed with APTOS_SUFFIX.
+* For Aptos, the message signed is the payload prefixed with APTOS_PREFIX and suffixed with APTOS_SUFFIX.
  */
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
