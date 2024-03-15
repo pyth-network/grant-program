@@ -149,6 +149,13 @@ export async function addTestWalletsToDatabase(
   ).flat(1)
 
   const maxAmount = getMaxAmount(claimInfos)
+  claimInfos.push(
+    new ClaimInfo(
+      'solana',
+      'E5KR7yfb9UyVB6ZhmhQki1rM1eBcxHvyGKFZakAC5uc',
+      maxAmount
+    )
+  )
 
   return [await addClaimInfosToDatabase(pool, claimInfos), maxAmount]
 }
